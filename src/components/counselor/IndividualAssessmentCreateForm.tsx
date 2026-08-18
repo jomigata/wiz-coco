@@ -11,7 +11,7 @@ import {
   fetchBulkPortalJobResult,
 } from '@/lib/clientPortalApi';
 import { counselorAssessmentTestOptions } from '@/data/counselorAssessmentTests';
-import type { BulkPortalJobStatus, ClientPortalBulkRow } from '@/types/clientPortal';
+import type { BulkPortalJobStatus } from '@/types/clientPortal';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import {
   prependCounselorAssessmentToListCache,
@@ -36,10 +36,11 @@ import {
   type RecipientRow,
 } from '@/lib/recipientImport';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
+import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
 import WelcomeMessageSamplePicker from '@/components/counselor/WelcomeMessageSamplePicker';
-import { COUNSELING_CODE_TYPES, counselingCodeTypeLabel, type CounselingCodeType } from '@/data/counselingCodeTypes';
+import { COUNSELING_CODE_TYPES, type CounselingCodeType } from '@/data/counselingCodeTypes';
 
-type IssueIntent = 'excel' | 'send_all' | 'goto_dispatch';
+type IssueIntent = 'excel' | 'send_all';
 type TestSortKey = 'no' | 'name';
 type SortDirection = 'asc' | 'desc';
 
@@ -107,7 +108,6 @@ export default function IndividualAssessmentCreateForm({
   const cohortNameRef = useRef<HTMLInputElement>(null);
   const titleRef = useRef<HTMLInputElement>(null);
   const recipientNameRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const pendingIntentRef = useRef<IssueIntent | null>(null);
   const { user, authPending, showLoginRequired } = useAuthResolved();
 
   const [cohortName, setCohortName] = useState('');
@@ -127,16 +127,11 @@ export default function IndividualAssessmentCreateForm({
   const [validationField, setValidationField] = useState<
     'cohortName' | 'title' | 'recipients' | 'tests' | null
   >(null);
-  const [created, setCreated] = useState<ClientPortalBulkRow[]>([]);
   const [sharedJoinCode, setSharedJoinCode] = useState('');
-  const [notifySent, setNotifySent] = useState(0);
-  const [notifyFailed, setNotifyFailed] = useState(0);
   const [notifyQueued, setNotifyQueued] = useState(0);
-  const [scheduledAtIso, setScheduledAtIso] = useState<string | null>(null);
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
   const [jobProgress, setJobProgress] = useState<BulkPortalJobStatus | null>(null);
   const [lastCreatedAssessmentId, setLastCreatedAssessmentId] = useState('');
-  const [lastIssueIntent, setLastIssueIntent] = useState<IssueIntent>('excel');
   const [testSortKey, setTestSortKey] = useState<TestSortKey>('no');
   const [testSortDir, setTestSortDir] = useState<SortDirection>('asc');
   const [testSearchQuery, setTestSearchQuery] = useState('');
@@ -224,6 +219,80 @@ export default function IndividualAssessmentCreateForm({
     return { widthCh, lineCount, heightRem };
   }, [samplePreviewText]);
 
+  const goToAssessmentListAfterIssue = useCallback(
+    ({
+      assessmentId,
+      accessCode,
+      createdCount,
+    }: {
+      assessmentId: string;
+      accessCode: string;
+      createdCount: number;
+    }) => {
+      const aid = assessmentId.trim();
+      const code = accessCode.trim();
+      const testList = counselorAssessmentTestOptions
+        .filter((t) => selectedTestIds.has(t.testId))
+        .map((t) => ({ testId: t.testId, name: t.name }));
+
+      if (aid && code) {
+        const optimistic: CounselorAssessment = {
+          id: aid,
+          accessCode: code,
+          counselorId: user?.uid || '',
+          title: (title.trim() || cohortName.trim() || '검사').slice(0, 200),
+          issueType: 'individual',
+          targetAudience: '그룹',
+          welcomeMessage: welcomeMessage.trim(),
+          usageEndDate: usageEndDate.trim() || undefined,
+          testList,
+          createdAt: new Date().toISOString(),
+          cohortName: cohortName.trim() || undefined,
+          codeCategory,
+          dispatchSentCount: 0,
+          dispatchFailedCount: 0,
+          testCompleteCount: 0,
+          testIncompleteCount: createdCount,
+        };
+        prependCounselorAssessmentToListCache(optimistic);
+        try {
+          sessionStorage.setItem(
+            'wizcoco_created_assessment',
+            JSON.stringify({
+              assessmentId: aid,
+              accessCode: code,
+              cohortName: cohortName.trim() || undefined,
+              title: (title.trim() || cohortName.trim() || '검사').slice(0, 200),
+            }),
+          );
+        } catch {
+          // ignore
+        }
+      }
+
+      const href = aid
+        ? `/counselor/assessments?created=${encodeURIComponent(aid)}`
+        : '/counselor/assessments';
+      if (variant === 'modal') {
+        onIssued?.();
+        return;
+      }
+      pushWithAuthSession(router, href);
+    },
+    [
+      cohortName,
+      codeCategory,
+      onIssued,
+      router,
+      selectedTestIds,
+      title,
+      usageEndDate,
+      user?.uid,
+      variant,
+      welcomeMessage,
+    ],
+  );
+
   useEffect(() => {
     if (!activeJobId) return undefined;
     let cancelled = false;
@@ -240,25 +309,11 @@ export default function IndividualAssessmentCreateForm({
           const full = await fetchBulkPortalJobResult(activeJobId);
           if (cancelled) return;
           const assessmentId = full.assessmentId || lastCreatedAssessmentId || '';
-          const intent = pendingIntentRef.current;
-          pendingIntentRef.current = null;
-
-          if (intent === 'goto_dispatch' && assessmentId) {
-            pushWithAuthSession(
-              router,
-              `/counselor/assessments/progress?assessmentId=${encodeURIComponent(assessmentId)}`
-            );
-            setActiveJobId(null);
-            setJobProgress(null);
-            setLoadingIntent(null);
-            return;
-          }
-
-          setCreated(full.created || []);
-          setNotifyQueued(full.notifyQueued);
-          setSharedJoinCode(full.joinAccessCode || '');
-          setScheduledAtIso(full.scheduledAt ?? null);
-          setLastCreatedAssessmentId(assessmentId);
+          goToAssessmentListAfterIssue({
+            assessmentId,
+            accessCode: full.joinAccessCode || status.joinAccessCode || '',
+            createdCount: full.created?.length || status.totalRows || 0,
+          });
           setActiveJobId(null);
           setJobProgress(null);
           setLoadingIntent(null);
@@ -266,7 +321,6 @@ export default function IndividualAssessmentCreateForm({
           setError(status.error || '대량 발급 작업이 실패했습니다.');
           setActiveJobId(null);
           setJobProgress(null);
-          pendingIntentRef.current = null;
           setLoadingIntent(null);
         }
       } catch (err) {
@@ -274,7 +328,6 @@ export default function IndividualAssessmentCreateForm({
           setError(err instanceof Error ? err.message : '작업 상태 조회에 실패했습니다.');
           setActiveJobId(null);
           setJobProgress(null);
-          pendingIntentRef.current = null;
           setLoadingIntent(null);
         }
       }
@@ -286,17 +339,7 @@ export default function IndividualAssessmentCreateForm({
       cancelled = true;
       window.clearInterval(timer);
     };
-  }, [activeJobId, lastCreatedAssessmentId, router]);
-
-  const navigateToDispatch = useCallback(
-    (assessmentId: string) => {
-      pushWithAuthSession(
-        router,
-        `/counselor/assessments/progress?assessmentId=${encodeURIComponent(assessmentId)}`
-      );
-    },
-    [router]
-  );
+  }, [activeJobId, goToAssessmentListAfterIssue, lastCreatedAssessmentId]);
 
   const recipients = useMemo(
     () => mergeRecipients(manualRows, fileRows),
@@ -387,7 +430,6 @@ export default function IndividualAssessmentCreateForm({
   const handleIssue = async (intent: IssueIntent) => {
     setError('');
     setValidationField(null);
-    setCreated([]);
     setSharedJoinCode('');
 
     if (!cohortName.trim()) {
@@ -427,8 +469,6 @@ export default function IndividualAssessmentCreateForm({
     }
 
     const willNotify = intent === 'send_all';
-    pendingIntentRef.current = intent;
-    setLastIssueIntent(intent);
     setLoadingIntent(intent);
     try {
       const result = await bulkCreateClientPortals({
@@ -472,95 +512,17 @@ export default function IndividualAssessmentCreateForm({
         return;
       }
 
-      if (intent === 'goto_dispatch') {
-        pendingIntentRef.current = null;
-        if (assessmentId) {
-          navigateToDispatch(assessmentId);
-          return;
-        }
-        setError('진행현황으로 이동할 검사 ID를 받지 못했습니다. 발송목록에서 확인해 주세요.');
-      }
-
-      setCreated(result.created || []);
-      setLastCreatedAssessmentId(assessmentId);
-      setSharedJoinCode(result.joinAccessCode || result.created?.[0]?.joinAccessCode || '');
-      setNotifySent(result.notifySent ?? 0);
-      setNotifyFailed(result.notifyFailed ?? 0);
-      setNotifyQueued(result.notifyQueued);
-      setScheduledAtIso(result.scheduledAt ?? null);
-      pendingIntentRef.current = null;
+      goToAssessmentListAfterIssue({
+        assessmentId,
+        accessCode: result.joinAccessCode || result.created?.[0]?.joinAccessCode || '',
+        createdCount: (result.created || []).length || recipients.length,
+      });
     } catch (err) {
-      pendingIntentRef.current = null;
       setError(err instanceof Error ? err.message : '상담코드 발급에 실패했습니다.');
     } finally {
       setLoadingIntent(null);
     }
   };
-
-  const confirmIssueCompleteAndGoToList = useCallback(() => {
-    const assessmentId = lastCreatedAssessmentId.trim();
-    const accessCode = sharedJoinCode.trim();
-    const testList = counselorAssessmentTestOptions
-      .filter((t) => selectedTestIds.has(t.testId))
-      .map((t) => ({ testId: t.testId, name: t.name }));
-
-    if (assessmentId && accessCode) {
-      const optimistic: CounselorAssessment = {
-        id: assessmentId,
-        accessCode,
-        counselorId: user?.uid || '',
-        title: (title.trim() || cohortName.trim() || '검사').slice(0, 200),
-        issueType: 'individual',
-        targetAudience: '그룹',
-        welcomeMessage: welcomeMessage.trim(),
-        usageEndDate: usageEndDate.trim() || undefined,
-        testList,
-        createdAt: new Date().toISOString(),
-        cohortName: cohortName.trim() || undefined,
-        codeCategory,
-        dispatchSentCount: 0,
-        dispatchFailedCount: 0,
-        testCompleteCount: 0,
-        testIncompleteCount: created.length,
-      };
-      prependCounselorAssessmentToListCache(optimistic);
-      try {
-        sessionStorage.setItem(
-          'wizcoco_created_assessment',
-          JSON.stringify({
-            assessmentId,
-            accessCode,
-            cohortName: cohortName.trim() || undefined,
-            title: (title.trim() || cohortName.trim() || '검사').slice(0, 200),
-          }),
-        );
-      } catch {
-        // ignore
-      }
-    }
-
-    const href = assessmentId
-      ? `/counselor/assessments?created=${encodeURIComponent(assessmentId)}`
-      : '/counselor/assessments';
-    if (variant === 'modal') {
-      onIssued?.();
-      return;
-    }
-    pushWithAuthSession(router, href);
-  }, [
-    cohortName,
-    created.length,
-    lastCreatedAssessmentId,
-    onIssued,
-    router,
-    selectedTestIds,
-    sharedJoinCode,
-    title,
-    usageEndDate,
-    user?.uid,
-    variant,
-    welcomeMessage,
-  ]);
 
   if (authPending) {
     return <AuthLoadingState className="py-8" message="로그인 정보를 불러오는 중…" />;
@@ -599,159 +561,6 @@ export default function IndividualAssessmentCreateForm({
             이 화면을 닫지 마세요. {GROUP_BULK_ASYNC_THRESHOLD}명 초과 발급은 백그라운드에서 배치 처리됩니다.
             알림은 발급 완료 후 큐를 통해 순차 발송됩니다.
           </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (created.length > 0) {
-    return (
-      <div
-        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 p-4 backdrop-blur-md"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="issue-complete-title"
-      >
-        <div className="w-full max-w-lg overflow-hidden rounded-2xl border-2 border-emerald-400/45 bg-gradient-to-b from-slate-900 to-slate-950 shadow-2xl shadow-black/50 ring-1 ring-emerald-500/15">
-          <div className="border-b border-emerald-500/25 bg-gradient-to-r from-emerald-950/60 via-slate-900 to-slate-900 px-6 py-5">
-            <div className="flex items-start gap-3">
-              <span
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-emerald-500/35 bg-emerald-500/15 text-emerald-300"
-                aria-hidden
-              >
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M5 13l4 4L19 7" />
-                </svg>
-              </span>
-              <div className="min-w-0">
-                <h2 id="issue-complete-title" className="text-xl font-semibold text-white">
-                  발급 완료
-                </h2>
-                <p className="mt-1 text-sm leading-relaxed text-slate-400">
-                  상담코드와 나의코드·비밀번호가 정상적으로 생성되었습니다.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-4 px-6 py-5">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/8 px-4 py-4 sm:col-span-2">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                  발급 인원
-                </p>
-                <p className="mt-1 text-3xl font-bold tabular-nums text-emerald-200">
-                  {created.length.toLocaleString('ko-KR')}
-                  <span className="ml-1 text-base font-medium text-slate-400">명</span>
-                </p>
-                <p className="mt-2 text-sm leading-relaxed text-slate-300">
-                  각 내담자에게 나의코드·비밀번호가 발급되었습니다.
-                </p>
-              </div>
-
-              {sharedJoinCode ? (
-                <div className="rounded-xl border border-cyan-500/25 bg-cyan-500/8 px-4 py-4">
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                    상담코드
-                  </p>
-                  <p className="mt-1.5 font-mono text-2xl font-bold tracking-wider text-cyan-300">
-                    {formatAccessCodeDisplay(sharedJoinCode)}
-                  </p>
-                  <p className="mt-2 text-xs text-slate-400">
-                    {counselingCodeTypeLabel(codeCategory)}
-                  </p>
-                </div>
-              ) : null}
-
-              <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-4">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                  그룹명 / 제목
-                </p>
-                <p className="mt-1.5 text-sm font-semibold leading-snug text-slate-100">
-                  {(cohortName.trim() || title.trim())
-                    ? `${cohortName.trim() || '—'} / ${title.trim() || '—'}`
-                    : '—'}
-                </p>
-                <p className="mt-2 text-xs text-slate-400">
-                  포함 검사{' '}
-                  <span className="font-semibold tabular-nums text-sky-300">{selectedTestIds.size}</span>개
-                  {usageEndDate.trim() ? (
-                    <>
-                      {' · '}
-                      사용종료 {usageEndDate.trim()}
-                    </>
-                  ) : (
-                    ' · 사용종료 무기한'
-                  )}
-                </p>
-              </div>
-            </div>
-
-            {selectedTestIds.size > 0 ? (
-              <div className="rounded-xl border border-indigo-500/20 bg-indigo-950/20 px-4 py-3.5">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                  포함 검사 목록
-                </p>
-                <ul className="mt-2 space-y-1 text-sm text-slate-200">
-                  {counselorAssessmentTestOptions
-                    .filter((t) => selectedTestIds.has(t.testId))
-                    .slice(0, 6)
-                    .map((t, idx) => (
-                      <li key={t.testId} className="flex gap-2">
-                        <span className="shrink-0 tabular-nums text-slate-500">{idx + 1}.</span>
-                        <span>{t.name}</span>
-                      </li>
-                    ))}
-                  {selectedTestIds.size > 6 ? (
-                    <li className="text-xs text-slate-500">외 {selectedTestIds.size - 6}개</li>
-                  ) : null}
-                </ul>
-              </div>
-            ) : null}
-
-            {(notifySent > 0 || notifyFailed > 0 || notifyQueued > 0) ? (
-              <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3.5 text-sm text-slate-300">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">발송 현황</p>
-                <div className="mt-2 space-y-1">
-                  {(notifySent > 0 || notifyQueued > 0) ? (
-                    <p>
-                      {notifySent > 0 ? (
-                        <>
-                          즉시 발송 완료{' '}
-                          <span className="font-semibold text-emerald-300 tabular-nums">{notifySent}</span>건
-                        </>
-                      ) : null}
-                      {notifySent > 0 && notifyQueued > 0 ? (
-                        <span className="text-slate-500"> / </span>
-                      ) : null}
-                      {notifyQueued > 0 ? (
-                        <>
-                          발송중{' '}
-                          <span className="font-semibold text-sky-300 tabular-nums">{notifyQueued}</span>건
-                        </>
-                      ) : null}
-                    </p>
-                  ) : null}
-                  {notifyFailed > 0 ? (
-                    <p>
-                      발송 실패{' '}
-                      <span className="font-semibold text-red-300 tabular-nums">{notifyFailed}</span>건
-                    </p>
-                  ) : null}
-                </div>
-              </div>
-            ) : null}
-          </div>
-
-          <div className="flex justify-end gap-2 border-t border-white/[0.06] bg-black/20 px-6 py-4">
-            <button
-              type="button"
-              onClick={confirmIssueCompleteAndGoToList}
-              className="rounded-lg bg-sky-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-sky-900/30 transition hover:bg-sky-500"
-            >
-              {variant === 'modal' ? '닫기' : '상담코드 목록으로'}
-            </button>
-          </div>
         </div>
       </div>
     );
@@ -1248,6 +1057,22 @@ export default function IndividualAssessmentCreateForm({
           </div>
         </CounselorPageSection>
       </div>
+
+      <CounselorActionProgressOverlay
+        open={Boolean(loadingIntent && !activeJobId)}
+        zIndexClass="z-[120]"
+        title="발급 진행 중…"
+        message={
+          loadingIntent === 'excel'
+            ? '엑셀 저장을 위해 상담코드를 발급하고 있습니다.'
+            : '내담자에게 발급·발송을 처리하고 있습니다.'
+        }
+        notice={
+          loadingIntent === 'send_all'
+            ? '코드 발송량에 따라 발송에 1~2분 이상 걸릴 수 있습니다.'
+            : undefined
+        }
+      />
     </form>
   );
 }
