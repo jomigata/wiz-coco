@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import {
-  getUserCounselorApplication,
+  subscribeUserCounselorApplication,
   type CounselorApplicationStatus,
 } from '@/lib/firestore/counselorApplicationsStore';
 import {
@@ -15,7 +15,7 @@ import {
 import { isCounselor } from '@/utils/roleUtils';
 
 export function useCounselorProfessionalAccess() {
-  const { user, loading: authLoading } = useFirebaseAuth();
+  const { user, loading: authLoading, refreshAuthRole } = useFirebaseAuth();
   const [applicationStatus, setApplicationStatus] = useState<CounselorApplicationStatus | null>(null);
   const [accessLoading, setAccessLoading] = useState(true);
 
@@ -24,8 +24,6 @@ export function useCounselorProfessionalAccess() {
   const counselorRole = isCounselor(role);
 
   useEffect(() => {
-    let cancelled = false;
-
     if (authLoading) return;
 
     if (!uid) {
@@ -34,36 +32,24 @@ export function useCounselorProfessionalAccess() {
       return;
     }
 
-    const applyApplication = (application: Awaited<ReturnType<typeof getUserCounselorApplication>>) => {
-      if (!cancelled) setApplicationStatus(application?.status ?? null);
-    };
-
-    if (counselorRole) {
-      setAccessLoading(false);
-      void getUserCounselorApplication(uid)
-        .then(applyApplication)
-        .catch(() => {
-          if (!cancelled) setApplicationStatus(null);
-        });
-      return () => {
-        cancelled = true;
-      };
-    }
-
     setAccessLoading(true);
-    void getUserCounselorApplication(uid)
-      .then(applyApplication)
-      .catch(() => {
-        if (!cancelled) setApplicationStatus(null);
-      })
-      .finally(() => {
-        if (!cancelled) setAccessLoading(false);
-      });
+    const unsubscribe = subscribeUserCounselorApplication(uid, (application) => {
+      setApplicationStatus(application?.status ?? null);
+      setAccessLoading(false);
+    });
 
     return () => {
-      cancelled = true;
+      unsubscribe();
     };
-  }, [authLoading, uid, counselorRole]);
+  }, [authLoading, uid]);
+
+  // 승인됐는데 role이 아직 user인 경우 — Firestore/API에서 role 재동기화
+  useEffect(() => {
+    if (!uid || authLoading) return;
+    if (applicationStatus !== 'approved') return;
+    if (counselorRole) return;
+    void refreshAuthRole();
+  }, [applicationStatus, counselorRole, uid, authLoading, refreshAuthRole]);
 
   const loading = authLoading || (!!uid && accessLoading && !counselorRole);
   const isAuthenticated = !!uid;

@@ -149,6 +149,8 @@ type FirebaseAuthContextValue = {
   loading: boolean;
   /** Firestore/API에서 role 확정 전 — RoleGuard 등에서 조기 리다이렉트 방지 */
   roleHydrating: boolean;
+  /** 관리자 승인 직후 등 — users.role·세션 캐시 재동기화 */
+  refreshAuthRole: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<{ success: boolean; user?: FirebaseSdkUser; error?: string }>;
   signUp: (
     email: string,
@@ -555,17 +557,74 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
     }
   }, []);
 
+  const refreshAuthRole = useCallback(async () => {
+    const { auth, db } = initializeFirebase();
+    const firebaseUser = auth?.currentUser;
+    if (!firebaseUser || !db) return;
+
+    setRoleHydrating(true);
+    writeSWRCache(AUTH_CACHE_KEY, null, { scope: 'session' });
+
+    try {
+      await firebaseUser.getIdToken(true);
+      const token = await firebaseUser.getIdToken();
+      const ref = doc(db, 'users', firebaseUser.uid);
+      const snap = await getDoc(ref);
+      let role = (
+        snap.exists() ? ((snap.data() as { role?: AppRole })?.role || 'user') : 'user'
+      ) as AppRole;
+
+      try {
+        const res = await fetch(`${getFlaskApiBaseUrl()}/api/auth/bootstrap-role`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const boot = (await res.json().catch(() => ({}))) as { role?: AppRole };
+          if (
+            boot.role === 'admin' ||
+            boot.role === 'counselor' ||
+            boot.role === 'org_admin' ||
+            boot.role === 'user'
+          ) {
+            role = boot.role;
+          }
+        }
+      } catch {
+        // ignore
+      }
+
+      if (snap.exists()) {
+        const liveRole = ((snap.data() as { role?: AppRole })?.role || role) as AppRole;
+        role = liveRole;
+      }
+
+      setUser((prev) => {
+        const base = prev ?? authUserFromSdkUser(firebaseUser);
+        const nextUser = { ...base, role };
+        writeSWRCache(AUTH_CACHE_KEY, nextUser, { scope: 'session' });
+        return nextUser;
+      });
+      await primeCounselorIdToken(token);
+    } catch (e) {
+      console.warn('[FirebaseAuth] refreshAuthRole 실패:', e);
+    } finally {
+      setRoleHydrating(false);
+    }
+  }, []);
+
   const value = useMemo(
     () => ({
       user,
       loading,
       roleHydrating,
+      refreshAuthRole,
       signIn,
       signUp,
       logout,
       resetPassword,
     }),
-    [user, loading, roleHydrating, signIn, signUp, logout, resetPassword],
+    [user, loading, roleHydrating, refreshAuthRole, signIn, signUp, logout, resetPassword],
   );
 
   return <FirebaseAuthContext.Provider value={value}>{children}</FirebaseAuthContext.Provider>;

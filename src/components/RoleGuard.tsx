@@ -34,11 +34,12 @@ export default function RoleGuard({
   redirectTo = '/',
 }: RoleGuardProps) {
   const { user, authPending, showLoginRequired } = useAuthResolved();
-  const { roleHydrating } = useFirebaseAuth();
+  const { roleHydrating, refreshAuthRole } = useFirebaseAuth();
   const { loading: accessLoading, applicationStatus } = useCounselorProfessionalAccess();
   const router = useRouter();
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const loginRedirectedRef = useRef(false);
 
   const needsCounselorAccess = allowedRoles.includes('counselor');
@@ -145,10 +146,17 @@ export default function RoleGuard({
             <div className="flex flex-col gap-3">
               <button
                 type="button"
-                onClick={() => window.location.reload()}
-                className="rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-sky-500"
+                disabled={isRefreshing}
+                onClick={() => {
+                  setIsRefreshing(true);
+                  void refreshAuthRole().finally(() => {
+                    setIsRefreshing(false);
+                    window.location.reload();
+                  });
+                }}
+                className="rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-sky-500 disabled:opacity-60"
               >
-                새로고침
+                {isRefreshing ? '동기화 중…' : '새로고침'}
               </button>
               <Link
                 href="/counselor-application/"

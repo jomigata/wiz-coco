@@ -184,6 +184,7 @@ export default function CounselorApplicationForm({ uid, email, role }: Props) {
         </span>
         <h1 className="mt-3 text-2xl font-semibold text-white tracking-tight">전문가·상담사 신청</h1>
         <p className="mt-2 text-sm text-slate-400">{statusMessage(applicationStatus, counselor)}</p>
+        <p className="mt-1 text-xs text-slate-500">로그인 계정: {email}</p>
       </div>
 
       <div className="rounded-2xl border border-slate-200 bg-slate-900/60 p-5 sm:p-6 shadow-2xl shadow-black/20 backdrop-blur-sm">

@@ -7,11 +7,13 @@ import {
   doc,
   getDocs,
   limit,
+  onSnapshot,
   orderBy,
   query,
   serverTimestamp,
   updateDoc,
   where,
+  type QueryDocumentSnapshot,
 } from 'firebase/firestore';
 import { initializeFirebase } from '@/lib/firebase';
 import { finalizeCounselorApproval } from '@/lib/firestore/counselorRegistration';
@@ -191,25 +193,34 @@ export async function rejectCounselorApplication(params: {
   });
 }
 
-export async function getUserCounselorApplication(
-  uid: string,
-): Promise<CounselorApplicationRecord | null> {
-  const db = getDb();
-  const q = query(
-    collection(db, COLLECTION),
-    where('applicantUid', '==', uid),
-    where('status', 'in', ['pending', 'under_review', 'approved', 'rejected']),
-  );
-  const snap = await getDocs(q);
-  if (snap.empty) return null;
+const APPLICATION_STATUS_PRIORITY: Record<CounselorApplicationStatus, number> = {
+  approved: 0,
+  under_review: 1,
+  pending: 2,
+  rejected: 3,
+};
 
-  const sorted = [...snap.docs].sort((a, b) => {
+function pickBestApplicationDoc(
+  docs: QueryDocumentSnapshot[],
+): QueryDocumentSnapshot | null {
+  if (docs.length === 0) return null;
+  const sorted = [...docs].sort((a, b) => {
+    const sa = (a.data().status || 'pending') as CounselorApplicationStatus;
+    const sb = (b.data().status || 'pending') as CounselorApplicationStatus;
+    const pa = APPLICATION_STATUS_PRIORITY[sa] ?? 9;
+    const pb = APPLICATION_STATUS_PRIORITY[sb] ?? 9;
+    if (pa !== pb) return pa - pb;
     const ta = a.data().submittedAt?.toMillis?.() ?? 0;
     const tb = b.data().submittedAt?.toMillis?.() ?? 0;
     return tb - ta;
   });
+  return sorted[0] ?? null;
+}
 
-  const docSnap = sorted[0];
+function mapApplicationDoc(
+  docSnap: QueryDocumentSnapshot,
+  uid: string,
+): CounselorApplicationRecord {
   const data = docSnap.data();
   const personalInfo = (data.personalInfo || {}) as Partial<CounselorProfileData>;
   return {
@@ -221,6 +232,42 @@ export async function getUserCounselorApplication(
     personalInfo: mapPersonalInfo(personalInfo),
     attachments: mapRawAttachments(data.attachments),
   };
+}
+
+export async function getUserCounselorApplication(
+  uid: string,
+): Promise<CounselorApplicationRecord | null> {
+  const db = getDb();
+  const q = query(
+    collection(db, COLLECTION),
+    where('applicantUid', '==', uid),
+    where('status', 'in', ['pending', 'under_review', 'approved', 'rejected']),
+  );
+  const snap = await getDocs(q);
+  const docSnap = pickBestApplicationDoc(snap.docs);
+  if (!docSnap) return null;
+  return mapApplicationDoc(docSnap, uid);
+}
+
+/** 승인·반려 등 신청 상태 실시간 구독 (관리자 승인 직후 UI 반영) */
+export function subscribeUserCounselorApplication(
+  uid: string,
+  onChange: (record: CounselorApplicationRecord | null) => void,
+): () => void {
+  const db = getDb();
+  const q = query(
+    collection(db, COLLECTION),
+    where('applicantUid', '==', uid),
+    where('status', 'in', ['pending', 'under_review', 'approved', 'rejected']),
+  );
+  return onSnapshot(
+    q,
+    (snap) => {
+      const docSnap = pickBestApplicationDoc(snap.docs);
+      onChange(docSnap ? mapApplicationDoc(docSnap, uid) : null);
+    },
+    () => onChange(null),
+  );
 }
 
 export async function submitCounselorApplication(
