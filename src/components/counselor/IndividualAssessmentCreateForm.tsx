@@ -36,7 +36,6 @@ import {
   type RecipientRow,
 } from '@/lib/recipientImport';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
-import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
 import WelcomeMessageSamplePicker from '@/components/counselor/WelcomeMessageSamplePicker';
 import { COUNSELING_CODE_TYPES, counselingCodeTypeLabel, type CounselingCodeType } from '@/data/counselingCodeTypes';
 
@@ -1249,22 +1248,6 @@ export default function IndividualAssessmentCreateForm({
           </div>
         </CounselorPageSection>
       </div>
-
-      <CounselorActionProgressOverlay
-        open={Boolean(loadingIntent && !activeJobId)}
-        zIndexClass="z-[120]"
-        title="발급 진행 중…"
-        message={
-          loadingIntent === 'excel'
-            ? '엑셀 저장을 위해 상담코드를 발급하고 있습니다.'
-            : '내담자에게 발급·발송을 처리하고 있습니다.'
-        }
-        notice={
-          loadingIntent === 'send_all'
-            ? '코드 발송량에 따라 발송에 1~2분 이상 걸릴 수 있습니다.'
-            : undefined
-        }
-      />
     </form>
   );
 }
