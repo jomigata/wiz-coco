@@ -34,7 +34,10 @@ import { useCounselorListPageSize } from '@/hooks/useCounselorListPageSize';
 import CounselorPortalMoveDialog from '@/components/counselor/CounselorPortalMoveDialog';
 import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
 import CounselorActionCompleteModal from '@/components/counselor/CounselorActionCompleteModal';
+import CounselorConfirmModal from '@/components/counselor/CounselorConfirmModal';
 import CounselorListBackLink from '@/components/counselor/CounselorListBackLink';
+import { DELETED_RECIPIENTS_HREF } from '@/lib/counselorNestedNav';
+import { LOADING_MESSAGE } from '@/lib/loadingMessage';
 import { listAssessments, clearCounselorAssessmentsListCache } from '@/lib/assessmentApi';
 import {
   archiveDispatchRecipients,
@@ -515,6 +518,8 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
   const [restoring, setRestoring] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [clientDeleteLoading, setClientDeleteLoading] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [permanentDeleteConfirmOpen, setPermanentDeleteConfirmOpen] = useState(false);
   const [actionComplete, setActionComplete] = useState<{
     title: string;
     message: string;
@@ -822,9 +827,6 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
 
   const handlePermanentDelete = async () => {
     if (selected.size === 0) return;
-    if (!window.confirm(`선택 ${selected.size}명을 영구 삭제하시겠습니까?`)) {
-      return;
-    }
     setDeleting(true);
     setMessage('');
     try {
@@ -865,7 +867,6 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
 
   const handleClientDelete = async () => {
     if (selected.size === 0) return;
-    if (!window.confirm(`선택 ${selected.size}명을 삭제하시겠습니까?`)) return;
     setClientDeleteLoading(true);
     setMessage('');
     setError('');
@@ -924,6 +925,16 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
   return (
     <CounselorPageSection
       title={pageTitle}
+      headerAction={
+        !deletedMode && !adminUser ? (
+          <AuthLink
+            href={DELETED_RECIPIENTS_HREF}
+            className="inline-flex shrink-0 items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1.5 text-xs font-medium text-slate-300 transition-colors hover:bg-white/5 sm:text-sm"
+          >
+            삭제된 내담자
+          </AuthLink>
+        ) : null
+      }
       dense
       className="flex min-h-0 flex-1"
       bodyClassName="flex min-h-0 flex-1 flex-col !p-0"
@@ -952,17 +963,6 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
           />
         </span>
       }
-      toolbar={
-        deletedMode ? null : selected.size > 0 ? (
-          <button
-            type="button"
-            onClick={() => setMoveOpen(true)}
-            className="inline-flex shrink-0 items-center justify-center rounded-md border border-sky-500/40 bg-sky-900/40 px-2.5 py-1.5 text-sm font-medium text-sky-100 transition-colors hover:bg-sky-800/50"
-          >
-            다른 상담코드로 이동
-          </button>
-        ) : null
-      }
     >
       <motion.div
         className="flex min-h-0 flex-1 flex-col p-2.5 text-sm sm:p-3"
@@ -982,9 +982,7 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
         ) : null}
 
         {loading && displayItems.length === 0 ? (
-          <p className="py-12 text-center text-sm text-slate-500">
-            {deletedMode ? '불러오는 중…' : '내담자 목록을 불러오는 중…'}
-          </p>
+          <p className="py-12 text-center text-sm text-slate-500">{LOADING_MESSAGE}</p>
         ) : filtered.length === 0 ? (
           <div className="flex min-h-[12rem] flex-1 flex-col items-center justify-center rounded-md border border-white/10 bg-white/[0.03] py-10 text-center">
             <FaUsers className="mb-2 h-10 w-10 text-slate-600" />
@@ -1272,7 +1270,7 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
                     {!adminUser ? (
                       <button
                         type="button"
-                        onClick={() => void handlePermanentDelete()}
+                        onClick={() => setPermanentDeleteConfirmOpen(true)}
                         disabled={deleting || selected.size === 0}
                         className="inline-flex items-center rounded-md bg-red-700 px-2.5 py-1 text-sm font-medium text-white transition-colors hover:bg-red-600 disabled:opacity-50"
                       >
@@ -1301,11 +1299,20 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
                     {!adminUser ? (
                       <button
                         type="button"
-                        onClick={() => void handleClientDelete()}
+                        onClick={() => setDeleteConfirmOpen(true)}
                         disabled={clientDeleteLoading || selected.size === 0}
                         className="inline-flex items-center rounded-md bg-red-700/90 px-2.5 py-1 text-sm font-medium text-white transition-colors hover:bg-red-600 disabled:opacity-50"
                       >
                         {clientDeleteLoading ? '삭제 중…' : `삭제 (${selected.size})`}
+                      </button>
+                    ) : null}
+                    {selected.size > 0 ? (
+                      <button
+                        type="button"
+                        onClick={() => setMoveOpen(true)}
+                        className="inline-flex shrink-0 items-center justify-center rounded-md border border-sky-500/40 bg-sky-900/40 px-2.5 py-1 text-sm font-medium text-sky-100 transition-colors hover:bg-sky-800/50"
+                      >
+                        다른 상담코드로 이동
                       </button>
                     ) : null}
                   </div>
@@ -1349,6 +1356,30 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
         message={actionComplete?.message}
         error={actionComplete?.error}
         onConfirm={() => setActionComplete(null)}
+      />
+      <CounselorConfirmModal
+        open={deleteConfirmOpen}
+        title="삭제 확인"
+        message={`선택 ${selected.size}명을 삭제하시겠습니까?`}
+        confirmLabel="삭제"
+        destructive
+        onCancel={() => setDeleteConfirmOpen(false)}
+        onConfirm={() => {
+          setDeleteConfirmOpen(false);
+          void handleClientDelete();
+        }}
+      />
+      <CounselorConfirmModal
+        open={permanentDeleteConfirmOpen}
+        title="영구 삭제 확인"
+        message={`선택 ${selected.size}명을 영구 삭제하시겠습니까?`}
+        confirmLabel="영구 삭제"
+        destructive
+        onCancel={() => setPermanentDeleteConfirmOpen(false)}
+        onConfirm={() => {
+          setPermanentDeleteConfirmOpen(false);
+          void handlePermanentDelete();
+        }}
       />
     </CounselorPageSection>
   );

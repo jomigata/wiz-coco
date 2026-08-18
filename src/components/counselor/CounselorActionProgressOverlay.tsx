@@ -18,7 +18,7 @@ export default function CounselorActionProgressOverlay({
   open,
   title,
   message,
-  hint = '창을 닫지 말고 잠시만 기다려 주세요.',
+  hint,
   notice,
   zIndexClass = 'z-[100]',
 }: Props) {
@@ -32,26 +32,26 @@ export default function CounselorActionProgressOverlay({
       aria-busy="true"
       aria-labelledby="counselor-action-progress-title"
     >
-      <div className="w-full max-w-md rounded-2xl border border-sky-500/30 bg-[#121f38] px-6 py-8 text-center shadow-2xl shadow-black/50">
+      <div className="w-full max-w-sm rounded-2xl border border-sky-500/30 bg-[#121f38] px-5 py-6 text-center shadow-2xl shadow-black/50">
         <div
-          className="mx-auto mb-5 h-12 w-12 animate-spin rounded-full border-4 border-sky-500/25 border-t-sky-400"
+          className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-sky-500/25 border-t-sky-400"
           aria-hidden="true"
         />
-        <h3 id="counselor-action-progress-title" className="text-xl font-bold tracking-tight text-white">
+        <h3 id="counselor-action-progress-title" className="text-base font-semibold tracking-tight text-white">
           {title}
         </h3>
         {message ? (
-          <p className="mt-3 text-[15px] font-medium leading-relaxed text-slate-100">{message}</p>
+          <p className="mt-2 text-sm font-medium leading-relaxed text-slate-100">{message}</p>
         ) : null}
         {hint ? (
-          <p className="mt-2 text-sm leading-relaxed text-slate-300">{hint}</p>
+          <p className="mt-2 text-xs leading-relaxed text-slate-400">{hint}</p>
         ) : null}
         {notice ? (
           <div
-            className="mt-4 rounded-xl border border-amber-400/30 bg-amber-500/10 px-4 py-3 text-left"
+            className="mt-3 rounded-xl border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-center"
             role="status"
           >
-            <p className="text-sm font-semibold leading-snug text-amber-50">{notice}</p>
+            <p className="text-xs font-semibold leading-snug text-amber-50">{notice}</p>
           </div>
         ) : null}
       </div>

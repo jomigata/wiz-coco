@@ -514,8 +514,8 @@ export default function PsychologyTestsPage() {
               <div className="w-16 h-16 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center text-3xl mx-auto mb-4">
                 🧠
               </div>
-              <h2 className="text-2xl font-bold text-white mb-2">로딩 중...</h2>
-              <p className="text-gray-300">심리검사 목록을 불러오고 있습니다.</p>
+              <h2 className="text-2xl font-bold text-white mb-2">로딩중…</h2>
+              <p className="text-gray-300">로딩중…</p>
             </div>
           </div>
         </div>

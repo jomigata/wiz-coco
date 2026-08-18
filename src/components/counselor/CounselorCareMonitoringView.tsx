@@ -193,7 +193,7 @@ export default function CounselorCareMonitoringView() {
     : null;
 
   if (loading) {
-    return <p className="py-12 text-center text-sm text-slate-500">치료·과제 모니터링을 불러오는 중…</p>;
+    return <p className="py-12 text-center text-sm text-slate-500">치료·과제 모니터링을 로딩중…</p>;
   }
 
   if (error) {

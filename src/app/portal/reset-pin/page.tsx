@@ -9,7 +9,7 @@ import { normalizeJoinPinDigits } from '@/lib/accessCodeFormat';
 function ResetPinLoading() {
   return (
     <div className="min-h-screen bg-[#070b14] pt-24 flex justify-center">
-      <p className="text-slate-400 text-sm">불러오는 중…</p>
+      <p className="text-slate-400 text-sm">로딩중…</p>
     </div>
   );
 }

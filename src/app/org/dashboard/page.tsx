@@ -27,7 +27,7 @@ export default function OrgDashboardPage() {
   if (authPending || loading) {
     return (
       <RoleGuard allowedRoles={['org_admin', 'admin']}>
-        <AuthLoadingState message="기관 대시보드 불러오는 중…" />
+        <AuthLoadingState message="기관 대시보드 로딩중…" />
       </RoleGuard>
     );
   }

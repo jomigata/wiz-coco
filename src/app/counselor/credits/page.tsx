@@ -130,7 +130,7 @@ function CreditsContent() {
   }, [authPending, user, searchParams, reload]);
 
   if (authPending) {
-    return <AuthLoadingState message="크레딧 정보를 불러오는 중…" />;
+    return <AuthLoadingState message="크레딧 정보를 로딩중…" />;
   }
 
   if (showLoginRequired || !user) {
@@ -146,7 +146,7 @@ function CreditsContent() {
   }
 
   if (loading && !data) {
-    return <AuthLoadingState message="크레딧 정보를 불러오는 중…" />;
+    return <AuthLoadingState message="크레딧 정보를 로딩중…" />;
   }
 
   return (
@@ -232,7 +232,7 @@ function CreditsContent() {
 export default function CounselorCreditsPage() {
   return (
     <RoleGuard allowedRoles={['counselor', 'admin']}>
-      <React.Suspense fallback={<AuthLoadingState message="불러오는 중…" />}>
+      <React.Suspense fallback={<AuthLoadingState message="로딩중…" />}>
         <CreditsContent />
       </React.Suspense>
     </RoleGuard>

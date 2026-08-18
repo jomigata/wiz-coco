@@ -43,6 +43,7 @@ import {
 } from '@/lib/counselorSessionCache';
 import CounselorListBackLink from '@/components/counselor/CounselorListBackLink';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
+import CounselorSlashInfoCell from '@/components/counselor/CounselorSlashInfoCell';
 import CounselorListSearchInput from '@/components/counselor/CounselorListSearchInput';
 import CounselorProgressMetricsInline from '@/components/counselor/CounselorProgressMetricsInline';
 import { buildAssessmentListHref, writeAssessmentListSearch } from '@/lib/counselorAssessmentListSearch';
@@ -59,6 +60,7 @@ import {
   counselorListTdClass,
   counselorListThClass,
 } from '@/lib/counselorListTableStyles';
+import { LOADING_MESSAGE } from '@/lib/loadingMessage';
 
 function formatCompletedAt(iso: string | null | undefined): string {
   return formatNotifyDate(iso);
@@ -240,6 +242,67 @@ function compareRecipients(
 function sortPhaseIcon(active: boolean, phase: string): string {
   if (!active) return '↕';
   return phase.endsWith('-asc') ? '▲' : '▼';
+}
+
+function DualFieldSortHeader({
+  leftLabel,
+  rightLabel,
+  activeKey,
+  sortKey,
+  phase,
+  leftPhases,
+  rightPhases,
+  onSortLeft,
+  onSortRight,
+  className = '',
+}: {
+  leftLabel: string;
+  rightLabel: string;
+  activeKey: RecipientSortKey;
+  sortKey: RecipientSortKey | null;
+  phase: NameSortPhase;
+  leftPhases: NameSortPhase[];
+  rightPhases: NameSortPhase[];
+  onSortLeft: () => void;
+  onSortRight: () => void;
+  className?: string;
+}) {
+  const active = activeKey === sortKey;
+  const leftActive = active && leftPhases.includes(phase);
+  const rightActive = active && rightPhases.includes(phase);
+  return (
+    <th scope="col" className={`${counselorListThClass} ${className}`}>
+      <div className="inline-flex flex-wrap items-center gap-1">
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onSortLeft();
+          }}
+          className={`inline-flex items-center gap-1 transition-colors hover:text-slate-200 ${leftActive ? counselorListSortActiveClass : 'text-slate-300'}`}
+        >
+          {leftLabel}
+          <span className="text-[10px] opacity-80" aria-hidden>
+            {sortPhaseIcon(leftActive, phase)}
+          </span>
+        </button>
+        <span className="text-slate-500">/</span>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onSortRight();
+          }}
+          className={`inline-flex items-center gap-1 transition-colors hover:text-slate-200 ${rightActive ? counselorListSortActiveClass : 'text-slate-300'}`}
+        >
+          {rightLabel}
+          <span className="text-[10px] opacity-80" aria-hidden>
+            {sortPhaseIcon(rightActive, phase)}
+          </span>
+        </button>
+      </div>
+    </th>
+  );
 }
 
 function SortableColumnHeader({
@@ -757,7 +820,7 @@ export default function AssessmentDispatchPanel({
   if (loading) {
     return (
       <CounselorPageSection title="상담진행 현황" dense className="flex min-h-0 flex-1">
-        <p className="text-slate-400 text-sm py-4">발송목록을 불러오는 중…</p>
+        <p className="text-slate-400 text-sm py-4">{LOADING_MESSAGE}</p>
       </CounselorPageSection>
     );
   }
@@ -910,8 +973,7 @@ export default function AssessmentDispatchPanel({
                 <colgroup>
                   <col className="w-10" />
                   <col className="w-10" />
-                  <col className="w-28" />
-                  <col className="w-28" />
+                  <col className="w-36" />
                   <col className="w-36" />
                   <col className="w-32" />
                   <col className="w-52" />
@@ -930,28 +992,17 @@ export default function AssessmentDispatchPanel({
                     aria-label="전체 선택"
                   />
                 </th>
-                <th scope="col" className={`${counselorListThClass} w-28`}>
-                  <button
-                    type="button"
-                    onClick={() => toggleNameFieldSort('name')}
-                    className="inline-flex items-center gap-1 transition-colors hover:text-slate-200"
-                  >
-                    <span>이름</span>
-                    <span
-                      className={`text-[10px] ${sortKey === 'displayName' && nameSortPhase.startsWith('name') ? counselorListSortActiveClass : counselorListSortIdleClass}`}
-                      aria-hidden="true"
-                    >
-                      {sortPhaseIcon(sortKey === 'displayName' && nameSortPhase.startsWith('name'), nameSortPhase.startsWith('name') ? nameSortPhase : 'name-asc')}
-                    </span>
-                  </button>
-                </th>
-                <SortableColumnHeader
-                  label="나의코드"
-                  sortKey="myCode"
-                  activeKey={sortKey}
-                  direction={sortDir}
-                  onSort={toggleSort}
-                  className="w-28"
+                <DualFieldSortHeader
+                  leftLabel="이름"
+                  rightLabel="나의코드"
+                  activeKey="displayName"
+                  sortKey={sortKey}
+                  phase={nameSortPhase}
+                  leftPhases={['name-asc', 'name-desc']}
+                  rightPhases={['code-asc', 'code-desc']}
+                  onSortLeft={() => toggleNameFieldSort('name')}
+                  onSortRight={() => toggleNameFieldSort('code')}
+                  className="w-36"
                 />
                 <SortableColumnHeader
                   label="진행 현황"
@@ -1029,11 +1080,13 @@ export default function AssessmentDispatchPanel({
                           className="rounded text-blue-500"
                         />
                       </td>
-                      <td className="px-3 py-2 text-white align-top w-28 max-w-[7rem] truncate">
-                        {r.displayName || '—'}
-                      </td>
-                      <td className="px-3 py-2 text-slate-300 align-top w-28 max-w-[7rem] font-mono tracking-wide whitespace-nowrap">
-                        {myCodeLabel !== '—' ? myCodeLabel : '—'}
+                      <td className={`max-w-[9rem] ${counselorListTdClass} align-top w-36`}>
+                        <CounselorSlashInfoCell
+                          primary={r.displayName || '—'}
+                          secondary={myCodeLabel !== '—' ? myCodeLabel : '—'}
+                          hoverTypeLabel="나의코드"
+                          normalSecondary
+                        />
                       </td>
                       <td className={`px-3 py-2.5 align-top whitespace-nowrap text-sm ${summary.className}`}>
                         <span className="text-slate-400" aria-hidden="true">
@@ -1071,7 +1124,7 @@ export default function AssessmentDispatchPanel({
                           aria-hidden="true"
                         />
                         <td
-                          colSpan={7}
+                          colSpan={6}
                           className="border-b border-slate-700/60 bg-slate-900/20 px-3 py-3 pb-4 align-top"
                         >
                           {tests.length === 0 ? (
@@ -1516,7 +1569,7 @@ export default function AssessmentDispatchPanel({
               </button>
             </div>
             <div className="p-4 overflow-y-auto flex-1">
-              {detailLoading && <p className="text-slate-400">불러오는 중…</p>}
+              {detailLoading && <p className="text-slate-400">{LOADING_MESSAGE}</p>}
               {detailError && <p className="text-red-400 text-sm">{detailError}</p>}
               {detail && !detailLoading && (
                 <div className="space-y-4">

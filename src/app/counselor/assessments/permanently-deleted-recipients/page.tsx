@@ -33,6 +33,7 @@ import { CounselorAdminEmailSortHeader, CounselorAdminEmailTd, compareCounselorE
 import {
   fetchPermanentlyDeletedRecords,
   restorePermanentlyDeletedRecords,
+  type PermanentlyDeletedAssessment,
   type PermanentlyDeletedPortal,
 } from '@/lib/adminDeletionsApi';
 
@@ -71,6 +72,9 @@ export default function PermanentlyDeletedRecipientsPage() {
   const { authPending, showLoginRequired } = useAuthResolved();
   const adminUser = isAdmin(getAppRoleSync());
   const [items, setItems] = useState<PermanentlyDeletedPortal[]>([]);
+  const [permanentlyDeletedAssessments, setPermanentlyDeletedAssessments] = useState<
+    PermanentlyDeletedAssessment[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -101,6 +105,7 @@ export default function PermanentlyDeletedRecipientsPage() {
     try {
       const data = await fetchPermanentlyDeletedRecords();
       setItems(data.portals || []);
+      setPermanentlyDeletedAssessments(data.assessments || []);
       setSelected(new Set());
     } catch (err) {
       setError(err instanceof Error ? err.message : '목록 조회 실패');
@@ -147,10 +152,42 @@ export default function PermanentlyDeletedRecipientsPage() {
     startIndex,
   } = useListPagination(sortedFiltered, pageSize);
 
+  const permanentlyDeletedAssessmentById = useMemo(() => {
+    const map = new Map<string, PermanentlyDeletedAssessment>();
+    for (const assessment of permanentlyDeletedAssessments) {
+      map.set(assessment.id, assessment);
+    }
+    return map;
+  }, [permanentlyDeletedAssessments]);
+
+  const isRowSelectionLocked = useCallback(
+    (row: PermanentlyDeletedPortal) => permanentlyDeletedAssessmentById.has(row.assessmentId),
+    [permanentlyDeletedAssessmentById],
+  );
+
+  const lockedAssessmentTooltip = useCallback(
+    (row: PermanentlyDeletedPortal): string => {
+      const assessment = permanentlyDeletedAssessmentById.get(row.assessmentId);
+      if (!assessment) return '영구삭제 상담코드';
+      const code = formatAccessCodeDisplay(assessment.accessCode);
+      const title = (assessment.title || assessment.cohortName || '').trim();
+      return title ? `영구삭제 상담코드 · ${code} / ${title}` : `영구삭제 상담코드 · ${code}`;
+    },
+    [permanentlyDeletedAssessmentById],
+  );
+
+  const selectableOnPage = useMemo(
+    () => paginatedItems.filter((row) => !isRowSelectionLocked(row)),
+    [paginatedItems, isRowSelectionLocked],
+  );
+
   const allPageSelected =
-    paginatedItems.length > 0 && paginatedItems.every((row) => selected.has(row.portalId));
+    selectableOnPage.length > 0 &&
+    selectableOnPage.every((row) => selected.has(row.portalId));
 
   const toggleOne = (id: string) => {
+    const row = items.find((item) => item.portalId === id);
+    if (row && isRowSelectionLocked(row)) return;
     setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
@@ -163,13 +200,13 @@ export default function PermanentlyDeletedRecipientsPage() {
     if (allPageSelected) {
       setSelected((prev) => {
         const next = new Set(prev);
-        for (const row of paginatedItems) next.delete(row.portalId);
+        for (const row of selectableOnPage) next.delete(row.portalId);
         return next;
       });
     } else {
       setSelected((prev) => {
         const next = new Set(prev);
-        for (const row of paginatedItems) next.add(row.portalId);
+        for (const row of selectableOnPage) next.add(row.portalId);
         return next;
       });
     }
@@ -241,7 +278,7 @@ export default function PermanentlyDeletedRecipientsPage() {
         {error ? <p className="mb-2 shrink-0 text-sm text-red-400">{error}</p> : null}
 
         {loading ? (
-          <AuthLoadingState className="py-8" message="목록을 불러오는 중…" />
+          <AuthLoadingState className="py-8" />
         ) : filtered.length === 0 ? (
           <div className="flex min-h-[12rem] flex-1 flex-col items-center justify-center rounded-md border border-white/10 bg-white/[0.03] py-10 text-center">
             <FaUsers className="mb-2 h-10 w-10 text-slate-600" />
@@ -288,23 +325,43 @@ export default function PermanentlyDeletedRecipientsPage() {
                 <tbody>
                   {paginatedItems.map((row, idx) => {
                     const isSelected = selected.has(row.portalId);
+                    const locked = isRowSelectionLocked(row);
                     const contact = row.email || formatPhoneDisplay(row.phone) || '—';
                     return (
                       <tr
                         key={row.portalId}
-                        className={`${counselorListBodyRowStaticClass} ${isSelected ? 'bg-white/[0.04]' : ''}`}
+                        className={`${counselorListBodyRowStaticClass} ${isSelected ? 'bg-white/[0.04]' : ''} ${locked ? 'opacity-70' : ''}`}
                       >
                         <td className={`${counselorListTdCompactClass} tabular-nums text-slate-500`}>
                           {startIndex + idx + 1}
                         </td>
                         <td className={counselorListSelectTdClass}>
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={() => toggleOne(row.portalId)}
-                            className="rounded accent-blue-500"
-                            aria-label={`${row.displayName || '내담자'} 선택`}
-                          />
+                          {locked ? (
+                            <span className="group/check relative inline-flex">
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => toggleOne(row.portalId)}
+                                disabled={locked}
+                                className="rounded accent-blue-500 disabled:cursor-not-allowed disabled:opacity-40"
+                                aria-label={`${row.displayName || '내담자'} 선택`}
+                              />
+                              <span
+                                className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-1.5 max-w-[16rem] -translate-x-1/2 whitespace-normal rounded-md border border-slate-200 bg-white px-2 py-1 text-center text-xs font-medium text-slate-800 opacity-0 shadow-md transition-none group-hover/check:opacity-100"
+                                role="tooltip"
+                              >
+                                {lockedAssessmentTooltip(row)}
+                              </span>
+                            </span>
+                          ) : (
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => toggleOne(row.portalId)}
+                              className="rounded accent-blue-500"
+                              aria-label={`${row.displayName || '내담자'} 선택`}
+                            />
+                          )}
                         </td>
                         <td className={`whitespace-nowrap ${counselorListTdCompactClass} text-center text-slate-300`}>
                           {formatWhen(row.permanentlyDeletedAt)}

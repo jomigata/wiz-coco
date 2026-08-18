@@ -171,7 +171,7 @@ export default function CounselorApplicationForm({ uid, email, role }: Props) {
   if (loading) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center text-slate-400 text-sm">
-        불러오는 중…
+        로딩중…
       </div>
     );
   }

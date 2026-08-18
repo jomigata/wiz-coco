@@ -157,7 +157,7 @@ export default function AdminPermanentlyDeletedPage() {
       {message ? <p className="mb-3 text-sm text-emerald-300">{message}</p> : null}
       {error ? <p className="mb-3 text-sm text-red-400">{error}</p> : null}
       {loading ? (
-        <p className="py-8 text-center text-sm text-slate-400">불러오는 중…</p>
+        <p className="py-8 text-center text-sm text-slate-400">로딩중…</p>
       ) : (
         <div className="space-y-8">
           <section>

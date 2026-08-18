@@ -167,7 +167,7 @@ export default function DataSharingPage() {
   }, [user, authPending, showLoginRequired, activeTab]);
 
   if (authPending) {
-    return <AuthLoadingState className="py-16" message="로딩 중..." />;
+    return <AuthLoadingState className="py-16" message="로딩중…" />;
   }
 
   if (showLoginRequired) {
@@ -346,7 +346,7 @@ export default function DataSharingPage() {
             {isLoading ? (
               <div className="text-center py-8">
                 <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                <p className="text-gray-400">공유 요청을 불러오는 중...</p>
+                <p className="text-gray-400">공유 요청을 로딩중…</p>
               </div>
             ) : requests.length === 0 ? (
               <div className="text-center py-12 bg-gray-800 rounded-lg">

@@ -524,7 +524,7 @@ export default function IndividualAssessmentCreateForm({
   };
 
   if (authPending) {
-    return <AuthLoadingState className="py-8" message="로그인 정보를 불러오는 중…" />;
+    return <AuthLoadingState className="py-8" message="로그인 정보를 로딩중…" />;
   }
   if (showLoginRequired) {
     return (

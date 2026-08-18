@@ -565,7 +565,7 @@ export default function ArchivedRecipientsTable({
         <CounselorActionProgressOverlay
           open
           zIndexClass="z-[80]"
-          title="결과 불러오는 중…"
+          title="결과 로딩중…"
         />
       ) : null}
       {detailError ? (

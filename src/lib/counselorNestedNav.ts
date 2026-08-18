@@ -205,23 +205,15 @@ export function getAssessmentsParentSubmenuItems(options?: { admin?: boolean }):
       href: ASSESSMENTS_NEW_HREF,
       isActive: (p) => p.startsWith(ASSESSMENTS_NEW_HREF),
     },
-    {
-      order: 2,
-      label: '삭제된 상담코드',
-      href: DELETED_ASSESSMENTS_HREF,
-      isActive: (p) =>
-        p.startsWith('/counselor/assessments/deleted') &&
-        !p.startsWith('/counselor/assessments/deleted-recipients') &&
-        !p.startsWith('/counselor/assessments/permanently-deleted-recipients') &&
-        !p.startsWith(PERMANENTLY_DELETED_ASSESSMENTS_HREF),
-    },
   ];
   if (options?.admin) {
     items.push({
       order: 60,
       label: '영구삭제 상담코드',
       href: PERMANENTLY_DELETED_ASSESSMENTS_HREF,
-      isActive: (p) => p.startsWith(PERMANENTLY_DELETED_ASSESSMENTS_HREF),
+      isActive: (p) =>
+        p.startsWith(PERMANENTLY_DELETED_ASSESSMENTS_HREF) &&
+        !p.startsWith(PERMANENTLY_DELETED_RECIPIENTS_HREF),
     });
   }
   return items;
@@ -235,12 +227,6 @@ export function getClientsParentSubmenuItems(options?: { admin?: boolean }): Cou
       label: '내담자 목록',
       href: CLIENTS_LIST_HREF,
       isActive: (p) => p === CLIENTS_LIST_HREF,
-    },
-    {
-      order: 1,
-      label: '삭제된 내담자',
-      href: DELETED_RECIPIENTS_HREF,
-      isActive: (p) => p.startsWith('/counselor/assessments/deleted-recipients'),
     },
   ];
   if (options?.admin) {

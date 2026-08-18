@@ -23,7 +23,7 @@ import AssessmentEditModal from '@/components/counselor/AssessmentEditModal';
 import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
 import CounselorActionCompleteModal from '@/components/counselor/CounselorActionCompleteModal';
 import CounselorConfirmModal from '@/components/counselor/CounselorConfirmModal';
-import { rememberCounselorAssessmentContext, rememberCounselorProgressFrom } from '@/lib/counselorNestedNav';
+import { rememberCounselorAssessmentContext, rememberCounselorProgressFrom, DELETED_ASSESSMENTS_HREF } from '@/lib/counselorNestedNav';
 import {
   counselingCodeTypeLabel,
 } from '@/data/counselingCodeTypes';
@@ -615,6 +615,16 @@ export default function AssessmentList({
     <CounselorPageSection
       showHierarchyBreadcrumb
       title="상담코드"
+      headerAction={
+        !adminUser ? (
+          <AuthLink
+            href={DELETED_ASSESSMENTS_HREF}
+            className="inline-flex shrink-0 items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1.5 text-xs font-medium text-slate-300 transition-colors hover:bg-white/5 sm:text-sm"
+          >
+            삭제된 상담코드
+          </AuthLink>
+        ) : null
+      }
       className="flex min-h-0 flex-1"
       bodyClassName="flex min-h-0 flex-1 flex-col !p-0"
       noBodyPadding

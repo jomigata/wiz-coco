@@ -191,7 +191,7 @@ export default function TestResultsPage() {
         )}
 
         {isLoading ? (
-          <div className="text-white/70 text-sm">불러오는 중…</div>
+          <div className="text-white/70 text-sm">로딩중…</div>
         ) : filtered.length === 0 ? (
           <div className="text-white/70 text-sm">표시할 결과가 없습니다.</div>
         ) : (

@@ -135,7 +135,7 @@ const ResetPasswordContent = () => {
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={<CounselorAuthLoading message="불러오는 중…" />}>
+    <Suspense fallback={<CounselorAuthLoading message="로딩중…" />}>
       <ResetPasswordContent />
     </Suspense>
   );

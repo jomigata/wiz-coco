@@ -23,7 +23,7 @@ const LoadingLogin = () => (
     <div className="flex-grow flex items-center justify-center">
       <div className="text-center">
         <div className="w-16 h-16 border-4 border-sky-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-        <p className="text-sky-300 text-lg">로그인 페이지를 로딩 중입니다...</p>
+        <p className="text-sky-300 text-lg">로그인 페이지를 로딩중…</p>
       </div>
     </div>
   </div>

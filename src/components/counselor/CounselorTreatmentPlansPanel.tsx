@@ -423,7 +423,7 @@ export default function CounselorTreatmentPlansPanel() {
                 </div>
                 <div className="max-h-48 overflow-y-auto rounded-lg border border-white/10">
                   {loadingClients ? (
-                    <p className="px-4 py-8 text-center text-xs text-slate-500">내담자 불러오는 중…</p>
+                    <p className="px-4 py-8 text-center text-xs text-slate-500">내담자 로딩중…</p>
                   ) : clients.length === 0 ? (
                     <p className="px-4 py-8 text-center text-xs text-slate-500">활성 내담자가 없습니다.</p>
                   ) : (
@@ -513,7 +513,7 @@ export default function CounselorTreatmentPlansPanel() {
 
       <CounselorPageSection title="활성 치료 할당">
         {loadingAssignments ? (
-          <p className="text-sm text-slate-500">할당 목록을 불러오는 중…</p>
+          <p className="text-sm text-slate-500">할당 목록을 로딩중…</p>
         ) : assignments.length === 0 ? (
           <p className="rounded-xl border border-white/10 bg-white/[0.02] px-6 py-10 text-center text-sm text-slate-500">
             아직 활성 치료 할당이 없습니다.

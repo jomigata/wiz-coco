@@ -35,7 +35,7 @@ const UserTable: React.FC<UserTableProps> = ({
       <div className="bg-slate-900 p-8 rounded-lg text-center border border-slate-700">
         <div className="flex flex-col items-center">
           <div className="w-12 h-12 rounded-full border-4 border-t-blue-500 border-r-transparent border-b-blue-500 border-l-transparent animate-spin"></div>
-          <p className="mt-4 text-blue-200">사용자 정보를 불러오는 중...</p>
+          <p className="mt-4 text-blue-200">사용자 정보를 로딩중…</p>
         </div>
       </div>
     );

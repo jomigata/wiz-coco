@@ -14,7 +14,7 @@ function NewAssessmentContent() {
 
 export default function AssessmentCreatePage() {
   return (
-    <Suspense fallback={<div className="text-slate-400 py-4 text-sm">불러오는 중…</div>}>
+    <Suspense fallback={<div className="text-slate-400 py-4 text-sm">로딩중…</div>}>
       <div className="flex min-h-0 flex-1 flex-col">
         <NewAssessmentContent />
       </div>

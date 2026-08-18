@@ -242,7 +242,7 @@ export default function PermanentlyDeletedAssessmentsPage() {
         {error ? <p className="mb-2 shrink-0 text-sm text-red-400">{error}</p> : null}
 
         {loading ? (
-          <AuthLoadingState className="py-8" message="목록을 불러오는 중…" />
+          <AuthLoadingState className="py-8" message="목록을 로딩중…" />
         ) : filtered.length === 0 ? (
           <div className="flex min-h-[12rem] flex-1 flex-col items-center justify-center rounded-md border border-white/10 bg-white/[0.03] py-10 text-center">
             <FaClipboard className="mb-2 h-10 w-10 text-slate-600" />

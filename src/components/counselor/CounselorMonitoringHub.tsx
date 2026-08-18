@@ -205,7 +205,7 @@ export default function CounselorMonitoringHub({ initialView = 'overview' }: Pro
   );
 
   if (loading && view === 'overview') {
-    return <p className="py-12 text-center text-sm text-slate-500">모니터링 허브를 불러오는 중…</p>;
+    return <p className="py-12 text-center text-sm text-slate-500">모니터링 허브를 로딩중…</p>;
   }
 
   if (error && view === 'overview') {

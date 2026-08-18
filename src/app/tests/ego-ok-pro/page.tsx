@@ -14,7 +14,7 @@ export default function EgoOkProTestPage() {
       <Suspense
         fallback={
           <div className="flex min-h-screen items-center justify-center pt-16">
-            <div className="text-lg text-slate-300">로딩 중...</div>
+            <div className="text-lg text-slate-300">로딩중…</div>
           </div>
         }
       >

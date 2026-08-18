@@ -147,7 +147,7 @@ const RegisterContent = () => {
 };
 
 const RegisterPage: React.FC = () => (
-  <Suspense fallback={<CounselorAuthLoading message="회원가입 페이지를 로딩 중입니다..." />}>
+  <Suspense fallback={<CounselorAuthLoading message="회원가입 페이지를 로딩중…" />}>
     <RegisterContent />
   </Suspense>
 );

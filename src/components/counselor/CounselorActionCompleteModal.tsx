@@ -31,20 +31,20 @@ export default function CounselorActionCompleteModal({
       aria-modal="true"
       aria-labelledby="counselor-action-complete-title"
     >
-      <div className="w-full max-w-md overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-[#0f1a2e] to-[#0a1220] shadow-2xl">
+      <div className="w-full max-w-sm overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-[#0f1a2e] to-[#0a1220] shadow-2xl">
         <div
-          className={`border-b px-6 py-5 ${
+          className={`px-5 py-5 text-center ${
             error
-              ? 'border-red-500/25 bg-gradient-to-r from-red-950/50 via-slate-900 to-slate-900'
-              : 'border-emerald-500/25 bg-gradient-to-r from-emerald-950/50 via-slate-900 to-slate-900'
+              ? 'border-b border-red-500/25 bg-gradient-to-r from-red-950/50 via-slate-900 to-slate-900'
+              : 'border-b border-emerald-500/25 bg-gradient-to-r from-emerald-950/50 via-slate-900 to-slate-900'
           }`}
         >
-          <h3 id="counselor-action-complete-title" className="text-lg font-semibold text-white">
+          <h3 id="counselor-action-complete-title" className="text-base font-semibold text-white">
             {title}
           </h3>
           {message ? <p className="mt-2 text-sm leading-relaxed text-slate-300">{message}</p> : null}
         </div>
-        <div className="flex justify-end px-6 py-4">
+        <div className="flex justify-center px-5 py-4">
           <button
             type="button"
             onClick={onConfirm}

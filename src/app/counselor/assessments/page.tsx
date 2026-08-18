@@ -133,7 +133,7 @@ function AssessmentListPageContent() {
           {(authPending || loading || loadingMore) && assessments.length > 0 ? (
             <p className="mb-2 shrink-0 text-xs text-sky-300/80" role="status">
               {loadingMore
-                ? '목록을 추가로 불러오는 중…'
+                ? '목록을 추가로 로딩중…'
                 : '저장된 목록을 표시 중… 최신 정보를 불러오고 있습니다.'}
             </p>
           ) : null}

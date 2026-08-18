@@ -18,7 +18,7 @@ export default function MbtiProPage() {
     <div className="bg-emerald-950 min-h-screen h-full overflow-y-auto">
       <Suspense fallback={
         <div className="flex items-center justify-center min-h-screen">
-          <div className="text-white text-lg">로딩 중...</div>
+          <div className="text-white text-lg">로딩중…</div>
         </div>
       }>
         <MbtiProTestContent />

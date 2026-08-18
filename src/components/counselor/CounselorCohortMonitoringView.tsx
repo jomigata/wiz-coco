@@ -201,7 +201,7 @@ export default function CounselorCohortMonitoringView({
   }, [baseData, liveHub]);
 
   if (loading) {
-    return <p className="py-12 text-center text-sm text-slate-500">그룹 모니터링을 불러오는 중…</p>;
+    return <p className="py-12 text-center text-sm text-slate-500">그룹 모니터링을 로딩중…</p>;
   }
 
   if (error) {

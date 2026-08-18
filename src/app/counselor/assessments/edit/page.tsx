@@ -26,7 +26,7 @@ function AssessmentEditContent() {
 
 export default function AssessmentEditPage() {
   return (
-    <Suspense fallback={<div className="text-slate-400 py-4 text-sm">불러오는 중…</div>}>
+    <Suspense fallback={<div className="text-slate-400 py-4 text-sm">로딩중…</div>}>
       <CounselorPageSection dense bodyClassName="!p-0" noBodyPadding>
         <div className="p-2.5 sm:p-3">
           <AssessmentEditContent />

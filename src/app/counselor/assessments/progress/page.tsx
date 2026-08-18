@@ -58,7 +58,7 @@ function ProgressPageContent() {
 
 export default function ProgressDashboardPage() {
   return (
-    <Suspense fallback={<div className="text-slate-400 py-4 text-sm">불러오는 중…</div>}>
+    <Suspense fallback={<div className="text-slate-400 py-4 text-sm">로딩중…</div>}>
       <ProgressPageContent />
     </Suspense>
   );

@@ -24,7 +24,7 @@ export default function CounselorAiCreditsPanel() {
   }, [reload]);
 
   if (loading && !data) {
-    return <p className="py-8 text-center text-sm text-slate-400">AI 크레딧 정보를 불러오는 중…</p>;
+    return <p className="py-8 text-center text-sm text-slate-400">AI 크레딧 정보를 로딩중…</p>;
   }
 
   return (

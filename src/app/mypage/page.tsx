@@ -172,7 +172,7 @@ const LoadingMyPage = () => (
       <div className="flex flex-1 items-center justify-center py-16">
         <div className="rounded-lg border border-white/10 bg-white/[0.06] px-8 py-10 text-center backdrop-blur-sm">
           <div className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-2 border-sky-400 border-t-transparent" />
-          <p className="text-sm text-slate-400">불러오는 중…</p>
+          <p className="text-sm text-slate-400">로딩중…</p>
         </div>
       </div>
     </div>
@@ -591,7 +591,7 @@ function MyPageContent() {
           <div className="flex items-center justify-center">
             <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl p-8 shadow-lg border border-white/20">
               <div className="w-16 h-16 border-4 border-blue-300 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-xl text-blue-200">정보를 불러오는 중입니다...</p>
+              <p className="text-xl text-blue-200">로딩중…</p>
             </div>
           </div>
         ) : !(user || firebaseUser) ? (
@@ -1116,7 +1116,7 @@ function TestRecordsTabContent({
   const openCounselorView = async (record: TestRecord) => {
     if (!record.counselorResultId) return;
     setCounselorViewRecord(record);
-    setCounselorViewText('불러오는 중…');
+    setCounselorViewText('로딩중…');
     try {
       const { getResultAsAuthenticatedOwner } = await import('@/lib/assessmentApi');
       const data = await getResultAsAuthenticatedOwner(record.counselorResultId);

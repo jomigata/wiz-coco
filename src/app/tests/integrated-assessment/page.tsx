@@ -639,7 +639,7 @@ export default function IntegratedAssessmentPage() {
   return (
     <Suspense fallback={
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900">
-        <div className="text-white text-lg">로딩 중...</div>
+        <div className="text-white text-lg">로딩중…</div>
       </div>
     }>
       <IntegratedAssessmentPageContent />

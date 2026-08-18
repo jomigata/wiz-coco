@@ -583,7 +583,7 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
             <div className="flex items-center justify-center py-8">
               <div className="text-center">
                 <div className="w-8 h-8 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin mx-auto mb-4"></div>
-                <p className="text-emerald-300 text-sm">정보를 불러오는 중입니다...</p>
+                <p className="text-emerald-300 text-sm">로딩중…</p>
               </div>
             </div>
           )}

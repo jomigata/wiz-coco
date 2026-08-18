@@ -283,7 +283,7 @@ export default function TestRunnerPage() {
         <div className="pt-24 px-4">
           <div className="max-w-lg mx-auto text-center">
             <p className="text-slate-300">
-              {editResultId ? '기존 응답을 불러오는 중…' : '상담(코드) 사용 가능 여부를 확인 중입니다…'}
+              {editResultId ? '기존 응답을 로딩중…' : '로딩중…'}
             </p>
           </div>
         </div>

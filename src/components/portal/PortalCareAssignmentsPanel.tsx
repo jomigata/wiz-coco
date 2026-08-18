@@ -440,7 +440,7 @@ export default function PortalCareAssignmentsPanel({
   }, [load]);
 
   if (loading) {
-    return <p className="text-slate-400 text-sm py-8 text-center">추가 과제·치료를 불러오는 중…</p>;
+    return <p className="text-slate-400 text-sm py-8 text-center">추가 과제·치료를 로딩중…</p>;
   }
 
   if (error) {

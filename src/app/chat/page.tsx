@@ -98,7 +98,7 @@ export default function ChatPage() {
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-emerald-300 text-lg">로딩 중...</p>
+          <p className="text-emerald-300 text-lg">로딩중…</p>
         </div>
       </div>
     );
@@ -184,7 +184,7 @@ export default function ChatPage() {
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
                 <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                <p className="text-gray-400">메시지를 불러오는 중...</p>
+                <p className="text-gray-400">메시지를 로딩중…</p>
               </div>
             </div>
           ) : messages.length === 0 ? (

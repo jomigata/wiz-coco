@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { LOADING_MESSAGE } from '@/lib/loadingMessage';
 
 type Props = {
   children: React.ReactNode;
@@ -8,7 +9,7 @@ type Props = {
   loadingMessage?: string;
 };
 
-export function CounselorAuthLoading({ message = '불러오는 중…' }: { message?: string }) {
+export function CounselorAuthLoading({ message = LOADING_MESSAGE }: { message?: string }) {
   return (
     <div className="min-h-screen bg-[#060a12] flex flex-col">
       <div className="h-20" />

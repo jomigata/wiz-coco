@@ -236,7 +236,7 @@ export default function CounselorDailyRecordsPanel() {
   const filteredCount = useMemo(() => records.length, [records]);
 
   if (loading) {
-    return <p className="py-12 text-center text-sm text-slate-500">일상 기록을 불러오는 중…</p>;
+    return <p className="py-12 text-center text-sm text-slate-500">일상 기록을 로딩중…</p>;
   }
 
   if (error) {

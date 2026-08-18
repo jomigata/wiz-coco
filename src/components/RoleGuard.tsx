@@ -15,6 +15,7 @@ import {
 import { shouldShowAdminMenu, shouldShowOrgMenu } from '@/utils/roleUtils';
 import { canAccessCounselorProfessionalFeatures } from '@/lib/counselorProfessionalAccess';
 import { useCounselorProfessionalAccess } from '@/hooks/useCounselorProfessionalAccess';
+import { LOADING_MESSAGE } from '@/lib/loadingMessage';
 
 interface RoleGuardProps {
   children: React.ReactNode;
@@ -112,7 +113,7 @@ export default function RoleGuard({
       <div className="min-h-screen bg-[#0f1628] flex items-center justify-center">
         <div className="text-center rounded-xl border border-white/10 bg-[#162b4a] p-8 shadow-sm">
           <div className="mx-auto mb-4 h-16 w-16 animate-spin rounded-full border-4 border-sky-300 border-t-transparent" />
-          <p className="text-xl text-slate-200">권한을 확인하는 중입니다...</p>
+          <p className="text-xl text-slate-200">{LOADING_MESSAGE}</p>
         </div>
       </div>
     );
@@ -124,7 +125,7 @@ export default function RoleGuard({
         <div className="min-h-screen bg-[#0f1628] flex items-center justify-center">
           <div className="text-center rounded-xl border border-white/10 bg-[#162b4a] p-8 shadow-sm">
             <div className="mx-auto mb-4 h-16 w-16 animate-spin rounded-full border-4 border-sky-300 border-t-transparent" />
-            <p className="text-xl text-slate-200">로그인을 처리하는 중입니다...</p>
+            <p className="text-xl text-slate-200">{LOADING_MESSAGE}</p>
           </div>
         </div>
       );

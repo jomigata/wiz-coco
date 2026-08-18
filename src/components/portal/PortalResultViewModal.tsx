@@ -84,7 +84,7 @@ export default function PortalResultViewModal({
             ) : null}
           </div>
 
-          {loading ? <p className="text-slate-400 text-sm">결과를 불러오는 중…</p> : null}
+          {loading ? <p className="text-slate-400 text-sm">결과를 로딩중…</p> : null}
           {error ? <p className="text-red-400 text-sm">{error}</p> : null}
 
           {resultDetail && !loading ? (

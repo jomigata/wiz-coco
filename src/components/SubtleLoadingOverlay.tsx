@@ -1,11 +1,13 @@
 'use client';
 
+import { LOADING_MESSAGE } from '@/lib/loadingMessage';
+
 /**
  * 이전 콘텐츠를 유지한 채 위에 얕은 블러·딤을 얹어 동기화 중임을 표시합니다.
  */
 export default function SubtleLoadingOverlay({
   show,
-  label = '불러오는 중…',
+  label = LOADING_MESSAGE,
   hint = '최신 자료를 연결하는 동안 이전 화면을 유지합니다.',
 }: {
   show: boolean;

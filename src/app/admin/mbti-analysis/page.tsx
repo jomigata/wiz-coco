@@ -192,7 +192,7 @@ export default function MbtiAnalysisPage() {
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="flex flex-col items-center">
               <div className="w-12 h-12 rounded-full border-4 border-t-blue-500 border-r-transparent border-b-blue-500 border-l-transparent animate-spin"></div>
-              <p className="mt-4 text-blue-200">데이터 불러오는 중...</p>
+              <p className="mt-4 text-blue-200">데이터 로딩중…</p>
             </div>
           </div>
         ) : (

@@ -14,6 +14,7 @@ import CounselorSlashInfoCell from '@/components/counselor/CounselorSlashInfoCel
 import CounselorProgressMetricsInline from '@/components/counselor/CounselorProgressMetricsInline';
 import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
 import CounselorActionCompleteModal from '@/components/counselor/CounselorActionCompleteModal';
+import CounselorConfirmModal from '@/components/counselor/CounselorConfirmModal';
 import CounselorListBackLink from '@/components/counselor/CounselorListBackLink';
 import AuthLink from '@/components/auth/AuthLink';
 import { counselingCodeTypeLabel } from '@/data/counselingCodeTypes';
@@ -244,6 +245,7 @@ export default function DeletedAssessmentsPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [restoring, setRestoring] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [permanentDeleteConfirmOpen, setPermanentDeleteConfirmOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [actionComplete, setActionComplete] = useState<{
     title: string;
@@ -396,9 +398,6 @@ export default function DeletedAssessmentsPage() {
 
   const handlePermanentDelete = async () => {
     if (selected.size === 0) return;
-    if (!window.confirm(`선택 ${selected.size}건을 영구 삭제하시겠습니까?`)) {
-      return;
-    }
     setDeleting(true);
     setMessage('');
     try {
@@ -467,7 +466,7 @@ export default function DeletedAssessmentsPage() {
         {error ? <p className="mb-2 shrink-0 text-sm text-red-400">{error}</p> : null}
 
         {loading ? (
-          <AuthLoadingState className="py-8" message="목록을 불러오는 중…" />
+          <AuthLoadingState className="py-8" />
         ) : filtered.length === 0 ? (
           <div className="flex min-h-[12rem] flex-1 flex-col items-center justify-center rounded-md border border-white/10 bg-white/[0.03] py-10 text-center">
             <FaClipboard className="mb-2 h-10 w-10 text-slate-600" />
@@ -627,7 +626,7 @@ export default function DeletedAssessmentsPage() {
                   {!adminUser ? (
                     <button
                       type="button"
-                      onClick={() => void handlePermanentDelete()}
+                      onClick={() => setPermanentDeleteConfirmOpen(true)}
                       disabled={deleting || selected.size === 0}
                       className="rounded-md bg-red-700/90 px-2.5 py-1 text-sm font-medium text-white transition-colors hover:bg-red-600 disabled:opacity-50"
                     >
@@ -656,6 +655,18 @@ export default function DeletedAssessmentsPage() {
         message={actionComplete?.message}
         error={actionComplete?.error}
         onConfirm={() => setActionComplete(null)}
+      />
+      <CounselorConfirmModal
+        open={permanentDeleteConfirmOpen}
+        title="영구 삭제 확인"
+        message={`선택 ${selected.size}건을 영구 삭제하시겠습니까?`}
+        confirmLabel="영구 삭제"
+        destructive
+        onCancel={() => setPermanentDeleteConfirmOpen(false)}
+        onConfirm={() => {
+          setPermanentDeleteConfirmOpen(false);
+          void handlePermanentDelete();
+        }}
       />
     </CounselorPageSection>
   );

@@ -175,7 +175,7 @@ export default function CounselorPushAssessmentPanel({
             <div>
               <label className="mb-1.5 block text-xs text-slate-400">상담코드 선택</label>
               {loadingAssessments ? (
-                <p className="text-xs text-slate-500">상담코드 목록 불러오는 중…</p>
+                <p className="text-xs text-slate-500">상담코드 목록 로딩중…</p>
               ) : availableAssessments.length === 0 ? (
                 <p className="text-xs text-amber-300">
                   배정 가능한 기존 상담코드가 없습니다. 신규 상담코드를 생성해 주세요.

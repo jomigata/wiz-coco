@@ -29,7 +29,7 @@ function formatExpiryLabel(unixSeconds?: number): string | null {
 function GoLoading() {
   return (
     <div className="min-h-screen bg-gray-900 pt-24 flex justify-center">
-      <p className="text-slate-400">접속 링크를 확인하는 중…</p>
+      <p className="text-slate-400">로딩중…</p>
     </div>
   );
 }

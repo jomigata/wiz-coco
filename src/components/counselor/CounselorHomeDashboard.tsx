@@ -235,7 +235,7 @@ export default function CounselorHomeDashboard() {
   };
 
   if (loading && !hub && !cohorts) {
-    return <p className="py-12 text-center text-sm text-slate-500">대시보드를 불러오는 중…</p>;
+    return <p className="py-12 text-center text-sm text-slate-500">대시보드를 로딩중…</p>;
   }
 
   if (error && !hub && !cohorts) {
@@ -339,7 +339,7 @@ export default function CounselorHomeDashboard() {
             {recentAssessments.length === 0 ? (
               <div className="flex flex-1 flex-col items-center justify-center px-4 py-10 text-center">
                 <p className="text-sm text-slate-400">
-                  {loading || revalidating ? '데이터를 불러오는 중…' : '등록된 상담코드가 없습니다'}
+                  {loading || revalidating ? '데이터를 로딩중…' : '등록된 상담코드가 없습니다'}
                 </p>
                 {!loading && !revalidating ? (
                   <AuthLink

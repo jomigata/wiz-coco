@@ -110,7 +110,7 @@ export default function DailyTrackingPage() {
   if (authPending) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <AuthLoadingState message="로딩 중..." />
+        <AuthLoadingState message="로딩중…" />
       </div>
     );
   }
@@ -326,7 +326,7 @@ export default function DailyTrackingPage() {
             {isLoading ? (
               <div className="text-center py-8">
                 <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                <p className="text-gray-400">기록을 불러오는 중...</p>
+                <p className="text-gray-400">기록을 로딩중…</p>
               </div>
             ) : records.length === 0 ? (
               <div className="text-center py-12 bg-gray-800 rounded-lg">

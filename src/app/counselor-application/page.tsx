@@ -23,7 +23,7 @@ export default function CounselorApplicationPage() {
   if (loading) {
     return (
       <div className="min-h-[calc(100dvh-4rem)] bg-[#0b1120] pt-20 flex items-center justify-center text-slate-400 text-sm">
-        불러오는 중…
+        로딩중…
       </div>
     );
   }

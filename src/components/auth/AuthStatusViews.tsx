@@ -10,13 +10,14 @@ import {
   replaceWithAuthSession,
   tryRestoreAuthenticatedTabSession,
 } from '@/utils/authSessionLifecycle';
+import { LOADING_MESSAGE } from '@/lib/loadingMessage';
 
 type AuthLoadingProps = {
   message?: string;
   className?: string;
 };
 
-export function AuthLoadingState({ message = '불러오는 중…', className = '' }: AuthLoadingProps) {
+export function AuthLoadingState({ message = LOADING_MESSAGE, className = '' }: AuthLoadingProps) {
   return (
     <AuthLoadingInner className={className} message={message} />
   );

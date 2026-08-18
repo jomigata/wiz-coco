@@ -227,7 +227,7 @@ function TestRecommendationsContent() {
   };
 
   if (loading) {
-    return <AuthLoadingState message="불러오는 중…" />;
+    return <AuthLoadingState message="로딩중…" />;
   }
 
   if (!user) {
@@ -290,7 +290,7 @@ function TestRecommendationsContent() {
           ) : null}
           <div className="overflow-x-auto rounded-lg border border-white/10">
             {isLoading ? (
-              <p className="p-4 text-sm text-white/60">불러오는 중…</p>
+              <p className="p-4 text-sm text-white/60">로딩중…</p>
             ) : (
               <table className="min-w-full text-sm text-white/90">
                 <thead className="bg-white/5 text-white/70">

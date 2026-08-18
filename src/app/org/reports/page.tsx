@@ -34,7 +34,7 @@ function ReportContent() {
   }
 
   if (!report) {
-    return <p className="text-slate-400">불러오는 중…</p>;
+    return <p className="text-slate-400">로딩중…</p>;
   }
 
   const narrative = buildAnonymousGroupNarrative(report);
@@ -110,7 +110,7 @@ export default function OrgReportsPage() {
           ← 대시보드
         </Link>
         <h1 className="text-2xl font-bold text-white mt-4 mb-6">그룹 통계 리포트</h1>
-        <Suspense fallback={<AuthLoadingState message="불러오는 중…" />}>
+        <Suspense fallback={<AuthLoadingState message="로딩중…" />}>
           <ReportContent />
         </Suspense>
       </div>

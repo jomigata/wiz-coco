@@ -313,7 +313,7 @@ export default function ProgressDashboard({
               </button>
             </div>
             <div className="p-4 overflow-y-auto flex-1">
-              {detailLoading && <p className="text-slate-400">불러오는 중…</p>}
+              {detailLoading && <p className="text-slate-400">로딩중…</p>}
               {detailError && <p className="text-red-400 text-sm">{detailError}</p>}
               {detail && !detailLoading && (
                 <div className="space-y-4">

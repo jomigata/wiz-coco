@@ -191,7 +191,7 @@ export default function CounselorClientDetail({ portalId }: Props) {
   };
 
   if (loading) {
-    return <p className="py-16 text-center text-sm text-slate-500">내담자 정보를 불러오는 중…</p>;
+    return <p className="py-16 text-center text-sm text-slate-500">내담자 정보를 로딩중…</p>;
   }
 
   if (error || !liveDetail) {

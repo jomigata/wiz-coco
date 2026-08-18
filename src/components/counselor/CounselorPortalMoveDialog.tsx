@@ -169,7 +169,7 @@ export default function CounselorPortalMoveDialog({
             required
           >
             <option value="">
-              {loadingOptions ? '불러오는 중…' : '상담코드를 선택하세요'}
+              {loadingOptions ? '로딩중…' : '상담코드를 선택하세요'}
             </option>
             {options.map((a) => (
               <option key={a.id} value={a.id}>

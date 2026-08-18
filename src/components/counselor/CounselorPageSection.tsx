@@ -6,6 +6,8 @@ import CounselorHierarchyBreadcrumb from '@/components/counselor/CounselorHierar
 
 type CounselorPageSectionProps = {
   title?: React.ReactNode;
+  /** 타이틀 행 우측 링크·버튼 (toolbar 앞) */
+  headerAction?: React.ReactNode;
   toolbar?: React.ReactNode;
   description?: React.ReactNode;
   children: React.ReactNode;
@@ -21,6 +23,7 @@ type CounselorPageSectionProps = {
 
 export default function CounselorPageSection({
   title,
+  headerAction,
   toolbar,
   description,
   children,
@@ -31,7 +34,7 @@ export default function CounselorPageSection({
   dense = false,
   relaxed = false,
 }: CounselorPageSectionProps) {
-  const hasHeader = Boolean(title || toolbar);
+  const hasHeader = Boolean(title || headerAction || toolbar);
   const headerPad = relaxed ? 'px-4 py-3.5' : dense ? 'px-3 py-2.5' : 'px-4 py-3 sm:gap-2.5';
   const bodyPad = noBodyPadding
     ? ''
@@ -60,11 +63,14 @@ export default function CounselorPageSection({
           ) : (
             <span />
           )}
-          {toolbar ? (
-            <div className="flex min-w-0 flex-1 flex-wrap items-center justify-end gap-2 sm:flex-initial">
-              {toolbar}
-            </div>
-          ) : null}
+          <div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-2">
+            {headerAction}
+            {toolbar ? (
+              <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
+                {toolbar}
+              </div>
+            ) : null}
+          </div>
         </div>
       ) : null}
       {description ? (
