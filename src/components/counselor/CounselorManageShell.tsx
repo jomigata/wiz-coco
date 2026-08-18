@@ -114,27 +114,27 @@ export default function CounselorManageShell({ children }: Props) {
                                 item.href,
                                 pathname,
                               );
-                              const contextNested =
-                                normalizedItemHref === '/counselor/assessments'
-                                  ? getAssessmentListContextNestedItems(pathname, search)
-                                  : normalizedItemHref === '/counselor/clients'
-                                    ? getClientsListContextNestedItems(pathname, search)
-                                    : [];
                               const parentSubmenu =
                                 normalizedItemHref === '/counselor/assessments'
                                   ? getAssessmentsParentSubmenuItems({ admin: adminUser })
                                   : normalizedItemHref === '/counselor/clients'
                                     ? getClientsParentSubmenuItems({ admin: adminUser })
                                     : [];
-                              const seenNestedLabels = new Set<string>();
-                              const assessmentNested = [...parentSubmenu, ...contextNested]
-                                .filter((nested) => {
-                                  if (seenNestedLabels.has(nested.label)) return false;
-                                  seenNestedLabels.add(nested.label);
-                                  return true;
-                                })
-                                .sort((a, b) => a.order - b.order);
-                              const hasActiveNested = assessmentNested.some((n) => n.isActive(pathNorm));
+                              const contextNested =
+                                normalizedItemHref === '/counselor/assessments'
+                                  ? getAssessmentListContextNestedItems(pathname, search)
+                                  : normalizedItemHref === '/counselor/clients'
+                                    ? getClientsListContextNestedItems(pathname, search)
+                                    : [];
+                              const contextAnchorHref =
+                                normalizedItemHref === '/counselor/assessments'
+                                  ? '/counselor/assessments'
+                                  : normalizedItemHref === '/counselor/clients'
+                                    ? '/counselor/clients'
+                                    : '';
+                              const hasActiveNested =
+                                parentSubmenu.some((n) => n.isActive(pathNorm)) ||
+                                contextNested.some((n) => n.isActive(pathNorm));
                               const parentExactActive =
                                 normalizedItemHref === '/counselor/assessments'
                                   ? pathNorm === '/counselor/assessments'
@@ -168,13 +168,11 @@ export default function CounselorManageShell({ children }: Props) {
                                   </AuthLink>
                                 </li>,
                               ];
-                              for (const nested of assessmentNested) {
-                                const nestedActive = nested.isActive(
-                                  (pathname || '').split('?')[0].replace(/\/+$/, '') || '',
-                                );
+                              for (const nested of parentSubmenu.sort((a, b) => a.order - b.order)) {
+                                const nestedActive = nested.isActive(pathNorm);
                                 rows.push(
                                   <li
-                                    key={`${item.href}-${nested.label}`}
+                                    key={`${item.href}-${nested.href}`}
                                     onMouseEnter={() => setHoveredMenuHref(item.href)}
                                     onMouseLeave={() =>
                                       setHoveredMenuHref((prev) =>
@@ -185,13 +183,10 @@ export default function CounselorManageShell({ children }: Props) {
                                     <AuthLink
                                       href={nested.href}
                                       onClick={() => {
-                                        const idMatch =
-                                          nested.href.match(/assessmentId=([^&]+)/) ||
-                                          nested.href.match(/[?&]id=([^&]+)/);
-                                        if (idMatch?.[1]) {
-                                          rememberCounselorAssessmentContext(
-                                            decodeURIComponent(idMatch[1]),
-                                          );
+                                        if (
+                                          nested.href.replace(/\/+$/, '') === '/counselor/assessments'
+                                        ) {
+                                          clearAssessmentListSearch();
                                         }
                                       }}
                                       className={`block truncate rounded-md py-1 pl-3 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${
@@ -205,6 +200,48 @@ export default function CounselorManageShell({ children }: Props) {
                                     </AuthLink>
                                   </li>,
                                 );
+
+                                if (
+                                  contextAnchorHref &&
+                                  nested.href.replace(/\/+$/, '') === contextAnchorHref
+                                ) {
+                                  for (const ctx of contextNested.sort((a, b) => a.order - b.order)) {
+                                    const ctxActive = ctx.isActive(pathNorm);
+                                    rows.push(
+                                      <li
+                                        key={`${item.href}-${nested.href}-${ctx.label}`}
+                                        onMouseEnter={() => setHoveredMenuHref(item.href)}
+                                        onMouseLeave={() =>
+                                          setHoveredMenuHref((prev) =>
+                                            prev === item.href ? null : prev,
+                                          )
+                                        }
+                                      >
+                                        <AuthLink
+                                          href={ctx.href}
+                                          onClick={() => {
+                                            const idMatch =
+                                              ctx.href.match(/assessmentId=([^&]+)/) ||
+                                              ctx.href.match(/[?&]id=([^&]+)/);
+                                            if (idMatch?.[1]) {
+                                              rememberCounselorAssessmentContext(
+                                                decodeURIComponent(idMatch[1]),
+                                              );
+                                            }
+                                          }}
+                                          className={`block truncate rounded-md py-1 pl-6 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${
+                                            ctxActive
+                                              ? 'bg-sky-600/30 font-semibold text-sky-100'
+                                              : 'text-slate-400 hover:bg-white/[0.06] hover:text-white'
+                                          }`}
+                                        >
+                                          {'\u00A0- '}
+                                          {ctx.label}
+                                        </AuthLink>
+                                      </li>,
+                                    );
+                                  }
+                                }
                               }
                               for (const nested of nestedAfter) {
                                 const href = nested.buildHref(
