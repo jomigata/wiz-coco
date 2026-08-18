@@ -22,6 +22,7 @@ import AssessmentAddRecipientModal, {
 import AssessmentEditModal from '@/components/counselor/AssessmentEditModal';
 import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
 import CounselorActionCompleteModal from '@/components/counselor/CounselorActionCompleteModal';
+import CounselorConfirmModal from '@/components/counselor/CounselorConfirmModal';
 import { rememberCounselorAssessmentContext, rememberCounselorProgressFrom } from '@/lib/counselorNestedNav';
 import {
   counselingCodeTypeLabel,
@@ -271,6 +272,7 @@ export default function AssessmentList({
   const [counselSortPhase, setCounselSortPhase] = useState<CounselSortPhase>('org-asc');
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkDeleteLoading, setBulkDeleteLoading] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [actionComplete, setActionComplete] = useState<{
     title: string;
     message: string;
@@ -572,7 +574,6 @@ export default function AssessmentList({
 
   const handleBulkDelete = async () => {
     if (selected.size === 0) return;
-    if (!window.confirm(`선택 ${selected.size}건을 삭제하시겠습니까?`)) return;
     setBulkDeleteLoading(true);
     let deleted = 0;
     let failed = 0;
@@ -895,7 +896,7 @@ export default function AssessmentList({
                 {!adminUser ? (
                   <button
                     type="button"
-                    onClick={() => void handleBulkDelete()}
+                    onClick={() => setDeleteConfirmOpen(true)}
                     disabled={bulkDeleteLoading || selected.size === 0}
                     className="inline-flex items-center rounded-md bg-red-700/90 px-2.5 py-1 text-sm font-medium text-white transition-colors hover:bg-red-600 disabled:opacity-50"
                   >
@@ -929,6 +930,19 @@ export default function AssessmentList({
       onSaved={() => {
         setEditTarget(null);
         void refreshFullListFromApi();
+      }}
+    />
+
+    <CounselorConfirmModal
+      open={deleteConfirmOpen}
+      title="삭제 확인"
+      message={`선택 ${selected.size}건을 삭제하시겠습니까?`}
+      confirmLabel="삭제"
+      destructive
+      onCancel={() => setDeleteConfirmOpen(false)}
+      onConfirm={() => {
+        setDeleteConfirmOpen(false);
+        void handleBulkDelete();
       }}
     />
 
