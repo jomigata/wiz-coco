@@ -6,7 +6,10 @@ type Props = {
   open: boolean;
   title: string;
   message?: string;
+  /** 보조 안내 (예: 창을 닫지 말아 주세요) */
   hint?: string;
+  /** 강조 안내 — 소요 시간 등 (별도 박스) */
+  notice?: string;
   zIndexClass?: string;
 };
 
@@ -15,29 +18,42 @@ export default function CounselorActionProgressOverlay({
   open,
   title,
   message,
-  hint = '잠시만 기다려 주세요.',
+  hint = '창을 닫지 말고 잠시만 기다려 주세요.',
+  notice,
   zIndexClass = 'z-[100]',
 }: Props) {
   if (!open) return null;
 
   return (
     <div
-      className={`fixed inset-0 ${zIndexClass} flex items-center justify-center bg-black/75 p-4`}
+      className={`fixed inset-0 ${zIndexClass} flex items-center justify-center bg-black/60 p-4 backdrop-blur-[2px]`}
       role="dialog"
       aria-modal="true"
       aria-busy="true"
       aria-labelledby="counselor-action-progress-title"
     >
-      <div className="w-full max-w-md rounded-xl border border-slate-600 bg-slate-800 p-6 text-center shadow-xl">
+      <div className="w-full max-w-md rounded-2xl border border-sky-500/30 bg-[#121f38] px-6 py-8 text-center shadow-2xl shadow-black/50">
         <div
-          className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-2 border-slate-600 border-t-cyan-400"
+          className="mx-auto mb-5 h-12 w-12 animate-spin rounded-full border-4 border-sky-500/25 border-t-sky-400"
           aria-hidden="true"
         />
-        <h3 id="counselor-action-progress-title" className="text-lg font-semibold text-white">
+        <h3 id="counselor-action-progress-title" className="text-xl font-bold tracking-tight text-white">
           {title}
         </h3>
-        {message ? <p className="mt-2 text-sm text-slate-300">{message}</p> : null}
-        <p className="mt-3 text-xs text-slate-500">{hint}</p>
+        {message ? (
+          <p className="mt-3 text-[15px] font-medium leading-relaxed text-slate-100">{message}</p>
+        ) : null}
+        {hint ? (
+          <p className="mt-2 text-sm leading-relaxed text-slate-300">{hint}</p>
+        ) : null}
+        {notice ? (
+          <div
+            className="mt-4 rounded-xl border border-amber-400/30 bg-amber-500/10 px-4 py-3 text-left"
+            role="status"
+          >
+            <p className="text-sm font-semibold leading-snug text-amber-50">{notice}</p>
+          </div>
+        ) : null}
       </div>
     </div>
   );

@@ -36,6 +36,7 @@ import {
   type RecipientRow,
 } from '@/lib/recipientImport';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
+import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
 import WelcomeMessageSamplePicker from '@/components/counselor/WelcomeMessageSamplePicker';
 import { COUNSELING_CODE_TYPES, counselingCodeTypeLabel, type CounselingCodeType } from '@/data/counselingCodeTypes';
 
@@ -1249,37 +1250,21 @@ export default function IndividualAssessmentCreateForm({
         </CounselorPageSection>
       </div>
 
-      {loadingIntent && !activeJobId ? (
-        <div
-          className="fixed inset-0 z-[120] flex items-center justify-center bg-black/55 backdrop-blur-[2px]"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="issue-progress-title"
-        >
-          <div className="mx-4 w-full max-w-sm rounded-2xl border border-sky-500/35 bg-[#121f38] px-6 py-8 text-center shadow-2xl shadow-black/50">
-            <div
-              className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-sky-500/30 border-t-sky-400"
-              aria-hidden="true"
-            />
-            <p id="issue-progress-title" className="text-lg font-bold text-white">
-              발급 진행 중…
-            </p>
-            <p className="mt-2 text-sm leading-relaxed text-slate-400">
-              {loadingIntent === 'excel'
-                ? '엑셀 저장을 위해 상담코드를 발급하고 있습니다.'
-                : '내담자에게 발급·발송을 처리하고 있습니다.'}
-              <br />
-              창을 닫지 말고 잠시만 기다려 주세요.
-              {loadingIntent === 'send_all' ? (
-                <>
-                  <br />
-                  코드 발송량에 따라, 발송은 1~2분 이상 걸릴 수 있습니다.
-                </>
-              ) : null}
-            </p>
-          </div>
-        </div>
-      ) : null}
+      <CounselorActionProgressOverlay
+        open={Boolean(loadingIntent && !activeJobId)}
+        zIndexClass="z-[120]"
+        title="발급 진행 중…"
+        message={
+          loadingIntent === 'excel'
+            ? '엑셀 저장을 위해 상담코드를 발급하고 있습니다.'
+            : '내담자에게 발급·발송을 처리하고 있습니다.'
+        }
+        notice={
+          loadingIntent === 'send_all'
+            ? '코드 발송량에 따라 발송에 1~2분 이상 걸릴 수 있습니다.'
+            : undefined
+        }
+      />
     </form>
   );
 }
