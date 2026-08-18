@@ -7,6 +7,7 @@ import { getCounselorResult, type CounselorResultDetail } from '@/lib/assessment
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
+import { getAppRoleSync, isAdmin } from '@/utils/roleUtils';
 import { formatPhoneDisplay, normalizeRecipientPhone } from '@/lib/phoneFormat';
 import { displayContactEmail, displayContactPhone } from '@/lib/contactPrivacy';
 import DispatchStatusText from '@/components/counselor/DispatchStatusText';
@@ -388,7 +389,8 @@ export default function AssessmentDispatchPanel({
   initialSearchQuery = '',
   entryFrom = 'assessments',
 }: AssessmentDispatchPanelProps) {
-  const { authPending, isAuthenticated } = useAuthResolved();
+  const { user, authPending, isAuthenticated } = useAuthResolved();
+  const adminUser = isAdmin(user?.role ?? getAppRoleSync());
   const [data, setData] = useState<AssessmentDispatchStatus | null>(
     () => readCachedDispatchStatus(assessmentId),
   );
@@ -1214,14 +1216,16 @@ export default function AssessmentDispatchPanel({
                 >
                   인쇄 ({selected.size})
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setConfirmAction('delete')}
-                  disabled={deleteLoading || selected.size === 0 || remindLoading || resendLoading}
-                  className="rounded-md bg-red-700/90 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-red-600 disabled:opacity-50 sm:text-sm"
-                >
-                  {deleteLoading ? '삭제 중…' : `삭제 (${selected.size})`}
-                </button>
+                {!adminUser ? (
+                  <button
+                    type="button"
+                    onClick={() => setConfirmAction('delete')}
+                    disabled={deleteLoading || selected.size === 0 || remindLoading || resendLoading}
+                    className="rounded-md bg-red-700/90 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-red-600 disabled:opacity-50 sm:text-sm"
+                  >
+                    {deleteLoading ? '삭제 중…' : `삭제 (${selected.size})`}
+                  </button>
+                ) : null}
               </div>
             </div>
           </>
