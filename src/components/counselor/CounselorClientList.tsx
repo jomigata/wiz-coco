@@ -500,7 +500,7 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, authPending, showLoginRequired, isAuthenticated } = useAuthResolved();
-  const adminUser = isAdmin(getAppRoleSync());
+  const adminUser = isAdmin(user?.role ?? getAppRoleSync());
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -917,6 +917,9 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
 
   const pageTitle = deletedMode ? '삭제된 내담자' : '내담자 목록';
   const dateColumnLabel = deletedMode ? '삭제일' : '발송일';
+  const searchPlaceholder = adminUser
+    ? '이름 · 이메일 · 연락처 · 상담유형 · 상담코드 · 상담정보 · 태그 · 상담사 이메일'
+    : '이름 · 이메일 · 연락처 · 상담유형 · 상담코드 · 상담정보 · 태그';
 
   return (
     <CounselorPageSection
@@ -945,7 +948,7 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
           <CounselorListSearchInput
             value={searchQuery}
             onChange={setSearchQuery}
-            placeholder="이름 · 연락처 · 상담유형 · 상담코드 · 상담정보 · 태그"
+            placeholder={searchPlaceholder}
           />
         </span>
       }

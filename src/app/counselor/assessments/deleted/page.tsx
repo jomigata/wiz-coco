@@ -232,7 +232,7 @@ function SortableColumnHeader({
 
 export default function DeletedAssessmentsPage() {
   const { user, authPending, isAuthenticated, showLoginRequired } = useAuthResolved();
-  const adminUser = isAdmin(getAppRoleSync());
+  const adminUser = isAdmin(user?.role ?? getAppRoleSync());
   const counselorUid = user?.uid;
   const [items, setItems] = useState<ArchivedAssessment[]>(
     () => (counselorUid ? readCachedArchivedAssessments<ArchivedAssessment>(counselorUid) : []) ?? [],
@@ -419,6 +419,10 @@ export default function DeletedAssessmentsPage() {
     }
   };
 
+  const searchPlaceholder = adminUser
+    ? '검사명 · 상담유형 · 코드 · 기관명 · 상담사 이메일 검색'
+    : '검사명 · 상담유형 · 코드 · 기관명 검색';
+
   if (authPending) return <AuthLoadingState className="py-8" />;
   if (showLoginRequired) {
     return <AuthRequiredState description="Firebase에 로그인한 상태에서 다시 시도해 주세요." />;
@@ -447,7 +451,7 @@ export default function DeletedAssessmentsPage() {
           <CounselorListSearchInput
             value={searchQuery}
             onChange={setSearchQuery}
-            placeholder="검사명 · 상담유형 · 코드 · 기관명 검색"
+            placeholder={searchPlaceholder}
           />
         </span>
       }
