@@ -18,7 +18,7 @@ from utils.result_actor import (
 )
 from utils.test_result_queries import query_results_shared_to_assessment
 from utils.assessment_dispatch import aggregate_assessment_list_stats
-from utils.counselor_scope import resource_owned_by_scope, scope_counselor_uid
+from utils.counselor_scope import is_admin_scope, resource_owned_by_scope, resolve_list_counselor_uid, scope_counselor_uid
 from utils.assessment_list_stats import (
     LIST_STATS_FIELD,
     apply_list_stats_to_item,
@@ -231,7 +231,8 @@ def _fetch_assessment_list_page(
 def list_assessments():
     """상담사: 로그인 상담사 소유 assessments 목록 (admin: 전체, 페이지네이션·검색·listStats)."""
     db = get_firestore()
-    scoped_uid = scope_counselor_uid()
+    own_only = request.args.get("ownOnly", "0") == "1"
+    scoped_uid = resolve_list_counselor_uid(own_only=own_only)
 
     try:
         limit = min(max(int(request.args.get("limit") or DEFAULT_LIST_LIMIT), 1), MAX_LIST_LIMIT)
@@ -268,14 +269,17 @@ def list_assessments():
 
         attach_counselor_emails(db, items)
 
-    return jsonify(
-        {
-            "assessments": items,
-            "nextCursor": next_cursor,
-            "hasMore": bool(next_cursor),
-            "limit": limit,
-        }
-    )
+    payload = {
+        "assessments": items,
+        "nextCursor": next_cursor,
+        "hasMore": bool(next_cursor),
+        "limit": limit,
+    }
+    if is_admin_scope() and own_only:
+        from utils.counselor_list_counts import count_active_assessments
+
+        payload["globalTotalCount"] = count_active_assessments(db)
+    return jsonify(payload)
 
 
 @bp.route("/stats", methods=["GET"])
@@ -489,13 +493,19 @@ def list_archived_assessments_route():
     from utils.deletion_records import list_archived_assessments
 
     db = get_firestore()
-    scoped_uid = scope_counselor_uid()
+    own_only = request.args.get("ownOnly", "0") == "1"
+    scoped_uid = resolve_list_counselor_uid(own_only=own_only)
     items = list_archived_assessments(db, counselor_uid=scoped_uid)
     if scoped_uid is None:
         from utils.counselor_emails import attach_counselor_emails
 
         attach_counselor_emails(db, items)
-    return jsonify({"assessments": items})
+    payload: dict = {"assessments": items}
+    if is_admin_scope() and own_only:
+        from utils.counselor_list_counts import count_archived_assessments
+
+        payload["globalTotalCount"] = count_archived_assessments(db)
+    return jsonify(payload)
 
 
 @bp.route("/archived/restore", methods=["POST"])

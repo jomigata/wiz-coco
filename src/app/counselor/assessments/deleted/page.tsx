@@ -47,6 +47,7 @@ import {
 } from '@/lib/assessmentApi';
 import { matchesWildcardFields } from '@/lib/wildcardSearch';
 import { getAppRoleSync, isAdmin } from '@/utils/roleUtils';
+import AdminGlobalTotalBadge from '@/components/counselor/AdminGlobalTotalBadge';
 import { exportDeletedAssessments } from '@/lib/counselorAssessmentListExport';
 import { CounselorAdminEmailSortHeader, CounselorAdminEmailTd, compareCounselorEmail } from '@/components/counselor/CounselorAdminEmailColumn';
 
@@ -254,6 +255,7 @@ export default function DeletedAssessmentsPage() {
     error?: boolean;
   } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [globalTotalCount, setGlobalTotalCount] = useState<number | null>(null);
   const [sortKey, setSortKey] = useState<ListSortKey>('archivedAt');
   const [sortDir, setSortDir] = useState<SortDirection>('desc');
   const [counselSortPhase, setCounselSortPhase] = useState<CounselSortPhase>('org-asc');
@@ -266,9 +268,12 @@ export default function DeletedAssessmentsPage() {
     if (!cached?.length) setLoading(true);
     setError('');
     try {
-      const result = await listArchivedAssessments();
+      const result = await listArchivedAssessments({ ownOnly: adminUser });
       writeCachedArchivedAssessments(result.assessments || [], counselorUid);
       setItems(result.assessments || []);
+      if (adminUser && typeof result.globalTotalCount === 'number') {
+        setGlobalTotalCount(result.globalTotalCount);
+      }
       setSelected(new Set());
     } catch (err) {
       if (!cached?.length) {
@@ -278,7 +283,7 @@ export default function DeletedAssessmentsPage() {
     } finally {
       setLoading(false);
     }
-  }, [counselorUid]);
+  }, [counselorUid, adminUser]);
 
   useEffect(() => {
     if (authPending || !isAuthenticated) return;
@@ -455,6 +460,7 @@ export default function DeletedAssessmentsPage() {
     <CounselorPageSection
       title="삭제된 상담코드"
       titleAccent="deleted"
+      headerAction={adminUser ? <AdminGlobalTotalBadge count={globalTotalCount} unit="건" /> : undefined}
       className="flex min-h-0 flex-1"
       bodyClassName="flex min-h-0 flex-1 flex-col !p-0"
       noBodyPadding

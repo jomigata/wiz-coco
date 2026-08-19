@@ -75,7 +75,7 @@ from utils.care_assignments import list_portal_care_assignments, submit_portal_c
 from utils.portal_legacy_archive import load_portal_legacy_archive
 from utils.care_assignment_schema import CareAssignmentValidationError
 from utils.email_notify import send_portal_pin_reset_email
-from utils.counselor_scope import scope_counselor_uid, resource_owned_by_scope
+from utils.counselor_scope import is_admin_scope, resolve_list_counselor_uid, scope_counselor_uid, resource_owned_by_scope
 
 bp = Blueprint("client_portals", __name__, url_prefix="/api/client-portals")
 
@@ -190,7 +190,8 @@ def list_counselor_portals():
     tag = (request.args.get("tag") or "").strip() or None
     q = (request.args.get("q") or "").strip() or None
     filter_counselor_id = (request.args.get("counselorId") or "").strip() or None
-    scoped = scope_counselor_uid()
+    own_only = request.args.get("ownOnly", "0") == "1"
+    scoped = resolve_list_counselor_uid(own_only=own_only)
     db = get_firestore()
     result = list_counselor_client_portals(
         db,
@@ -206,6 +207,10 @@ def list_counselor_portals():
         from utils.counselor_emails import attach_counselor_emails
 
         attach_counselor_emails(db, result["items"])
+    if is_admin_scope() and own_only:
+        from utils.counselor_list_counts import count_client_portals_by_status
+
+        result["globalTotalCount"] = count_client_portals_by_status(db, status=status)
     return jsonify(result)
 
 
@@ -1012,13 +1017,19 @@ def list_archived():
     """삭제(archived)된 내담자 포털 목록."""
     assessment_id = (request.args.get("assessmentId") or "").strip() or None
     db = get_firestore()
-    scoped = scope_counselor_uid()
+    own_only = request.args.get("ownOnly", "0") == "1"
+    scoped = resolve_list_counselor_uid(own_only=own_only)
     items = list_archived_portals(db, counselor_uid=scoped, assessment_id=assessment_id)
     if scoped is None:
         from utils.counselor_emails import attach_counselor_emails
 
         attach_counselor_emails(db, items)
-    return jsonify({"items": items})
+    payload: dict = {"items": items}
+    if is_admin_scope() and own_only:
+        from utils.counselor_list_counts import count_client_portals_by_status
+
+        payload["globalTotalCount"] = count_client_portals_by_status(db, status="archived")
+    return jsonify(payload)
 
 
 @bp.route("/archived/restore", methods=["POST"])

@@ -38,6 +38,7 @@ import CounselorConfirmModal from '@/components/counselor/CounselorConfirmModal'
 import CounselorListBackLink from '@/components/counselor/CounselorListBackLink';
 import { DELETED_RECIPIENTS_HREF } from '@/lib/counselorNestedNav';
 import { LoadingMessage } from '@/components/ui/LoadingMessage';
+import AdminGlobalTotalBadge from '@/components/counselor/AdminGlobalTotalBadge';
 import { listAssessments, clearCounselorAssessmentsListCache } from '@/lib/assessmentApi';
 import {
   archiveDispatchRecipients,
@@ -540,6 +541,7 @@ export default function CounselorClientList({
   const adminUser = isAdmin(user?.role ?? getAppRoleSync());
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [globalTotalCount, setGlobalTotalCount] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortKey, setSortKey] = useState<ListSortKey>('notifyAt');
   const [sortDir, setSortDir] = useState<SortDirection>('desc');
@@ -637,8 +639,13 @@ export default function CounselorClientList({
       setError('');
       try {
         const filterAssessmentId = (searchParams.get('assessmentId') || '').trim();
-        const data = await fetchArchivedDispatchRecipients(filterAssessmentId || undefined);
+        const data = await fetchArchivedDispatchRecipients(filterAssessmentId || undefined, {
+          ownOnly: adminUser,
+        });
         const raw = data.items || [];
+        if (adminUser && typeof data.globalTotalCount === 'number') {
+          setGlobalTotalCount(data.globalTotalCount);
+        }
         setArchivedRaw(raw);
         setItems(raw.map(mapArchivedToClientItem));
         setCohorts([]);
@@ -668,9 +675,13 @@ export default function CounselorClientList({
     try {
       const data = await listCounselorClientPortals({
         status: 'active',
+        ownOnly: adminUser,
       });
       writeCachedClientPortals(cacheKey, data);
       setItems(data.items || []);
+      if (adminUser && typeof data.globalTotalCount === 'number') {
+        setGlobalTotalCount(data.globalTotalCount);
+      }
       setCohorts(data.cohorts || []);
       setTags(data.tags || []);
       setAssessmentMeta(data.assessmentMeta || {});
@@ -682,7 +693,7 @@ export default function CounselorClientList({
     } finally {
       setLoading(false);
     }
-  }, [cacheKey, deletedMode, permanentlyDeletedMode, searchParams]);
+  }, [cacheKey, deletedMode, permanentlyDeletedMode, searchParams, adminUser]);
 
   useEffect(() => {
     if (permanentlyDeletedMode && !adminUser) {
@@ -797,6 +808,11 @@ export default function CounselorClientList({
   }, [displayItems]);
 
   const selectedPortalIds = useMemo(() => Array.from(selected), [selected]);
+
+  const restorableSelectedCount = useMemo(() => {
+    if (!permanentlyDeletedMode) return selected.size;
+    return Array.from(selected).filter((portalId) => !isAssessmentDeletedLinkedRow(portalId)).length;
+  }, [permanentlyDeletedMode, selected, isAssessmentDeletedLinkedRow]);
 
   const movePortalSummaries = useMemo(
     () =>
@@ -1040,7 +1056,9 @@ export default function CounselorClientList({
       title={pageTitle}
       titleAccent={deletedMode || permanentlyDeletedMode ? 'deleted' : 'list'}
       headerAction={
-        !deletedMode && !permanentlyDeletedMode && !adminUser ? (
+        adminUser && !permanentlyDeletedMode ? (
+          <AdminGlobalTotalBadge count={globalTotalCount} unit="명" />
+        ) : !deletedMode && !permanentlyDeletedMode && !adminUser ? (
           <AuthLink
             href={DELETED_RECIPIENTS_HREF}
             className="inline-flex shrink-0 items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1.5 text-xs font-medium text-slate-300 transition-colors hover:bg-white/5 sm:text-sm"
@@ -1067,6 +1085,11 @@ export default function CounselorClientList({
                 </AuthLink>
               ) : null}
             </>
+          ) : null}
+          {permanentlyDeletedMode ? (
+            <span className="shrink-0">
+              전체 <span className="font-semibold text-white">{displayItems.length}</span>명
+            </span>
           ) : null}
           {!deletedMode && !permanentlyDeletedMode ? (
             <span className="shrink-0">
@@ -1424,13 +1447,13 @@ export default function CounselorClientList({
                       <button
                         type="button"
                         onClick={() => void handleRestore()}
-                        disabled={restoring || selected.size === 0}
+                        disabled={restoring || restorableSelectedCount === 0}
                         className="inline-flex items-center rounded-md bg-emerald-600 px-2.5 py-1 text-sm font-medium text-white transition-colors hover:bg-emerald-500 disabled:opacity-50"
                       >
                         {restoring
                           ? '복구 중…'
                           : permanentlyDeletedMode
-                            ? `삭제된 내담자로 복구 (${selected.size})`
+                            ? `삭제된 내담자로 복구 (${restorableSelectedCount})`
                             : `복구 (${selected.size})`}
                       </button>
                     ) : null}

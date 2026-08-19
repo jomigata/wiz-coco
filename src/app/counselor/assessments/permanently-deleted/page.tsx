@@ -14,7 +14,6 @@ import CounselorSlashInfoCell from '@/components/counselor/CounselorSlashInfoCel
 import CounselorProgressMetricsInline from '@/components/counselor/CounselorProgressMetricsInline';
 import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
 import CounselorActionCompleteModal from '@/components/counselor/CounselorActionCompleteModal';
-import CounselorListBackLink from '@/components/counselor/CounselorListBackLink';
 import { counselingCodeTypeLabel } from '@/data/counselingCodeTypes';
 import { getAssessmentOrgLabel } from '@/lib/assessmentSortOptions';
 import {
@@ -278,16 +277,6 @@ export default function PermanentlyDeletedAssessmentsPage() {
     return list;
   }, [filtered, sortKey, sortDir, counselSortPhase]);
 
-  const totalParticipants = useMemo(
-    () => items.reduce((sum, a) => sum + resultStatusCounts(a).dispatchTotal, 0),
-    [items],
-  );
-
-  const totalCompleted = useMemo(
-    () => items.reduce((sum, a) => sum + (a.testCompleteCount ?? 0), 0),
-    [items],
-  );
-
   const {
     page,
     setPage,
@@ -405,11 +394,6 @@ export default function PermanentlyDeletedAssessmentsPage() {
       dense
       description={
         <span className="inline-flex w-full flex-wrap items-center gap-x-3 gap-y-2">
-          <CounselorListBackLink href="/counselor/assessments" label="상담코드" />
-          <span className="shrink-0">
-            전체 <span className="font-semibold text-white">{totalParticipants}</span>명 · 완료{' '}
-            <span className="font-semibold text-emerald-300">{totalCompleted}</span>명
-          </span>
           <CounselorListSearchInput
             value={searchQuery}
             onChange={setSearchQuery}

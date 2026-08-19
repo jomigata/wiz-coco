@@ -18,13 +18,16 @@ import {
   type CreatedAssessmentBannerInfo,
   type PortalMoveBannerInfo,
 } from '@/lib/assessmentApi';
+import { getAppRoleSync, isAdmin } from '@/utils/roleUtils';
 
 function AssessmentListPageContent() {
   const searchParams = useSearchParams();
   const initialSearchQuery = parseAssessmentListSearchFromUrl(searchParams.get('search'));
   const { user, authPending, showLoginRequired } = useAuthResolved();
   const counselorUid = user?.uid;
+  const adminUser = isAdmin(user?.role ?? getAppRoleSync());
   const [assessments, setAssessments] = useState<CounselorAssessment[]>([]);
+  const [globalTotalCount, setGlobalTotalCount] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [createdInfo, setCreatedInfo] = useState<CreatedAssessmentBannerInfo | null>(null);
@@ -83,18 +86,21 @@ function AssessmentListPageContent() {
 
     const searchQ = initialSearchQuery.trim() || undefined;
 
-    listAssessmentsPage({ limit: 50, q: searchQ, includeStats: true })
+    listAssessmentsPage({ limit: 50, q: searchQ, includeStats: true, ownOnly: adminUser })
       .then(async (firstPage) => {
         if (cancelled) return;
         const firstItems = firstPage.assessments || [];
         setAssessments(firstItems);
+        if (adminUser && typeof firstPage.globalTotalCount === 'number') {
+          setGlobalTotalCount(firstPage.globalTotalCount);
+        }
         if (!firstItems.length) {
           clearCounselorAssessmentsListCache(counselorUid);
         }
         setLoading(false);
         if (!firstPage.nextCursor) return;
         setLoadingMore(true);
-        const all = await listAssessments({ q: searchQ, includeStats: true });
+        const all = await listAssessments({ q: searchQ, includeStats: true, ownOnly: adminUser });
         if (!cancelled) setAssessments(all.assessments || []);
       })
       .catch((err) => {
@@ -109,7 +115,7 @@ function AssessmentListPageContent() {
     return () => {
       cancelled = true;
     };
-  }, [authPending, user, showLoginRequired, initialSearchQuery]);
+  }, [authPending, user, showLoginRequired, initialSearchQuery, adminUser]);
 
   useRedirectOnLoginRequiredError(error);
 
@@ -146,6 +152,7 @@ function AssessmentListPageContent() {
           <AssessmentList
             key={initialSearchQuery}
             assessments={assessments}
+            globalTotalCount={globalTotalCount}
             createdInfo={createdInfo}
             moveInfo={moveInfo}
             autoLivePollId={autoLivePollId}

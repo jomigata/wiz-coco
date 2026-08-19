@@ -487,10 +487,14 @@ export async function archiveDispatchRecipients(
 
 export async function fetchArchivedDispatchRecipients(
   assessmentId?: string,
-): Promise<{ items: ArchivedDispatchRecipient[] }> {
+  options?: { ownOnly?: boolean },
+): Promise<{ items: ArchivedDispatchRecipient[]; globalTotalCount?: number }> {
   const token = await getCounselorToken();
   if (!token) throw new Error('전문가·상담사 로그인이 필요합니다.');
-  const qs = assessmentId ? `?assessmentId=${encodeURIComponent(assessmentId)}` : '';
+  const search = new URLSearchParams();
+  if (assessmentId) search.set('assessmentId', assessmentId);
+  if (options?.ownOnly) search.set('ownOnly', '1');
+  const qs = search.toString() ? `?${search.toString()}` : '';
   const res = await fetch(`${getBaseUrl()}/api/client-portals/archived${qs}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -498,7 +502,7 @@ export async function fetchArchivedDispatchRecipients(
   if (!res.ok) {
     throw new Error(typeof data?.message === 'string' ? data.message : '목록 조회에 실패했습니다.');
   }
-  return data as { items: ArchivedDispatchRecipient[] };
+  return data as { items: ArchivedDispatchRecipient[]; globalTotalCount?: number };
 }
 
 export async function restoreArchivedDispatchRecipients(
@@ -568,6 +572,7 @@ export async function listCounselorClientPortals(params?: {
   progress?: 'all' | ClientPortalProgressLabel;
   tag?: string;
   q?: string;
+  ownOnly?: boolean;
 }): Promise<CounselorClientPortalListResult> {
   const token = await getCounselorToken();
   if (!token) throw new Error('전문가·상담사 로그인이 필요합니다.');
@@ -578,6 +583,7 @@ export async function listCounselorClientPortals(params?: {
   if (params?.progress && params.progress !== 'all') search.set('progress', params.progress);
   if (params?.tag?.trim()) search.set('tag', params.tag.trim());
   if (params?.q?.trim()) search.set('q', params.q.trim());
+  if (params?.ownOnly) search.set('ownOnly', '1');
   const qs = search.toString() ? `?${search.toString()}` : '';
 
   const res = await fetch(`${getBaseUrl()}/api/client-portals${qs}`, {

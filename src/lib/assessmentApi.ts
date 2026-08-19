@@ -583,17 +583,20 @@ export type ArchivedAssessment = {
   counselorEmail?: string;
 };
 
-export async function listArchivedAssessments(): Promise<{ assessments: ArchivedAssessment[] }> {
+export async function listArchivedAssessments(params?: {
+  ownOnly?: boolean;
+}): Promise<{ assessments: ArchivedAssessment[]; globalTotalCount?: number }> {
   const token = await getCounselorToken();
   if (!token) throw new Error('로그인이 필요합니다.');
-  const res = await fetch(`${getBaseUrl()}/api/assessments/archived`, {
+  const qs = params?.ownOnly ? '?ownOnly=1' : '';
+  const res = await fetch(`${getBaseUrl()}/api/assessments/archived${qs}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     throw new Error(data?.message || data?.error || '삭제 목록 조회에 실패했습니다.');
   }
-  return data as { assessments: ArchivedAssessment[] };
+  return data as { assessments: ArchivedAssessment[]; globalTotalCount?: number };
 }
 
 export async function restoreArchivedAssessments(
@@ -646,6 +649,7 @@ export interface AssessmentListPageResult {
   nextCursor?: string | null;
   hasMore?: boolean;
   limit?: number;
+  globalTotalCount?: number;
 }
 
 export interface AssessmentListStats {
@@ -664,6 +668,7 @@ export async function listAssessmentsPage(params?: {
   q?: string;
   includeStats?: boolean;
   counselorId?: string;
+  ownOnly?: boolean;
 }): Promise<AssessmentListPageResult> {
   const token = await getCounselorToken();
   if (!token) throw new Error('로그인이 필요합니다.');
@@ -674,6 +679,7 @@ export async function listAssessmentsPage(params?: {
   if (params?.q?.trim()) search.set('q', params.q.trim());
   if (params?.counselorId?.trim()) search.set('counselorId', params.counselorId.trim());
   if (params?.includeStats === false) search.set('includeStats', '0');
+  if (params?.ownOnly) search.set('ownOnly', '1');
 
   const qs = search.toString() ? `?${search.toString()}` : '';
   const res = await fetch(`${getBaseUrl()}/api/assessments${qs}`, {
@@ -901,7 +907,8 @@ export async function listAssessments(params?: {
   q?: string;
   counselorId?: string;
   includeStats?: boolean;
-}): Promise<{ assessments: CounselorAssessment[] }> {
+  ownOnly?: boolean;
+}): Promise<{ assessments: CounselorAssessment[]; globalTotalCount?: number }> {
   const token = await getCounselorToken();
   if (!token) throw new Error('로그인이 필요합니다.');
   const counselorUid = (await getCounselorUid())?.trim();

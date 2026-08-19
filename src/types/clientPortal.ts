@@ -137,6 +137,7 @@ export type CounselorClientPortalListResult = {
   cohorts: CounselorClientPortalCohort[];
   tags?: string[];
   assessmentMeta?: Record<string, { testList: { testId: string; name: string }[] }>;
+  globalTotalCount?: number;
 };
 
 export type CounselorPortalTestAssignmentStatus = 'not_started' | 'in_progress' | 'completed';

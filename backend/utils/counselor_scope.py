@@ -17,6 +17,17 @@ def scope_counselor_uid() -> str | None:
     return getattr(g, "counselor_uid", None)
 
 
+def resolve_list_counselor_uid(*, own_only: bool) -> str | None:
+    """목록 API scope. admin+ownOnly 이면 본인 생성분만."""
+    from flask import g
+
+    if is_admin_scope():
+        if own_only:
+            return getattr(g, "counselor_uid", None)
+        return None
+    return getattr(g, "counselor_uid", None)
+
+
 def resource_owned_by_scope(resource_counselor_id: str | None) -> bool:
     from flask import g
 
