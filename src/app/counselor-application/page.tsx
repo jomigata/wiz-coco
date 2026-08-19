@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { LoadingMessage } from '@/components/ui/LoadingMessage';
 import { useRouter } from 'next/navigation';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { buildLoginRedirectUrl } from '@/lib/authRedirect';
@@ -22,8 +23,8 @@ export default function CounselorApplicationPage() {
 
   if (loading) {
     return (
-      <div className="min-h-[calc(100dvh-4rem)] bg-[#0b1120] pt-20 flex items-center justify-center text-slate-400 text-sm">
-        로딩중…
+      <div className="min-h-[calc(100dvh-4rem)] bg-[#0b1120] pt-20 flex items-center justify-center">
+        <LoadingMessage textClassName="text-slate-400 text-sm" />
       </div>
     );
   }

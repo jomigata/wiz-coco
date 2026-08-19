@@ -3,6 +3,7 @@
 import MbtiProTest from '@/components/tests/MbtiProTest';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, Suspense } from 'react';
+import { LoadingMessage } from '@/components/ui/LoadingMessage';
 
 function MbtiProTestContent() {
   return <MbtiProTest isLoggedIn={true} />;
@@ -18,7 +19,7 @@ export default function MbtiProPage() {
     <div className="bg-emerald-950 min-h-screen h-full overflow-y-auto">
       <Suspense fallback={
         <div className="flex items-center justify-center min-h-screen">
-          <div className="text-white text-lg">로딩중…</div>
+          <LoadingMessage textClassName="text-white text-lg" />
         </div>
       }>
         <MbtiProTestContent />

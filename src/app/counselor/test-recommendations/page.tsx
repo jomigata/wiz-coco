@@ -1,6 +1,7 @@
 'use client';
 
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
+import { LoadingMessage } from '@/components/ui/LoadingMessage';
 import RoleGuard from '@/components/RoleGuard';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -290,7 +291,7 @@ function TestRecommendationsContent() {
           ) : null}
           <div className="overflow-x-auto rounded-lg border border-white/10">
             {isLoading ? (
-              <p className="p-4 text-sm text-white/60">로딩중…</p>
+              <LoadingMessage layout="inline" className="p-4" textClassName="text-sm text-white/60" />
             ) : (
               <table className="min-w-full text-sm text-white/90">
                 <thead className="bg-white/5 text-white/70">

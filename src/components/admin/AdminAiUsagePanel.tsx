@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { LoadingMessage } from '@/components/ui/LoadingMessage';
 import {
   fetchAiAdminUsageLedger,
   fetchAiAdminUsageSummary,
@@ -96,7 +97,7 @@ export default function AdminAiUsagePanel() {
           onChange={(e) => setMonth(e.target.value)}
           className="rounded-lg bg-slate-800 border border-white/10 px-3 py-2 text-white text-sm"
         />
-        {loading && <span className="text-xs text-slate-500">로딩중…</span>}
+        {loading && <LoadingMessage layout="inline" textClassName="text-xs text-slate-500" />}
       </div>
 
       {summary && (

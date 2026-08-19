@@ -392,18 +392,45 @@ def _serialize_portal_row(doc) -> dict:
 
 
 def list_permanently_deleted_records(db) -> dict:
+    from utils.assessment_dispatch import (
+        _build_assessment_recipient_item,
+        _latest_notify_by_portal,
+    )
+
     assessments = [
         _serialize_assessment_row(doc)
         for doc in db.collection(ASSESSMENTS_COLLECTION)
         .where("status", "==", "permanently_deleted")
         .stream()
     ]
-    portals = [
-        _serialize_portal_row(doc)
-        for doc in db.collection(CLIENT_PORTALS_COLLECTION)
+    permanently_deleted_assessment_ids = {a["id"] for a in assessments}
+
+    portal_docs = list(
+        db.collection(CLIENT_PORTALS_COLLECTION)
         .where("status", "==", "permanently_deleted")
         .stream()
-    ]
+    )
+    portal_ids = {doc.id for doc in portal_docs}
+    notify_map = _latest_notify_by_portal(db, portal_ids)
+    assessment_cache: dict[str, dict] = {}
+    portals: list[dict] = []
+
+    for doc in portal_docs:
+        pdata = doc.to_dict() or {}
+        assessment_id = _portal_linked_assessment_id(pdata)
+        item = _build_assessment_recipient_item(
+            db,
+            portal_id=doc.id,
+            pdata=pdata,
+            assessment_id=assessment_id,
+            assessment_cache=assessment_cache,
+            notify_map=notify_map,
+        )
+        item["permanentlyDeletedAt"] = _iso_timestamp(pdata.get("permanentlyDeletedAt"))
+        item["assessmentPermanentlyDeleted"] = assessment_id in permanently_deleted_assessment_ids
+        item["notifyAt"] = item["permanentlyDeletedAt"]
+        portals.append(item)
+
     assessments.sort(key=lambda x: x.get("permanentlyDeletedAt") or "", reverse=True)
     portals.sort(key=lambda x: x.get("permanentlyDeletedAt") or "", reverse=True)
     from utils.counselor_emails import attach_counselor_emails

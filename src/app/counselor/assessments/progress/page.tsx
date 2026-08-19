@@ -6,6 +6,7 @@ import AssessmentDispatchPanel from '@/components/counselor/AssessmentDispatchPa
 import { rememberCounselorAssessmentContext, resolveCounselorProgressFrom } from '@/lib/counselorNestedNav';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
+import { LoadingMessage } from '@/components/ui/LoadingMessage';
 
 function ProgressPageContent() {
   const router = useRouter();
@@ -58,7 +59,7 @@ function ProgressPageContent() {
 
 export default function ProgressDashboardPage() {
   return (
-    <Suspense fallback={<div className="text-slate-400 py-4 text-sm">로딩중…</div>}>
+    <Suspense fallback={<LoadingMessage layout="inline" className="py-4" textClassName="text-slate-400 text-sm" />}>
       <ProgressPageContent />
     </Suspense>
   );

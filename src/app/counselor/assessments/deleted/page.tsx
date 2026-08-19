@@ -374,7 +374,7 @@ export default function DeletedAssessmentsPage() {
   };
 
   const handleRestore = async () => {
-    if (selected.size === 0) return;
+    if (selected.size === 0 || adminUser) return;
     setRestoring(true);
     setMessage('');
     try {
@@ -616,14 +616,16 @@ export default function DeletedAssessmentsPage() {
                   >
                     {allSelected ? '전체 해제' : '전체 선택'}
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => void handleRestore()}
-                    disabled={restoring || selected.size === 0}
-                    className="rounded-md bg-emerald-600/90 px-2.5 py-1 text-sm font-medium text-white transition-colors hover:bg-emerald-500 disabled:opacity-50"
-                  >
-                    {restoring ? '복구 중…' : `복구 (${selected.size})`}
-                  </button>
+                  {!adminUser ? (
+                    <button
+                      type="button"
+                      onClick={() => void handleRestore()}
+                      disabled={restoring || selected.size === 0}
+                      className="rounded-md bg-emerald-600/90 px-2.5 py-1 text-sm font-medium text-white transition-colors hover:bg-emerald-500 disabled:opacity-50"
+                    >
+                      {restoring ? '복구 중…' : `복구 (${selected.size})`}
+                    </button>
+                  ) : null}
                   {!adminUser ? (
                     <button
                       type="button"

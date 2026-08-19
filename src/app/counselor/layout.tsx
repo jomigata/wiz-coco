@@ -12,6 +12,7 @@ import { isPsychTestsWorkspaceRoute } from '@/lib/counselorManageShell';
 import { counselorHubClasses } from '@/components/layout/appChromeTheme';
 import { CounselorPageBody } from '@/components/counselor/CounselorPageSection';
 import CounselorPageTitle from '@/components/counselor/CounselorPageTitle';
+import { LoadingMessage } from '@/components/ui/LoadingMessage';
 
 export default function CounselorLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -188,8 +189,8 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
             {useManageShell ? (
               <Suspense
                 fallback={
-                  <div className="flex min-h-0 flex-1 items-center justify-center text-sm text-slate-400">
-                    메뉴 로딩중…
+                  <div className="flex min-h-0 flex-1 items-center justify-center">
+                    <LoadingMessage message="메뉴 로딩중…" textClassName="text-sm text-slate-400" />
                   </div>
                 }
               >

@@ -1,6 +1,7 @@
 ﻿'use client';
 
 import React, { Suspense } from 'react';
+import { LoadingMessage } from '@/components/ui/LoadingMessage';
 import AuthLink from '@/components/auth/AuthLink';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import { useSearchParams } from 'next/navigation';
@@ -26,7 +27,7 @@ function AssessmentEditContent() {
 
 export default function AssessmentEditPage() {
   return (
-    <Suspense fallback={<div className="text-slate-400 py-4 text-sm">로딩중…</div>}>
+    <Suspense fallback={<LoadingMessage layout="inline" className="py-4" textClassName="text-slate-400 text-sm" />}>
       <CounselorPageSection dense bodyClassName="!p-0" noBodyPadding>
         <div className="p-2.5 sm:p-3">
           <AssessmentEditContent />

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { LoadingMessage } from '@/components/ui/LoadingMessage';
 import Link from 'next/link';
 import {
   COUNSELOR_REGIONS,
@@ -240,7 +241,7 @@ export default function CounselorSwitchPanel({ uid, email, role }: Props) {
   if (loading) {
     return (
       <div className="pt-4 border-t border-white/10">
-        <p className="text-blue-300 text-sm">상담사 정보를 로딩중…</p>
+        <LoadingMessage layout="inline" message="상담사 정보를 로딩중…" textClassName="text-blue-300 text-sm" />
       </div>
     );
   }

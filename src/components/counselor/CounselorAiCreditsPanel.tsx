@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { LoadingMessage } from '@/components/ui/LoadingMessage';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import { fetchCounselorAiCredits } from '@/lib/aiUsageApi';
 import { AI_PRICING_CATALOG, PILOT_FREE_AI_CREDITS } from '@/data/aiPricingCatalog';
@@ -24,7 +25,13 @@ export default function CounselorAiCreditsPanel() {
   }, [reload]);
 
   if (loading && !data) {
-    return <p className="py-8 text-center text-sm text-slate-400">AI 크레딧 정보를 로딩중…</p>;
+    return (
+      <LoadingMessage
+        className="py-8"
+        message="AI 크레딧 정보를 로딩중…"
+        textClassName="text-sm text-slate-400"
+      />
+    );
   }
 
   return (

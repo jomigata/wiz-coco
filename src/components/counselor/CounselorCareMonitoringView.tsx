@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import AuthLink from '@/components/auth/AuthLink';
+import { LoadingMessage } from '@/components/ui/LoadingMessage';
 import { listCareAssignments } from '@/lib/careAssignmentApi';
 import { useCounselorCareRealtime } from '@/hooks/useCounselorCareRealtime';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
@@ -193,7 +194,13 @@ export default function CounselorCareMonitoringView() {
     : null;
 
   if (loading) {
-    return <p className="py-12 text-center text-sm text-slate-500">치료·과제 모니터링을 로딩중…</p>;
+    return (
+      <LoadingMessage
+        className="py-12"
+        message="치료·과제 모니터링을 로딩중…"
+        textClassName="text-sm text-slate-500"
+      />
+    );
   }
 
   if (error) {

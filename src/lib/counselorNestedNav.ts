@@ -40,6 +40,22 @@ export function normalizeCounselorPath(pathname: string): string {
   return (pathname || '').split('?')[0].replace(/\/+$/, '') || '';
 }
 
+/** 삭제된 상담코드 목록(내담자 삭제·영구삭제 경로 제외) */
+export function isDeletedAssessmentsPath(pathname: string): boolean {
+  const path = normalizeCounselorPath(pathname);
+  if (path.startsWith(DELETED_RECIPIENTS_HREF)) return false;
+  if (path.startsWith(PERMANENTLY_DELETED_ASSESSMENTS_HREF)) return false;
+  if (path.startsWith(PERMANENTLY_DELETED_RECIPIENTS_HREF)) return false;
+  return path === DELETED_ASSESSMENTS_HREF || path.startsWith(`${DELETED_ASSESSMENTS_HREF}/`);
+}
+
+/** 삭제된 내담자 목록(영구삭제 내담자 제외) */
+export function isDeletedRecipientsPath(pathname: string): boolean {
+  const path = normalizeCounselorPath(pathname);
+  if (path.startsWith(PERMANENTLY_DELETED_RECIPIENTS_HREF)) return false;
+  return path.startsWith(DELETED_RECIPIENTS_HREF);
+}
+
 function normalizeHref(href: string): string {
   return href.replace(/\/+$/, '');
 }
@@ -124,6 +140,15 @@ export function getAssessmentListContextNestedItems(
   const progressFrom = resolveCounselorProgressFrom(pathname, search);
   const items: AssessmentListNestedNavItem[] = [];
 
+  if (isDeletedAssessmentsPath(path)) {
+    items.push({
+      order: 10,
+      label: '삭제된 상담코드',
+      href: DELETED_ASSESSMENTS_HREF,
+      isActive: isDeletedAssessmentsPath,
+    });
+  }
+
   if (path.startsWith('/counselor/assessments/progress') && progressFrom !== 'clients') {
     items.push({
       order: 50,
@@ -155,6 +180,15 @@ export function getClientsListContextNestedItems(
   const path = normalizeCounselorPath(pathname);
   const items: AssessmentListNestedNavItem[] = [];
 
+  if (isDeletedRecipientsPath(path)) {
+    items.push({
+      order: 10,
+      label: '삭제된 내담자',
+      href: DELETED_RECIPIENTS_HREF,
+      isActive: isDeletedRecipientsPath,
+    });
+  }
+
   if (path.startsWith('/counselor/assessments/progress') && resolveCounselorProgressFrom(pathname, search) === 'clients') {
     const assessmentId = resolveAssessmentContextId(pathname, search);
     items.push({
@@ -172,7 +206,7 @@ export function getClientsListContextNestedItems(
 export function isClientsMenuSelected(pathname: string, search: string): boolean {
   const path = normalizeCounselorPath(pathname);
   if (path === CLIENTS_LIST_HREF) return true;
-  if (path.startsWith('/counselor/assessments/deleted-recipients')) return true;
+  if (isDeletedRecipientsPath(path)) return true;
   if (path.startsWith(PERMANENTLY_DELETED_RECIPIENTS_HREF)) return true;
   if (
     path.startsWith('/counselor/assessments/progress') &&
@@ -187,6 +221,7 @@ export function isClientsMenuSelected(pathname: string, search: string): boolean
 export function isAssessmentsMenuSelected(pathname: string, search: string): boolean {
   if (isClientsMenuSelected(pathname, search)) return false;
   const path = normalizeCounselorPath(pathname);
+  if (isDeletedAssessmentsPath(path)) return true;
   return path.startsWith('/counselor/assessments');
 }
 

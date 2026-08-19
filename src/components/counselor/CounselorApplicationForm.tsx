@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { LoadingMessage } from '@/components/ui/LoadingMessage';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -170,8 +171,8 @@ export default function CounselorApplicationForm({ uid, email, role }: Props) {
 
   if (loading) {
     return (
-      <div className="flex min-h-[40vh] items-center justify-center text-slate-400 text-sm">
-        로딩중…
+      <div className="flex min-h-[40vh] items-center justify-center">
+        <LoadingMessage textClassName="text-slate-400 text-sm" />
       </div>
     );
   }

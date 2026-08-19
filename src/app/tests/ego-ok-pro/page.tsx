@@ -3,6 +3,7 @@
 import MbtiProTest from '@/components/tests/MbtiProTest';
 import { EGO_OK_PRO_TEST_FLOW } from '@/config/mbtiProTestFlow';
 import { Suspense } from 'react';
+import { LoadingMessage } from '@/components/ui/LoadingMessage';
 
 function EgoOkProTestContent() {
   return <MbtiProTest isLoggedIn flow={EGO_OK_PRO_TEST_FLOW} />;
@@ -14,7 +15,7 @@ export default function EgoOkProTestPage() {
       <Suspense
         fallback={
           <div className="flex min-h-screen items-center justify-center pt-16">
-            <div className="text-lg text-slate-300">로딩중…</div>
+            <LoadingMessage textClassName="text-lg text-slate-300" />
           </div>
         }
       >

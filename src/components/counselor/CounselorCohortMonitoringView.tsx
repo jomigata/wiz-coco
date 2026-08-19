@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import AuthLink from '@/components/auth/AuthLink';
+import { LoadingMessage } from '@/components/ui/LoadingMessage';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import { fetchCounselorCohortMonitoring } from '@/lib/clientPortalApi';
 import {
@@ -201,7 +202,13 @@ export default function CounselorCohortMonitoringView({
   }, [baseData, liveHub]);
 
   if (loading) {
-    return <p className="py-12 text-center text-sm text-slate-500">그룹 모니터링을 로딩중…</p>;
+    return (
+      <LoadingMessage
+        className="py-12"
+        message="그룹 모니터링을 로딩중…"
+        textClassName="text-sm text-slate-500"
+      />
+    );
   }
 
   if (error) {

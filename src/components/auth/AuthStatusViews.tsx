@@ -10,6 +10,7 @@ import {
   replaceWithAuthSession,
   tryRestoreAuthenticatedTabSession,
 } from '@/utils/authSessionLifecycle';
+import { LoadingMessage } from '@/components/ui/LoadingMessage';
 import { LOADING_MESSAGE } from '@/lib/loadingMessage';
 
 type AuthLoadingProps = {
@@ -25,12 +26,10 @@ export function AuthLoadingState({ message = LOADING_MESSAGE, className = '' }: 
 
 function AuthLoadingInner({ className, message }: AuthLoadingProps) {
   return (
-    <div className={`flex items-center justify-center py-12 ${className ?? ''}`.trim()}>
-      <div className="flex flex-col items-center gap-4 text-slate-400">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-600 border-t-blue-400" />
-        <p className="text-sm">{message}</p>
-      </div>
-    </div>
+    <LoadingMessage
+      message={message}
+      className={`py-12 ${className ?? ''}`.trim()}
+    />
   );
 }
 

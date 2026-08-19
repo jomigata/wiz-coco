@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { LoadingMessage } from '@/components/ui/LoadingMessage';
 
 type PortalAuthTheme = 'start' | 'results' | 'recovery';
 
@@ -89,7 +90,7 @@ export function PortalAuthScreenLayout({ theme, children, loading }: Props) {
     return (
       <div className={`relative min-h-screen ${pageBg} pt-24 flex justify-center`}>
         <PortalAuthGrid />
-        <p className={`relative z-10 text-sm ${t.loadingText}`}>로딩중…</p>
+        <LoadingMessage className="relative z-10" textClassName={`text-sm ${t.loadingText}`} />
       </div>
     );
   }

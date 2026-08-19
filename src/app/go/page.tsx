@@ -1,6 +1,7 @@
 'use client';
 
 import React, { Suspense, useEffect, useState } from 'react';
+import { LoadingMessage } from '@/components/ui/LoadingMessage';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { verifyPortalMagicToken, type PortalMagicVerifyError } from '@/lib/clientPortalApi';
@@ -29,7 +30,7 @@ function formatExpiryLabel(unixSeconds?: number): string | null {
 function GoLoading() {
   return (
     <div className="min-h-screen bg-gray-900 pt-24 flex justify-center">
-      <p className="text-slate-400">로딩중…</p>
+      <LoadingMessage textClassName="text-slate-400" />
     </div>
   );
 }

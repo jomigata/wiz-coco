@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { LoadingMessage } from '@/components/ui/LoadingMessage';
 import AdminPageLayout from '@/components/AdminPageLayout';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import { formatPhoneDisplay } from '@/lib/phoneFormat';
@@ -157,7 +158,7 @@ export default function AdminPermanentlyDeletedPage() {
       {message ? <p className="mb-3 text-sm text-emerald-300">{message}</p> : null}
       {error ? <p className="mb-3 text-sm text-red-400">{error}</p> : null}
       {loading ? (
-        <p className="py-8 text-center text-sm text-slate-400">로딩중…</p>
+        <LoadingMessage className="py-8" textClassName="text-sm text-slate-400" />
       ) : (
         <div className="space-y-8">
           <section>

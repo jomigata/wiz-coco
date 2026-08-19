@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import AuthLink from '@/components/auth/AuthLink';
+import { LoadingMessage } from '@/components/ui/LoadingMessage';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import { formatPhoneDisplayOr } from '@/lib/phoneFormat';
 import CounselorHierarchyBreadcrumb from '@/components/counselor/CounselorHierarchyBreadcrumb';
@@ -191,7 +192,13 @@ export default function CounselorClientDetail({ portalId }: Props) {
   };
 
   if (loading) {
-    return <p className="py-16 text-center text-sm text-slate-500">내담자 정보를 로딩중…</p>;
+    return (
+      <LoadingMessage
+        className="py-16"
+        message="내담자 정보를 로딩중…"
+        textClassName="text-sm text-slate-500"
+      />
+    );
   }
 
   if (error || !liveDetail) {

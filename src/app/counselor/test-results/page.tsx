@@ -1,6 +1,7 @@
 'use client';
 
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
+import { LoadingMessage } from '@/components/ui/LoadingMessage';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -191,7 +192,7 @@ export default function TestResultsPage() {
         )}
 
         {isLoading ? (
-          <div className="text-white/70 text-sm">로딩중…</div>
+          <LoadingMessage layout="inline" textClassName="text-white/70 text-sm" />
         ) : filtered.length === 0 ? (
           <div className="text-white/70 text-sm">표시할 결과가 없습니다.</div>
         ) : (

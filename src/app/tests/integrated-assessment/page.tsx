@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, Suspense } from 'react';
+import { LoadingMessage } from '@/components/ui/LoadingMessage';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { clearTestProgress, generateTestId } from '@/utils/testResume';
@@ -639,7 +640,7 @@ export default function IntegratedAssessmentPage() {
   return (
     <Suspense fallback={
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900">
-        <div className="text-white text-lg">로딩중…</div>
+        <LoadingMessage textClassName="text-white text-lg" />
       </div>
     }>
       <IntegratedAssessmentPageContent />

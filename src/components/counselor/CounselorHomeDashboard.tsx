@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import AuthLink from '@/components/auth/AuthLink';
+import { LoadingMessage } from '@/components/ui/LoadingMessage';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import CounselorProgressMetricsInline from '@/components/counselor/CounselorProgressMetricsInline';
 import CounselorSlashInfoCell from '@/components/counselor/CounselorSlashInfoCell';
@@ -235,7 +236,13 @@ export default function CounselorHomeDashboard() {
   };
 
   if (loading && !hub && !cohorts) {
-    return <p className="py-12 text-center text-sm text-slate-500">대시보드를 로딩중…</p>;
+    return (
+      <LoadingMessage
+        className="py-12"
+        message="대시보드를 로딩중…"
+        textClassName="text-sm text-slate-500"
+      />
+    );
   }
 
   if (error && !hub && !cohorts) {

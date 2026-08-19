@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import AuthLink from '@/components/auth/AuthLink';
+import { LoadingMessage } from '@/components/ui/LoadingMessage';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import { listCounselorPortalTestAssignments } from '@/lib/clientPortalApi';
 import { applyRealtimeToAssignmentList } from '@/lib/clientPortalRealtime';
@@ -315,7 +316,11 @@ export default function CounselorAssignTestsPanel() {
       ) : null}
 
       {loading ? (
-        <p className="py-12 text-center text-sm text-slate-500">검사 할당 목록을 로딩중…</p>
+        <LoadingMessage
+          className="py-12"
+          message="검사 할당 목록을 로딩중…"
+          textClassName="text-sm text-slate-500"
+        />
       ) : displayItems.length === 0 ? (
         <div className="rounded-xl border border-white/10 bg-white/[0.03] px-6 py-14 text-center">
           <p className="text-slate-300">조건에 맞는 검사 할당이 없습니다.</p>

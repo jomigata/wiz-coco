@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import AuthLink from '@/components/auth/AuthLink';
+import { LoadingMessage } from '@/components/ui/LoadingMessage';
 import {
   getCareProgramById,
   listCareProgramSummaries,
@@ -423,7 +424,12 @@ export default function CounselorTreatmentPlansPanel() {
                 </div>
                 <div className="max-h-48 overflow-y-auto rounded-lg border border-white/10">
                   {loadingClients ? (
-                    <p className="px-4 py-8 text-center text-xs text-slate-500">내담자 로딩중…</p>
+                    <LoadingMessage
+                      layout="inline"
+                      className="px-4 py-8"
+                      message="내담자 로딩중…"
+                      textClassName="text-xs text-slate-500"
+                    />
                   ) : clients.length === 0 ? (
                     <p className="px-4 py-8 text-center text-xs text-slate-500">활성 내담자가 없습니다.</p>
                   ) : (
@@ -513,7 +519,7 @@ export default function CounselorTreatmentPlansPanel() {
 
       <CounselorPageSection title="활성 치료 할당">
         {loadingAssignments ? (
-          <p className="text-sm text-slate-500">할당 목록을 로딩중…</p>
+          <LoadingMessage layout="inline" message="할당 목록을 로딩중…" textClassName="text-sm text-slate-500" />
         ) : assignments.length === 0 ? (
           <p className="rounded-xl border border-white/10 bg-white/[0.02] px-6 py-10 text-center text-sm text-slate-500">
             아직 활성 치료 할당이 없습니다.

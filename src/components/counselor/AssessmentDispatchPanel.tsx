@@ -60,7 +60,7 @@ import {
   counselorListTdClass,
   counselorListThClass,
 } from '@/lib/counselorListTableStyles';
-import { LOADING_MESSAGE } from '@/lib/loadingMessage';
+import { LoadingMessage } from '@/components/ui/LoadingMessage';
 
 function formatCompletedAt(iso: string | null | undefined): string {
   return formatNotifyDate(iso);
@@ -820,7 +820,7 @@ export default function AssessmentDispatchPanel({
   if (loading) {
     return (
       <CounselorPageSection title="상담진행 현황" titleAccent="progress" dense className="flex min-h-0 flex-1">
-        <p className="text-slate-400 text-sm py-4">{LOADING_MESSAGE}</p>
+        <LoadingMessage className="py-4" textClassName="text-sm text-slate-400" />
       </CounselorPageSection>
     );
   }
@@ -1222,7 +1222,7 @@ export default function AssessmentDispatchPanel({
                     {deleteLoading ? '삭제 중…' : `삭제 (${selected.size})`}
                   </button>
                 ) : null}
-                {selected.size > 0 ? (
+                {selected.size > 0 && !adminUser ? (
                   <button
                     type="button"
                     onClick={() => setMoveOpen(true)}
@@ -1567,7 +1567,9 @@ export default function AssessmentDispatchPanel({
               </button>
             </div>
             <div className="p-4 overflow-y-auto flex-1">
-              {detailLoading && <p className="text-slate-400">{LOADING_MESSAGE}</p>}
+              {detailLoading ? (
+                <LoadingMessage layout="inline" textClassName="text-slate-400 text-sm" />
+              ) : null}
               {detailError && <p className="text-red-400 text-sm">{detailError}</p>}
               {detail && !detailLoading && (
                 <div className="space-y-4">

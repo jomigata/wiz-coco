@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, Suspense } from 'react';
+import { LoadingMessage } from '@/components/ui/LoadingMessage';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 
@@ -511,11 +512,7 @@ export default function PsychologyTestsPage() {
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
-              <div className="w-16 h-16 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center text-3xl mx-auto mb-4">
-                🧠
-              </div>
-              <h2 className="text-2xl font-bold text-white mb-2">로딩중…</h2>
-              <p className="text-gray-300">로딩중…</p>
+            <LoadingMessage textClassName="text-gray-300" />
             </div>
           </div>
         </div>

@@ -1,6 +1,7 @@
 ﻿'use client';
 
 import React, { useCallback, useMemo, useState } from 'react';
+import { LoadingMessage } from '@/components/ui/LoadingMessage';
 import { getCounselorResult, type ProgressByClient, type CounselorResultDetail } from '@/lib/assessmentApi';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 
@@ -313,7 +314,7 @@ export default function ProgressDashboard({
               </button>
             </div>
             <div className="p-4 overflow-y-auto flex-1">
-              {detailLoading && <p className="text-slate-400">로딩중…</p>}
+              {detailLoading && <LoadingMessage layout="inline" textClassName="text-slate-400" />}
               {detailError && <p className="text-red-400 text-sm">{detailError}</p>}
               {detail && !detailLoading && (
                 <div className="space-y-4">

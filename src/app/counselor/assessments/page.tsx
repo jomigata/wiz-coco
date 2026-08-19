@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import AssessmentList from '@/components/counselor/AssessmentList';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
+import { LoadingMessage } from '@/components/ui/LoadingMessage';
 import { isLoginRequiredError } from '@/lib/authRedirect';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
 import { parseAssessmentListSearchFromUrl } from '@/lib/counselorAssessmentListSearch';
@@ -131,11 +132,16 @@ function AssessmentListPageContent() {
       ) : (
         <>
           {(authPending || loading || loadingMore) && assessments.length > 0 ? (
-            <p className="mb-2 shrink-0 text-xs text-sky-300/80" role="status">
-              {loadingMore
-                ? '목록을 추가로 로딩중…'
-                : '저장된 목록을 표시 중… 최신 정보를 불러오고 있습니다.'}
-            </p>
+            <LoadingMessage
+              layout="inline"
+              className="mb-2 shrink-0"
+              message={
+                loadingMore
+                  ? '목록을 추가로 로딩중…'
+                  : '저장된 목록을 표시 중… 최신 정보를 불러오고 있습니다.'
+              }
+              textClassName="text-xs text-sky-300/80"
+            />
           ) : null}
           <AssessmentList
             key={initialSearchQuery}

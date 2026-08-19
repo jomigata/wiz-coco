@@ -40,10 +40,24 @@ export type PermanentlyDeletedPortal = {
   email: string;
   phone: string;
   myCode: string;
+  joinAccessCode: string;
+  assessmentId: string;
+  assessmentTitle: string;
+  cohortName: string;
   counselorId: string;
   counselorEmail?: string;
-  assessmentId: string;
   permanentlyDeletedAt: string | null;
+  assessmentPermanentlyDeleted?: boolean;
+  archivedReason?: string;
+  assessmentArchived?: boolean;
+  notifyStatus?: string;
+  notifyError?: string | null;
+  notifyAt?: string | null;
+  notifySentVia?: string;
+  notifyKind?: string;
+  testStatus?: 'not_started' | 'in_progress' | 'completed' | string;
+  completedCount?: number;
+  requiredCount?: number;
 };
 
 export async function fetchPermanentlyDeletedRecords(): Promise<{

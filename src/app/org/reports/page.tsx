@@ -7,6 +7,7 @@ import RoleGuard from '@/components/RoleGuard';
 import { fetchOrgGroupReport, fetchOrgMe, printOrgGroupReport } from '@/lib/orgApi';
 import { buildAnonymousGroupNarrative } from '@/lib/orgGroupReportNarrative';
 import { AuthLoadingState } from '@/components/auth/AuthStatusViews';
+import { LoadingMessage } from '@/components/ui/LoadingMessage';
 
 function ReportContent() {
   const searchParams = useSearchParams();
@@ -34,7 +35,7 @@ function ReportContent() {
   }
 
   if (!report) {
-    return <p className="text-slate-400">로딩중…</p>;
+    return <LoadingMessage layout="inline" textClassName="text-slate-400" />;
   }
 
   const narrative = buildAnonymousGroupNarrative(report);

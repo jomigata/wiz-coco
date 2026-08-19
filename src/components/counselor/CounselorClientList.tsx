@@ -37,7 +37,7 @@ import CounselorActionCompleteModal from '@/components/counselor/CounselorAction
 import CounselorConfirmModal from '@/components/counselor/CounselorConfirmModal';
 import CounselorListBackLink from '@/components/counselor/CounselorListBackLink';
 import { DELETED_RECIPIENTS_HREF } from '@/lib/counselorNestedNav';
-import { LOADING_MESSAGE } from '@/lib/loadingMessage';
+import { LoadingMessage } from '@/components/ui/LoadingMessage';
 import { listAssessments, clearCounselorAssessmentsListCache } from '@/lib/assessmentApi';
 import {
   archiveDispatchRecipients,
@@ -59,6 +59,11 @@ import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { getAppRoleSync, isAdmin } from '@/utils/roleUtils';
 import { CounselorAdminEmailSortHeader, CounselorAdminEmailTd, compareCounselorEmail } from '@/components/counselor/CounselorAdminEmailColumn';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
+import {
+  fetchPermanentlyDeletedRecords,
+  restorePermanentlyDeletedRecords,
+  type PermanentlyDeletedPortal,
+} from '@/lib/adminDeletionsApi';
 import {
   buildClientPortalsCacheKey,
   readCachedClientPortals,
@@ -495,11 +500,40 @@ function mapArchivedToClientItem(row: ArchivedDispatchRecipient): CounselorClien
   };
 }
 
+function mapPermanentlyDeletedToClientItem(row: PermanentlyDeletedPortal): CounselorClientPortalListItem {
+  return mapArchivedToClientItem({
+    portalId: row.portalId,
+    displayName: row.displayName,
+    email: row.email,
+    phone: row.phone,
+    myCode: row.myCode,
+    joinAccessCode: row.joinAccessCode,
+    assessmentId: row.assessmentId,
+    assessmentTitle: row.assessmentTitle,
+    cohortName: row.cohortName,
+    archivedAt: row.permanentlyDeletedAt,
+    archivedReason: row.assessmentPermanentlyDeleted ? 'assessment_deleted' : row.archivedReason,
+    assessmentArchived: row.assessmentPermanentlyDeleted || row.assessmentArchived,
+    counselorId: row.counselorId,
+    counselorEmail: row.counselorEmail,
+    notifyStatus: row.notifyStatus,
+    notifyError: row.notifyError,
+    notifyAt: row.permanentlyDeletedAt,
+    testStatus: row.testStatus,
+    completedCount: row.completedCount,
+    requiredCount: row.requiredCount,
+  });
+}
+
 type CounselorClientListProps = {
   deletedMode?: boolean;
+  permanentlyDeletedMode?: boolean;
 };
 
-export default function CounselorClientList({ deletedMode = false }: CounselorClientListProps) {
+export default function CounselorClientList({
+  deletedMode = false,
+  permanentlyDeletedMode = false,
+}: CounselorClientListProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, authPending, showLoginRequired, isAuthenticated } = useAuthResolved();
@@ -515,6 +549,7 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
   const [usageEndMap, setUsageEndMap] = useState<Record<string, string>>({});
   const [moveOpen, setMoveOpen] = useState(false);
   const [archivedRaw, setArchivedRaw] = useState<ArchivedDispatchRecipient[]>([]);
+  const [permanentlyDeletedRaw, setPermanentlyDeletedRaw] = useState<PermanentlyDeletedPortal[]>([]);
   const [restoring, setRestoring] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [clientDeleteLoading, setClientDeleteLoading] = useState(false);
@@ -538,12 +573,12 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
   );
 
   const initialCached = useMemo(
-    () => (deletedMode ? null : readCachedClientPortals(cacheKey)),
-    [cacheKey, deletedMode],
+    () => (deletedMode || permanentlyDeletedMode ? null : readCachedClientPortals(cacheKey)),
+    [cacheKey, deletedMode, permanentlyDeletedMode],
   );
 
   const [items, setItems] = useState<CounselorClientPortalListItem[]>(
-    () => (deletedMode ? [] : initialCached?.items ?? []),
+    () => (deletedMode || permanentlyDeletedMode ? [] : initialCached?.items ?? []),
   );
   const [assessmentMeta, setAssessmentMeta] = useState<
     Record<string, { testList: { testId: string; name: string }[] }>
@@ -553,7 +588,7 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
   );
   const [tags, setTags] = useState<string[]>(() => initialCached?.tags ?? []);
   const [loading, setLoading] = useState(() =>
-    deletedMode ? true : !initialCached?.items?.length,
+    deletedMode || permanentlyDeletedMode ? true : !initialCached?.items?.length,
   );
 
   useEffect(() => {
@@ -573,6 +608,29 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
   }, []);
 
   const load = useCallback(async () => {
+    if (permanentlyDeletedMode) {
+      setLoading(true);
+      setItems([]);
+      setError('');
+      try {
+        const data = await fetchPermanentlyDeletedRecords();
+        const raw = data.portals || [];
+        setPermanentlyDeletedRaw(raw);
+        setItems(raw.map(mapPermanentlyDeletedToClientItem));
+        setCohorts([]);
+        setTags([]);
+        setAssessmentMeta({});
+        setSelected(new Set());
+      } catch (err) {
+        setError(err instanceof Error ? err.message : '목록을 불러오지 못했습니다.');
+        setItems([]);
+        setPermanentlyDeletedRaw([]);
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
     if (deletedMode) {
       setLoading(true);
       setItems([]);
@@ -624,15 +682,19 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
     } finally {
       setLoading(false);
     }
-  }, [cacheKey, deletedMode, searchParams]);
+  }, [cacheKey, deletedMode, permanentlyDeletedMode, searchParams]);
 
   useEffect(() => {
+    if (permanentlyDeletedMode && !adminUser) {
+      setLoading(false);
+      return;
+    }
     if (authPending || showLoginRequired) {
       setLoading(false);
       return;
     }
     void load();
-  }, [authPending, showLoginRequired, load]);
+  }, [authPending, showLoginRequired, load, permanentlyDeletedMode, adminUser]);
 
   const archivedByPortalId = useMemo(() => {
     const map = new Map<string, ArchivedDispatchRecipient>();
@@ -644,27 +706,34 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
 
   const isRowSelectionLocked = useCallback(
     (portalId: string) => {
+      if (permanentlyDeletedMode) {
+        const row = permanentlyDeletedRaw.find((item) => item.portalId === portalId);
+        return row?.assessmentPermanentlyDeleted === true;
+      }
       if (!deletedMode) return false;
       const row = archivedByPortalId.get(portalId);
       return row ? isAssessmentLinkedArchivedRecipient(row) : false;
     },
-    [archivedByPortalId, deletedMode],
+    [archivedByPortalId, deletedMode, permanentlyDeletedMode, permanentlyDeletedRaw],
   );
 
   useRedirectOnLoginRequiredError(error);
 
   const assessmentIds = useMemo(
-    () => (deletedMode ? [] : Object.keys(assessmentMeta)),
-    [assessmentMeta, deletedMode],
+    () => (deletedMode || permanentlyDeletedMode ? [] : Object.keys(assessmentMeta)),
+    [assessmentMeta, deletedMode, permanentlyDeletedMode],
   );
 
   const { results: liveResults, isLive, liveError, lastUpdatedAt } =
-    useCounselorTestResultsRealtime(assessmentIds, isAuthenticated && !authPending && !deletedMode);
+    useCounselorTestResultsRealtime(
+      assessmentIds,
+      isAuthenticated && !authPending && !deletedMode && !permanentlyDeletedMode,
+    );
 
   const displayItems = useMemo(() => {
-    if (deletedMode) return items;
+    if (deletedMode || permanentlyDeletedMode) return items;
     return applyRealtimeToClientList(items, assessmentMeta, liveResults);
-  }, [deletedMode, items, assessmentMeta, liveResults]);
+  }, [deletedMode, permanentlyDeletedMode, items, assessmentMeta, liveResults]);
 
   const filtered = useMemo(() => {
     const q = searchQuery.trim();
@@ -804,15 +873,26 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
 
   const handleRestore = async () => {
     if (selected.size === 0) return;
+    if (adminUser && deletedMode) return;
     setRestoring(true);
     setMessage('');
     try {
-      const result = await restoreArchivedDispatchRecipients(Array.from(selected));
-      clearCounselorAssessmentsListCache(user?.uid);
-      setActionComplete({
-        title: '복구 완료',
-        message: `복구 ${result.restored}명${result.failed ? `, 실패 ${result.failed}명` : ''}`,
-      });
+      if (permanentlyDeletedMode) {
+        const result = await restorePermanentlyDeletedRecords({
+          portalIds: Array.from(selected),
+        });
+        setActionComplete({
+          title: '복구 완료',
+          message: `삭제된 내담자로 복구 ${result.restoredPortals}건${result.failed ? `, 실패 ${result.failed}건` : ''}`,
+        });
+      } else {
+        const result = await restoreArchivedDispatchRecipients(Array.from(selected));
+        clearCounselorAssessmentsListCache(user?.uid);
+        setActionComplete({
+          title: '복구 완료',
+          message: `복구 ${result.restored}명${result.failed ? `, 실패 ${result.failed}명` : ''}`,
+        });
+      }
       await load();
     } catch (err) {
       setActionComplete({
@@ -916,8 +996,16 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
     router.push(counselorClientProgressHref(assessmentId, item.portalId));
   };
 
-  const pageTitle = deletedMode ? '삭제된 내담자' : '내담자 목록';
-  const dateColumnLabel = deletedMode ? '삭제일' : '발송일';
+  const pageTitle = permanentlyDeletedMode
+    ? '영구삭제 내담자'
+    : deletedMode
+      ? '삭제된 내담자'
+      : '내담자 목록';
+  const dateColumnLabel = permanentlyDeletedMode
+    ? '영구삭제일'
+    : deletedMode
+      ? '삭제일'
+      : '발송일';
   const searchPlaceholder = adminUser
     ? '이름 · 이메일 · 연락처 · 상담유형 · 상담코드 · 상담정보 · 태그 · 상담사 이메일'
     : '이름 · 이메일 · 연락처 · 상담유형 · 상담코드 · 상담정보 · 태그';
@@ -925,9 +1013,16 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
   return (
     <CounselorPageSection
       title={pageTitle}
-      titleAccent={deletedMode ? 'deleted' : 'list'}
+      titleAccent={deletedMode || permanentlyDeletedMode ? 'deleted' : 'list'}
       headerAction={
-        !deletedMode ? (
+        permanentlyDeletedMode ? (
+          <AuthLink
+            href={DELETED_RECIPIENTS_HREF}
+            className="inline-flex shrink-0 items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1.5 text-xs font-medium text-slate-300 transition-colors hover:bg-white/5 sm:text-sm"
+          >
+            삭제된 내담자
+          </AuthLink>
+        ) : !deletedMode ? (
           <AuthLink
             href={DELETED_RECIPIENTS_HREF}
             className="inline-flex shrink-0 items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1.5 text-xs font-medium text-slate-300 transition-colors hover:bg-white/5 sm:text-sm"
@@ -942,21 +1037,25 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
       noBodyPadding
       description={
         <span className="inline-flex w-full flex-wrap items-center gap-x-3 gap-y-2">
-          {deletedMode ? (
+          {deletedMode || permanentlyDeletedMode ? (
             <>
               <CounselorListBackLink href="/counselor/clients" label="내담자" />
-              <AuthLink
-                href="/counselor/clients"
-                className="inline-flex shrink-0 items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1.5 text-sm text-slate-300 transition-colors hover:bg-white/5"
-              >
-                내담자
-              </AuthLink>
+              {!permanentlyDeletedMode ? (
+                <AuthLink
+                  href="/counselor/clients"
+                  className="inline-flex shrink-0 items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1.5 text-sm text-slate-300 transition-colors hover:bg-white/5"
+                >
+                  내담자
+                </AuthLink>
+              ) : null}
             </>
           ) : null}
-          <span className="shrink-0">
-            전체 <span className="font-semibold text-white">{stats.total}</span>명 · 완료{' '}
-            <span className="font-semibold text-emerald-300">{stats.completed}</span>명
-          </span>
+          {!deletedMode && !permanentlyDeletedMode ? (
+            <span className="shrink-0">
+              전체 <span className="font-semibold text-white">{stats.total}</span>명 · 완료{' '}
+              <span className="font-semibold text-emerald-300">{stats.completed}</span>명
+            </span>
+          ) : null}
           <CounselorListSearchInput
             value={searchQuery}
             onChange={setSearchQuery}
@@ -983,25 +1082,29 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
         ) : null}
 
         {loading && displayItems.length === 0 ? (
-          <p className="py-12 text-center text-sm text-slate-500">{LOADING_MESSAGE}</p>
+          <LoadingMessage className="py-12" textClassName="text-sm text-slate-500" />
         ) : filtered.length === 0 ? (
           <div className="flex min-h-[12rem] flex-1 flex-col items-center justify-center rounded-md border border-white/10 bg-white/[0.03] py-10 text-center">
             <FaUsers className="mb-2 h-10 w-10 text-slate-600" />
             <p className="text-base text-slate-300">
               {displayItems.length === 0
-                ? deletedMode
-                  ? '삭제된 내담자가 없습니다'
+                ? deletedMode || permanentlyDeletedMode
+                  ? permanentlyDeletedMode
+                    ? '영구삭제된 내담자가 없습니다'
+                    : '삭제된 내담자가 없습니다'
                   : '등록된 내담자가 없습니다'
                 : '검색 결과가 없습니다'}
             </p>
             <p className="mt-1 text-sm text-slate-500">
               {displayItems.length === 0
-                ? deletedMode
-                  ? '직접 삭제하거나 상담코드 삭제로 보관된 내담자가 여기에 표시됩니다.'
+                ? deletedMode || permanentlyDeletedMode
+                  ? permanentlyDeletedMode
+                    ? '영구삭제된 내담자가 여기에 표시됩니다.'
+                    : '직접 삭제하거나 상담코드 삭제로 보관된 내담자가 여기에 표시됩니다.'
                   : '상담코드를 발급하면 내담자가 여기에 표시됩니다.'
                 : '검색어·필터를 바꿔 보세요.'}
             </p>
-            {displayItems.length === 0 && !deletedMode ? (
+            {displayItems.length === 0 && !deletedMode && !permanentlyDeletedMode ? (
               <AuthLink
                 href="/counselor/assessments/new"
                 className="mt-6 inline-flex items-center gap-2 rounded-md bg-sky-600/90 px-3 py-1.5 text-sm font-medium text-white hover:bg-sky-500 transition-colors"
@@ -1012,7 +1115,7 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
           </div>
         ) : (
           <>
-            {loading && !deletedMode ? (
+            {loading && !deletedMode && !permanentlyDeletedMode ? (
               <p className="mb-2 shrink-0 text-xs text-sky-300/80" role="status">
                 저장된 목록을 표시 중… 최신 정보를 불러오고 있습니다.
               </p>
@@ -1129,12 +1232,17 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
                     const isSelected = selected.has(item.portalId);
 
                     const locked = isRowSelectionLocked(item.portalId);
-                    const rowClickable = !deletedMode && !locked;
-                    const rowClass = deletedMode ? counselorListBodyRowStaticClass : counselorListBodyRowClass;
-                    const cellInteractionClass = deletedMode ? '' : cellLinkClass;
-                    const dispatchViewForRow = deletedMode
-                      ? { ...dispatchView, title: undefined }
-                      : dispatchView;
+                    const rowClickable = !deletedMode && !permanentlyDeletedMode && !locked;
+                    const rowClass =
+                      deletedMode || permanentlyDeletedMode
+                        ? counselorListBodyRowStaticClass
+                        : counselorListBodyRowClass;
+                    const cellInteractionClass =
+                      deletedMode || permanentlyDeletedMode ? '' : cellLinkClass;
+                    const dispatchViewForRow =
+                      deletedMode || permanentlyDeletedMode
+                        ? { ...dispatchView, title: undefined }
+                        : dispatchView;
 
                     return (
                       <tr
@@ -1145,7 +1253,7 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
                           {startIndex + idx + 1}
                         </td>
                         <td className={`${counselorListTdClass} text-center`}>
-                          {locked && deletedMode ? (
+                          {locked && (deletedMode || permanentlyDeletedMode) ? (
                             <span className="group/check relative inline-flex">
                               <input
                                 type="checkbox"
@@ -1160,7 +1268,7 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
                                 className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-800 opacity-0 shadow-md transition-none group-hover/check:opacity-100"
                                 role="tooltip"
                               >
-                                삭제된 상담코드
+                                {permanentlyDeletedMode ? '영구삭제된 상담코드' : '삭제된 상담코드'}
                               </span>
                             </span>
                           ) : (
@@ -1190,7 +1298,7 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
                             secondary={formatAccessCodeDisplay(item.accessCode || '')}
                             hoverTypeLabel="나의코드"
                             normalSecondary
-                            showTooltip={!deletedMode}
+                            showTooltip={!deletedMode && !permanentlyDeletedMode}
                             className={cellInteractionClass}
                           />
                         </td>
@@ -1209,7 +1317,7 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
                                 primaryAssessment.joinAccessCode || '',
                               )}
                               normalWeight
-                              showTooltip={!deletedMode}
+                              showTooltip={!deletedMode && !permanentlyDeletedMode}
                               className={cellInteractionClass}
                             />
                           ) : (
@@ -1258,17 +1366,23 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
               pageSize={pageSize}
               onPageSizeChange={setPageSize}
               footerAction={
-                deletedMode ? (
+                deletedMode || permanentlyDeletedMode ? (
                   <div className="flex flex-wrap items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => void handleRestore()}
-                      disabled={restoring || selected.size === 0}
-                      className="inline-flex items-center rounded-md bg-emerald-600 px-2.5 py-1 text-sm font-medium text-white transition-colors hover:bg-emerald-500 disabled:opacity-50"
-                    >
-                      {restoring ? '복구 중…' : `복구 (${selected.size})`}
-                    </button>
-                    {!adminUser ? (
+                    {!(adminUser && deletedMode) ? (
+                      <button
+                        type="button"
+                        onClick={() => void handleRestore()}
+                        disabled={restoring || selected.size === 0}
+                        className="inline-flex items-center rounded-md bg-emerald-600 px-2.5 py-1 text-sm font-medium text-white transition-colors hover:bg-emerald-500 disabled:opacity-50"
+                      >
+                        {restoring
+                          ? '복구 중…'
+                          : permanentlyDeletedMode
+                            ? `삭제된 내담자로 복구 (${selected.size})`
+                            : `복구 (${selected.size})`}
+                      </button>
+                    ) : null}
+                    {!adminUser && deletedMode ? (
                       <button
                         type="button"
                         onClick={() => setPermanentDeleteConfirmOpen(true)}
@@ -1307,7 +1421,7 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
                         {clientDeleteLoading ? '삭제 중…' : `삭제 (${selected.size})`}
                       </button>
                     ) : null}
-                    {selected.size > 0 ? (
+                    {selected.size > 0 && !adminUser ? (
                       <button
                         type="button"
                         onClick={() => setMoveOpen(true)}
@@ -1331,18 +1445,24 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
         onClose={() => setMoveOpen(false)}
         onSuccess={handleMoveSuccess}
       />
-      {deletedMode ? (
+      {deletedMode || permanentlyDeletedMode ? (
         <>
           <CounselorActionProgressOverlay
             open={restoring}
             title="복구 진행 중…"
-            message={`선택 ${selected.size}명을 복구하고 있습니다.`}
+            message={
+              permanentlyDeletedMode
+                ? `선택 ${selected.size}명을 삭제된 내담자로 복구하고 있습니다.`
+                : `선택 ${selected.size}명을 복구하고 있습니다.`
+            }
           />
-          <CounselorActionProgressOverlay
-            open={deleting}
-            title="영구 삭제 진행 중…"
-            message={`선택 ${selected.size}명을 영구 삭제하고 있습니다.`}
-          />
+          {deletedMode ? (
+            <CounselorActionProgressOverlay
+              open={deleting}
+              title="영구 삭제 진행 중…"
+              message={`선택 ${selected.size}명을 영구 삭제하고 있습니다.`}
+            />
+          ) : null}
         </>
       ) : (
         <CounselorActionProgressOverlay

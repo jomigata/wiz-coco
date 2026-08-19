@@ -1,6 +1,7 @@
 'use client';
 
 import React, { Suspense } from 'react';
+import { LoadingMessage } from '@/components/ui/LoadingMessage';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
@@ -129,7 +130,7 @@ function MbtiAgeResultContent() {
 function LoadingComponent() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-900 via-teal-800 to-green-900 flex items-center justify-center">
-      <div className="text-white text-xl">결과를 로딩중…</div>
+      <LoadingMessage message="결과를 로딩중…" textClassName="text-white text-xl" size="lg" />
     </div>
   );
 }

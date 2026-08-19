@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
+import { LoadingMessage } from '@/components/ui/LoadingMessage';
 import { getCareProgramById } from '@/data/careProgramCatalog';
 import { fetchPortalCareAssignments, submitPortalCareProgress } from '@/lib/clientPortalApi';
 import { readClientPortalSession } from '@/lib/clientPortalSession';
@@ -440,7 +441,13 @@ export default function PortalCareAssignmentsPanel({
   }, [load]);
 
   if (loading) {
-    return <p className="text-slate-400 text-sm py-8 text-center">추가 과제·치료를 로딩중…</p>;
+    return (
+      <LoadingMessage
+        className="py-8"
+        message="추가 과제·치료를 로딩중…"
+        textClassName="text-slate-400 text-sm"
+      />
+    );
   }
 
   if (error) {

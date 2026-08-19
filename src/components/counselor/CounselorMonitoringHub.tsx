@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import AuthLink from '@/components/auth/AuthLink';
+import { LoadingMessage } from '@/components/ui/LoadingMessage';
 import CounselorCohortMonitoringView from '@/components/counselor/CounselorCohortMonitoringView';
 import CounselorCareMonitoringView from '@/components/counselor/CounselorCareMonitoringView';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
@@ -205,7 +206,13 @@ export default function CounselorMonitoringHub({ initialView = 'overview' }: Pro
   );
 
   if (loading && view === 'overview') {
-    return <p className="py-12 text-center text-sm text-slate-500">모니터링 허브를 로딩중…</p>;
+    return (
+      <LoadingMessage
+        className="py-12"
+        message="모니터링 허브를 로딩중…"
+        textClassName="text-sm text-slate-500"
+      />
+    );
   }
 
   if (error && view === 'overview') {

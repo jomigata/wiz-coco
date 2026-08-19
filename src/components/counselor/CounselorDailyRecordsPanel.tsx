@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import AuthLink from '@/components/auth/AuthLink';
+import { LoadingMessage } from '@/components/ui/LoadingMessage';
 import { listCounselorClientPortals } from '@/lib/clientPortalApi';
 import {
   listCounselorDailyRecords,
@@ -236,7 +237,13 @@ export default function CounselorDailyRecordsPanel() {
   const filteredCount = useMemo(() => records.length, [records]);
 
   if (loading) {
-    return <p className="py-12 text-center text-sm text-slate-500">일상 기록을 로딩중…</p>;
+    return (
+      <LoadingMessage
+        className="py-12"
+        message="일상 기록을 로딩중…"
+        textClassName="text-sm text-slate-500"
+      />
+    );
   }
 
   if (error) {

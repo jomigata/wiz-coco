@@ -1,6 +1,7 @@
 'use client';
 
 import React, { Suspense, useState } from 'react';
+import { LoadingMessage } from '@/components/ui/LoadingMessage';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { resetPortalPin } from '@/lib/clientPortalApi';
@@ -9,7 +10,7 @@ import { normalizeJoinPinDigits } from '@/lib/accessCodeFormat';
 function ResetPinLoading() {
   return (
     <div className="min-h-screen bg-[#070b14] pt-24 flex justify-center">
-      <p className="text-slate-400 text-sm">로딩중…</p>
+      <LoadingMessage textClassName="text-slate-400 text-sm" />
     </div>
   );
 }
