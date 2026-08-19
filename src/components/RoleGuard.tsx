@@ -47,7 +47,7 @@ export default function RoleGuard({
   const rolesKey = useMemo(() => allowedRoles.slice().sort().join(','), [allowedRoles]);
   const sessionSettling =
     Boolean(user && (roleHydrating || (needsCounselorAccess && accessLoading))) ||
-    isAuthLoginInProgress();
+    (isAuthLoginInProgress() && !user);
 
   useEffect(() => {
     if (authPending || sessionSettling) {
@@ -120,7 +120,7 @@ export default function RoleGuard({
   }
 
   if (!isAuthorized) {
-    if (isAuthLoginInProgress()) {
+    if (isAuthLoginInProgress() && !user) {
       return (
         <div className="min-h-screen bg-[#0f1628] flex items-center justify-center">
           <div className="text-center rounded-xl border border-white/10 bg-[#162b4a] p-8 shadow-sm">
@@ -183,17 +183,6 @@ export default function RoleGuard({
           >
             홈으로 돌아가기
           </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-[#0f1628] flex items-center justify-center">
-        <div className="text-center rounded-xl border border-white/10 bg-[#162b4a] p-8 shadow-sm">
-          <div className="mx-auto mb-4 h-16 w-16 animate-spin rounded-full border-4 border-sky-300 border-t-transparent" />
-          <p className="text-xl text-slate-200">{LOADING_MESSAGE}</p>
         </div>
       </div>
     );

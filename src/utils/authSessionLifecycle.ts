@@ -173,6 +173,12 @@ export function beginAuthLoginAttempt(): void {
   } catch {
     // ignore
   }
+  // 다른 계정으로 재로그인 시 이전 role·user 캐시가 남지 않도록 정리
+  try {
+    sessionStorage.removeItem(FIREBASE_AUTH_USER_CACHE_KEY);
+  } catch {
+    // ignore
+  }
 }
 
 /** 로그인 시도 종료 */

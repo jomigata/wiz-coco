@@ -26,6 +26,7 @@ import { getBootstrapRoleForEmail } from '@/constants/bootstrapAccounts';
 import { readSWRCache, writeSWRCache } from '@/utils/staleWhileRevalidateCache';
 import {
   clearAllAuthStorage,
+  endAuthLoginAttempt,
   evaluateAuthSessionOnStartup,
   hasAuthenticatedTabSession,
   isAuthLoginInProgress,
@@ -132,7 +133,18 @@ function readCachedAuthUser(): AuthUser | null {
     return null;
   }
 
-  if (cached.data) return cached.data;
+  if (cached.data) {
+    try {
+      const { auth } = initializeFirebase();
+      const currentUid = auth?.currentUser?.uid;
+      if (currentUid && cached.data.uid && cached.data.uid !== currentUid) {
+        return authUserFromSdkUser(auth.currentUser);
+      }
+    } catch {
+      // ignore
+    }
+    return cached.data;
+  }
   return null;
 }
 
@@ -140,6 +152,7 @@ function readCachedAuthUser(): AuthUser | null {
 export function primeFirebaseAuthSessionCache(firebaseUser: FirebaseSdkUser): void {
   markAuthenticatedTabSession();
   writeSWRCache(AUTH_CACHE_KEY, authUserFromSdkUser(firebaseUser), { scope: 'session' });
+  endAuthLoginAttempt();
   void firebaseUser.getIdToken().then((token) => primeCounselorIdToken(token)).catch(() => null);
 }
 
@@ -237,6 +250,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
       markAuthenticatedTabSession();
       clearClientPortalSessionWithBroadcast();
       authExpiredOnStartupRef.current = false;
+      endAuthLoginAttempt();
       const baseUser = authUserFromSdkUser(firebaseUser);
 
       const bootstrapRole: AppRole = getBootstrapRoleForEmail(firebaseUser.email) || 'user';

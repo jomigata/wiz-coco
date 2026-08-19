@@ -106,7 +106,7 @@ const LoginContent = () => {
           // ignore
         }
         replaceWithAuthSession(router, resolveSafeRedirect(result.user.email));
-        window.setTimeout(() => endAuthLoginAttempt(), 5000);
+        endAuthLoginAttempt();
       } else {
         endAuthLoginAttempt();
         setLoginError(result.error || '로그인 처리 중 오류가 발생했습니다.');
