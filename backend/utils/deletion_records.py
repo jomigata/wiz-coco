@@ -369,6 +369,14 @@ def _serialize_assessment_row(doc) -> dict:
     }
 
 
+def _portal_linked_assessment_id(data: dict) -> str:
+    from_aid = (data.get("archivedFromAssessmentId") or "").strip()
+    if from_aid:
+        return from_aid
+    assigned = [str(x).strip() for x in (data.get("assignedAssessmentIds") or []) if str(x).strip()]
+    return assigned[0] if assigned else ""
+
+
 def _serialize_portal_row(doc) -> dict:
     data = doc.to_dict() or {}
     return {
@@ -378,7 +386,7 @@ def _serialize_portal_row(doc) -> dict:
         "phone": (data.get("phone") or "").strip(),
         "myCode": data.get("accessCode") or "",
         "counselorId": data.get("counselorId") or "",
-        "assessmentId": (data.get("archivedFromAssessmentId") or "").strip(),
+        "assessmentId": _portal_linked_assessment_id(data),
         "permanentlyDeletedAt": _iso_timestamp(data.get("permanentlyDeletedAt")),
     }
 
@@ -419,7 +427,8 @@ def restore_permanently_deleted_portals_for_assessment(db, *, assessment_id: str
     for doc in refs:
         pdata = doc.to_dict() or {}
         from_aid = (pdata.get("archivedFromAssessmentId") or "").strip()
-        if from_aid != aid:
+        assigned = [str(x).strip() for x in (pdata.get("assignedAssessmentIds") or []) if str(x).strip()]
+        if from_aid != aid and aid not in assigned:
             continue
         doc.reference.update(
             {

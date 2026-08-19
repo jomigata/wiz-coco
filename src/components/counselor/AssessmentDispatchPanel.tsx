@@ -819,7 +819,7 @@ export default function AssessmentDispatchPanel({
 
   if (loading) {
     return (
-      <CounselorPageSection title="상담진행 현황" dense className="flex min-h-0 flex-1">
+      <CounselorPageSection title="상담진행 현황" titleAccent="progress" dense className="flex min-h-0 flex-1">
         <p className="text-slate-400 text-sm py-4">{LOADING_MESSAGE}</p>
       </CounselorPageSection>
     );
@@ -827,7 +827,7 @@ export default function AssessmentDispatchPanel({
 
   if (error) {
     return (
-      <CounselorPageSection title="상담진행 현황" dense className="flex min-h-0 flex-1">
+      <CounselorPageSection title="상담진행 현황" titleAccent="progress" dense className="flex min-h-0 flex-1">
         <p className="text-red-400 text-sm py-4">{error}</p>
       </CounselorPageSection>
     );
@@ -872,6 +872,7 @@ export default function AssessmentDispatchPanel({
           </span>
         </span>
       }
+      titleAccent="progress"
       className="flex min-h-0 flex-1"
       bodyClassName="flex min-h-0 flex-1 flex-col !p-0"
       noBodyPadding

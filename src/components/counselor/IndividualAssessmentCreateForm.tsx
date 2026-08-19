@@ -573,6 +573,7 @@ export default function IndividualAssessmentCreateForm({
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)_minmax(18rem,22rem)] xl:items-stretch">
         <CounselorPageSection
           title="검사 정보"
+          titleAccent="create"
           className="!overflow-visible flex h-full min-h-0 flex-col"
           bodyClassName="flex min-h-0 flex-1 flex-col overflow-visible"
         >
@@ -778,6 +779,7 @@ export default function IndividualAssessmentCreateForm({
 
         <CounselorPageSection
           title="내담자 목록"
+          titleAccent="create"
           className="!overflow-visible flex h-full min-h-0 flex-col xl:col-start-2 xl:row-start-1"
           bodyClassName="flex min-h-0 flex-1 flex-col overflow-visible"
           toolbar={
@@ -988,6 +990,7 @@ export default function IndividualAssessmentCreateForm({
 
         <CounselorPageSection
           title="발급 · 발송"
+          titleAccent="create"
           className="!overflow-visible flex h-full min-h-0 flex-col xl:col-start-3 xl:row-start-1"
           bodyClassName="flex min-h-0 flex-1 flex-col overflow-visible"
         >

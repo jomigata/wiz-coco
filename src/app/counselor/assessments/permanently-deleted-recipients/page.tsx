@@ -165,7 +165,7 @@ export default function PermanentlyDeletedRecipientsPage() {
     [permanentlyDeletedAssessmentById],
   );
 
-  const lockedAssessmentTooltip = '영구삭제 상담코드';
+  const lockedAssessmentTooltip = '영구삭제된 상담코드';
 
   const selectableOnPage = useMemo(
     () => paginatedItems.filter((row) => !isRowSelectionLocked(row)),
@@ -337,7 +337,7 @@ export default function PermanentlyDeletedRecipientsPage() {
                                 disabled={locked}
                                 tabIndex={-1}
                                 className="rounded accent-blue-500 disabled:cursor-not-allowed disabled:opacity-40"
-                                aria-label={`${row.displayName || '내담자'} 선택 불가 — 영구삭제 상담코드`}
+                                aria-label={`${row.displayName || '내담자'} 선택 불가 — 영구삭제된 상담코드`}
                               />
                               <span
                                 className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-800 opacity-0 shadow-md group-hover/check:opacity-100 group-focus-within/check:opacity-100"
