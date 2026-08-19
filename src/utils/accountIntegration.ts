@@ -6,8 +6,6 @@ import {
   sendEmailVerification,
 } from 'firebase/auth';
 import {
-  beginAuthLoginAttempt,
-  endAuthLoginAttempt,
   markAuthenticatedTabSession,
 } from '@/utils/authSessionLifecycle';
 
@@ -43,7 +41,6 @@ export class AccountIntegrationManager {
     email: string,
     password: string,
   ): Promise<{ success: boolean; user?: import('firebase/auth').User; error?: string }> {
-    beginAuthLoginAttempt();
     try {
       const result = await signInWithEmailAndPassword(auth, email.trim(), password);
       markAuthenticatedTabSession();
@@ -54,8 +51,6 @@ export class AccountIntegrationManager {
         success: false,
         error: mapFirebaseAuthError(code, (error as { message?: string })?.message),
       };
-    } finally {
-      endAuthLoginAttempt();
     }
   }
 

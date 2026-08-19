@@ -2,6 +2,20 @@
  * 로그인 페이지 리다이렉트 URL 및 인증 오류 판별
  */
 
+import type { AppRole } from '@/utils/roleUtils';
+
+/** 상담관리 영역 중 관리자 전용 경로 */
+export const COUNSELOR_ADMIN_ONLY_PATH_PREFIXES = [
+  '/counselor/assessments/permanently-deleted',
+] as const;
+
+export function isCounselorAdminOnlyPath(path: string): boolean {
+  const normalized = (path.split('?')[0] || '').replace(/\/+$/, '') || '/';
+  return COUNSELOR_ADMIN_ONLY_PATH_PREFIXES.some(
+    (prefix) => normalized === prefix || normalized.startsWith(`${prefix}/`) || normalized.startsWith(`${prefix}-`),
+  );
+}
+
 export function buildLoginRedirectUrl(returnPath?: string): string {
   if (typeof window === 'undefined') return '/login';
   const path = (returnPath || `${window.location.pathname}${window.location.search}`).trim();
@@ -32,6 +46,18 @@ export function resolveCounselorPostLoginRedirect(raw: string | null | undefined
   const path = (raw || '').trim();
   if (!path || path === '/') return '/counselor';
   if (path.startsWith('/login') || path.startsWith('/register')) return '/counselor';
+  return path;
+}
+
+/** 역할에 맞지 않는 관리자 전용 redirect는 상담관리 허브로 대체 (로그인 루프 방지) */
+export function resolvePostLoginRedirectForRole(
+  redirectPath: string,
+  role: AppRole | string | null | undefined,
+): string {
+  const path = resolveCounselorPostLoginRedirect(redirectPath);
+  if (isCounselorAdminOnlyPath(path) && role !== 'admin') {
+    return '/counselor';
+  }
   return path;
 }
 

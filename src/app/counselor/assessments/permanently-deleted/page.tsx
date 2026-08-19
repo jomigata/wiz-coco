@@ -207,7 +207,11 @@ export default function PermanentlyDeletedAssessmentsPage() {
   }
   if (!adminUser) {
     return (
-      <AuthRequiredState description="관리자 계정으로 로그인해야 영구삭제 상담코드 목록을 이용할 수 있습니다." />
+      <AuthRequiredState
+        autoRedirect={false}
+        title="관리자 권한이 필요합니다"
+        description="관리자 계정으로 로그인해야 영구삭제 상담코드 목록을 이용할 수 있습니다."
+      />
     );
   }
 

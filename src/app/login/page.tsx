@@ -13,9 +13,11 @@ import {
   replaceWithAuthSession,
   markCounselorLoginPageSession,
 } from '@/utils/authSessionLifecycle';
-import { resolveCounselorPostLoginRedirect } from '@/lib/authRedirect';
+import { resolveCounselorPostLoginRedirect, resolvePostLoginRedirectForRole } from '@/lib/authRedirect';
 import { clearClientPortalSessionWithBroadcast } from '@/lib/clientPortalSession';
 import { AccountIntegrationManager } from '@/utils/accountIntegration';
+import { getBootstrapRoleForEmail } from '@/constants/bootstrapAccounts';
+import { getAppRoleSync } from '@/utils/roleUtils';
 
 const LoadingLogin = () => (
   <div className="min-h-screen bg-[#060a12] flex flex-col">
@@ -36,6 +38,15 @@ const LoginContent = () => {
   const registered = searchParams.get('registered') === 'true';
   const emailVerification = searchParams.get('emailVerification');
   const redirectUrl = resolveCounselorPostLoginRedirect(searchParams.get('redirect'));
+
+  const resolveSafeRedirect = (email: string | null | undefined) => {
+    const role =
+      getBootstrapRoleForEmail(email) ??
+      (user?.email === email ? user?.role : undefined) ??
+      getAppRoleSync();
+    return resolvePostLoginRedirectForRole(redirectUrl, role);
+  };
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
@@ -61,7 +72,7 @@ const LoginContent = () => {
     const { auth } = initializeFirebase();
     const current = auth?.currentUser;
     if (!current || current.uid !== user.uid) return;
-    replaceWithAuthSession(router, redirectUrl);
+    replaceWithAuthSession(router, resolveSafeRedirect(current.email));
   }, [user, loading, router, redirectUrl]);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -94,7 +105,7 @@ const LoginContent = () => {
         } catch {
           // ignore
         }
-        replaceWithAuthSession(router, redirectUrl);
+        replaceWithAuthSession(router, resolveSafeRedirect(result.user.email));
         window.setTimeout(() => endAuthLoginAttempt(), 5000);
       } else {
         endAuthLoginAttempt();
