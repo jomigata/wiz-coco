@@ -26,12 +26,19 @@ async function adminFetch(path: string, init?: RequestInit) {
 export type PermanentlyDeletedAssessment = {
   id: string;
   accessCode: string;
+  codeCategory?: string;
   title: string;
   counselorId: string;
   targetAudience: string;
   cohortName: string;
+  usageEndDate?: string;
+  createdAt?: string | null;
   counselorEmail?: string;
   permanentlyDeletedAt: string | null;
+  dispatchSentCount?: number;
+  dispatchFailedCount?: number;
+  testCompleteCount?: number;
+  testIncompleteCount?: number;
 };
 
 export type PermanentlyDeletedPortal = {

@@ -47,6 +47,7 @@ import {
 } from '@/lib/assessmentApi';
 import { matchesWildcardFields } from '@/lib/wildcardSearch';
 import { getAppRoleSync, isAdmin } from '@/utils/roleUtils';
+import { exportDeletedAssessments } from '@/lib/counselorAssessmentListExport';
 import { CounselorAdminEmailSortHeader, CounselorAdminEmailTd, compareCounselorEmail } from '@/components/counselor/CounselorAdminEmailColumn';
 
 type ListSortKey = 'createdAt' | 'counselInfo' | 'accessCode' | 'usageEndDate' | 'archivedAt' | 'counselorEmail';
@@ -418,6 +419,29 @@ export default function DeletedAssessmentsPage() {
     }
   };
 
+  const selectedRows = useMemo(
+    () => sortedFiltered.filter((row) => selected.has(row.id)),
+    [sortedFiltered, selected],
+  );
+
+  const handleAssessmentDownload = () => {
+    exportDeletedAssessments(selectedRows, 'download', {
+      dateColumnLabel: '삭제일',
+      dateField: 'archivedAt',
+      sheetTitle: '삭제된상담코드',
+      printTitle: '삭제된 상담코드',
+    });
+  };
+
+  const handleAssessmentPrint = () => {
+    exportDeletedAssessments(selectedRows, 'print', {
+      dateColumnLabel: '삭제일',
+      dateField: 'archivedAt',
+      sheetTitle: '삭제된상담코드',
+      printTitle: '삭제된 상담코드',
+    });
+  };
+
   const searchPlaceholder = adminUser
     ? '검사명 · 상담유형 · 코드 · 기관명 · 상담사 이메일 검색'
     : '검사명 · 상담유형 · 코드 · 기관명 검색';
@@ -615,6 +639,22 @@ export default function DeletedAssessmentsPage() {
                     className="rounded-md border border-white/10 bg-[#101f38]/90 px-2.5 py-1 text-sm text-slate-300 transition-colors hover:bg-white/5 disabled:opacity-50"
                   >
                     {allSelected ? '전체 해제' : '전체 선택'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleAssessmentDownload}
+                    disabled={selected.size === 0}
+                    className="rounded-md bg-emerald-700/90 px-2.5 py-1 text-sm font-medium text-white transition-colors hover:bg-emerald-600 disabled:opacity-50"
+                  >
+                    다운로드 ({selected.size})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleAssessmentPrint}
+                    disabled={selected.size === 0}
+                    className="rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1 text-sm font-medium text-slate-200 transition-colors hover:bg-white/5 disabled:opacity-50"
+                  >
+                    인쇄 ({selected.size})
                   </button>
                   {!adminUser ? (
                     <button

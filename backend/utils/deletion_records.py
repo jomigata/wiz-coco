@@ -361,12 +361,89 @@ def _serialize_assessment_row(doc) -> dict:
     return {
         "id": doc.id,
         "accessCode": data.get("accessCode") or "",
+        "codeCategory": data.get("codeCategory") or "",
         "title": data.get("title") or "",
         "counselorId": data.get("counselorId") or "",
         "targetAudience": data.get("targetAudience") or "",
         "cohortName": data.get("cohortName") or "",
+        "usageEndDate": data.get("usageEndDate") or "",
+        "createdAt": _iso_timestamp(data.get("createdAt")),
         "permanentlyDeletedAt": _iso_timestamp(data.get("permanentlyDeletedAt")),
+        "testList": data.get("testList") or [],
     }
+
+
+def _aggregate_permanently_deleted_assessment_list_stats(
+    db,
+    *,
+    items: list[dict],
+) -> dict[str, dict]:
+    """영구삭제 상담코드 — 연결된 영구삭제 내담자 기준 진행 집계."""
+    if not items:
+        return {}
+
+    from utils.assessment_dispatch import (
+        _accumulate_assessment_stats_for_portals,
+        _bulk_completed_tests_by_portal_assessment,
+        _latest_notify_by_portal,
+    )
+
+    def linked_assessment_id(pdata: dict) -> str:
+        return _portal_linked_assessment_id(pdata)
+
+    stats: dict[str, dict] = {
+        x["id"]: {
+            "dispatchSentCount": 0,
+            "dispatchFailedCount": 0,
+            "dispatchSendingCount": 0,
+            "testCompleteCount": 0,
+            "testIncompleteCount": 0,
+        }
+        for x in items
+    }
+    required_by_assessment: dict[str, set[str]] = {}
+    for x in items:
+        aid = x["id"]
+        required_by_assessment[aid] = {
+            str(t.get("testId") or "").strip()
+            for t in (x.get("testList") or [])
+            if t and str(t.get("testId") or "").strip()
+        }
+
+    portal_rows_by_assessment: dict[str, list[tuple[str, dict]]] = {x["id"]: [] for x in items}
+    portal_docs = (
+        db.collection(CLIENT_PORTALS_COLLECTION)
+        .where("status", "==", "permanently_deleted")
+        .stream()
+    )
+    for doc in portal_docs:
+        pdata = doc.to_dict() or {}
+        aid = linked_assessment_id(pdata)
+        if aid not in portal_rows_by_assessment:
+            continue
+        portal_rows_by_assessment[aid].append((doc.id, pdata))
+
+    portal_ids = {
+        pid
+        for rows in portal_rows_by_assessment.values()
+        for pid, _ in rows
+    }
+    notify_map = _latest_notify_by_portal(db, portal_ids)
+    completion_map = _bulk_completed_tests_by_portal_assessment(
+        db, list(portal_ids), set(stats.keys())
+    )
+
+    for x in items:
+        aid = x["id"]
+        _accumulate_assessment_stats_for_portals(
+            stats,
+            assessment_id=aid,
+            portal_rows=portal_rows_by_assessment.get(aid) or [],
+            required_by_assessment=required_by_assessment,
+            notify_map=notify_map,
+            completion_map=completion_map,
+        )
+    return stats
 
 
 def _portal_linked_assessment_id(data: dict) -> str:
@@ -403,6 +480,13 @@ def list_permanently_deleted_records(db) -> dict:
         .where("status", "==", "permanently_deleted")
         .stream()
     ]
+    assessment_stats = _aggregate_permanently_deleted_assessment_list_stats(db, items=assessments)
+    for x in assessments:
+        pstats = assessment_stats.get(x["id"]) or {}
+        x["dispatchSentCount"] = int(pstats.get("dispatchSentCount") or 0)
+        x["dispatchFailedCount"] = int(pstats.get("dispatchFailedCount") or 0)
+        x["testCompleteCount"] = int(pstats.get("testCompleteCount") or 0)
+        x["testIncompleteCount"] = int(pstats.get("testIncompleteCount") or 0)
     permanently_deleted_assessment_ids = {a["id"] for a in assessments}
 
     portal_docs = list(

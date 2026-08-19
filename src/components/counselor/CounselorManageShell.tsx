@@ -122,9 +122,13 @@ export default function CounselorManageShell({ children }: Props) {
                                     : [];
                               const contextNested =
                                 normalizedItemHref === '/counselor/assessments'
-                                  ? getAssessmentListContextNestedItems(pathname, search)
+                                  ? getAssessmentListContextNestedItems(pathname, search, {
+                                      admin: adminUser,
+                                    })
                                   : normalizedItemHref === '/counselor/clients'
-                                    ? getClientsListContextNestedItems(pathname, search)
+                                    ? getClientsListContextNestedItems(pathname, search, {
+                                        admin: adminUser,
+                                      })
                                     : [];
                               const contextAnchorHref =
                                 normalizedItemHref === '/counselor/assessments'

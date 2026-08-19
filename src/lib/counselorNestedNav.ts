@@ -134,13 +134,14 @@ export function resolveAssessmentContextId(pathname: string, search: string): st
 export function getAssessmentListContextNestedItems(
   pathname: string,
   search: string,
+  options?: { admin?: boolean },
 ): AssessmentListNestedNavItem[] {
   const path = normalizeCounselorPath(pathname);
   const assessmentId = resolveAssessmentContextId(pathname, search);
   const progressFrom = resolveCounselorProgressFrom(pathname, search);
   const items: AssessmentListNestedNavItem[] = [];
 
-  if (isDeletedAssessmentsPath(path)) {
+  if (!options?.admin && isDeletedAssessmentsPath(path)) {
     items.push({
       order: 10,
       label: '삭제된 상담코드',
@@ -176,11 +177,12 @@ export function getAssessmentListContextNestedItems(
 export function getClientsListContextNestedItems(
   pathname: string,
   search: string,
+  options?: { admin?: boolean },
 ): AssessmentListNestedNavItem[] {
   const path = normalizeCounselorPath(pathname);
   const items: AssessmentListNestedNavItem[] = [];
 
-  if (isDeletedRecipientsPath(path)) {
+  if (!options?.admin && isDeletedRecipientsPath(path)) {
     items.push({
       order: 10,
       label: '삭제된 내담자',
@@ -222,6 +224,9 @@ export function isAssessmentsMenuSelected(pathname: string, search: string): boo
   if (isClientsMenuSelected(pathname, search)) return false;
   const path = normalizeCounselorPath(pathname);
   if (isDeletedAssessmentsPath(path)) return true;
+  if (path.startsWith(PERMANENTLY_DELETED_ASSESSMENTS_HREF) && !path.startsWith(PERMANENTLY_DELETED_RECIPIENTS_HREF)) {
+    return true;
+  }
   return path.startsWith('/counselor/assessments');
 }
 
@@ -242,6 +247,12 @@ export function getAssessmentsParentSubmenuItems(options?: { admin?: boolean }):
     },
   ];
   if (options?.admin) {
+    items.push({
+      order: 55,
+      label: '삭제된 상담코드',
+      href: DELETED_ASSESSMENTS_HREF,
+      isActive: isDeletedAssessmentsPath,
+    });
     items.push({
       order: 60,
       label: '영구삭제 상담코드',
@@ -265,6 +276,12 @@ export function getClientsParentSubmenuItems(options?: { admin?: boolean }): Cou
     },
   ];
   if (options?.admin) {
+    items.push({
+      order: 55,
+      label: '삭제된 내담자',
+      href: DELETED_RECIPIENTS_HREF,
+      isActive: isDeletedRecipientsPath,
+    });
     items.push({
       order: 60,
       label: '영구삭제 내담자',

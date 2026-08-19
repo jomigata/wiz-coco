@@ -1015,14 +1015,7 @@ export default function CounselorClientList({
       title={pageTitle}
       titleAccent={deletedMode || permanentlyDeletedMode ? 'deleted' : 'list'}
       headerAction={
-        permanentlyDeletedMode ? (
-          <AuthLink
-            href={DELETED_RECIPIENTS_HREF}
-            className="inline-flex shrink-0 items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1.5 text-xs font-medium text-slate-300 transition-colors hover:bg-white/5 sm:text-sm"
-          >
-            삭제된 내담자
-          </AuthLink>
-        ) : !deletedMode ? (
+        !deletedMode && !permanentlyDeletedMode ? (
           <AuthLink
             href={DELETED_RECIPIENTS_HREF}
             className="inline-flex shrink-0 items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1.5 text-xs font-medium text-slate-300 transition-colors hover:bg-white/5 sm:text-sm"
@@ -1368,6 +1361,34 @@ export default function CounselorClientList({
               footerAction={
                 deletedMode || permanentlyDeletedMode ? (
                   <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={toggleAllOnPage}
+                      disabled={loading || selectableOnPage.length === 0}
+                      className="rounded-md border border-white/10 bg-[#101f38]/90 px-2.5 py-1 text-sm text-slate-300 transition-colors hover:bg-white/5 disabled:opacity-50"
+                    >
+                      {allPageSelected ? '전체 해제' : '전체 선택'}
+                    </button>
+                    {(adminUser && deletedMode) || permanentlyDeletedMode ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={handleClientDownload}
+                          disabled={selected.size === 0 || restoring || deleting}
+                          className="inline-flex items-center rounded-md bg-emerald-700/90 px-2.5 py-1 text-sm font-medium text-white transition-colors hover:bg-emerald-600 disabled:opacity-50"
+                        >
+                          다운로드 ({selected.size})
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleClientPrint}
+                          disabled={selected.size === 0 || restoring || deleting}
+                          className="inline-flex items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1 text-sm font-medium text-slate-200 transition-colors hover:bg-white/5 disabled:opacity-50"
+                        >
+                          인쇄 ({selected.size})
+                        </button>
+                      </>
+                    ) : null}
                     {!(adminUser && deletedMode) ? (
                       <button
                         type="button"
