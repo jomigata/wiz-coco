@@ -938,19 +938,6 @@ export default function AssessmentDispatchPanel({
               ? '발송 중…'
               : `${credentialSendModeLabel(credentialSendMode)} (${credentialTargetSelected.length})`}
           </button>
-          <button
-            type="button"
-            onClick={() => setMoveOpen(true)}
-            disabled={
-              remindLoading ||
-              resendLoading ||
-              deleteLoading ||
-              selected.size === 0
-            }
-            className="ml-auto rounded-md border border-sky-500/40 bg-sky-900/40 px-2.5 py-1.5 text-xs font-medium text-sky-100 transition-colors hover:bg-sky-800/50 disabled:opacity-50 sm:text-sm"
-          >
-            상담코드 이동 ({selected.size})
-          </button>
         </div>
       }
     >
@@ -1232,6 +1219,16 @@ export default function AssessmentDispatchPanel({
                     className="rounded-md bg-red-700/90 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-red-600 disabled:opacity-50 sm:text-sm"
                   >
                     {deleteLoading ? '삭제 중…' : `삭제 (${selected.size})`}
+                  </button>
+                ) : null}
+                {selected.size > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => setMoveOpen(true)}
+                    disabled={remindLoading || resendLoading || deleteLoading}
+                    className="inline-flex shrink-0 items-center justify-center rounded-md border border-sky-500/40 bg-sky-900/40 px-2.5 py-1.5 text-xs font-medium text-sky-100 transition-colors hover:bg-sky-800/50 disabled:opacity-50 sm:text-sm"
+                  >
+                    다른 상담코드로 이동
                   </button>
                 ) : null}
               </div>

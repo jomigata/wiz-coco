@@ -925,8 +925,9 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
   return (
     <CounselorPageSection
       title={pageTitle}
+      titleAccent={deletedMode ? 'deleted' : 'list'}
       headerAction={
-        !deletedMode && !adminUser ? (
+        !deletedMode ? (
           <AuthLink
             href={DELETED_RECIPIENTS_HREF}
             className="inline-flex shrink-0 items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1.5 text-xs font-medium text-slate-300 transition-colors hover:bg-white/5 sm:text-sm"

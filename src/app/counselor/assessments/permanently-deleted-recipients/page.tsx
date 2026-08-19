@@ -165,16 +165,7 @@ export default function PermanentlyDeletedRecipientsPage() {
     [permanentlyDeletedAssessmentById],
   );
 
-  const lockedAssessmentTooltip = useCallback(
-    (row: PermanentlyDeletedPortal): string => {
-      const assessment = permanentlyDeletedAssessmentById.get(row.assessmentId);
-      if (!assessment) return '영구삭제 상담코드';
-      const code = formatAccessCodeDisplay(assessment.accessCode);
-      const title = (assessment.title || assessment.cohortName || '').trim();
-      return title ? `영구삭제 상담코드 · ${code} / ${title}` : `영구삭제 상담코드 · ${code}`;
-    },
-    [permanentlyDeletedAssessmentById],
-  );
+  const lockedAssessmentTooltip = '영구삭제 상담코드';
 
   const selectableOnPage = useMemo(
     () => paginatedItems.filter((row) => !isRowSelectionLocked(row)),
@@ -248,6 +239,7 @@ export default function PermanentlyDeletedRecipientsPage() {
   return (
     <CounselorPageSection
       title="영구삭제 내담자"
+      titleAccent="deleted"
       className="flex min-h-0 flex-1"
       bodyClassName="flex min-h-0 flex-1 flex-col !p-0"
       noBodyPadding
@@ -337,20 +329,21 @@ export default function PermanentlyDeletedRecipientsPage() {
                         </td>
                         <td className={counselorListSelectTdClass}>
                           {locked ? (
-                            <span className="group/check relative inline-flex">
+                            <span className="group/check relative inline-flex cursor-not-allowed">
                               <input
                                 type="checkbox"
                                 checked={isSelected}
                                 onChange={() => toggleOne(row.portalId)}
                                 disabled={locked}
+                                tabIndex={-1}
                                 className="rounded accent-blue-500 disabled:cursor-not-allowed disabled:opacity-40"
-                                aria-label={`${row.displayName || '내담자'} 선택`}
+                                aria-label={`${row.displayName || '내담자'} 선택 불가 — 영구삭제 상담코드`}
                               />
                               <span
-                                className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-1.5 max-w-[16rem] -translate-x-1/2 whitespace-normal rounded-md border border-slate-200 bg-white px-2 py-1 text-center text-xs font-medium text-slate-800 opacity-0 shadow-md transition-none group-hover/check:opacity-100"
+                                className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-800 opacity-0 shadow-md group-hover/check:opacity-100 group-focus-within/check:opacity-100"
                                 role="tooltip"
                               >
-                                {lockedAssessmentTooltip(row)}
+                                {lockedAssessmentTooltip}
                               </span>
                             </span>
                           ) : (

@@ -405,6 +405,32 @@ def list_permanently_deleted_records(db) -> dict:
     return {"assessments": assessments, "portals": portals}
 
 
+def restore_permanently_deleted_portals_for_assessment(db, *, assessment_id: str) -> int:
+    """영구삭제 상담코드 복구 시 연결된 영구삭제 내담자도 삭제된 내담자(archived)로 복구."""
+    aid = (assessment_id or "").strip()
+    if not aid:
+        return 0
+    restored_count = 0
+    refs = (
+        db.collection(CLIENT_PORTALS_COLLECTION)
+        .where("status", "==", "permanently_deleted")
+        .stream()
+    )
+    for doc in refs:
+        pdata = doc.to_dict() or {}
+        from_aid = (pdata.get("archivedFromAssessmentId") or "").strip()
+        if from_aid != aid:
+            continue
+        doc.reference.update(
+            {
+                "status": "archived",
+                "permanentlyDeletedAt": fa_firestore.DELETE_FIELD,
+            }
+        )
+        restored_count += 1
+    return restored_count
+
+
 def restore_permanently_deleted_records(
     db,
     *,
@@ -439,6 +465,17 @@ def restore_permanently_deleted_records(
         )
         restored_assessments += 1
         details.append({"kind": "assessment", "id": assessment_id, "status": "restored"})
+        linked = restore_permanently_deleted_portals_for_assessment(db, assessment_id=assessment_id)
+        if linked:
+            restored_portals += linked
+            details.append(
+                {
+                    "kind": "portal_batch",
+                    "assessmentId": assessment_id,
+                    "status": "restored",
+                    "count": linked,
+                }
+            )
 
     for pid in portal_ids or []:
         portal_id = (pid or "").strip()

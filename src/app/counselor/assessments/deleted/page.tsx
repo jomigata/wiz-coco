@@ -430,6 +430,7 @@ export default function DeletedAssessmentsPage() {
   return (
     <CounselorPageSection
       title="삭제된 상담코드"
+      titleAccent="deleted"
       className="flex min-h-0 flex-1"
       bodyClassName="flex min-h-0 flex-1 flex-col !p-0"
       noBodyPadding

@@ -8,6 +8,8 @@ type CounselorPageSectionProps = {
   title?: React.ReactNode;
   /** 타이틀 행 우측 링크·버튼 (toolbar 앞) */
   headerAction?: React.ReactNode;
+  /** 타이틀 블록 상단 강조선 — list: 노란색, deleted: 주황색 */
+  titleAccent?: 'list' | 'deleted';
   toolbar?: React.ReactNode;
   description?: React.ReactNode;
   children: React.ReactNode;
@@ -24,6 +26,7 @@ type CounselorPageSectionProps = {
 export default function CounselorPageSection({
   title,
   headerAction,
+  titleAccent,
   toolbar,
   description,
   children,
@@ -44,6 +47,13 @@ export default function CounselorPageSection({
         ? 'p-2.5'
         : 'p-2.5 sm:p-3';
 
+  const titleAccentClass =
+    titleAccent === 'deleted'
+      ? 'border-t-4 border-t-orange-500'
+      : titleAccent === 'list'
+        ? 'border-t-4 border-t-yellow-400'
+        : '';
+
   return (
     <>
       {showHierarchyBreadcrumb ? (
@@ -54,7 +64,7 @@ export default function CounselorPageSection({
     >
       {hasHeader ? (
         <div
-          className={`flex flex-col gap-2 border-b border-sky-400/25 bg-gradient-to-r from-sky-600/25 via-sky-500/15 to-transparent sm:flex-row sm:items-center sm:justify-between ${headerPad}`}
+          className={`flex flex-col gap-2 border-b border-sky-400/25 bg-gradient-to-r from-sky-600/25 via-sky-500/15 to-transparent sm:flex-row sm:items-center sm:justify-between ${headerPad} ${titleAccentClass}`}
         >
           {title ? (
             <h2 className={`font-bold tracking-tight text-white ${relaxed ? 'text-base' : dense ? 'text-sm' : 'text-sm sm:text-base'}`}>

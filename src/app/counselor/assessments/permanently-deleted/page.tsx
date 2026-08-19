@@ -185,7 +185,9 @@ export default function PermanentlyDeletedAssessmentsPage() {
       });
       setActionComplete({
         title: '복구 완료',
-        message: `삭제된 상담코드로 복구 ${result.restoredAssessments}건${result.failed ? `, 실패 ${result.failed}건` : ''}`,
+        message: `삭제된 상담코드로 복구 ${result.restoredAssessments}건${
+          result.restoredPortals ? ` · 연결 내담자 ${result.restoredPortals}명` : ''
+        }${result.failed ? `, 실패 ${result.failed}건` : ''}`,
       });
       await load();
     } catch (err) {
@@ -212,6 +214,7 @@ export default function PermanentlyDeletedAssessmentsPage() {
   return (
     <CounselorPageSection
       title="영구삭제 상담코드"
+      titleAccent="deleted"
       className="flex min-h-0 flex-1"
       bodyClassName="flex min-h-0 flex-1 flex-col !p-0"
       noBodyPadding
