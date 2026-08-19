@@ -617,12 +617,14 @@ export default function AssessmentList({
       title="상담코드"
       titleAccent="list"
       headerAction={
-        <AuthLink
-          href={DELETED_ASSESSMENTS_HREF}
-          className="inline-flex shrink-0 items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1.5 text-xs font-medium text-slate-300 transition-colors hover:bg-white/5 sm:text-sm"
-        >
-          삭제된 상담코드
-        </AuthLink>
+        adminUser ? undefined : (
+          <AuthLink
+            href={DELETED_ASSESSMENTS_HREF}
+            className="inline-flex shrink-0 items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1.5 text-xs font-medium text-slate-300 transition-colors hover:bg-white/5 sm:text-sm"
+          >
+            삭제된 상담코드
+          </AuthLink>
+        )
       }
       className="flex min-h-0 flex-1"
       bodyClassName="flex min-h-0 flex-1 flex-col !p-0"
@@ -731,13 +733,15 @@ export default function AssessmentList({
                 <tr className={counselorListHeaderRowClass}>
                   <th className={counselorListNoThClass}>No.</th>
                   <th className={counselorListSelectThClass}>
-                    <input
-                      type="checkbox"
-                      checked={allPageSelected}
-                      onChange={toggleAllOnPage}
-                      className="rounded accent-blue-500"
-                      aria-label="현재 페이지 전체 선택"
-                    />
+                    {adminUser ? null : (
+                      <input
+                        type="checkbox"
+                        checked={allPageSelected}
+                        onChange={toggleAllOnPage}
+                        className="rounded accent-blue-500"
+                        aria-label="현재 페이지 전체 선택"
+                      />
+                    )}
                   </th>
                   <SortableColumnHeader
                     label="발급일"
@@ -886,6 +890,16 @@ export default function AssessmentList({
             unit="건"
             footerAction={
               <div className="flex flex-wrap items-center gap-2">
+                {adminUser ? (
+                  <button
+                    type="button"
+                    onClick={toggleAllOnPage}
+                    disabled={paginatedItems.length === 0 || bulkDeleteLoading}
+                    className="rounded-md border border-white/10 bg-[#101f38]/90 px-2.5 py-1 text-sm text-slate-300 transition-colors hover:bg-white/5 disabled:opacity-50"
+                  >
+                    {allPageSelected ? '전체 해제' : '전체 선택'}
+                  </button>
+                ) : null}
                 <button
                   type="button"
                   onClick={handleAssessmentDownload}

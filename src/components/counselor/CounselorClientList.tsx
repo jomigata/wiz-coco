@@ -704,7 +704,7 @@ export default function CounselorClientList({
     return map;
   }, [archivedRaw]);
 
-  const isRowSelectionLocked = useCallback(
+  const isAssessmentDeletedLinkedRow = useCallback(
     (portalId: string) => {
       if (permanentlyDeletedMode) {
         const row = permanentlyDeletedRaw.find((item) => item.portalId === portalId);
@@ -715,6 +715,14 @@ export default function CounselorClientList({
       return row ? isAssessmentLinkedArchivedRecipient(row) : false;
     },
     [archivedByPortalId, deletedMode, permanentlyDeletedMode, permanentlyDeletedRaw],
+  );
+
+  const isRowSelectionLocked = useCallback(
+    (portalId: string) => {
+      if (adminUser && (deletedMode || permanentlyDeletedMode)) return false;
+      return isAssessmentDeletedLinkedRow(portalId);
+    },
+    [adminUser, deletedMode, permanentlyDeletedMode, isAssessmentDeletedLinkedRow],
   );
 
   useRedirectOnLoginRequiredError(error);
@@ -802,10 +810,10 @@ export default function CounselorClientList({
     [items, selected],
   );
 
-  const selectableOnPage = useMemo(
-    () => paginatedItems.filter((item) => !isRowSelectionLocked(item.portalId)),
-    [paginatedItems, isRowSelectionLocked],
-  );
+  const selectableOnPage = useMemo(() => {
+    if (adminUser && (deletedMode || permanentlyDeletedMode)) return paginatedItems;
+    return paginatedItems.filter((item) => !isRowSelectionLocked(item.portalId));
+  }, [adminUser, deletedMode, permanentlyDeletedMode, paginatedItems, isRowSelectionLocked]);
 
   const allPageSelected =
     selectableOnPage.length > 0 && selectableOnPage.every((item) => selected.has(item.portalId));
@@ -878,12 +886,29 @@ export default function CounselorClientList({
     setMessage('');
     try {
       if (permanentlyDeletedMode) {
+        const restorablePortalIds = Array.from(selected).filter(
+          (portalId) => !isAssessmentDeletedLinkedRow(portalId),
+        );
+        const skipped = selected.size - restorablePortalIds.length;
+        if (restorablePortalIds.length === 0) {
+          setActionComplete({
+            title: '복구 불가',
+            message:
+              skipped > 0
+                ? '선택한 내담자는 삭제·영구삭제된 상담코드에 연결되어 복구할 수 없습니다.'
+                : '복구할 내담자를 선택해 주세요.',
+            error: true,
+          });
+          return;
+        }
         const result = await restorePermanentlyDeletedRecords({
-          portalIds: Array.from(selected),
+          portalIds: restorablePortalIds,
         });
         setActionComplete({
           title: '복구 완료',
-          message: `삭제된 내담자로 복구 ${result.restoredPortals}건${result.failed ? `, 실패 ${result.failed}건` : ''}`,
+          message: `삭제된 내담자로 복구 ${result.restoredPortals}건${
+            skipped > 0 ? ` · 상담코드 연결 ${skipped}명 제외` : ''
+          }${result.failed ? `, 실패 ${result.failed}건` : ''}`,
         });
       } else {
         const result = await restoreArchivedDispatchRecipients(Array.from(selected));
@@ -1015,7 +1040,7 @@ export default function CounselorClientList({
       title={pageTitle}
       titleAccent={deletedMode || permanentlyDeletedMode ? 'deleted' : 'list'}
       headerAction={
-        !deletedMode && !permanentlyDeletedMode ? (
+        !deletedMode && !permanentlyDeletedMode && !adminUser ? (
           <AuthLink
             href={DELETED_RECIPIENTS_HREF}
             className="inline-flex shrink-0 items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1.5 text-xs font-medium text-slate-300 transition-colors hover:bg-white/5 sm:text-sm"
@@ -1119,13 +1144,15 @@ export default function CounselorClientList({
                   <tr className={counselorListHeaderRowClass}>
                     <th className={`${counselorListNoThClass} w-12 tabular-nums`}>No.</th>
                     <th className={`${counselorListThClass} w-10 text-center`}>
-                      <input
-                        type="checkbox"
-                        checked={allPageSelected}
-                        onChange={toggleAllOnPage}
-                        className="rounded accent-blue-500"
-                        aria-label="현재 페이지 전체 선택"
-                      />
+                      {!adminUser || deletedMode || permanentlyDeletedMode ? (
+                        <input
+                          type="checkbox"
+                          checked={allPageSelected}
+                          onChange={toggleAllOnPage}
+                          className="rounded accent-blue-500"
+                          aria-label="현재 페이지 전체 선택"
+                        />
+                      ) : null}
                     </th>
                     <SortableColumnHeader
                       label={dateColumnLabel}
@@ -1225,6 +1252,10 @@ export default function CounselorClientList({
                     const isSelected = selected.has(item.portalId);
 
                     const locked = isRowSelectionLocked(item.portalId);
+                    const dimmedCheckbox =
+                      adminUser &&
+                      (deletedMode || permanentlyDeletedMode) &&
+                      isAssessmentDeletedLinkedRow(item.portalId);
                     const rowClickable = !deletedMode && !permanentlyDeletedMode && !locked;
                     const rowClass =
                       deletedMode || permanentlyDeletedMode
@@ -1233,7 +1264,7 @@ export default function CounselorClientList({
                     const cellInteractionClass =
                       deletedMode || permanentlyDeletedMode ? '' : cellLinkClass;
                     const dispatchViewForRow =
-                      deletedMode || permanentlyDeletedMode
+                      deletedMode || permanentlyDeletedMode || adminUser
                         ? { ...dispatchView, title: undefined }
                         : dispatchView;
 
@@ -1246,7 +1277,7 @@ export default function CounselorClientList({
                           {startIndex + idx + 1}
                         </td>
                         <td className={`${counselorListTdClass} text-center`}>
-                          {locked && (deletedMode || permanentlyDeletedMode) ? (
+                          {locked && (deletedMode || permanentlyDeletedMode) && !adminUser ? (
                             <span className="group/check relative inline-flex">
                               <input
                                 type="checkbox"
@@ -1270,7 +1301,7 @@ export default function CounselorClientList({
                               checked={isSelected}
                               onChange={() => toggleOne(item.portalId)}
                               disabled={locked}
-                              className="rounded accent-blue-500 disabled:opacity-40"
+                              className={`rounded accent-blue-500 disabled:opacity-40 ${dimmedCheckbox ? 'opacity-40' : ''}`}
                               aria-label={`${item.displayName || '내담자'} 선택`}
                               onClick={(e) => e.stopPropagation()}
                             />
@@ -1291,7 +1322,7 @@ export default function CounselorClientList({
                             secondary={formatAccessCodeDisplay(item.accessCode || '')}
                             hoverTypeLabel="나의코드"
                             normalSecondary
-                            showTooltip={!deletedMode && !permanentlyDeletedMode}
+                            showTooltip={!adminUser && !deletedMode && !permanentlyDeletedMode}
                             className={cellInteractionClass}
                           />
                         </td>
@@ -1310,7 +1341,7 @@ export default function CounselorClientList({
                                 primaryAssessment.joinAccessCode || '',
                               )}
                               normalWeight
-                              showTooltip={!deletedMode && !permanentlyDeletedMode}
+                              showTooltip={!adminUser && !deletedMode && !permanentlyDeletedMode}
                               className={cellInteractionClass}
                             />
                           ) : (
@@ -1416,6 +1447,16 @@ export default function CounselorClientList({
                   </div>
                 ) : (
                   <div className="flex flex-wrap items-center gap-2">
+                    {adminUser ? (
+                      <button
+                        type="button"
+                        onClick={toggleAllOnPage}
+                        disabled={loading || paginatedItems.length === 0 || clientDeleteLoading}
+                        className="rounded-md border border-white/10 bg-[#101f38]/90 px-2.5 py-1 text-sm text-slate-300 transition-colors hover:bg-white/5 disabled:opacity-50"
+                      >
+                        {allPageSelected ? '전체 해제' : '전체 선택'}
+                      </button>
+                    ) : null}
                     <button
                       type="button"
                       onClick={handleClientDownload}

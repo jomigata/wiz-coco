@@ -40,6 +40,7 @@ import {
   restorePermanentlyDeletedRecords,
   type PermanentlyDeletedAssessment,
 } from '@/lib/adminDeletionsApi';
+import { exportDeletedAssessments } from '@/lib/counselorAssessmentListExport';
 
 type ListSortKey =
   | 'counselInfo'
@@ -357,6 +358,29 @@ export default function PermanentlyDeletedAssessmentsPage() {
     }
   };
 
+  const selectedRows = useMemo(
+    () => sortedFiltered.filter((row) => selected.has(row.id)),
+    [sortedFiltered, selected],
+  );
+
+  const handleAssessmentDownload = () => {
+    exportDeletedAssessments(selectedRows, 'download', {
+      dateColumnLabel: '영구삭제일',
+      dateField: 'permanentlyDeletedAt',
+      sheetTitle: '영구삭제상담코드',
+      printTitle: '영구삭제 상담코드',
+    });
+  };
+
+  const handleAssessmentPrint = () => {
+    exportDeletedAssessments(selectedRows, 'print', {
+      dateColumnLabel: '영구삭제일',
+      dateField: 'permanentlyDeletedAt',
+      sheetTitle: '영구삭제상담코드',
+      printTitle: '영구삭제 상담코드',
+    });
+  };
+
   if (authPending) return <AuthLoadingState className="py-8" />;
   if (showLoginRequired) {
     return <AuthRequiredState description="Firebase에 로그인한 상태에서 다시 시도해 주세요." />;
@@ -546,6 +570,22 @@ export default function PermanentlyDeletedAssessmentsPage() {
                     className="rounded-md border border-white/10 bg-[#101f38]/90 px-2.5 py-1 text-sm text-slate-300 transition-colors hover:bg-white/5 disabled:opacity-50"
                   >
                     {allSelected ? '전체 해제' : '전체 선택'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleAssessmentDownload}
+                    disabled={selected.size === 0}
+                    className="rounded-md bg-emerald-700/90 px-2.5 py-1 text-sm font-medium text-white transition-colors hover:bg-emerald-600 disabled:opacity-50"
+                  >
+                    다운로드 ({selected.size})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleAssessmentPrint}
+                    disabled={selected.size === 0}
+                    className="rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1 text-sm font-medium text-slate-200 transition-colors hover:bg-white/5 disabled:opacity-50"
+                  >
+                    인쇄 ({selected.size})
                   </button>
                   <button
                     type="button"

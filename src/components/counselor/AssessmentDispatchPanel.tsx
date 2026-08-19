@@ -835,6 +835,8 @@ export default function AssessmentDispatchPanel({
 
   if (!data || !displayData) return null;
 
+  const adminClientProgressView = adminUser && entryFrom === 'clients';
+
   const backHref =
     entryFrom === 'deleted-recipients'
       ? '/counselor/assessments/deleted-recipients'
@@ -962,7 +964,7 @@ export default function AssessmentDispatchPanel({
               <table className="w-max min-w-full table-fixed text-sm">
                 <colgroup>
                   <col className="w-10" />
-                  <col className="w-10" />
+                  {!adminClientProgressView ? <col className="w-10" /> : null}
                   <col className="w-36" />
                   <col className="w-36" />
                   <col className="w-32" />
@@ -973,15 +975,17 @@ export default function AssessmentDispatchPanel({
                 <thead>
               <tr className={counselorListHeaderRowClass}>
                 <th className={counselorListNoThClass}>No.</th>
-                <th className={counselorListSelectThClass}>
-                  <input
-                    type="checkbox"
-                    checked={allSelected}
-                    onChange={toggleAll}
-                    className="rounded accent-blue-500"
-                    aria-label="전체 선택"
-                  />
-                </th>
+                {!adminClientProgressView ? (
+                  <th className={counselorListSelectThClass}>
+                    <input
+                      type="checkbox"
+                      checked={allSelected}
+                      onChange={toggleAll}
+                      className="rounded accent-blue-500"
+                      aria-label="전체 선택"
+                    />
+                  </th>
+                ) : null}
                 <DualFieldSortHeader
                   leftLabel="이름"
                   rightLabel="나의코드"
@@ -1062,20 +1066,23 @@ export default function AssessmentDispatchPanel({
                       className={`cursor-pointer ${counselorListBodyRowClass} ${isOpen ? 'bg-white/[0.04]' : ''}`}
                     >
                       <td className={`${counselorListTdClass} tabular-nums text-slate-400`}>{rowIndex + 1}</td>
-                      <td className={counselorListSelectTdClass} onClick={(e) => e.stopPropagation()}>
-                        <input
-                          type="checkbox"
-                          checked={selected.has(r.portalId)}
-                          onChange={() => toggleOne(r.portalId)}
-                          className="rounded text-blue-500"
-                        />
-                      </td>
+                      {!adminClientProgressView ? (
+                        <td className={counselorListSelectTdClass} onClick={(e) => e.stopPropagation()}>
+                          <input
+                            type="checkbox"
+                            checked={selected.has(r.portalId)}
+                            onChange={() => toggleOne(r.portalId)}
+                            className="rounded text-blue-500"
+                          />
+                        </td>
+                      ) : null}
                       <td className={`max-w-[9rem] ${counselorListTdClass} align-top w-36`}>
                         <CounselorSlashInfoCell
                           primary={r.displayName || '—'}
                           secondary={myCodeLabel !== '—' ? myCodeLabel : '—'}
                           hoverTypeLabel="나의코드"
                           normalSecondary
+                          showTooltip={!adminUser}
                         />
                       </td>
                       <td className={`px-3 py-2.5 align-top whitespace-nowrap text-sm ${summary.className}`}>
@@ -1109,7 +1116,7 @@ export default function AssessmentDispatchPanel({
                     {isOpen ? (
                       <tr>
                         <td
-                          colSpan={2}
+                          colSpan={adminClientProgressView ? 1 : 2}
                           className="border-b border-slate-700/60 bg-slate-900/20 p-0"
                           aria-hidden="true"
                         />
@@ -1192,6 +1199,7 @@ export default function AssessmentDispatchPanel({
               </table>
             </div>
 
+            {!adminClientProgressView ? (
             <div className="mt-2 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-3">
               <p className="text-xs text-slate-500">
                 선택 <span className="font-semibold text-slate-300 tabular-nums">{selected.size}</span>명 · 전체{' '}
@@ -1246,6 +1254,7 @@ export default function AssessmentDispatchPanel({
                 ) : null}
               </div>
             </div>
+            ) : null}
           </>
         )}
       </div>
