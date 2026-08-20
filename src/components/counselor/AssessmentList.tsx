@@ -56,7 +56,6 @@ import {
 import { exportCounselorAssessments } from '@/lib/counselorAssessmentListExport';
 import { matchesWildcardFields } from '@/lib/wildcardSearch';
 import { getAppRoleSync, isAdmin } from '@/utils/roleUtils';
-import AdminGlobalTotalBadge from '@/components/counselor/AdminGlobalTotalBadge';
 import { CounselorAdminEmailSortHeader, CounselorAdminEmailTd, compareCounselorEmail } from '@/components/counselor/CounselorAdminEmailColumn';
 
 type ListSortKey = 'createdAt' | 'counselInfo' | 'accessCode' | 'usageEndDate' | 'counselorEmail';
@@ -244,7 +243,6 @@ function SortableColumnHeader({
 
 interface AssessmentListProps {
   assessments: CounselorAssessment[];
-  globalTotalCount?: number | null;
   createdInfo?: CreatedAssessmentBannerInfo | null;
   moveInfo?: PortalMoveBannerInfo | null;
   autoLivePollId?: string | null;
@@ -257,7 +255,6 @@ const LIVE_POLL_MAX_MS = 60_000;
 
 export default function AssessmentList({
   assessments,
-  globalTotalCount = null,
   createdInfo,
   moveInfo,
   autoLivePollId,
@@ -621,9 +618,7 @@ export default function AssessmentList({
       title="상담코드"
       titleAccent="list"
       headerAction={
-        adminUser ? (
-          <AdminGlobalTotalBadge count={globalTotalCount} unit="건" />
-        ) : (
+        adminUser ? undefined : (
           <AuthLink
             href={DELETED_ASSESSMENTS_HREF}
             className="inline-flex shrink-0 items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1.5 text-xs font-medium text-slate-300 transition-colors hover:bg-white/5 sm:text-sm"

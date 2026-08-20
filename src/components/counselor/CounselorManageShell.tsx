@@ -100,13 +100,16 @@ export default function CounselorManageShell({ children }: Props) {
                 {expanded ? (
                   <div className="ml-2 mt-0.5 space-y-1 border-l border-white/10 pl-1.5">
                     {category.subcategories.map((sub) => {
+                      if (sub.adminOnly && !adminUser) return null;
+                      const visibleItems = sub.items.filter((item) => !item.adminOnly || adminUser);
+                      if (visibleItems.length === 0) return null;
                       return (
                         <div key={sub.name}>
                           <p className="px-1.5 py-0.5 text-[10px] font-normal uppercase tracking-wide text-slate-500">
                             {sub.name.replace(/^\d+[a-z]\.\s*/i, '')}
                           </p>
                           <ul className="space-y-0.5 pb-1">
-                            {sub.items.flatMap((item) => {
+                            {visibleItems.flatMap((item) => {
                               const normalizedItemHref = item.href.replace(/\/+$/, '');
                               const pathNorm = (pathname || '').split('?')[0].replace(/\/+$/, '') || '';
                               const nestedAfter = nestedNavItemsAfter(

@@ -50,6 +50,12 @@ export function getPsychTestsHubHref(): string {
 /** 현재 경로가 속한 대분류 slug (없으면 null) */
 export function resolveCounselorCategorySlugForPath(pathname: string): string | null {
   const path = normalizePath(pathname);
+  if (
+    path.startsWith('/counselor/assessments/permanently-deleted') ||
+    path.startsWith('/counselor/assessments/permanently-deleted-recipients')
+  ) {
+    return 'data';
+  }
   for (const category of counselorMenuCategories) {
     for (const sub of category.subcategories) {
       for (const item of sub.items) {

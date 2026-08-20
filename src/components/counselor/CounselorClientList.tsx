@@ -38,7 +38,6 @@ import CounselorConfirmModal from '@/components/counselor/CounselorConfirmModal'
 import CounselorListBackLink from '@/components/counselor/CounselorListBackLink';
 import { DELETED_RECIPIENTS_HREF } from '@/lib/counselorNestedNav';
 import { LoadingMessage } from '@/components/ui/LoadingMessage';
-import AdminGlobalTotalBadge from '@/components/counselor/AdminGlobalTotalBadge';
 import { listAssessments, clearCounselorAssessmentsListCache } from '@/lib/assessmentApi';
 import {
   archiveDispatchRecipients,
@@ -541,7 +540,6 @@ export default function CounselorClientList({
   const adminUser = isAdmin(user?.role ?? getAppRoleSync());
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
-  const [globalTotalCount, setGlobalTotalCount] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortKey, setSortKey] = useState<ListSortKey>('notifyAt');
   const [sortDir, setSortDir] = useState<SortDirection>('desc');
@@ -643,9 +641,6 @@ export default function CounselorClientList({
           ownOnly: adminUser,
         });
         const raw = data.items || [];
-        if (adminUser && typeof data.globalTotalCount === 'number') {
-          setGlobalTotalCount(data.globalTotalCount);
-        }
         setArchivedRaw(raw);
         setItems(raw.map(mapArchivedToClientItem));
         setCohorts([]);
@@ -679,9 +674,6 @@ export default function CounselorClientList({
       });
       writeCachedClientPortals(cacheKey, data);
       setItems(data.items || []);
-      if (adminUser && typeof data.globalTotalCount === 'number') {
-        setGlobalTotalCount(data.globalTotalCount);
-      }
       setCohorts(data.cohorts || []);
       setTags(data.tags || []);
       setAssessmentMeta(data.assessmentMeta || {});
@@ -1056,9 +1048,7 @@ export default function CounselorClientList({
       title={pageTitle}
       titleAccent={deletedMode || permanentlyDeletedMode ? 'deleted' : 'list'}
       headerAction={
-        adminUser && !permanentlyDeletedMode ? (
-          <AdminGlobalTotalBadge count={globalTotalCount} unit="명" />
-        ) : !deletedMode && !permanentlyDeletedMode && !adminUser ? (
+        !deletedMode && !permanentlyDeletedMode && !adminUser ? (
           <AuthLink
             href={DELETED_RECIPIENTS_HREF}
             className="inline-flex shrink-0 items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1.5 text-xs font-medium text-slate-300 transition-colors hover:bg-white/5 sm:text-sm"
@@ -1073,17 +1063,15 @@ export default function CounselorClientList({
       noBodyPadding
       description={
         <span className="inline-flex w-full flex-wrap items-center gap-x-3 gap-y-2">
-          {deletedMode || permanentlyDeletedMode ? (
+          {deletedMode && !permanentlyDeletedMode ? (
             <>
               <CounselorListBackLink href="/counselor/clients" label="내담자" />
-              {!permanentlyDeletedMode ? (
-                <AuthLink
-                  href="/counselor/clients"
-                  className="inline-flex shrink-0 items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1.5 text-sm text-slate-300 transition-colors hover:bg-white/5"
-                >
-                  내담자
-                </AuthLink>
-              ) : null}
+              <AuthLink
+                href="/counselor/clients"
+                className="inline-flex shrink-0 items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1.5 text-sm text-slate-300 transition-colors hover:bg-white/5"
+              >
+                내담자
+              </AuthLink>
             </>
           ) : null}
           {permanentlyDeletedMode ? (

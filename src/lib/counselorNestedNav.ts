@@ -204,12 +204,22 @@ export function getClientsListContextNestedItems(
   return items;
 }
 
+/** 영구삭제 상담코드·내담자 (데이터 관리 > 복구 관리) */
+export function isPermanentlyDeletedAdminPath(pathname: string): boolean {
+  const path = normalizeCounselorPath(pathname);
+  return (
+    (path.startsWith(PERMANENTLY_DELETED_ASSESSMENTS_HREF) &&
+      !path.startsWith(PERMANENTLY_DELETED_RECIPIENTS_HREF)) ||
+    path.startsWith(PERMANENTLY_DELETED_RECIPIENTS_HREF)
+  );
+}
+
 /** 내담자 메뉴가 활성(선택) 상태인지 */
 export function isClientsMenuSelected(pathname: string, search: string): boolean {
   const path = normalizeCounselorPath(pathname);
   if (path === CLIENTS_LIST_HREF) return true;
   if (isDeletedRecipientsPath(path)) return true;
-  if (path.startsWith(PERMANENTLY_DELETED_RECIPIENTS_HREF)) return true;
+  if (isPermanentlyDeletedAdminPath(path)) return false;
   if (
     path.startsWith('/counselor/assessments/progress') &&
     resolveCounselorProgressFrom(pathname, search) === 'clients'
@@ -224,9 +234,7 @@ export function isAssessmentsMenuSelected(pathname: string, search: string): boo
   if (isClientsMenuSelected(pathname, search)) return false;
   const path = normalizeCounselorPath(pathname);
   if (isDeletedAssessmentsPath(path)) return true;
-  if (path.startsWith(PERMANENTLY_DELETED_ASSESSMENTS_HREF) && !path.startsWith(PERMANENTLY_DELETED_RECIPIENTS_HREF)) {
-    return true;
-  }
+  if (isPermanentlyDeletedAdminPath(path)) return false;
   return path.startsWith('/counselor/assessments');
 }
 
@@ -253,14 +261,6 @@ export function getAssessmentsParentSubmenuItems(options?: { admin?: boolean }):
       href: DELETED_ASSESSMENTS_HREF,
       isActive: isDeletedAssessmentsPath,
     });
-    items.push({
-      order: 60,
-      label: '영구삭제 상담코드',
-      href: PERMANENTLY_DELETED_ASSESSMENTS_HREF,
-      isActive: (p) =>
-        p.startsWith(PERMANENTLY_DELETED_ASSESSMENTS_HREF) &&
-        !p.startsWith(PERMANENTLY_DELETED_RECIPIENTS_HREF),
-    });
   }
   return items;
 }
@@ -281,12 +281,6 @@ export function getClientsParentSubmenuItems(options?: { admin?: boolean }): Cou
       label: '삭제된 내담자',
       href: DELETED_RECIPIENTS_HREF,
       isActive: isDeletedRecipientsPath,
-    });
-    items.push({
-      order: 60,
-      label: '영구삭제 내담자',
-      href: PERMANENTLY_DELETED_RECIPIENTS_HREF,
-      isActive: (p) => p.startsWith('/counselor/assessments/permanently-deleted-recipients'),
     });
   }
   return items;

@@ -856,12 +856,6 @@ export default function AssessmentDispatchPanel({
       title={
         <span className="inline-flex flex-wrap items-center gap-2">
           <span>상담진행 현황</span>
-          <span className="inline-flex items-center gap-1.5 rounded-md border border-cyan-500/25 bg-cyan-950/30 px-2 py-1">
-            <span className="text-[10px] font-semibold uppercase tracking-wide text-cyan-500/80">상담코드</span>
-            <span className="font-mono text-sm font-semibold tracking-wide text-cyan-300">
-              {formatAccessCodeDisplay(displayData.joinAccessCode)}
-            </span>
-          </span>
           {displayData.cohortName ? (
             <span className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-slate-900/50 px-2 py-1">
               <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">그룹</span>
@@ -871,6 +865,12 @@ export default function AssessmentDispatchPanel({
           <span className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-slate-900/50 px-2 py-1">
             <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">제목</span>
             <span className="text-sm text-slate-300">{displayData.title || '—'}</span>
+          </span>
+          <span className="inline-flex items-center gap-1.5 rounded-md border border-cyan-500/25 bg-cyan-950/30 px-2 py-1">
+            <span className="text-[10px] font-semibold uppercase tracking-wide text-cyan-500/80">상담코드</span>
+            <span className="font-mono text-sm font-semibold tracking-wide text-cyan-300">
+              {formatAccessCodeDisplay(displayData.joinAccessCode)}
+            </span>
           </span>
         </span>
       }

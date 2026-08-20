@@ -27,7 +27,6 @@ function AssessmentListPageContent() {
   const counselorUid = user?.uid;
   const adminUser = isAdmin(user?.role ?? getAppRoleSync());
   const [assessments, setAssessments] = useState<CounselorAssessment[]>([]);
-  const [globalTotalCount, setGlobalTotalCount] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [createdInfo, setCreatedInfo] = useState<CreatedAssessmentBannerInfo | null>(null);
@@ -91,9 +90,6 @@ function AssessmentListPageContent() {
         if (cancelled) return;
         const firstItems = firstPage.assessments || [];
         setAssessments(firstItems);
-        if (adminUser && typeof firstPage.globalTotalCount === 'number') {
-          setGlobalTotalCount(firstPage.globalTotalCount);
-        }
         if (!firstItems.length) {
           clearCounselorAssessmentsListCache(counselorUid);
         }
@@ -152,7 +148,6 @@ function AssessmentListPageContent() {
           <AssessmentList
             key={initialSearchQuery}
             assessments={assessments}
-            globalTotalCount={globalTotalCount}
             createdInfo={createdInfo}
             moveInfo={moveInfo}
             autoLivePollId={autoLivePollId}

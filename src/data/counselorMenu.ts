@@ -1,8 +1,26 @@
 ﻿import type { TestCategory } from '@/data/psychologyTestMenu';
 
-export interface CounselorMainCategory extends TestCategory {
+export interface CounselorMenuItem {
+  name: string;
+  href: string;
+  description: string;
+  icon: string;
+  /** 관리자 로그인 시에만 좌측 메뉴에 표시 */
+  adminOnly?: boolean;
+}
+
+export interface CounselorMenuSubcategory {
+  name: string;
+  icon: string;
+  items: CounselorMenuItem[];
+  /** 관리자 로그인 시에만 중분류 전체 표시 */
+  adminOnly?: boolean;
+}
+
+export interface CounselorMainCategory extends Omit<TestCategory, 'subcategories'> {
   slug: string;
   description: string;
+  subcategories: CounselorMenuSubcategory[];
 }
 
 /** 상담관리 메가 메뉴 — 3단계 구조 */
@@ -146,6 +164,27 @@ export const counselorMenuCategories: CounselorMainCategory[] = [
             href: '/counselor/daily-records',
             description: '내담자 일상 기록 관리',
             icon: '📊',
+          },
+        ],
+      },
+      {
+        name: '3b. 복구 관리',
+        icon: '♻️',
+        adminOnly: true,
+        items: [
+          {
+            name: '영구삭제 상담코드',
+            href: '/counselor/assessments/permanently-deleted',
+            description: '영구삭제된 상담코드 조회·복구',
+            icon: '🗂️',
+            adminOnly: true,
+          },
+          {
+            name: '영구삭제 내담자',
+            href: '/counselor/assessments/permanently-deleted-recipients',
+            description: '영구삭제된 내담자 조회·복구',
+            icon: '👤',
+            adminOnly: true,
           },
         ],
       },
