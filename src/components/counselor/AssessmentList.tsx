@@ -634,8 +634,7 @@ export default function AssessmentList({
       description={
         <span className="inline-flex w-full flex-wrap items-center gap-x-3 gap-y-2">
           <span className="shrink-0">
-            상담코드 총 <span className="font-semibold text-white">{listItems.length}</span>개 · 내담자 총{' '}
-            <span className="font-semibold text-cyan-300">{totalParticipants}</span>명
+            전체 <span className="font-semibold text-white">{totalParticipants}</span>명
           </span>
           <CounselorListSearchInput
             value={searchQuery}

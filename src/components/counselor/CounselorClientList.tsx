@@ -1333,7 +1333,7 @@ export default function CounselorClientList({
                             secondary={formatAccessCodeDisplay(item.accessCode || '')}
                             hoverTypeLabel="나의코드"
                             normalSecondary
-                            showTooltip={!adminUser && !deletedMode && !permanentlyDeletedMode}
+                            showTooltip={false}
                             className={cellInteractionClass}
                           />
                         </td>
@@ -1352,7 +1352,7 @@ export default function CounselorClientList({
                                 primaryAssessment.joinAccessCode || '',
                               )}
                               normalWeight
-                              showTooltip={!adminUser && !deletedMode && !permanentlyDeletedMode}
+                              showTooltip={false}
                               className={cellInteractionClass}
                             />
                           ) : (

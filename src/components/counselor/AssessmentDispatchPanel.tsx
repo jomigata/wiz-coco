@@ -881,13 +881,17 @@ export default function AssessmentDispatchPanel({
       dense
       description={
         <span className="inline-flex w-full flex-wrap items-center gap-2">
-          <CounselorListBackLink href={backHref} label={backButtonLabel} />
-          <AuthLink
-            href={backHref}
-            className="inline-flex shrink-0 items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1.5 text-sm text-slate-300 transition-colors hover:bg-white/5"
-          >
-            {backButtonLabel}
-          </AuthLink>
+          {entryFrom !== 'assessments' ? (
+            <>
+              <CounselorListBackLink href={backHref} label={backButtonLabel} />
+              <AuthLink
+                href={backHref}
+                className="inline-flex shrink-0 items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1.5 text-sm text-slate-300 transition-colors hover:bg-white/5"
+              >
+                {backButtonLabel}
+              </AuthLink>
+            </>
+          ) : null}
           <span className="inline-flex items-center rounded-md border border-emerald-500/20 bg-emerald-950/25 px-2 py-1 text-sm">
             <CounselorProgressMetricsInline
               totalClients={totalRecipientCount}
@@ -1082,7 +1086,7 @@ export default function AssessmentDispatchPanel({
                           secondary={myCodeLabel !== '—' ? myCodeLabel : '—'}
                           hoverTypeLabel="나의코드"
                           normalSecondary
-                          showTooltip={!adminUser}
+                          showTooltip={false}
                         />
                       </td>
                       <td className={`px-3 py-2.5 align-top whitespace-nowrap text-sm ${summary.className}`}>

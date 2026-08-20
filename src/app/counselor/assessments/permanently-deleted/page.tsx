@@ -277,11 +277,6 @@ export default function PermanentlyDeletedAssessmentsPage() {
     return list;
   }, [filtered, sortKey, sortDir, counselSortPhase]);
 
-  const totalParticipants = useMemo(
-    () => items.reduce((sum, a) => sum + resultStatusCounts(a).dispatchTotal, 0),
-    [items],
-  );
-
   const {
     page,
     setPage,
@@ -400,7 +395,7 @@ export default function PermanentlyDeletedAssessmentsPage() {
       description={
         <span className="inline-flex w-full flex-wrap items-center gap-x-3 gap-y-2">
           <span className="shrink-0">
-            전체 <span className="font-semibold text-white">{totalParticipants}</span>명
+            전체 <span className="font-semibold text-white">{items.length}</span>개
           </span>
           <CounselorListSearchInput
             value={searchQuery}

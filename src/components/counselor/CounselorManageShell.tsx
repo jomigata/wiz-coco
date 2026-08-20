@@ -10,6 +10,7 @@ import {
   getClientsListContextNestedItems,
   getClientsParentSubmenuItems,
   nestedNavItemsAfter,
+  PERMANENTLY_DELETED_ASSESSMENTS_HREF,
   rememberCounselorAssessmentContext,
   resolveActiveNestedNavItem,
 } from '@/lib/counselorNestedNav';
@@ -64,8 +65,7 @@ export default function CounselorManageShell({ children }: Props) {
         <nav className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-1.5 py-1.5">
           {sidebarCategories.map((category) => {
             const expanded = expandedSlug === category.slug;
-            const hubHref = getCounselorCategoryHubHref(category.slug);
-            const isPsych = category.slug === COUNSELOR_PSYCH_TESTS_SLUG;
+            const categoryEntryHref = getCategoryEntryHref(category, adminUser);
 
             return (
               <div key={category.slug} className="mb-1">
@@ -80,7 +80,7 @@ export default function CounselorManageShell({ children }: Props) {
                     <span className="text-[10px]">{expanded ? '▼' : '▶'}</span>
                   </button>
                   <AuthLink
-                    href={isPsych ? getPsychTestsEntryHref(category) : hubHref}
+                    href={categoryEntryHref}
                     onClick={() => setExpandedSlug(category.slug)}
                     className={`min-w-0 flex-1 rounded-md px-2 py-1.5 text-left font-normal transition-colors hover:bg-white/[0.06] ${
                       activeCategorySlug === category.slug && !activeNested
@@ -298,4 +298,17 @@ function stripCategoryNumber(label: string): string {
 
 function getPsychTestsEntryHref(category: (typeof counselorMenuCategories)[number]): string {
   return category.subcategories[0]?.items[0]?.href || '/counselor/assessments';
+}
+
+function getCategoryEntryHref(
+  category: (typeof counselorMenuCategories)[number],
+  adminUser: boolean,
+): string {
+  if (category.slug === 'data' && adminUser) {
+    return PERMANENTLY_DELETED_ASSESSMENTS_HREF;
+  }
+  if (category.slug === COUNSELOR_PSYCH_TESTS_SLUG) {
+    return getPsychTestsEntryHref(category);
+  }
+  return getCounselorCategoryHubHref(category.slug);
 }
