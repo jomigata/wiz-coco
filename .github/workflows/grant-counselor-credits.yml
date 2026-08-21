@@ -17,10 +17,6 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - uses: google-github-actions/auth@v3
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
-
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
@@ -28,7 +24,43 @@ jobs:
       - name: Install backend dependencies
         run: pip install -r backend/requirements.txt
 
+      - name: Write Firebase service account
+        env:
+          FIREBASE_SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          python - <<'PY'
+          import base64
+          import json
+          import os
+          import sys
+
+          raw = (os.environ.get("FIREBASE_SA") or "").strip()
+          if not raw:
+              print("FIREBASE_SERVICE_ACCOUNT secret is empty", file=sys.stderr)
+              sys.exit(1)
+
+          data = None
+          for candidate in (raw,):
+              try:
+                  data = json.loads(candidate)
+                  break
+              except json.JSONDecodeError:
+                  pass
+          if data is None:
+              try:
+                  data = json.loads(base64.b64decode(raw))
+              except Exception as exc:
+                  print(f"Failed to parse FIREBASE_SERVICE_ACCOUNT: {exc}", file=sys.stderr)
+                  sys.exit(1)
+
+          with open("firebase-service-account.json", "w", encoding="utf-8") as fh:
+              json.dump(data, fh)
+          print("Wrote firebase-service-account.json")
+          PY
+
       - name: Grant credits
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/firebase-service-account.json
         run: |
           IFS=',' read -ra ADDR <<< "${{ github.event.inputs.emails }}"
           ARGS=()
