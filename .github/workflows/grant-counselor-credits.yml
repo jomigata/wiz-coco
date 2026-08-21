@@ -1,0 +1,42 @@
+name: Grant counselor credits
+
+on:
+  workflow_dispatch:
+    inputs:
+      emails:
+        description: 'Comma-separated counselor emails'
+        required: true
+      amount:
+        description: 'Credits to grant per email (max 100000)'
+        required: true
+        default: '100000'
+
+jobs:
+  grant:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install backend dependencies
+        run: pip install -r backend/requirements.txt
+
+      - name: Write Firebase service account
+        run: echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" > firebase-service-account.json
+
+      - name: Grant credits
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/firebase-service-account.json
+        run: |
+          IFS=',' read -ra ADDR <<< "${{ github.event.inputs.emails }}"
+          ARGS=()
+          for email in "${ADDR[@]}"; do
+            trimmed="$(echo "$email" | xargs)"
+            if [ -n "$trimmed" ]; then
+              ARGS+=("$trimmed")
+            fi
+          done
+          python backend/scripts/grant_counselor_credits_by_email.py "${ARGS[@]}" --amount "${{ github.event.inputs.amount }}"
