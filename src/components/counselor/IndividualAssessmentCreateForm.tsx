@@ -38,6 +38,7 @@ import {
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
 import WelcomeMessageSamplePicker from '@/components/counselor/WelcomeMessageSamplePicker';
+import AuthLink from '@/components/auth/AuthLink';
 import { COUNSELING_CODE_TYPES, type CounselingCodeType } from '@/data/counselingCodeTypes';
 
 type IssueIntent = 'excel' | 'send_all';
@@ -576,6 +577,16 @@ export default function IndividualAssessmentCreateForm({
           titleAccent="create"
           className="!overflow-visible flex h-full min-h-0 flex-col"
           bodyClassName="flex min-h-0 flex-1 flex-col overflow-visible"
+          toolbar={
+            variant === 'page' ? (
+              <AuthLink
+                href="/counselor/assessments/new"
+                className="text-xs text-sky-400 hover:text-sky-300"
+              >
+                간단히 보내기
+              </AuthLink>
+            ) : undefined
+          }
         >
           <div className="space-y-4">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">

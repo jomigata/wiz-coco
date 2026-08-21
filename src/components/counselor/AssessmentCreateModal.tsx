@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import IndividualAssessmentCreateForm from '@/components/counselor/IndividualAssessmentCreateForm';
+import CounselorQuickSendForm from '@/components/counselor/CounselorQuickSendForm';
 
 type Props = {
   open: boolean;
@@ -11,6 +12,8 @@ type Props = {
 };
 
 export default function AssessmentCreateModal({ open, onClose, onCreated }: Props) {
+  const [fullForm, setFullForm] = useState(false);
+
   useEffect(() => {
     if (!open || typeof document === 'undefined') return;
     const prev = document.body.style.overflow;
@@ -18,6 +21,10 @@ export default function AssessmentCreateModal({ open, onClose, onCreated }: Prop
     return () => {
       document.body.style.overflow = prev;
     };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) setFullForm(false);
   }, [open]);
 
   if (!open || typeof document === 'undefined') return null;
@@ -32,7 +39,9 @@ export default function AssessmentCreateModal({ open, onClose, onCreated }: Prop
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex shrink-0 items-center justify-between border-b border-sky-400/20 bg-gradient-to-r from-sky-600/25 via-sky-500/15 to-transparent px-4 py-3 sm:px-5">
-          <h3 className="text-base font-bold text-white sm:text-lg">상담코드 생성</h3>
+          <h3 className="text-base font-bold text-white sm:text-lg">
+            {fullForm ? '상담코드 생성' : '검사 보내기'}
+          </h3>
           <button
             type="button"
             onClick={onClose}
@@ -43,14 +52,26 @@ export default function AssessmentCreateModal({ open, onClose, onCreated }: Prop
           </button>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-2.5 sm:p-3">
-          <IndividualAssessmentCreateForm
-            variant="modal"
-            onClose={onClose}
-            onIssued={() => {
-              onCreated?.();
-              onClose();
-            }}
-          />
+          {fullForm ? (
+            <IndividualAssessmentCreateForm
+              variant="modal"
+              onClose={onClose}
+              onIssued={() => {
+                onCreated?.();
+                onClose();
+              }}
+            />
+          ) : (
+            <CounselorQuickSendForm
+              variant="modal"
+              onClose={onClose}
+              onShowFullForm={() => setFullForm(true)}
+              onIssued={() => {
+                onCreated?.();
+                onClose();
+              }}
+            />
+          )}
         </div>
       </div>
     </div>,
