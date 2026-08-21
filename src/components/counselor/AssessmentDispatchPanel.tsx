@@ -50,15 +50,14 @@ import { buildAssessmentListHref, writeAssessmentListSearch } from '@/lib/counse
 import { matchesWildcardFields } from '@/lib/wildcardSearch';
 import {
   counselorListBodyRowClass,
-  counselorListHeaderRowClass,
-  counselorListNoThClass,
+  counselorListHeaderRowLightClass,
+  counselorListNoThLightClass,
   counselorListSelectTdClass,
-  counselorListSelectThClass,
-  counselorListSortActiveClass,
-  counselorListSortIdleClass,
+  counselorListSelectThLightClass,
+  counselorListSortActiveLightClass,
   counselorListTableWrapperClass,
   counselorListTdClass,
-  counselorListThClass,
+  counselorListThLightClass,
 } from '@/lib/counselorListTableStyles';
 import { LoadingMessage } from '@/components/ui/LoadingMessage';
 
@@ -271,7 +270,7 @@ function DualFieldSortHeader({
   const leftActive = active && leftPhases.includes(phase);
   const rightActive = active && rightPhases.includes(phase);
   return (
-    <th scope="col" className={`${counselorListThClass} ${className}`}>
+    <th scope="col" className={`${counselorListThLightClass} ${className}`}>
       <div className="inline-flex flex-wrap items-center gap-1">
         <button
           type="button"
@@ -279,21 +278,21 @@ function DualFieldSortHeader({
             e.stopPropagation();
             onSortLeft();
           }}
-          className={`inline-flex items-center gap-1 transition-colors hover:text-slate-200 ${leftActive ? counselorListSortActiveClass : 'text-slate-300'}`}
+          className={`inline-flex items-center gap-1 transition-colors hover:text-slate-800 ${leftActive ? counselorListSortActiveLightClass : 'text-slate-500'}`}
         >
           {leftLabel}
           <span className="text-[10px] opacity-80" aria-hidden>
             {sortPhaseIcon(leftActive, phase)}
           </span>
         </button>
-        <span className="text-slate-500">/</span>
+        <span className="text-slate-300">/</span>
         <button
           type="button"
           onClick={(e) => {
             e.stopPropagation();
             onSortRight();
           }}
-          className={`inline-flex items-center gap-1 transition-colors hover:text-slate-200 ${rightActive ? counselorListSortActiveClass : 'text-slate-300'}`}
+          className={`inline-flex items-center gap-1 transition-colors hover:text-slate-800 ${rightActive ? counselorListSortActiveLightClass : 'text-slate-500'}`}
         >
           {rightLabel}
           <span className="text-[10px] opacity-80" aria-hidden>
@@ -322,14 +321,14 @@ function SortableColumnHeader({
 }) {
   const active = activeKey === sortKey;
   return (
-    <th className={`px-3 py-2.5 text-left text-sm font-medium text-slate-400 ${className}`}>
+    <th className={`px-3 py-2.5 text-left text-sm font-medium text-slate-600 ${className}`}>
       <button
         type="button"
         onClick={() => onSort(sortKey)}
-        className="inline-flex items-center gap-1 hover:text-slate-200 transition-colors"
+        className="inline-flex items-center gap-1 text-slate-600 transition-colors hover:text-slate-800"
       >
         <span>{label}</span>
-        <span className={`text-[10px] ${active ? 'text-cyan-400' : 'text-slate-600'}`} aria-hidden="true">
+        <span className={`text-[10px] ${active ? 'text-sky-600' : 'text-slate-400'}`} aria-hidden="true">
           {active ? (direction === 'asc' ? '▲' : '▼') : '↕'}
         </span>
       </button>
@@ -819,7 +818,7 @@ export default function AssessmentDispatchPanel({
 
   if (loading) {
     return (
-      <CounselorPageSection title="상담진행 현황" titleAccent="progress" dense className="flex min-h-0 flex-1">
+      <CounselorPageSection title="상담진행 현황" titleAccent="progress" chromeTone="light" dense className="flex min-h-0 flex-1">
         <LoadingMessage className="py-4" textClassName="text-sm text-slate-400" />
       </CounselorPageSection>
     );
@@ -827,7 +826,7 @@ export default function AssessmentDispatchPanel({
 
   if (error) {
     return (
-      <CounselorPageSection title="상담진행 현황" titleAccent="progress" dense className="flex min-h-0 flex-1">
+      <CounselorPageSection title="상담진행 현황" titleAccent="progress" chromeTone="light" dense className="flex min-h-0 flex-1">
         <p className="text-red-400 text-sm py-4">{error}</p>
       </CounselorPageSection>
     );
@@ -857,24 +856,25 @@ export default function AssessmentDispatchPanel({
         <span className="inline-flex flex-wrap items-center gap-2">
           <span>상담진행 현황</span>
           {displayData.cohortName ? (
-            <span className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-slate-900/50 px-2 py-1">
-              <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">그룹</span>
-              <span className="text-sm font-medium text-slate-200">{displayData.cohortName}</span>
+            <span className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-2 py-1">
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">그룹</span>
+              <span className="text-sm font-medium text-slate-700">{displayData.cohortName}</span>
             </span>
           ) : null}
-          <span className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-slate-900/50 px-2 py-1">
-            <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">제목</span>
-            <span className="text-sm text-slate-300">{displayData.title || '—'}</span>
+          <span className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-2 py-1">
+            <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">제목</span>
+            <span className="text-sm text-slate-600">{displayData.title || '—'}</span>
           </span>
-          <span className="inline-flex items-center gap-1.5 rounded-md border border-cyan-500/25 bg-cyan-950/30 px-2 py-1">
-            <span className="text-[10px] font-semibold uppercase tracking-wide text-cyan-500/80">상담코드</span>
-            <span className="font-mono text-sm font-semibold tracking-wide text-cyan-300">
+          <span className="inline-flex items-center gap-1.5 rounded-md border border-sky-200 bg-sky-50 px-2 py-1">
+            <span className="text-[10px] font-semibold uppercase tracking-wide text-sky-500">상담코드</span>
+            <span className="font-mono text-sm font-semibold tracking-wide text-sky-700">
               {formatAccessCodeDisplay(displayData.joinAccessCode)}
             </span>
           </span>
         </span>
       }
       titleAccent="progress"
+      chromeTone="light"
       className="flex min-h-0 flex-1"
       bodyClassName="flex min-h-0 flex-1 flex-col !p-0"
       noBodyPadding
@@ -886,14 +886,15 @@ export default function AssessmentDispatchPanel({
               <CounselorListBackLink href={backHref} label={backButtonLabel} />
               <AuthLink
                 href={backHref}
-                className="inline-flex shrink-0 items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1.5 text-sm text-slate-300 transition-colors hover:bg-white/5"
+                className="inline-flex shrink-0 items-center rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-sm text-slate-600 transition-colors hover:bg-slate-100"
               >
                 {backButtonLabel}
               </AuthLink>
             </>
           ) : null}
-          <span className="inline-flex items-center rounded-md border border-emerald-500/20 bg-emerald-950/25 px-2 py-1 text-sm">
+          <span className="inline-flex items-center rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-sm">
             <CounselorProgressMetricsInline
+              tone="light"
               totalClients={totalRecipientCount}
               items={[
                 { label: '발송성공', value: dispatchSuccessCount },
@@ -902,6 +903,7 @@ export default function AssessmentDispatchPanel({
             />
           </span>
           <CounselorListSearchInput
+            tone="light"
             value={searchQuery}
             onChange={setSearchQuery}
             placeholder="이름 · 이메일 · 휴대폰 · 나의코드 검색"
@@ -916,7 +918,7 @@ export default function AssessmentDispatchPanel({
             type="button"
             onClick={toggleAll}
             disabled={displayData.recipients.length === 0}
-            className="rounded-md border border-white/10 bg-[#101f38]/90 px-2.5 py-1.5 text-xs text-slate-300 transition-colors hover:bg-white/5 disabled:opacity-50 sm:text-sm"
+            className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs text-slate-600 transition-colors hover:bg-slate-100 disabled:opacity-50 sm:text-sm"
           >
             {allSelected ? '전체 해제' : '전체 선택'}
           </button>
@@ -977,10 +979,10 @@ export default function AssessmentDispatchPanel({
                   <col className="w-36" />
                 </colgroup>
                 <thead>
-              <tr className={counselorListHeaderRowClass}>
-                <th className={counselorListNoThClass}>No.</th>
+              <tr className={counselorListHeaderRowLightClass}>
+                <th className={counselorListNoThLightClass}>No.</th>
                 {!adminClientProgressView ? (
-                  <th className={counselorListSelectThClass}>
+                  <th className={counselorListSelectThLightClass}>
                     <input
                       type="checkbox"
                       checked={allSelected}
