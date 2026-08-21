@@ -120,7 +120,9 @@ export async function fetchMyCredits(limit = 20): Promise<CounselorCreditsRespon
 export async function fetchCounselorCredits(
   counselorUid: string,
   limit = 30,
-): Promise<CounselorCreditsResponse & { email?: string; role?: string }> {
+): Promise<
+  CounselorCreditsResponse & { email?: string; role?: string; displayName?: string }
+> {
   const res = await commerceFetch(
     `/api/commerce/credits/${encodeURIComponent(counselorUid)}?limit=${limit}`,
   );
@@ -131,8 +133,34 @@ export async function fetchCounselorCredits(
   return res.json();
 }
 
-export async function grantCounselorCredits(params: {
+export async function lookupCounselorCredits(params: {
+  email?: string;
+  counselorUid?: string;
+  limit?: number;
+}): Promise<{
   counselorUid: string;
+  email: string;
+  displayName?: string;
+  role?: string;
+  balance: number;
+  ledger: CreditLedgerEntry[];
+}> {
+  const search = new URLSearchParams();
+  if (params.email?.trim()) search.set('email', params.email.trim().toLowerCase());
+  if (params.counselorUid?.trim()) search.set('counselorUid', params.counselorUid.trim());
+  if (params.limit) search.set('limit', String(params.limit));
+  const qs = search.toString();
+  const res = await commerceFetch(`/api/commerce/credits/lookup${qs ? `?${qs}` : ''}`);
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.message || body.error || `상담사 조회 실패 (${res.status})`);
+  }
+  return res.json();
+}
+
+export async function grantCounselorCredits(params: {
+  counselorUid?: string;
+  counselorEmail?: string;
   amount: number;
   reason?: string;
 }): Promise<{ ok: boolean; balance: number; granted: number }> {
@@ -140,6 +168,7 @@ export async function grantCounselorCredits(params: {
     method: 'POST',
     body: JSON.stringify({
       counselorUid: params.counselorUid,
+      counselorEmail: params.counselorEmail,
       amount: params.amount,
       reason: params.reason || 'admin_grant',
     }),

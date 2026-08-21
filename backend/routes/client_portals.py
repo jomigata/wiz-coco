@@ -12,6 +12,7 @@ from config import (
     SECRET_KEY,
     ASSESSMENTS_COLLECTION,
     CLIENT_PORTALS_COLLECTION,
+    USERS_COLLECTION,
     PORTAL_MAGIC_LINK_MAX_AGE,
     PORTAL_PIN_RESET_MAX_AGE,
     PORTAL_SESSION_MAX_AGE,
@@ -81,6 +82,7 @@ from utils.portal_legacy_archive import load_portal_legacy_archive
 from utils.care_assignment_schema import CareAssignmentValidationError
 from utils.email_notify import send_portal_pin_reset_email
 from utils.counselor_scope import is_admin_scope, resolve_list_counselor_uid, scope_counselor_uid, resource_owned_by_scope
+from utils.counselor_lookup import counselor_display_name
 
 bp = Blueprint("client_portals", __name__, url_prefix="/api/client-portals")
 
@@ -165,7 +167,7 @@ def _load_assessments_for_portal_ecosystem(db, primary_portal_id: str):
     return items
 
 
-def _portal_public_json(portal_doc, assessments=None):
+def _portal_public_json(portal_doc, assessments=None, db=None):
     d = portal_doc.to_dict()
     assigned = []
     if assessments is not None:
@@ -173,11 +175,22 @@ def _portal_public_json(portal_doc, assessments=None):
     else:
         for aid in d.get("assignedAssessmentIds") or []:
             assigned.append({"assessmentId": aid})
+    counselor_id = d.get("counselorId", "")
+    counselor_name = ""
+    counselor_email = ""
+    if counselor_id and db is not None:
+        udoc = db.collection(USERS_COLLECTION).document(counselor_id).get()
+        if udoc.exists:
+            user_data = udoc.to_dict() or {}
+            counselor_name = counselor_display_name(user_data)
+            counselor_email = (user_data.get("email") or "").strip()
     return {
         "id": portal_doc.id,
         "accessCode": d.get("accessCode", ""),
         "displayName": d.get("displayName", ""),
-        "counselorId": d.get("counselorId", ""),
+        "counselorId": counselor_id,
+        "counselorName": counselor_name,
+        "counselorEmail": counselor_email,
         "assignedAssessments": assigned,
     }
 
@@ -379,7 +392,7 @@ def portal_login():
             {
                 "portalToken": token,
                 "rememberDays": 30 if remember else 1,
-                "portal": _portal_public_json(portal_doc, assessments),
+                "portal": _portal_public_json(portal_doc, assessments, db=db),
             }
         )
 
@@ -432,7 +445,7 @@ def portal_me():
     legacy_archive = load_portal_legacy_archive(db, portal_id, assessments, repair=True)
     return jsonify(
         {
-            **_portal_public_json(pdoc, assessments),
+            **_portal_public_json(pdoc, assessments, db=db),
             "assessments": assessments,
             "linkedPortals": linked_portals,
             "legacyTests": legacy_archive.get("legacyTests") or [],
@@ -628,7 +641,7 @@ def verify_magic_link():
         {
             "portalToken": session_token,
             "rememberDays": 1,
-            "portal": _portal_public_json(pdoc, assessments),
+            "portal": _portal_public_json(pdoc, assessments, db=db),
         }
     )
 

@@ -15,6 +15,7 @@ from config import (
 )
 from data.commerce_products import get_product, public_catalog
 from utils.counselor_credits import get_balance, grant_credits, list_ledger, is_first_send_trial_eligible
+from utils.counselor_lookup import resolve_counselor_by_email, counselor_display_name
 from utils.commerce_orders import create_pending_order, get_order, mark_order_paid, order_buyer_uid
 from utils.toss_payments import (
     confirm_payment,
@@ -138,8 +139,56 @@ def credits_for_counselor(counselor_uid: str):
             "counselorUid": uid,
             "balance": balance,
             "email": user_data.get("email") or "",
+            "displayName": counselor_display_name(user_data),
             "role": user_data.get("role") or "",
             "subscription": sub_doc.to_dict() if sub_doc.exists else None,
+            "ledger": ledger,
+        }
+    )
+
+
+@bp.route("/credits/lookup", methods=["GET"])
+@require_admin
+def credits_lookup():
+    """관리자 — 이메일 또는 UID로 상담사 검사 크레딧 조회."""
+    db = get_firestore()
+    email = (request.args.get("email") or "").strip().lower()
+    counselor_uid = (request.args.get("counselorUid") or request.args.get("counselor_uid") or "").strip()
+
+    if email:
+        resolved = resolve_counselor_by_email(db, email)
+        if not resolved:
+            return jsonify({"error": "Not Found", "message": "해당 이메일의 상담사를 찾을 수 없습니다."}), 404
+        counselor_uid, role, user_data = resolved
+    elif counselor_uid:
+        user_doc = db.collection(USERS_COLLECTION).document(counselor_uid).get()
+        if not user_doc.exists:
+            return jsonify({"error": "Not Found", "message": "해당 사용자를 찾을 수 없습니다."}), 404
+        user_data = user_doc.to_dict() or {}
+        role = user_data.get("role") or ""
+        if role not in ("counselor", "admin"):
+            return (
+                jsonify(
+                    {
+                        "error": "Bad Request",
+                        "message": "상담사(counselor) 또는 admin 역할 사용자만 조회할 수 있습니다.",
+                    }
+                ),
+                400,
+            )
+    else:
+        return jsonify({"error": "Bad Request", "message": "email 또는 counselorUid가 필요합니다."}), 400
+
+    limit = int(request.args.get("limit", 20))
+    balance = get_balance(db, counselor_uid)
+    ledger = list_ledger(db, counselor_uid, limit=limit)
+    return jsonify(
+        {
+            "counselorUid": counselor_uid,
+            "email": user_data.get("email") or email or "",
+            "displayName": counselor_display_name(user_data),
+            "role": role,
+            "balance": balance,
             "ledger": ledger,
         }
     )
@@ -150,18 +199,24 @@ def credits_for_counselor(counselor_uid: str):
 def credits_grant():
     body = request.get_json() or {}
     counselor_uid = (body.get("counselorUid") or body.get("counselor_uid") or "").strip()
+    counselor_email = (body.get("counselorEmail") or body.get("counselor_email") or "").strip().lower()
     try:
         amount = int(body.get("amount") or 0)
     except (TypeError, ValueError):
         amount = 0
     reason = (body.get("reason") or "admin_grant").strip()
 
+    db = get_firestore()
+    if not counselor_uid and counselor_email:
+        resolved = resolve_counselor_by_email(db, counselor_email)
+        if not resolved:
+            return jsonify({"error": "Not Found", "message": "해당 이메일의 상담사를 찾을 수 없습니다."}), 404
+        counselor_uid, _, _ = resolved
+
     if not counselor_uid:
-        return jsonify({"error": "Bad Request", "message": "counselorUid가 필요합니다."}), 400
+        return jsonify({"error": "Bad Request", "message": "counselorUid 또는 counselorEmail이 필요합니다."}), 400
     if amount <= 0 or amount > 100000:
         return jsonify({"error": "Bad Request", "message": "amount는 1~100000 사이여야 합니다."}), 400
-
-    db = get_firestore()
     user_doc = db.collection(USERS_COLLECTION).document(counselor_uid).get()
     if not user_doc.exists:
         return jsonify({"error": "Not Found", "message": "해당 사용자를 찾을 수 없습니다."}), 404
@@ -184,7 +239,7 @@ def credits_grant():
             amount,
             reason=reason,
             actor_uid=g.admin_uid,
-            metadata={"source": "admin_api"},
+            metadata={"source": "admin_api", "targetEmail": counselor_email or None},
         )
     except ValueError as exc:
         return jsonify({"error": "Bad Request", "message": str(exc)}), 400

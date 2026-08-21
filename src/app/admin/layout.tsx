@@ -15,6 +15,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   // 현재 경로에 따라 활성화된 메뉴 항목 결정 (통합 메뉴 구조)
   function getActiveSection(path: string) {
     if (path === '/admin') return 'dashboard';
+    if (path.includes('/admin/commerce')) return 'commerce';
+    if (path.includes('/admin/organizations')) return 'organizations';
     if (path.includes('/admin/system-dashboard')) return 'system-dashboard';
     if (path.includes('/admin/realtime-monitoring')) return 'realtime-monitoring';
     if (path.includes('/admin/notification-management')) return 'notification-management';
@@ -35,6 +37,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   function getPageTitle(section: string) {
     const titleMap: { [key: string]: string } = {
       'dashboard': '대시보드',
+      'commerce': '크레딧 · 수익화',
+      'organizations': 'B2B 기관 관리',
       'system-dashboard': '시스템 대시보드',
       'realtime-monitoring': '실시간 모니터링',
       'notification-management': '알림 관리',
@@ -87,6 +91,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         { id: 'counselor-management', label: '상담사 관리', href: '/admin/counselor-management', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
         { id: 'counseling-management', label: '상담 관리', href: '/admin/counseling-management', icon: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z' },
         { id: 'psychological-tests', label: '심리검사 관리', href: '/admin/psychological-tests', icon: 'M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z' },
+        { id: 'commerce', label: '크레딧 · 수익화', href: '/admin/commerce', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
+        { id: 'organizations', label: 'B2B 기관 관리', href: '/admin/organizations', icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4' },
         { id: 'content-management', label: '콘텐츠 관리', href: '/admin/content-management', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' }
       ]
     },

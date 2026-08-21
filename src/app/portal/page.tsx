@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { fetchPortalDashboard, fetchPortalCareAssignments, changeClientPortalPin, type PortalDashboardAssessment, type PortalLegacyTestGroup } from '@/lib/clientPortalApi';
 import { listResults, deleteResult, getClientResult, TestResultItem, clearForceGuestForAccessCode } from '@/lib/assessmentApi';
 import PortalTestList from '@/components/portal/PortalTestList';
+import PortalHomeHero from '@/components/portal/PortalHomeHero';
 import PortalCareAssignmentsPanel from '@/components/portal/PortalCareAssignmentsPanel';
 import PortalLegacyMaterialsPanel from '@/components/portal/PortalLegacyMaterialsPanel';
 import PortalResultViewModal, { type PortalResultViewState } from '@/components/portal/PortalResultViewModal';
@@ -29,6 +30,8 @@ import { clearJoinParticipantSession } from '@/lib/joinParticipantSession';
 import { setPortalReturnPath } from '@/lib/portalReturnPath';
 import { clearJoinFreshParticipantFlow } from '@/lib/joinFlowMode';
 import { getJoinTestPath } from '@/lib/portalTestNavigation';
+import { pickPortalHomeTask } from '@/lib/portalHomeTask';
+import type { PortalCareAssignmentItem } from '@/types/careAssignment';
 
 type PortalAssessment = PortalDashboardAssessment;
 
@@ -54,6 +57,8 @@ function ClientPortalContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [displayName, setDisplayName] = useState('');
+  const [counselorName, setCounselorName] = useState('');
+  const [counselorEmail, setCounselorEmail] = useState('');
   const [myCode, setMyCode] = useState('');
   const [assessments, setAssessments] = useState<PortalAssessment[]>([]);
   const [legacyTests, setLegacyTests] = useState<PortalLegacyTestGroup[]>([]);
@@ -84,6 +89,8 @@ function ClientPortalContent() {
   const [pinError, setPinError] = useState('');
   const [pinSuccess, setPinSuccess] = useState('');
   const [careTotalCount, setCareTotalCount] = useState(0);
+  const [careItems, setCareItems] = useState<PortalCareAssignmentItem[]>([]);
+  const [showRecords, setShowRecords] = useState(false);
 
   useEffect(() => {
     if (!resultView) {
@@ -151,6 +158,8 @@ function ClientPortalContent() {
       const data = await fetchPortalDashboard(session.portalToken);
       const items = (data.assessments || []) as PortalAssessment[];
       setDisplayName(data.displayName || '내담자');
+      setCounselorName(String((data as { counselorName?: string }).counselorName || ''));
+      setCounselorEmail(String((data as { counselorEmail?: string }).counselorEmail || ''));
       setMyCode(data.accessCode || session.portal.accessCode);
       setAssessments(items);
       setLegacyTests(data.legacyTests || []);
@@ -158,8 +167,10 @@ function ClientPortalContent() {
       try {
         const careData = await fetchPortalCareAssignments(session.portalToken);
         const summary = careData.summary;
+        setCareItems([...(careData.active || []), ...(careData.completed || [])]);
         setCareTotalCount((summary.activeCount ?? 0) + (summary.completedCount ?? 0));
       } catch {
+        setCareItems([]);
         setCareTotalCount(0);
       }
     } catch (err) {
@@ -204,9 +215,16 @@ function ClientPortalContent() {
 
   useEffect(() => {
     const tab = (searchParams.get('tab') || '').trim();
-    if (tab === 'care') setPortalTab('care');
-    else if (tab === 'materials') setPortalTab('materials');
-    else if (tab === 'tests') setPortalTab('tests');
+    if (tab === 'care') {
+      setPortalTab('care');
+      setShowRecords(true);
+    } else if (tab === 'materials') {
+      setPortalTab('materials');
+      setShowRecords(true);
+    } else if (tab === 'tests') {
+      setPortalTab('tests');
+      setShowRecords(true);
+    }
   }, [searchParams]);
 
   useEffect(() => {
@@ -385,6 +403,45 @@ function ClientPortalContent() {
     setPinSuccess('');
   };
 
+  const homeTask = React.useMemo(
+    () =>
+      pickPortalHomeTask({
+        assessments: assessments.map((a) => ({
+          assessmentId: a.assessmentId,
+          accessCode: a.accessCode,
+          title: a.title,
+          testList: a.testList,
+        })),
+        resultsByCode,
+        careItems,
+        normalizeCode: normalizeAccessCodeInput,
+      }),
+    [assessments, resultsByCode, careItems],
+  );
+
+  const handlePrimaryHomeAction = () => {
+    if (homeTask.kind === 'test') {
+      const assessment = assessments.find((a) => a.assessmentId === homeTask.assessmentId);
+      if (assessment) {
+        openTest(assessment, homeTask.testId, homeTask.resultId);
+      }
+      return;
+    }
+    if (homeTask.kind === 'care') {
+      setShowRecords(true);
+      setPortalTab('care');
+      return;
+    }
+    setShowRecords(true);
+  };
+
+  const openRecords = () => {
+    setShowRecords(true);
+    if (homeTask.kind === 'all_done') {
+      setPortalTab('tests');
+    }
+  };
+
   if (loading) return <PortalLoading />;
 
   const legacyMaterialsCount = legacyTests.reduce(
@@ -409,41 +466,60 @@ function ClientPortalContent() {
     <div className="min-h-screen bg-gray-900">
       <div className="pt-24 pb-12 px-4">
         <main className="max-w-3xl mx-auto space-y-6">
-          <div className="bg-slate-800/80 rounded-2xl border border-slate-600 p-6 shadow-xl">
-            <div className="flex flex-col gap-4">
-              <div>
-                <h1 className="text-xl font-bold text-white">내 검사실</h1>
-                <p className="text-slate-300 text-sm mt-2">{displayName}님, 환영합니다.</p>
+          {!showRecords ? (
+            <>
+              <PortalHomeHero
+                displayName={displayName}
+                counselorName={counselorName}
+                counselorEmail={counselorEmail}
+                task={homeTask}
+                onPrimaryAction={handlePrimaryHomeAction}
+                onOpenRecords={openRecords}
+              />
+              <div className="rounded-xl border border-slate-700/60 bg-slate-800/40 px-4 py-3 text-sm text-slate-400 flex flex-wrap items-center justify-between gap-2">
+                <span>
+                  나의코드{' '}
+                  <span className="font-mono text-cyan-300">{formatAccessCodeDisplay(myCode)}</span>
+                </span>
+                <div className="flex items-center gap-3 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setPinModalOpen(true)}
+                    className="text-xs text-sky-300 hover:text-sky-200 underline"
+                  >
+                    비밀번호 변경
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      clearClientPortalSession();
+                      router.push('/portal/login/');
+                    }}
+                    className="text-xs text-slate-400 hover:text-slate-200 underline"
+                  >
+                    로그아웃
+                  </button>
+                </div>
               </div>
-            </div>
-            <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-              <p className="text-sm text-slate-400">
-                나의코드{' '}
-                <span className="font-mono text-cyan-300">{formatAccessCodeDisplay(myCode)}</span>
-              </p>
-              <div className="flex items-center gap-3 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setPinModalOpen(true)}
-                  className="text-xs text-sky-300 hover:text-sky-200 underline"
-                >
-                  비밀번호 변경
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    clearClientPortalSession();
-                    router.push('/portal/login/');
-                  }}
-                  className="text-xs text-slate-400 hover:text-slate-200 underline"
-                >
-                  로그아웃
-                </button>
-              </div>
-            </div>
-          </div>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => setShowRecords(false)}
+                className="text-sm text-slate-400 hover:text-white flex items-center gap-1"
+              >
+                ← 홈으로
+              </button>
 
-          <div className="flex gap-2 border-b border-slate-700/80">
+              <div className="bg-slate-800/80 rounded-2xl border border-slate-600 p-5 shadow-xl">
+                <h2 className="text-lg font-bold text-white">기록 · 도움말</h2>
+                <p className="text-sm text-slate-400 mt-1">
+                  검사 진행, 과제, 자료를 확인할 수 있습니다.
+                </p>
+              </div>
+
+          <div className="flex gap-2 border-b border-slate-700/80 overflow-x-auto">
             <button
               type="button"
               onClick={() => setPortalTab('tests')}
@@ -561,6 +637,8 @@ function ClientPortalContent() {
             })
           )}
             </div>
+          )}
+            </>
           )}
         </main>
       </div>
