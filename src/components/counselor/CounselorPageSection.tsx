@@ -21,8 +21,6 @@ type CounselorPageSectionProps = {
   dense?: boolean;
   /** 블록 여백 확대 (수정 화면 가독성) */
   relaxed?: boolean;
-  /** 타이틀·검색 줄 — light는 흰 배경 + 어두운 글자 */
-  chromeTone?: 'default' | 'light';
 };
 
 export default function CounselorPageSection({
@@ -38,7 +36,6 @@ export default function CounselorPageSection({
   showHierarchyBreadcrumb = false,
   dense = false,
   relaxed = false,
-  chromeTone = 'default',
 }: CounselorPageSectionProps) {
   const hasHeader = Boolean(title || headerAction || toolbar);
   const headerPad = relaxed ? 'px-4 py-3.5' : dense ? 'px-3 py-2.5' : 'px-4 py-3 sm:gap-2.5';
@@ -71,18 +68,10 @@ export default function CounselorPageSection({
     >
       {hasHeader ? (
         <div
-          className={`flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-between ${headerPad} ${titleAccentClass} ${
-            chromeTone === 'light'
-              ? 'border-b border-slate-200 bg-white'
-              : 'border-b border-sky-400/25 bg-gradient-to-r from-sky-600/25 via-sky-500/15 to-transparent'
-          }`}
+          className={`flex w-full flex-col gap-2 border-b border-sky-400/25 bg-gradient-to-r from-sky-600/25 via-sky-500/15 to-transparent sm:flex-row sm:items-center sm:justify-between ${headerPad} ${titleAccentClass}`}
         >
           {title ? (
-            <h2
-              className={`min-w-0 flex-1 font-bold tracking-tight ${
-                chromeTone === 'light' ? 'text-slate-800' : 'text-white'
-              } ${relaxed ? 'text-base' : dense ? 'text-sm' : 'text-sm sm:text-base'}`}
-            >
+            <h2 className={`min-w-0 flex-1 font-bold tracking-tight text-white ${relaxed ? 'text-base' : dense ? 'text-sm' : 'text-sm sm:text-base'}`}>
               {title}
             </h2>
           ) : (
@@ -99,13 +88,7 @@ export default function CounselorPageSection({
         </div>
       ) : null}
       {description ? (
-        <div
-          className={`shrink-0 px-4 py-2 text-xs leading-relaxed sm:text-sm ${
-            chromeTone === 'light'
-              ? 'border-b border-slate-200 bg-white text-slate-500'
-              : 'border-b border-white/[0.06] bg-[#0f1d33]/40 text-slate-400'
-          }`}
-        >
+        <div className="shrink-0 border-b border-white/[0.06] bg-[#0f1d33]/40 px-4 py-2 text-xs leading-relaxed text-slate-400 sm:text-sm">
           {description}
         </div>
       ) : null}
