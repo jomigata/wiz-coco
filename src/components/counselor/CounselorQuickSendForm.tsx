@@ -40,6 +40,7 @@ export default function CounselorQuickSendForm({
   const [templateId, setTemplateId] = useState<CounselorSendTemplateId | null>(null);
   const [displayName, setDisplayName] = useState('');
   const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -70,8 +71,13 @@ export default function CounselorQuickSendForm({
       return;
     }
     const phoneNorm = normalizeRecipientPhone(phone);
-    if (!phoneNorm) {
-      setError('휴대폰 번호를 입력해 주세요. 카톡·문자로 링크를 보냅니다.');
+    const emailNorm = email.trim();
+    if (!phoneNorm && !emailNorm) {
+      setError('휴대폰 또는 이메일을 입력해 주세요.');
+      return;
+    }
+    if (emailNorm && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailNorm)) {
+      setError('이메일 형식을 확인해 주세요.');
       return;
     }
 
@@ -87,7 +93,8 @@ export default function CounselorQuickSendForm({
         rows: [
           {
             displayName: name,
-            phone: phoneNorm,
+            phone: phoneNorm || undefined,
+            email: emailNorm || undefined,
             queueNotify: true,
           },
         ],
@@ -151,10 +158,10 @@ export default function CounselorQuickSendForm({
     <CounselorPageSection
       title="검사 보내기"
       dense
-      description="세트 고르기 → 이름·번호 → 보내기. 내담자는 가입하지 않습니다."
+      description="세트 고르기 → 이름·연락처 → 보내기. 내담자는 가입하지 않습니다."
       toolbar={fullLink}
     >
-      <form onSubmit={handleSend} className="mx-auto flex max-w-xl flex-col gap-5 p-1">
+      <form onSubmit={handleSend} className="mx-auto flex max-w-2xl flex-col gap-5 p-1">
         <div>
           <p className="mb-2 text-sm font-semibold text-slate-200">1. 어떤 검사인가요?</p>
           <div className="grid grid-cols-3 gap-2">
@@ -182,7 +189,7 @@ export default function CounselorQuickSendForm({
 
         <div>
           <p className="mb-2 text-sm font-semibold text-slate-200">2. 누구에게 보낼까요?</p>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-3">
             <label className="block">
               <span className="mb-1.5 block text-xs text-slate-400">이름</span>
               <input
@@ -203,6 +210,18 @@ export default function CounselorQuickSendForm({
                 placeholder="010-0000-0000"
                 inputMode="tel"
                 autoComplete="tel"
+                disabled={loading}
+              />
+            </label>
+            <label className="block">
+              <span className="mb-1.5 block text-xs text-slate-400">이메일</span>
+              <input
+                className={INPUT}
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="name@example.com"
+                autoComplete="email"
                 disabled={loading}
               />
             </label>
