@@ -19,7 +19,7 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
   useRequireLoginRedirect();
   const [activeSection, setActiveSection] = useState<string>('');
-  const [pageTitle, setPageTitle] = useState<string>('상담사 대시보드');
+  const [pageTitle, setPageTitle] = useState<string>('오늘');
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
 
   // 상담사 메뉴 카테고리 정의
@@ -123,7 +123,7 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
     if (path.startsWith('/counselor/test-management')) return '신입생 검사 관리';
     if (path.startsWith('/counselor/progress')) return '진행 현황';
     const titleMap: { [key: string]: string } = {
-      '/counselor': '상담사 대시보드',
+      '/counselor': '오늘',
       '/counselor/clients': '내담자',
       '/counselor/clients/detail': '내담자 목록',
       '/counselor/assign-tests': '검사 할당',
@@ -141,7 +141,7 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
       '/counselor/bulk-invite': '일괄 초대',
       '/counselor/test-management': '신입생 검사 관리',
     };
-    return titleMap[path] || '상담사 대시보드';
+    return titleMap[path] || '오늘';
   };
 
   // 메뉴 클릭 핸들러

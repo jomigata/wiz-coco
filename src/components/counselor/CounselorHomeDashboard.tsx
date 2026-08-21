@@ -1,13 +1,10 @@
 ﻿'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import AuthLink from '@/components/auth/AuthLink';
 import { LoadingMessage } from '@/components/ui/LoadingMessage';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
-import CounselorProgressMetricsInline from '@/components/counselor/CounselorProgressMetricsInline';
-import CounselorSlashInfoCell from '@/components/counselor/CounselorSlashInfoCell';
 import {
   fetchCounselorCohortMonitoring,
   fetchCounselorMonitoringHub,
@@ -18,24 +15,14 @@ import {
   listAssessments,
   type CounselorAssessment,
 } from '@/lib/assessmentApi';
-import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
+import { fetchMyCredits } from '@/lib/commerceApi';
+import { fetchCounselorAiCredits } from '@/lib/aiUsageApi';
 import {
   readCachedCounselorDashboard,
   writeCachedCounselorDashboard,
 } from '@/lib/counselorDashboardCache';
-import { getAssessmentOrgLabel } from '@/lib/assessmentSortOptions';
-import { INDIVIDUAL_COHORT_KEY } from '@/lib/monitoringRealtime';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
-import {
-  counselorListBodyRowClass,
-  counselorListHeaderRowClass,
-  counselorListNoThClass,
-  counselorListTableWrapperClass,
-  counselorListTdCompactClass,
-  counselorListThClass,
-  formatCounselorIssueDate,
-} from '@/lib/counselorListTableStyles';
 import type {
   CounselorCohortMonitoringResult,
   CounselorMonitoringHubResult,
@@ -45,87 +32,75 @@ import {
   resultStatusCounts,
 } from '@/lib/counselorAssessmentResultDisplay';
 
-function formatUsageEndDate(iso: string | undefined): string {
-  const s = (iso || '').trim();
-  if (!s) return '무기한';
-  try {
-    const d = new Date(`${s}T00:00:00`);
-    if (Number.isNaN(d.getTime())) return s;
-    return d.toLocaleDateString('ko-KR');
-  } catch {
-    return s;
-  }
+function needsSend(a: CounselorAssessment): boolean {
+  const { dispatchSent, dispatchFailed, dispatchSending, testComplete, testIncomplete } =
+    resultStatusCounts(a);
+  const neverTouched =
+    dispatchSent === 0 &&
+    dispatchFailed === 0 &&
+    dispatchSending === 0 &&
+    testComplete === 0 &&
+    testIncomplete === 0;
+  return neverTouched || dispatchFailed > 0;
 }
 
-function isExpired(iso: string | undefined): boolean {
-  const s = (iso || '').trim();
-  if (!s) return false;
-  try {
-    return new Date(`${s}T23:59:59`) < new Date();
-  } catch {
-    return false;
-  }
+function isIncompleteAssessment(a: CounselorAssessment): boolean {
+  const { testIncomplete, dispatchSending } = resultStatusCounts(a);
+  return testIncomplete > 0 || dispatchSending > 0;
 }
 
-function isExpiringSoon(iso: string | undefined, withinDays = 7): boolean {
-  const s = (iso || '').trim();
-  if (!s || isExpired(s)) return false;
-  try {
-    const end = new Date(`${s}T23:59:59`).getTime();
-    const now = Date.now();
-    return end - now <= withinDays * 24 * 60 * 60 * 1000;
-  } catch {
-    return false;
-  }
+function isRecentResult(iso: string | null | undefined, withinHours = 48): boolean {
+  if (!iso) return true;
+  const t = new Date(iso).getTime();
+  if (Number.isNaN(t)) return true;
+  return Date.now() - t <= withinHours * 60 * 60 * 1000;
 }
 
-function InsightTile({
-  emoji,
+function TodayTile({
   label,
   value,
   hint,
   href,
   accent,
+  cta,
 }: {
-  emoji: string;
   label: string;
   value: number | string;
   hint: string;
-  href?: string;
+  href: string;
   accent: 'sky' | 'amber' | 'emerald' | 'violet';
+  cta: string;
 }) {
   const accentMap = {
-    sky: 'border-sky-400/25 bg-sky-500/10 text-sky-100',
-    amber: 'border-amber-400/25 bg-amber-500/10 text-amber-100',
-    emerald: 'border-emerald-400/25 bg-emerald-500/10 text-emerald-100',
-    violet: 'border-violet-400/25 bg-violet-500/10 text-violet-100',
+    sky: 'border-sky-400/25 bg-sky-500/10',
+    amber: 'border-amber-400/25 bg-amber-500/10',
+    emerald: 'border-emerald-400/25 bg-emerald-500/10',
+    violet: 'border-violet-400/25 bg-violet-500/10',
   };
 
-  const inner = (
-    <div className={`rounded-xl border p-3 transition-colors hover:border-white/20 ${accentMap[accent]}`}>
-      <div className="flex items-start justify-between gap-2">
-        <span className="text-xl leading-none" aria-hidden>
-          {emoji}
-        </span>
-        <p className="text-2xl font-bold tabular-nums leading-none text-white">{value}</p>
+  return (
+    <AuthLink href={href} className="block h-full">
+      <div
+        className={`flex h-full flex-col rounded-xl border p-4 transition-colors hover:border-white/25 ${accentMap[accent]}`}
+      >
+        <p className="text-sm font-semibold text-white">{label}</p>
+        <p className="mt-3 text-3xl font-bold tabular-nums leading-none text-white">{value}</p>
+        <p className="mt-2 flex-1 text-xs text-slate-400">{hint}</p>
+        <p className="mt-3 text-xs font-medium text-sky-300">{cta}</p>
       </div>
-      <p className="mt-2 text-sm font-semibold">{label}</p>
-      <p className="mt-0.5 text-xs text-slate-400">{hint}</p>
-    </div>
+    </AuthLink>
   );
-
-  if (href) {
-    return (
-      <AuthLink href={href} className="block">
-        {inner}
-      </AuthLink>
-    );
-  }
-  return inner;
 }
 
+type TodayRow = {
+  id: string;
+  kind: 'send' | 'incomplete' | 'result';
+  title: string;
+  hint: string;
+  href: string;
+};
+
 export default function CounselorHomeDashboard() {
-  const router = useRouter();
   const { user, authPending, showLoginRequired } = useAuthResolved();
   const counselorUid = user?.uid;
   const initialCache = useMemo(
@@ -138,12 +113,11 @@ export default function CounselorHomeDashboard() {
   );
   const [liaisons, setLiaisons] = useState<CounselorOrgLiaison[]>(() => initialCache?.liaisons ?? []);
   const [assessments, setAssessments] = useState<CounselorAssessment[]>([]);
+  const [creditBalance, setCreditBalance] = useState<number | null>(null);
+  const [aiCreditBalance, setAiCreditBalance] = useState<number | null>(null);
   const [loading, setLoading] = useState(() => !initialCache?.hub && !initialCache?.cohorts);
   const [revalidating, setRevalidating] = useState(false);
   const [error, setError] = useState('');
-
-  const cellLinkClass =
-    'cursor-pointer text-left focus:outline-none focus-visible:ring-1 focus-visible:ring-sky-500/60 rounded-sm';
 
   const load = useCallback(async () => {
     const cached = counselorUid ? readCachedCounselorDashboard(counselorUid) : null;
@@ -152,23 +126,28 @@ export default function CounselorHomeDashboard() {
     else setRevalidating(true);
     setError('');
     try {
-      const [hubData, cohortData, liaisonData, assessmentData] = await Promise.all([
-        fetchCounselorMonitoringHub(),
-        fetchCounselorCohortMonitoring(),
-        fetchCounselorOrgLiaisons().catch(() => []),
-        listAssessments().catch(() => ({ assessments: [] as CounselorAssessment[] })),
-      ]);
+      const [hubData, cohortData, liaisonData, assessmentData, credits, aiCredits] =
+        await Promise.all([
+          fetchCounselorMonitoringHub(),
+          fetchCounselorCohortMonitoring(),
+          fetchCounselorOrgLiaisons().catch(() => []),
+          listAssessments().catch(() => ({ assessments: [] as CounselorAssessment[] })),
+          fetchMyCredits(1).catch(() => null),
+          fetchCounselorAiCredits(1).catch(() => null),
+        ]);
       setHub(hubData);
       setCohorts(cohortData);
       setLiaisons(liaisonData);
       setAssessments(assessmentData.assessments || []);
+      setCreditBalance(credits ? credits.balance : null);
+      setAiCreditBalance(aiCredits ? aiCredits.balance : null);
       writeCachedCounselorDashboard(
         { hub: hubData, cohorts: cohortData, liaisons: liaisonData },
         counselorUid,
       );
     } catch (err) {
       if (!hasCache) {
-        setError(err instanceof Error ? err.message : '대시보드 데이터를 불러오지 못했습니다.');
+        setError(err instanceof Error ? err.message : '오늘 화면을 불러오지 못했습니다.');
         setHub(null);
         setCohorts(null);
       }
@@ -189,57 +168,70 @@ export default function CounselorHomeDashboard() {
   useRedirectOnLoginRequiredError(error);
 
   const summary = hub?.summary;
-  const individualCohort = useMemo(
-    () => cohorts?.cohorts.find((c) => c.cohortKey === INDIVIDUAL_COHORT_KEY) ?? null,
-    [cohorts?.cohorts],
-  );
-  const recentActivity = (hub?.recentActivity || []).slice(0, 5);
-
-  const recentAssessments = useMemo(() => {
-    return [...assessments]
-      .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
-      .slice(0, 6);
-  }, [assessments]);
-
-  const attentionCount = useMemo(
-    () =>
-      assessments.filter((a) => {
-        const { dispatchFailed, testIncomplete, dispatchSending } = resultStatusCounts(a);
-        return dispatchSending > 0 || dispatchFailed > 0 || testIncomplete > 0;
-      }).length,
+  const sendAssessments = useMemo(() => assessments.filter(needsSend), [assessments]);
+  const incompleteAssessments = useMemo(
+    () => assessments.filter(isIncompleteAssessment),
     [assessments],
   );
-
-  const expiringSoonCount = useMemo(
-    () => assessments.filter((a) => isExpiringSoon(a.usageEndDate)).length,
-    [assessments],
+  const incompletePeople = useMemo(
+    () => incompleteAssessments.reduce((sum, a) => sum + resultStatusCounts(a).testIncomplete, 0),
+    [incompleteAssessments],
+  );
+  const recentResults = useMemo(
+    () => (hub?.recentActivity || []).filter((item) => isRecentResult(item.completedAt)),
+    [hub?.recentActivity],
   );
 
-  const completionPercent = useMemo(() => {
-    const total = summary?.totalRecipients ?? 0;
-    const done = summary?.completedRecipients ?? 0;
-    if (total <= 0) return 0;
-    return Math.round((done / total) * 100);
-  }, [summary?.totalRecipients, summary?.completedRecipients]);
+  const sendCount = sendAssessments.length + (summary?.notifyFailedCount ?? 0);
+  const incompleteCount =
+    incompletePeople > 0
+      ? incompletePeople
+      : (summary?.inProgressRecipients ?? 0) + (summary?.notStartedRecipients ?? 0);
+  const newResultCount = recentResults.length;
+  const remainingLabel =
+    creditBalance === null ? '—' : String(creditBalance);
 
-  const totalParticipants = useMemo(
-    () =>
-      assessments.reduce((sum, a) => {
-        const { dispatchTotal } = resultStatusCounts(a);
-        return sum + dispatchTotal;
-      }, 0),
-    [assessments],
-  );
-
-  const goToProgress = (assessmentId: string) => {
-    router.push(`/counselor/assessments/progress?assessmentId=${encodeURIComponent(assessmentId)}`);
-  };
+  const todayRows = useMemo((): TodayRow[] => {
+    const rows: TodayRow[] = [];
+    for (const a of sendAssessments.slice(0, 4)) {
+      const { dispatchFailed } = resultStatusCounts(a);
+      const { primary } = assessmentGroupTitleParts(a);
+      rows.push({
+        id: `send-${a.id}`,
+        kind: 'send',
+        title: primary,
+        hint: dispatchFailed > 0 ? `발송 실패 ${dispatchFailed}명 · 다시 보내기` : '아직 보내지 않음',
+        href: `/counselor/assessments/progress?assessmentId=${encodeURIComponent(a.id)}`,
+      });
+    }
+    for (const a of incompleteAssessments.slice(0, 4)) {
+      const { testIncomplete } = resultStatusCounts(a);
+      const { primary } = assessmentGroupTitleParts(a);
+      rows.push({
+        id: `inc-${a.id}`,
+        kind: 'incomplete',
+        title: primary,
+        hint: `안 끝난 검사 ${testIncomplete}명`,
+        href: `/counselor/assessments/progress?assessmentId=${encodeURIComponent(a.id)}`,
+      });
+    }
+    for (const item of recentResults.slice(0, 4)) {
+      rows.push({
+        id: `res-${item.resultId}`,
+        kind: 'result',
+        title: item.displayName || '내담자',
+        hint: `${item.assessmentTitle || '검사'} 결과`,
+        href: '/counselor/test-results',
+      });
+    }
+    return rows.slice(0, 8);
+  }, [sendAssessments, incompleteAssessments, recentResults]);
 
   if (loading && !hub && !cohorts) {
     return (
       <LoadingMessage
         className="py-12"
-        message="대시보드를 로딩중…"
+        message="오늘 할 일을 로딩중…"
         textClassName="text-sm text-slate-500"
       />
     );
@@ -255,43 +247,27 @@ export default function CounselorHomeDashboard() {
 
   return (
     <CounselorPageSection
-      title="상담관리"
+      title="오늘"
       className="flex min-h-0 flex-1"
       bodyClassName="flex min-h-0 flex-1 flex-col !p-0"
       noBodyPadding
       dense
       description={
         <>
-          상담코드 <span className="font-semibold text-white">{assessments.length}</span>개 · 응시자{' '}
-          <span className="font-semibold text-cyan-300">{totalParticipants}</span>명 · 완료{' '}
-          <span className="font-semibold text-emerald-300">{summary?.completedRecipients ?? 0}</span>명 · 활성 내담자{' '}
-          <span className="font-semibold text-sky-300">{summary?.activePortals ?? 0}</span>명
-          {revalidating ? (
-            <span className="ml-2 text-sky-200/60">(갱신 중…)</span>
+          회기 전에 이 네 칸만 보면 됩니다
+          {revalidating ? <span className="ml-2 text-sky-200/60">(갱신 중…)</span> : null}
+          {liaisons.length > 0 ? (
+            <span className="ml-2 text-slate-500">· 기관 {liaisons.length}</span>
           ) : null}
         </>
       }
       toolbar={
-        <div className="flex flex-wrap items-center justify-end gap-1.5 sm:gap-2">
-          <AuthLink
-            href="/counselor/clients"
-            className="rounded-md border border-white/10 bg-[#101f38]/90 px-2.5 py-1.5 text-xs text-slate-300 transition-colors hover:bg-white/5 sm:text-sm"
-          >
-            내담자 목록
-          </AuthLink>
-          <AuthLink
-            href="/counselor/assessments"
-            className="rounded-md border border-white/10 bg-[#101f38]/90 px-2.5 py-1.5 text-xs text-slate-300 transition-colors hover:bg-white/5 sm:text-sm"
-          >
-            상담코드 목록
-          </AuthLink>
-          <AuthLink
-            href="/counselor/assessments/new"
-            className="rounded-md bg-sky-600/90 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-sky-500 sm:text-sm"
-          >
-            + 상담코드 생성
-          </AuthLink>
-        </div>
+        <AuthLink
+          href="/counselor/assessments/new"
+          className="rounded-md bg-sky-600/90 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-sky-500 sm:text-sm"
+        >
+          + 상담코드 보내기
+        </AuthLink>
       }
     >
       <motion.div
@@ -301,247 +277,92 @@ export default function CounselorHomeDashboard() {
         transition={{ duration: 0.35 }}
       >
         <div className="grid shrink-0 grid-cols-2 gap-2 lg:grid-cols-4">
-          <InsightTile
-            emoji="⚡"
-            label="확인 필요"
-            value={attentionCount}
-            hint="발송실패·미완료 상담코드"
+          <TodayTile
+            label="오늘 보낼 것"
+            value={sendCount}
+            hint="아직 안 보낸 코드 · 발송 실패"
+            href="/counselor/assessments/new"
+            accent="sky"
+            cta="지금 보내기 →"
+          />
+          <TodayTile
+            label="안 끝난 검사"
+            value={incompleteCount}
+            hint="내담자가 아직 끝내지 않음"
             href="/counselor/assessments"
             accent="amber"
+            cta="진행 보기 →"
           />
-          <InsightTile
-            emoji="🏃"
-            label="진행 중"
-            value={summary?.inProgressRecipients ?? 0}
-            hint="검사 진행 중인 내담자"
-            href="/counselor/assign-tests"
-            accent="sky"
-          />
-          <InsightTile
-            emoji="⏳"
-            label="만료 임박"
-            value={expiringSoonCount}
-            hint="7일 이내 사용 종료"
-            href="/counselor/assessments"
-            accent="violet"
-          />
-          <InsightTile
-            emoji="✅"
-            label="전체 완료율"
-            value={`${completionPercent}%`}
-            hint={`완료 ${summary?.completedRecipients ?? 0} / ${summary?.totalRecipients ?? 0}명`}
+          <TodayTile
+            label="새 결과"
+            value={newResultCount}
+            hint="최근 완료된 검사"
             href="/counselor/test-results"
             accent="emerald"
+            cta="결과 확인 →"
+          />
+          <TodayTile
+            label="남은 횟수"
+            value={remainingLabel}
+            hint={
+              aiCreditBalance === null
+                ? '검사 크레딧'
+                : `검사 크레딧 · AI ${aiCreditBalance}`
+            }
+            href="/counselor/credits"
+            accent="violet"
+            cta="잔액 보기 →"
           />
         </div>
 
-        <div className="grid min-h-0 flex-1 gap-3 lg:grid-cols-[minmax(0,1fr)_17rem] xl:grid-cols-[minmax(0,1fr)_19rem]">
-          <div className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-sky-400/20 bg-[#0f1d33]/60">
-            <div className="flex shrink-0 items-center justify-between border-b border-sky-400/20 bg-gradient-to-r from-sky-600/20 to-transparent px-3 py-2.5">
-              <h3 className="text-sm font-bold text-white sm:text-base">최근 상담코드</h3>
-              <AuthLink href="/counselor/assessments" className="text-xs text-sky-400 hover:text-sky-300">
-                전체 보기 →
-              </AuthLink>
-            </div>
-            {recentAssessments.length === 0 ? (
-              <div className="flex flex-1 flex-col items-center justify-center px-4 py-10 text-center">
-                {loading || revalidating ? (
-                  <LoadingMessage
-                    layout="inline"
-                    message="데이터를 로딩중…"
-                    textClassName="text-sm text-slate-400"
-                  />
-                ) : (
-                  <>
-                    <p className="text-sm text-slate-400">등록된 상담코드가 없습니다</p>
-                    <AuthLink
-                      href="/counselor/assessments/new"
-                      className="mt-4 inline-flex items-center gap-2 rounded-md bg-sky-600/90 px-3 py-1.5 text-sm font-medium text-white hover:bg-sky-500"
-                    >
-                      첫 상담코드 생성
-                    </AuthLink>
-                  </>
-                )}
-              </div>
-            ) : (
-              <div className={`min-h-0 flex-1 ${counselorListTableWrapperClass}`}>
-                <table className="w-max min-w-full table-fixed text-sm">
-                  <thead>
-                    <tr className={counselorListHeaderRowClass}>
-                      <th className={counselorListNoThClass}>No.</th>
-                      <th className={`${counselorListThClass} whitespace-nowrap`}>발급일</th>
-                      <th className={`${counselorListThClass} whitespace-nowrap text-center`}>상담코드</th>
-                      <th className={counselorListThClass}>그룹명 / 제목</th>
-                      <th className={`${counselorListThClass} whitespace-nowrap text-center`}>
-                        <span className="block">진행현황</span>
-                      </th>
-                      <th className={`${counselorListThClass} whitespace-nowrap text-center`}>사용 종료일</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {recentAssessments.map((a, idx) => {
-                      const { dispatchTotal, testComplete } = resultStatusCounts(a);
-                      const expired = isExpired(a.usageEndDate);
-                      const { primary: infoPrimary, secondary: infoSecondary } = assessmentGroupTitleParts(a);
-
-                      return (
-                        <tr key={a.id} className={counselorListBodyRowClass}>
-                          <td className={`${counselorListTdCompactClass} tabular-nums text-slate-500`}>
-                            {idx + 1}
-                          </td>
-                          <td
-                            className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer text-white`}
-                            onClick={() => goToProgress(a.id)}
-                          >
-                            <span className={cellLinkClass}>{formatCounselorIssueDate(a.createdAt)}</span>
-                          </td>
-                          <td
-                            className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer text-center`}
-                            onClick={() => goToProgress(a.id)}
-                          >
-                            <span className={`${cellLinkClass} font-mono tracking-wide text-cyan-300/95`}>
-                              {formatAccessCodeDisplay(a.accessCode)}
-                            </span>
-                          </td>
-                          <td
-                            className={`max-w-[14rem] ${counselorListTdCompactClass} cursor-pointer`}
-                            onClick={() => goToProgress(a.id)}
-                          >
-                            {infoSecondary ? (
-                              <CounselorSlashInfoCell
-                                primary={infoPrimary}
-                                secondary={infoSecondary}
-                                showTooltip={false}
-                                className={cellLinkClass}
-                              />
-                            ) : (
-                              <span className={`block truncate font-medium text-white ${cellLinkClass}`}>
-                                {infoPrimary}
-                              </span>
-                            )}
-                            {isExpiringSoon(a.usageEndDate) ? (
-                              <span className="ml-1 inline-block rounded-full border border-amber-500/30 bg-amber-500/15 px-1.5 py-0.5 align-middle text-[10px] font-medium text-amber-300">
-                                임박
-                              </span>
-                            ) : null}
-                          </td>
-                          <td className={`whitespace-nowrap ${counselorListTdCompactClass} text-center`}>
-                            <CounselorProgressMetricsInline
-                              totalClients={dispatchTotal}
-                              items={[{ label: '검사완료', value: testComplete }]}
-                            />
-                          </td>
-                          <td
-                            className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer text-center ${expired ? 'text-red-400' : ''}`}
-                            onClick={() => goToProgress(a.id)}
-                          >
-                            <span className={cellLinkClass}>{formatUsageEndDate(a.usageEndDate)}</span>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-sky-400/20 bg-[#0f1d33]/60">
+          <div className="flex shrink-0 items-center justify-between border-b border-sky-400/20 px-3 py-2.5">
+            <h3 className="text-sm font-bold text-white">오늘 할 일</h3>
+            <AuthLink href="/counselor/assessments" className="text-xs text-sky-400 hover:text-sky-300">
+              전체 목록 →
+            </AuthLink>
           </div>
-
-          <aside className="flex min-h-0 flex-col gap-2 overflow-y-auto">
-            <div className="rounded-xl border border-sky-400/20 bg-[#0f1d33]/60 p-3">
-              <p className="text-sm font-bold text-white">내담자 진행 요약</p>
-              {individualCohort ? (
+          {todayRows.length === 0 ? (
+            <div className="flex flex-1 flex-col items-center justify-center px-4 py-12 text-center">
+              {loading || revalidating ? (
+                <LoadingMessage
+                  layout="inline"
+                  message="데이터를 로딩중…"
+                  textClassName="text-sm text-slate-400"
+                />
+              ) : (
                 <>
-                  <div className="mt-2 flex items-end justify-between">
-                    <p className="text-xs text-slate-400">개별 내담자</p>
-                    <p className="text-lg font-bold tabular-nums text-sky-300">
-                      {individualCohort.progress.percent}%
-                    </p>
-                  </div>
-                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/10">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-sky-500 to-cyan-400"
-                      style={{ width: `${individualCohort.progress.percent}%` }}
-                    />
-                  </div>
-                  <div className="mt-2 grid grid-cols-3 gap-1 text-center text-[11px]">
-                    <div className="rounded-md bg-emerald-500/10 py-1 text-emerald-300">
-                      완료 {individualCohort.completedPortals}
-                    </div>
-                    <div className="rounded-md bg-sky-500/10 py-1 text-sky-300">
-                      진행 {individualCohort.inProgressPortals}
-                    </div>
-                    <div className="rounded-md bg-amber-500/10 py-1 text-amber-300">
-                      미시작 {individualCohort.notStartedPortals}
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <p className="mt-2 text-xs text-slate-500">내담자 데이터 없음</p>
-              )}
-              <AuthLink
-                href="/counselor/clients"
-                className="mt-2 inline-block text-xs text-sky-400 hover:text-sky-300"
-              >
-                내담자 목록 →
-              </AuthLink>
-            </div>
-
-            <div className="rounded-xl border border-sky-400/20 bg-[#0f1d33]/60 p-3">
-              <p className="text-sm font-bold text-white">최근 검사 활동</p>
-              {recentActivity.length === 0 ? (
-                <p className="mt-2 text-xs text-slate-500">최근 활동 없음</p>
-              ) : (
-                <ul className="mt-2 space-y-1.5">
-                  {recentActivity.map((item, i) => (
-                    <li
-                      key={`${item.portalId}-${item.testId}-${i}`}
-                      className="rounded-md border border-white/[0.06] bg-white/[0.02] px-2 py-1.5 text-xs"
-                    >
-                      <span className="font-medium text-slate-200">{item.displayName}</span>
-                      <span className="block truncate text-slate-500">{item.assessmentTitle}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-
-            {liaisons.length > 0 ? (
-              <div className="rounded-xl border border-violet-400/20 bg-violet-500/5 p-3">
-                <p className="text-sm font-bold text-white">B2B 기관</p>
-                <ul className="mt-2 space-y-1 text-xs text-slate-400">
-                  {liaisons.slice(0, 3).map((org) => (
-                    <li key={org.organizationId} className="truncate">
-                      <span className="text-violet-200">{org.name}</span>
-                      <span className="text-slate-500"> · cohort {org.cohortCount}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-
-            <div className="rounded-xl border border-sky-400/20 bg-[#0f1d33]/60 p-3">
-              <p className="text-sm font-bold text-white">빠른 이동</p>
-              <div className="mt-2 grid grid-cols-2 gap-1.5">
-                {[
-                  { href: '/counselor/assessments/new', label: '코드 생성', icon: '➕' },
-                  { href: '/counselor/clients', label: '내담자', icon: '👥' },
-                  { href: '/counselor/test-results', label: '결과 분석', icon: '📊' },
-                  { href: '/counselor/credits', label: '크레딧', icon: '💳' },
-                  { href: '/counselor/schedule', label: '상담 일정', icon: '📅' },
-                  { href: '/counselor/assign-tests', label: '검사 할당', icon: '📋' },
-                ].map((item) => (
+                  <p className="text-sm text-slate-300">지금은 확인할 일이 없습니다</p>
+                  <p className="mt-1 text-xs text-slate-500">내담자에게 검사를 보내면 여기에 쌓입니다</p>
                   <AuthLink
-                    key={item.href}
-                    href={item.href}
-                    className="flex items-center gap-1.5 rounded-md border border-white/[0.06] bg-[#101f38]/80 px-2 py-2 text-xs text-slate-200 transition-colors hover:border-sky-400/30 hover:bg-sky-500/10"
+                    href="/counselor/assessments/new"
+                    className="mt-4 inline-flex rounded-md bg-sky-600/90 px-3 py-1.5 text-sm font-medium text-white hover:bg-sky-500"
                   >
-                    <span aria-hidden>{item.icon}</span>
-                    <span className="truncate font-medium">{item.label}</span>
+                    상담코드 보내기
                   </AuthLink>
-                ))}
-              </div>
+                </>
+              )}
             </div>
-          </aside>
+          ) : (
+            <ul className="min-h-0 flex-1 divide-y divide-white/[0.06] overflow-y-auto">
+              {todayRows.map((row) => (
+                <li key={row.id}>
+                  <AuthLink
+                    href={row.href}
+                    className="flex items-center justify-between gap-3 px-3 py-3 hover:bg-white/[0.04]"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-white">{row.title}</p>
+                      <p className="truncate text-xs text-slate-400">{row.hint}</p>
+                    </div>
+                    <span className="shrink-0 text-[11px] font-medium text-slate-500">
+                      {row.kind === 'send' ? '보내기' : row.kind === 'incomplete' ? '진행' : '결과'}
+                    </span>
+                  </AuthLink>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </motion.div>
     </CounselorPageSection>
