@@ -7,6 +7,7 @@ import { fetchPortalDashboard, fetchPortalCareAssignments, changeClientPortalPin
 import { listResults, deleteResult, getClientResult, TestResultItem, clearForceGuestForAccessCode } from '@/lib/assessmentApi';
 import PortalTestList from '@/components/portal/PortalTestList';
 import PortalHomeHero from '@/components/portal/PortalHomeHero';
+import PortalOptionalPurchaseCard from '@/components/portal/PortalOptionalPurchaseCard';
 import PortalCareAssignmentsPanel from '@/components/portal/PortalCareAssignmentsPanel';
 import PortalLegacyMaterialsPanel from '@/components/portal/PortalLegacyMaterialsPanel';
 import PortalResultViewModal, { type PortalResultViewState } from '@/components/portal/PortalResultViewModal';
@@ -638,6 +639,8 @@ function ClientPortalContent() {
           )}
             </div>
           )}
+
+          <PortalOptionalPurchaseCard />
             </>
           )}
         </main>

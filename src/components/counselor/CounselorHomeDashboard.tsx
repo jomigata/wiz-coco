@@ -31,6 +31,7 @@ import {
   assessmentGroupTitleParts,
   resultStatusCounts,
 } from '@/lib/counselorAssessmentResultDisplay';
+import CounselorRevenueLinksFooter from '@/components/counselor/CounselorRevenueLinksFooter';
 
 function needsSend(a: CounselorAssessment): boolean {
   const { dispatchSent, dispatchFailed, dispatchSending, testComplete, testIncomplete } =
@@ -190,6 +191,7 @@ export default function CounselorHomeDashboard() {
   const newResultCount = recentResults.length;
   const remainingLabel =
     creditBalance === null ? '—' : String(creditBalance);
+  const creditsLow = creditBalance !== null && creditBalance < 20;
 
   const todayRows = useMemo((): TodayRow[] => {
     const rows: TodayRow[] = [];
@@ -305,13 +307,15 @@ export default function CounselorHomeDashboard() {
             label="남은 횟수"
             value={remainingLabel}
             hint={
-              aiCreditBalance === null
-                ? '검사 크레딧'
-                : `검사 크레딧 · AI ${aiCreditBalance}`
+              creditsLow
+                ? '크레딧이 적습니다 · 필요할 때만 충전'
+                : aiCreditBalance === null
+                  ? '검사 크레딧'
+                  : `검사 크레딧 · AI ${aiCreditBalance}`
             }
             href="/counselor/credits"
             accent="violet"
-            cta="잔액 보기 →"
+            cta={creditsLow ? '충전하기 →' : '잔액 보기 →'}
           />
         </div>
 
@@ -365,6 +369,7 @@ export default function CounselorHomeDashboard() {
           )}
         </div>
       </motion.div>
+      <CounselorRevenueLinksFooter creditBalance={creditBalance} orgLiaisonCount={liaisons.length} />
     </CounselorPageSection>
   );
 }

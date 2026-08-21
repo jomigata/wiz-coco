@@ -167,6 +167,12 @@ function CreditsContent() {
         </div>
       )}
 
+      {data && data.balance < 20 ? (
+        <div className="mb-4 rounded-lg border border-amber-500/35 bg-amber-950/30 p-4 text-sm text-amber-100">
+          검사 크레딧이 {data.balance}회 남았습니다. 필요할 때만 아래에서 충전하세요.
+        </div>
+      ) : null}
+
       <CounselorCheckoutPanel onSuccess={reload} />
 
       {data && (

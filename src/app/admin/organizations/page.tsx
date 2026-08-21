@@ -10,6 +10,7 @@ import {
   adminUpdateOrgLiaison,
   type OrganizationRecord,
 } from '@/lib/orgApi';
+import AdminOrgEventCreditsPanel from '@/components/admin/AdminOrgEventCreditsPanel';
 
 export default function AdminOrganizationsPage() {
   const [orgs, setOrgs] = useState<OrganizationRecord[]>([]);
@@ -71,7 +72,7 @@ export default function AdminOrganizationsPage() {
     <RoleGuard allowedRoles={['admin']}>
       <div className="p-6 max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold text-white mb-2">B2B 기관 관리</h1>
-        <p className="text-slate-400 text-sm mb-6">3단계 — 학교·기업 POC · 선결제 크레딧 · org_admin 배정</p>
+        <p className="text-slate-400 text-sm mb-6">7단계 — 행사 선결제 · 학교·기업 POC · org_admin 배정</p>
 
         {message && (
           <div className="mb-4 rounded-lg bg-emerald-900/40 p-4 text-emerald-200 text-sm">{message}</div>
@@ -119,6 +120,15 @@ export default function AdminOrganizationsPage() {
             기관 생성
           </button>
         </form>
+
+        <AdminOrgEventCreditsPanel
+          orgs={orgs}
+          onGranted={(msg) => {
+            setMessage(msg);
+            void reload();
+          }}
+          onError={(msg) => setError(msg)}
+        />
 
         <form onSubmit={handleGrant} className="rounded-xl border border-white/10 p-6 mb-8 space-y-3 bg-slate-900/50">
           <h2 className="text-lg font-semibold text-white">기관 크레딧 지급 (선결제)</h2>
