@@ -206,6 +206,7 @@ def submit_result():
     payload = {
         "resultId": ref.id,
         "message": "Result submitted.",
+        "resultData": result_data,
     }
     if portal_issued and portal_issued.get("credentialsSent"):
         payload["portalCredentialsSent"] = True

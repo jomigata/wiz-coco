@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { lookupPublicAssessment, submitResult, getClientResult, updateClientResult, listResults, clearForceGuestForAccessCode, setForceGuestForAccessCode } from '@/lib/assessmentApi';
 import { isValidAccessCodeInput, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
 import { genericJoinQuestions } from '@/data/genericJoinQuestions';
+import type { MiniCheckQuestion } from '@/data/miniCheckQuestions';
 import { JOIN_STORAGE_KEY } from '@/lib/joinAssessmentSession';
 import { buildPortalProgressReturnUrl } from '@/lib/portalReturnPath';
 import { resolveDedicatedJoinTestPath, buildDedicatedJoinTestUrl } from '@/lib/joinDedicatedTestPaths';
@@ -47,13 +48,18 @@ export default function TestRunnerPage() {
   const [responses, setResponses] = useState<Record<string, number>>({});
   const [editOriginalResponses, setEditOriginalResponses] = useState<unknown>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [completionSummary, setCompletionSummary] = useState<{
+    hookMessage: string;
+    counselorNote: string;
+  } | null>(null);
   const [error, setError] = useState('');
   const [accessCheckLoading, setAccessCheckLoading] = useState(true);
   const [accessCheckError, setAccessCheckError] = useState('');
   const [linkEntryResetDone, setLinkEntryResetDone] = useState(false);
 
   const code = normalizeAccessCodeInput(accessCode);
-  const questions = genericJoinQuestions;
+  const questions = genericJoinQuestions as MiniCheckQuestion[];
+  const isMiniCheck = testId === 'generic';
   const hasPortal = isPortalModeForAccessCode(code);
   const hasParticipant = hasJoinParticipantSessionForCode(code);
   const canSubmitAuth = canTrackJoinResults(code);
@@ -199,6 +205,10 @@ export default function TestRunnerPage() {
     if (currentIndex < questions.length - 1) setCurrentIndex((i) => i + 1);
   };
 
+  const handleChoiceAnswer = (value: number) => {
+    handleAnswer(value);
+  };
+
   const handlePrev = () => {
     if (currentIndex > 0) setCurrentIndex((i) => i - 1);
   };
@@ -238,8 +248,20 @@ export default function TestRunnerPage() {
         if (joinTestResponsesChanged(editOriginalResponses, responses)) {
           await updateClientResult(editResultId, { responses }, code);
         }
-      } else {
-        await submitResult({ accessCode: code, testId, responses });
+        navigateAfterSubmit();
+        return;
+      }
+      const payload = await submitResult({ accessCode: code, testId, responses });
+      if (isMiniCheck) {
+        const hookMessage =
+          payload.resultData?.hookMessage ||
+          payload.resultData?.summary ||
+          '응답이 잘 전달되었습니다.';
+        const counselorNote =
+          payload.resultData?.counselorNote || '담당 상담사가 곧 확인해 드립니다.';
+        setCompletionSummary({ hookMessage, counselorNote });
+        setSubmitting(false);
+        return;
       }
       navigateAfterSubmit();
     } catch (err) {
@@ -311,6 +333,31 @@ export default function TestRunnerPage() {
   const currentQuestion = questions[currentIndex];
   const progress = questions.length ? ((currentIndex + 1) / questions.length) * 100 : 0;
 
+  if (completionSummary) {
+    return (
+      <div className="min-h-screen bg-gray-900">
+        <div className="pt-24 pb-12 px-4">
+          <main className="max-w-lg mx-auto">
+            <div className="bg-slate-800/80 rounded-2xl border border-slate-600 p-8 shadow-xl text-center">
+              <p className="text-sm text-sky-300 mb-2">3분 마음 체크 완료</p>
+              <p className="text-xl font-semibold text-white leading-relaxed mb-4">
+                {completionSummary.hookMessage}
+              </p>
+              <p className="text-slate-400 text-sm mb-8">{completionSummary.counselorNote}</p>
+              <button
+                type="button"
+                onClick={() => navigateAfterSubmit()}
+                className="w-full rounded-lg bg-blue-600 px-6 py-3 text-white hover:bg-blue-700"
+              >
+                {hasPortal ? '내 검사실로' : '목록으로'}
+              </button>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-900">
       <div className="pt-24 pb-12 px-4">
@@ -350,26 +397,48 @@ export default function TestRunnerPage() {
             {currentQuestion && (
               <div className="mb-8">
                 <p className="text-white text-xl font-semibold leading-relaxed mb-6">{currentQuestion.question}</p>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {[1, 2, 3, 4, 5, 6, 7].map((v) => (
-                    <button
-                      key={v}
-                      type="button"
-                      onClick={() => handleAnswer(v)}
-                      disabled={viewOnly}
-                      className={`py-2 px-3 rounded-lg text-sm border transition-colors ${
-                        responses[currentQuestion.id] === v
-                          ? 'bg-blue-600 border-blue-500 text-white'
-                          : 'bg-slate-700/45 border-slate-600/70 text-slate-300 hover:border-slate-500 hover:bg-slate-700/65'
-                      } ${viewOnly ? 'cursor-default opacity-90' : ''}`}
-                    >
-                      {v}
-                    </button>
-                  ))}
-                </div>
-                <p className="text-slate-500 text-xs mt-2">
-                  1: {SCALE_LABELS[1]} · 7: {SCALE_LABELS[7]}
-                </p>
+                {currentQuestion.choices?.length ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {currentQuestion.choices.map((choice) => (
+                      <button
+                        key={choice.value}
+                        type="button"
+                        onClick={() => handleChoiceAnswer(choice.value)}
+                        disabled={viewOnly}
+                        className={`py-3 px-4 rounded-lg text-sm border text-left transition-colors ${
+                          responses[currentQuestion.id] === choice.value
+                            ? 'bg-blue-600 border-blue-500 text-white'
+                            : 'bg-slate-700/45 border-slate-600/70 text-slate-300 hover:border-slate-500 hover:bg-slate-700/65'
+                        } ${viewOnly ? 'cursor-default opacity-90' : ''}`}
+                      >
+                        {choice.label}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {[1, 2, 3, 4, 5, 6, 7].map((v) => (
+                        <button
+                          key={v}
+                          type="button"
+                          onClick={() => handleAnswer(v)}
+                          disabled={viewOnly}
+                          className={`py-2 px-3 rounded-lg text-sm border transition-colors ${
+                            responses[currentQuestion.id] === v
+                              ? 'bg-blue-600 border-blue-500 text-white'
+                              : 'bg-slate-700/45 border-slate-600/70 text-slate-300 hover:border-slate-500 hover:bg-slate-700/65'
+                          } ${viewOnly ? 'cursor-default opacity-90' : ''}`}
+                        >
+                          {v}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-slate-500 text-xs mt-2">
+                      1: {SCALE_LABELS[1]} · 7: {SCALE_LABELS[7]}
+                    </p>
+                  </>
+                )}
               </div>
             )}
 

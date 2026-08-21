@@ -26,7 +26,7 @@ export const COUNSELOR_SEND_TEMPLATES: CounselorSendTemplate[] = [
   {
     id: 'stress',
     name: '스트레스',
-    description: '기분·긴장을 짧게 봅니다',
+    description: '3분 마음 체크 (6문항)',
     testIds: ['generic'],
   },
 ];

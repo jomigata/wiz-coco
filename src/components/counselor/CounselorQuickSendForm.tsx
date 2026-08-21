@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { pushWithAuthSession } from '@/utils/authSessionLifecycle';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
@@ -17,6 +17,7 @@ import {
   resolveTemplateTestList,
   type CounselorSendTemplateId,
 } from '@/data/counselorSendTemplates';
+import { fetchMyCredits } from '@/lib/commerceApi';
 
 const INPUT =
   'w-full rounded-lg border border-white/15 bg-[#121f38]/95 px-3 py-2.5 text-base text-slate-100 placeholder:text-slate-500 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500/35 focus:border-sky-400/55 disabled:opacity-55';
@@ -43,6 +44,18 @@ export default function CounselorQuickSendForm({
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [firstSendTrialEligible, setFirstSendTrialEligible] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    fetchMyCredits(5)
+      .then((data) => {
+        const eligible = Boolean(data.firstSendTrialEligible);
+        setFirstSendTrialEligible(eligible);
+        if (eligible) setTemplateId('stress');
+      })
+      .catch(() => setFirstSendTrialEligible(false));
+  }, [user]);
 
   const template = COUNSELOR_SEND_TEMPLATES.find((t) => t.id === templateId) ?? null;
   const testList = template ? resolveTemplateTestList(template) : [];
@@ -123,6 +136,9 @@ export default function CounselorQuickSendForm({
         };
         prependCounselorAssessmentToListCache(optimistic);
       }
+      if (result.credits?.trial) {
+        setFirstSendTrialEligible(false);
+      }
       finish(assessmentId);
     } catch (err) {
       setError(err instanceof Error ? err.message : '보내기에 실패했습니다.');
@@ -158,15 +174,25 @@ export default function CounselorQuickSendForm({
     <CounselorPageSection
       title="검사 보내기"
       dense
-      description="세트 고르기 → 이름·연락처 → 보내기. 내담자는 가입하지 않습니다."
+      description={
+        firstSendTrialEligible
+          ? '첫 1명 보내기는 검사 크레딧을 차감하지 않습니다. 세트 고르기 → 이름·연락처 → 보내기.'
+          : '세트 고르기 → 이름·연락처 → 보내기. 내담자는 가입하지 않습니다.'
+      }
       toolbar={fullLink}
     >
+      {firstSendTrialEligible ? (
+        <p className="mx-auto mb-3 max-w-2xl rounded-lg border border-emerald-500/25 bg-emerald-950/30 px-3 py-2 text-sm text-emerald-200">
+          첫 검사 보내기는 무료입니다. 「스트레스」는 3분 마음 체크(6문항)로 부담 없이 시작할 수 있습니다.
+        </p>
+      ) : null}
       <form onSubmit={handleSend} className="mx-auto flex max-w-2xl flex-col gap-5 p-1">
         <div>
           <p className="mb-2 text-sm font-semibold text-slate-200">1. 어떤 검사인가요?</p>
           <div className="grid grid-cols-3 gap-2">
             {COUNSELOR_SEND_TEMPLATES.map((item) => {
               const active = templateId === item.id;
+              const recommend = firstSendTrialEligible && item.id === 'stress';
               return (
                 <button
                   key={item.id}
@@ -179,7 +205,12 @@ export default function CounselorQuickSendForm({
                       : 'border-white/12 bg-[#121f38]/80 text-slate-200 hover:border-sky-400/30'
                   }`}
                 >
-                  <span className="block text-base font-bold">{item.name}</span>
+                  <span className="block text-base font-bold">
+                    {item.name}
+                    {recommend ? (
+                      <span className="ml-1 text-[10px] font-medium text-emerald-300">첫 보내기 추천</span>
+                    ) : null}
+                  </span>
                   <span className="mt-1 block text-xs text-slate-400">{item.description}</span>
                 </button>
               );

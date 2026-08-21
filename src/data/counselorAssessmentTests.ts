@@ -14,7 +14,7 @@ export interface CounselorTestOption {
 const seen = new Set<string>();
 const list: CounselorTestOption[] = [];
 
-list.push({ testId: 'generic', name: '일반 심리 문항 (상담코드용)' });
+list.push({ testId: 'generic', name: '3분 마음 체크' });
 seen.add('generic');
 
 for (const cat of getVisibleTestMenuItems()) {

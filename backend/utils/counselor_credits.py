@@ -7,6 +7,7 @@ from config import (
     COUNSELOR_CREDITS_COLLECTION,
     COUNSELOR_CREDIT_LEDGER_COLLECTION,
     COMMERCE_CREDITS_ENFORCE,
+    FIRST_SEND_TRIAL_ENABLED,
 )
 
 
@@ -19,6 +20,74 @@ class InsufficientCreditsError(Exception):
 
 def _credits_ref(db, counselor_uid: str):
     return db.collection(COUNSELOR_CREDITS_COLLECTION).document(counselor_uid)
+
+
+_PORTAL_CHARGE_REASONS = frozenset(
+    {"bulk_portal_sync", "bulk_portal_async", "portal_assessment_push"}
+)
+
+
+def _has_prior_portal_credit_charge(db, counselor_uid: str) -> bool:
+    for row in list_ledger(db, counselor_uid, limit=50):
+        try:
+            delta = int(row.get("delta") or 0)
+        except (TypeError, ValueError):
+            delta = 0
+        reason = (row.get("reason") or "").strip()
+        if delta < 0 and reason in _PORTAL_CHARGE_REASONS:
+            return True
+    return False
+
+
+def is_first_send_trial_eligible(db, counselor_uid: str) -> bool:
+    """상담사 첫 1명 발송 시 검사 크레딧을 차감하지 않음."""
+    if not FIRST_SEND_TRIAL_ENABLED:
+        return False
+    doc = _credits_ref(db, counselor_uid).get()
+    if doc.exists:
+        data = doc.to_dict() or {}
+        if data.get("firstSendTrialUsed"):
+            return False
+    return not _has_prior_portal_credit_charge(db, counselor_uid)
+
+
+def mark_first_send_trial_used(
+    db,
+    counselor_uid: str,
+    *,
+    portal_id: str,
+    assessment_id: str,
+    actor_uid: str | None = None,
+) -> dict:
+    balance = get_balance(db, counselor_uid)
+    _credits_ref(db, counselor_uid).set(
+        {
+            "counselorUid": counselor_uid,
+            "balance": balance,
+            "firstSendTrialUsed": True,
+            "firstSendTrialUsedAt": SERVER_TIMESTAMP,
+            "firstSendTrialPortalId": portal_id,
+            "firstSendTrialAssessmentId": assessment_id,
+            "updatedAt": SERVER_TIMESTAMP,
+        },
+        merge=True,
+    )
+    _append_ledger(
+        db,
+        counselor_uid=counselor_uid,
+        delta=0,
+        balance_after=balance,
+        reason="first_send_trial",
+        actor_uid=actor_uid,
+        metadata={"portalId": portal_id, "assessmentId": assessment_id},
+    )
+    return {
+        "counselorUid": counselor_uid,
+        "balance": balance,
+        "consumed": 0,
+        "trial": True,
+        "message": "first_send_free",
+    }
 
 
 def get_balance(db, counselor_uid: str) -> int:

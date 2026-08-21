@@ -63,6 +63,7 @@ export interface CounselorCreditsResponse {
   balance: number;
   enforceCredits: boolean;
   pilotFreeCredits: number;
+  firstSendTrialEligible?: boolean;
   ledger: CreditLedgerEntry[];
   subscription?: CounselorSubscription | null;
   payments?: {

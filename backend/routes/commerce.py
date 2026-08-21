@@ -14,7 +14,7 @@ from config import (
     PLATFORM_FEE_RATE,
 )
 from data.commerce_products import get_product, public_catalog
-from utils.counselor_credits import get_balance, grant_credits, list_ledger
+from utils.counselor_credits import get_balance, grant_credits, list_ledger, is_first_send_trial_eligible
 from utils.commerce_orders import create_pending_order, get_order, mark_order_paid, order_buyer_uid
 from utils.toss_payments import (
     confirm_payment,
@@ -110,6 +110,7 @@ def credits_me():
             "balance": balance,
             "enforceCredits": COMMERCE_CREDITS_ENFORCE,
             "pilotFreeCredits": PILOT_FREE_CREDITS,
+            "firstSendTrialEligible": is_first_send_trial_eligible(db, uid),
             "subscription": subscription,
             "ledger": ledger,
             "payments": {

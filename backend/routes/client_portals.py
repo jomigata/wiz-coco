@@ -53,7 +53,12 @@ from utils.bulk_portal_worker import (
     resend_job_notifications,
     resend_cohort_notifications,
 )
-from utils.counselor_credits import consume_credits, get_balance
+from utils.counselor_credits import (
+    consume_credits,
+    get_balance,
+    is_first_send_trial_eligible,
+    mark_first_send_trial_used,
+)
 from utils.assessment_dispatch import (
     get_assessment_dispatch_status,
     resend_portal_credentials,
@@ -723,7 +728,11 @@ def bulk_create():
             return jsonify({"error": "Bad Request", "message": "예약 발송 시각 형식이 올바르지 않습니다."}), 400
 
     credit_required = len(normalized_rows)
-    if COMMERCE_CREDITS_ENFORCE:
+    trial_eligible = len(normalized_rows) == 1 and is_first_send_trial_eligible(db, counselor_uid)
+    if trial_eligible:
+        credit_required = 0
+
+    if COMMERCE_CREDITS_ENFORCE and not trial_eligible:
         balance = get_balance(db, counselor_uid)
         if balance < credit_required:
             return (
@@ -760,14 +769,25 @@ def bulk_create():
             create_magic_link=_create_magic_link_token,
         )
         status = get_bulk_job_status(db, job_id, counselor_uid=counselor_uid) or {}
-        credit_info = consume_credits(
-            db,
-            counselor_uid,
-            credit_required,
-            reason="bulk_portal_async",
-            actor_uid=counselor_uid,
-            metadata={"jobId": job_id, "cohortId": cohort_id},
-        )
+        if trial_eligible:
+            rows = load_bulk_job_created_rows(db, job_id, counselor_uid=counselor_uid)
+            first_portal_id = rows[0].get("portalId") if rows else ""
+            credit_info = mark_first_send_trial_used(
+                db,
+                counselor_uid,
+                portal_id=first_portal_id or "",
+                assessment_id=assessment_ref_id,
+                actor_uid=counselor_uid,
+            )
+        else:
+            credit_info = consume_credits(
+                db,
+                counselor_uid,
+                len(normalized_rows),
+                reason="bulk_portal_async",
+                actor_uid=counselor_uid,
+                metadata={"jobId": job_id, "cohortId": cohort_id},
+            )
         return (
             jsonify(
                 {
@@ -824,14 +844,24 @@ def bulk_create():
         processed = int(flush.get("processed") or 0)
         notify_queued = max(0, notify_queued - processed)
 
-    credit_info = consume_credits(
-        db,
-        counselor_uid,
-        len(created),
-        reason="bulk_portal_sync",
-        actor_uid=counselor_uid,
-        metadata={"cohortId": cohort_id, "assessmentId": assessment_ref_id},
-    )
+    if trial_eligible and created:
+        first_portal_id = (created[0].get("portalId") or "").strip()
+        credit_info = mark_first_send_trial_used(
+            db,
+            counselor_uid,
+            portal_id=first_portal_id,
+            assessment_id=assessment_ref_id,
+            actor_uid=counselor_uid,
+        )
+    else:
+        credit_info = consume_credits(
+            db,
+            counselor_uid,
+            len(created),
+            reason="bulk_portal_sync",
+            actor_uid=counselor_uid,
+            metadata={"cohortId": cohort_id, "assessmentId": assessment_ref_id},
+        )
 
     return jsonify(
         {

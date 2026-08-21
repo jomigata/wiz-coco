@@ -164,6 +164,11 @@ export async function submitResult(body: {
 }): Promise<{
   resultId: string;
   message: string;
+  resultData?: {
+    hookMessage?: string;
+    summary?: string;
+    counselorNote?: string;
+  };
 }> {
   const code = normalizeAccessCodeInput(body.accessCode || '');
   const authHeaders = await getClientResultAuthHeaders(code);

@@ -71,6 +71,12 @@ export interface ClientPortalBulkCreateResult {
   notifyFailed?: number;
   notifyQueued: number;
   scheduledAt?: string | null;
+  credits?: {
+    balance?: number;
+    consumed?: number;
+    trial?: boolean;
+    message?: string;
+  };
 }
 
 export type BulkPortalJobStatus = {

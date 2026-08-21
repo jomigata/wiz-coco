@@ -53,6 +53,11 @@ COMMERCE_CREDITS_ENFORCE = os.getenv("COMMERCE_CREDITS_ENFORCE", "false").lower(
     "yes",
 )
 PILOT_FREE_CREDITS = int(os.getenv("PILOT_FREE_CREDITS", "50"))
+FIRST_SEND_TRIAL_ENABLED = os.getenv("FIRST_SEND_TRIAL_ENABLED", "true").lower() in (
+    "1",
+    "true",
+    "yes",
+)
 
 # 2단계 — 결제·정산
 COMMERCE_ORDERS_COLLECTION = "commerceOrders"
