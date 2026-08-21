@@ -271,12 +271,12 @@ export default function CounselorHomeDashboard() {
       }
     >
       <motion.div
-        className="flex min-h-0 flex-1 flex-col gap-3 p-2.5 text-sm sm:p-3"
+        className="grid min-h-0 flex-1 grid-cols-1 gap-3 p-2.5 text-sm sm:p-3 lg:grid-cols-2"
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35 }}
       >
-        <div className="grid shrink-0 grid-cols-2 gap-2 lg:grid-cols-4">
+        <div className="grid min-h-0 grid-cols-2 grid-rows-2 gap-2">
           <TodayTile
             label="오늘 보낼 것"
             value={sendCount}
@@ -315,7 +315,7 @@ export default function CounselorHomeDashboard() {
           />
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-sky-400/20 bg-[#0f1d33]/60">
+        <div className="flex min-h-[16rem] flex-1 flex-col overflow-hidden rounded-xl border border-sky-400/20 bg-[#0f1d33]/60 lg:min-h-0">
           <div className="flex shrink-0 items-center justify-between border-b border-sky-400/20 px-3 py-2.5">
             <h3 className="text-sm font-bold text-white">오늘 할 일</h3>
             <AuthLink href="/counselor/assessments" className="text-xs text-sky-400 hover:text-sky-300">
