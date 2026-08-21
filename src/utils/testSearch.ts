@@ -4,6 +4,7 @@ import {
   type FlatTestMenuItem,
   type TestCategory,
 } from '@/data/psychologyTestMenu';
+import { isReadyTestHref } from '@/data/readyTests';
 import {
   IMPLEMENTED_TEST_HREF,
   TEST_SEARCH_SEED,
@@ -102,6 +103,7 @@ export function buildTestSearchIndex(categories?: TestCategory[]): TestSearchEnt
 
   TEST_SEARCH_SEED.forEach((seed, i) => {
     const entry = seedToEntry(seed, i);
+    if (!isReadyTestHref(entry.href)) return;
     const key = entry.href;
     const existing = byHref.get(key);
     if (existing) {

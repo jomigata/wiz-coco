@@ -1,5 +1,8 @@
 // AI 심리검사 메뉴 데이터 - 11개 대분류 3단계 구조
 // hidden: true 인 항목/카테고리는 네비에서 숨김. NEXT_PUBLIC_SHOW_LEGACY_TESTS=true 시 복원 가능.
+// 기본 노출은 readyTests.ts 의 완료 검사만 (1단계: 빈 페이지 숨김).
+import { isReadyTestHref } from './readyTests';
+
 export interface TestMenuItem {
   name: string;
   href: string;
@@ -31,14 +34,34 @@ const showLegacyTests =
   typeof process !== 'undefined' &&
   process.env.NEXT_PUBLIC_SHOW_LEGACY_TESTS === 'true';
 
-/** 네비/사이드바에 표시할 메뉴만 반환. hidden 카테고리 제외 (레거시 노출 시에는 전체) */
+function pruneEmptyCategories(categories: TestCategory[]): TestCategory[] {
+  return categories
+    .map((c) => ({
+      ...c,
+      subcategories: c.subcategories
+        .filter((s) => !s.hidden)
+        .map((s) => ({
+          ...s,
+          items: s.items.filter((item) => {
+            if (item.hidden) return false;
+            if (showLegacyTests) return true;
+            return isReadyTestHref(item.href);
+          }),
+        }))
+        .filter((s) => s.items.length > 0),
+    }))
+    .filter((c) => !c.hidden && c.subcategories.length > 0);
+}
+
+/** 네비/사이드바에 표시할 메뉴만 반환. 기본은 완료 검사만. */
 export function getVisibleTestMenuItems(): TestCategory[] {
   if (showLegacyTests) return testSubMenuItems;
-  return testSubMenuItems.filter((c) => !c.hidden);
+  return pruneEmptyCategories(testSubMenuItems);
 }
 
 /** 대분류명 → /tests?category={slug} 경로 */
 export const TEST_CATEGORY_SLUGS: Record<string, string> = {
+  '이용 가능한 검사': 'available',
   'TA 이고-오케이그램 검사': 'ego-ok-professional',
   '1. 개인 심리 및 성장': 'personal-growth',
   '2. 대인관계 및 사회적응': 'relationships-social',
@@ -50,6 +73,7 @@ export const TEST_CATEGORY_SLUGS: Record<string, string> = {
 
 /** 중분류명 → /tests/{slug} 경로 (실제 폴더명과 일치) */
 export const TEST_SUBCATEGORY_SLUGS: Record<string, string> = {
+  '성격·종합': 'available',
   '1a. 성격 및 기질 탐색': 'personality-temperament',
   '1b. 자아정체감 및 가치관': 'identity-values',
   '1c. 잠재력 및 역량 개발': 'potential-development',
@@ -111,27 +135,20 @@ export function flattenTestMenuItems(categories: TestCategory[]): FlatTestMenuIt
 
 export const testSubMenuItems: TestCategory[] = [
   {
-    category: "임시 검사",
+    category: "이용 가능한 검사",
     icon: "🔬",
-    hidden: true, // 기존 완료 기능 보관. 메뉴에서 숨김, 추후 복원 가능
     subcategories: [
       {
-        name: "임시 검사",
+        name: "성격·종합",
         icon: "🧪",
         items: [
           { name: "MBTI Pro 검사", href: "/tests/mbti_pro", description: "전문가용 MBTI 성격 유형 검사", icon: "🧠" },
           { name: "MBTI 검사", href: "/tests/mbti", description: "개인용 MBTI 성격 유형 검사", icon: "🔍" },
           { name: "AI 프로파일링 검사", href: "/tests/ai-profiling", description: "AI 기반 종합 성격 프로파일링 검사", icon: "🤖" },
-          { name: "통합 평가 검사", href: "/tests/integrated-assessment", description: "종합 심리 평가 검사", icon: "📊" }
+          { name: "통합 평가 검사", href: "/tests/integrated-assessment", description: "종합 심리 평가 검사", icon: "📊" },
+          { name: "Inside MBTI 검사", href: "/tests/inside-mbti", description: "MBTI 유형 기반 관계 분석", icon: "💑" },
         ]
       },
-      {
-        name: "통합 심리검사",
-        icon: "🎓",
-        items: [
-          { name: "통합 심리검사", href: "/tests/integrated-assessment", description: "신입생 통합 심리검사", icon: "🎓" }
-        ]
-      }
     ]
   },
   {
@@ -155,6 +172,7 @@ export const testSubMenuItems: TestCategory[] = [
   {
     category: "1. 개인 심리 및 성장",
     icon: "🚀",
+    hidden: true,
     subcategories: [
       {
         name: "1a. 성격 및 기질 탐색",
@@ -201,6 +219,7 @@ export const testSubMenuItems: TestCategory[] = [
   {
     category: "2. 대인관계 및 사회적응",
     icon: "💕",
+    hidden: true,
     subcategories: [
       {
         name: "2a. 가족 관계",
@@ -247,6 +266,7 @@ export const testSubMenuItems: TestCategory[] = [
   {
     category: "3. 정서 문제 및 정신 건강",
     icon: "💙",
+    hidden: true,
     subcategories: [
       {
         name: "3a. 우울 및 기분 문제",
@@ -293,6 +313,7 @@ export const testSubMenuItems: TestCategory[] = [
   {
     category: "4. 현실 문제 및 생활 관리",
     icon: "🔧",
+    hidden: true,
     subcategories: [
       {
         name: "4a. 진로 및 직업 문제",
@@ -339,6 +360,7 @@ export const testSubMenuItems: TestCategory[] = [
   {
     category: "5. 문화 및 환경 적응",
     icon: "🌍",
+    hidden: true,
     subcategories: [
       {
         name: "5a. 다문화 적응",

@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { pushWithAuthSession } from '@/utils/authSessionLifecycle';
 import RoleGuard from '@/components/RoleGuard';
 import { requiresPsychologyTestsMenuAccess } from '@/utils/roleUtils';
+import { shouldShowTestUnavailable } from '@/data/readyTests';
+import TestUnavailableNotice from '@/components/tests/TestUnavailableNotice';
 
 export default function TestsLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -184,6 +186,12 @@ export default function TestsLayout({ children }: { children: React.ReactNode })
 {/* 전문가용 MBTI 결과 페이지는 레이아웃 우회 */}
       {pathname.includes('/mbti_pro/result') ? (
         children
+      ) : shouldShowTestUnavailable(pathname) ? (
+        <div className="pt-16">
+          <div className="mx-auto w-full max-w-[1800px] px-4 py-16 sm:px-6">
+            <TestUnavailableNotice />
+          </div>
+        </div>
       ) : (
         <>
           {/* 메인 콘텐츠 영역 - 전체 화면 최적화 */}
@@ -191,7 +199,10 @@ export default function TestsLayout({ children }: { children: React.ReactNode })
             {/* 페이지 헤더 - mbti_pro 및 mbti 페이지에서는 숨김 */}
             {!pathname.includes('/mbti_pro') &&
               !pathname.includes('/mbti') &&
-              !pathname.includes('/ego-ok') && (
+              !pathname.includes('/ego-ok') &&
+              !pathname.includes('/ai-profiling') &&
+              !pathname.includes('/integrated-assessment') &&
+              !pathname.includes('/inside-mbti') && (
               <div className="border-b border-slate-700/50 bg-gradient-to-r from-slate-900 to-slate-800 py-6">
                 <div className="mx-auto flex w-full max-w-[1800px] items-center justify-between px-4 sm:px-6">
                   <div>

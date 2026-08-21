@@ -1,35 +1,29 @@
 /**
  * 상담사가 상담코드 세트에 넣을 수 있는 검사 목록
- * psychologyTestMenu에서 href 기준 testId 추출 (중복 제거)
+ * 기본: 끝까지 되는 검사만 (readyTests) + 상담코드용 일반 문항
  */
 
-import { testSubMenuItems } from './psychologyTestMenu';
+import { getVisibleTestMenuItems } from './psychologyTestMenu';
+import { isReadyTestId, testIdFromHref } from './readyTests';
 
 export interface CounselorTestOption {
   testId: string;
   name: string;
 }
 
-function testIdFromHref(href: string): string {
-  const match = (href || '').match(/\/tests\/(.+)$/);
-  return match ? match[1].trim() : '';
-}
-
 const seen = new Set<string>();
 const list: CounselorTestOption[] = [];
 
-// 일반 상담코드용 문항 (genericJoinQuestions 사용)
 list.push({ testId: 'generic', name: '일반 심리 문항 (상담코드용)' });
 seen.add('generic');
 
-for (const cat of testSubMenuItems) {
+for (const cat of getVisibleTestMenuItems()) {
   for (const sub of cat.subcategories || []) {
     for (const item of sub.items || []) {
       const id = testIdFromHref(item.href);
-      if (id && !seen.has(id)) {
-        seen.add(id);
-        list.push({ testId: id, name: item.name || id });
-      }
+      if (!id || seen.has(id) || !isReadyTestId(id)) continue;
+      seen.add(id);
+      list.push({ testId: id, name: item.name || id });
     }
   }
 }

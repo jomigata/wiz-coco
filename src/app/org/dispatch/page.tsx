@@ -11,6 +11,7 @@ import {
   type OrgCohortTemplate,
 } from '@/lib/orgApi';
 import { counselorAssessmentTestOptions } from '@/data/counselorAssessmentTests';
+import { isReadyTestId } from '@/data/readyTests';
 
 const DEFAULT_TESTS = [
   { testId: 'mbti_pro', name: 'MBTI Pro' },
@@ -34,7 +35,7 @@ export default function OrgDispatchPage() {
   const testOptions = useMemo(
     () =>
       counselorAssessmentTestOptions.filter(
-        (o) => o.testId === 'generic' || o.testId.includes('-') || o.testId === 'mbti_pro',
+        (o) => o.testId === 'generic' || isReadyTestId(o.testId),
       ),
     [],
   );
