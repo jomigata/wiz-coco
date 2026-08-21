@@ -268,6 +268,7 @@ def _bulk_test_results_by_portal_assessment(
                 "resultId": doc.id,
                 "status": status,
                 "completedAt": _iso_timestamp(data.get("completedAt")),
+                "miniCheckBand": (data.get("resultData") or {}).get("band"),
             }
             by_test = out.setdefault(pid, {})
             prev = by_test.get(test_id)
@@ -298,6 +299,7 @@ def _test_detail_rows_from_map(by_test: dict[str, dict], test_list: list) -> lis
                     "status": "completed",
                     "completedAt": info.get("completedAt"),
                     "resultId": info.get("resultId"),
+                    "miniCheckBand": info.get("miniCheckBand"),
                 }
             )
         elif info:

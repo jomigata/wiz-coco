@@ -59,6 +59,7 @@ import {
   counselorListTdClass,
   counselorListThGrayClass,
 } from '@/lib/counselorListTableStyles';
+import CounselorNextTestRecommendCard from '@/components/counselor/CounselorNextTestRecommendCard';
 import { LoadingMessage } from '@/components/ui/LoadingMessage';
 
 function formatCompletedAt(iso: string | null | undefined): string {
@@ -1192,6 +1193,13 @@ export default function AssessmentDispatchPanel({
                               </table>
                             </div>
                           )}
+                          {!adminClientProgressView ? (
+                            <CounselorNextTestRecommendCard
+                              assessmentId={assessmentId}
+                              recipient={r}
+                              onAssigned={() => void load({ silent: true })}
+                            />
+                          ) : null}
                         </td>
                       </tr>
                     ) : null}

@@ -315,6 +315,7 @@ export type DispatchTestResult = {
   status: 'completed' | 'in_progress' | 'not_started';
   completedAt: string | null;
   resultId: string | null;
+  miniCheckBand?: 'high' | 'moderate' | 'low' | string | null;
 };
 
 export type DispatchRecipient = {
