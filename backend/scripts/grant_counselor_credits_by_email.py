@@ -17,10 +17,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from firebase_admin import auth as fb_auth
 
 from config import USERS_COLLECTION
-from firebase_init import get_firestore, init_firebase
+from firebase_init import get_firestore, get_firebase_app
 from utils.counselor_credits import get_balance, grant_credits
 
-init_firebase()
+get_firebase_app()
 
 
 def resolve_counselor_uid(db, email: str) -> tuple[str, str]:
