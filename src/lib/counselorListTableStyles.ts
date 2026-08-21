@@ -6,9 +6,14 @@ export const counselorListHeaderRowClass = 'border-b border-white/20';
 
 export const counselorListHeaderRowLightClass = 'border-b border-slate-200 bg-white';
 
+/** 상담진행 현황 — 컬럼 헤더만 회색 계통 */
+export const counselorListHeaderRowGrayClass = 'border-b border-gray-400/70 bg-gray-300';
+
 export const counselorListThClass = 'text-left text-gray-300 py-3 px-4 text-sm font-medium';
 
 export const counselorListThLightClass = 'text-left text-slate-600 py-3 px-4 text-sm font-medium';
+
+export const counselorListThGrayClass = 'text-left text-gray-700 py-3 px-4 text-sm font-medium';
 
 export const counselorListNoThClass =
   'w-10 text-left text-gray-300 py-3 px-4 text-sm font-medium tabular-nums';
@@ -16,12 +21,18 @@ export const counselorListNoThClass =
 export const counselorListNoThLightClass =
   'w-10 text-left text-slate-600 py-3 px-4 text-sm font-medium tabular-nums';
 
+export const counselorListNoThGrayClass =
+  'w-10 text-left text-gray-700 py-3 px-4 text-sm font-medium tabular-nums';
+
 /** 선택(체크박스) 열 — 가로 한 줄 · 중앙 정렬 */
 export const counselorListSelectThClass =
   'w-10 whitespace-nowrap text-center text-gray-300 py-3 px-2 text-sm font-medium';
 
 export const counselorListSelectThLightClass =
   'w-10 whitespace-nowrap text-center text-slate-600 py-3 px-2 text-sm font-medium';
+
+export const counselorListSelectThGrayClass =
+  'w-10 whitespace-nowrap text-center text-gray-700 py-3 px-2 text-sm font-medium';
 
 export const counselorListSelectTdClass = 'py-3 px-2 text-center align-top text-sm';
 
@@ -44,6 +55,8 @@ export const counselorListActionBtnClass =
 export const counselorListSortActiveClass = 'text-cyan-400';
 
 export const counselorListSortActiveLightClass = 'text-sky-600';
+
+export const counselorListSortActiveGrayClass = 'text-gray-900';
 
 export const counselorListSortIdleClass = 'text-slate-600';
 

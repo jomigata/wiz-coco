@@ -50,14 +50,14 @@ import { buildAssessmentListHref, writeAssessmentListSearch } from '@/lib/counse
 import { matchesWildcardFields } from '@/lib/wildcardSearch';
 import {
   counselorListBodyRowClass,
-  counselorListHeaderRowLightClass,
-  counselorListNoThLightClass,
+  counselorListHeaderRowGrayClass,
+  counselorListNoThGrayClass,
   counselorListSelectTdClass,
-  counselorListSelectThLightClass,
-  counselorListSortActiveLightClass,
+  counselorListSelectThGrayClass,
+  counselorListSortActiveGrayClass,
   counselorListTableWrapperClass,
   counselorListTdClass,
-  counselorListThLightClass,
+  counselorListThGrayClass,
 } from '@/lib/counselorListTableStyles';
 import { LoadingMessage } from '@/components/ui/LoadingMessage';
 
@@ -270,7 +270,7 @@ function DualFieldSortHeader({
   const leftActive = active && leftPhases.includes(phase);
   const rightActive = active && rightPhases.includes(phase);
   return (
-    <th scope="col" className={`${counselorListThLightClass} ${className}`}>
+    <th scope="col" className={`${counselorListThGrayClass} ${className}`}>
       <div className="inline-flex flex-wrap items-center gap-1">
         <button
           type="button"
@@ -278,21 +278,21 @@ function DualFieldSortHeader({
             e.stopPropagation();
             onSortLeft();
           }}
-          className={`inline-flex items-center gap-1 transition-colors hover:text-slate-800 ${leftActive ? counselorListSortActiveLightClass : 'text-slate-500'}`}
+          className={`inline-flex items-center gap-1 transition-colors hover:text-gray-900 ${leftActive ? counselorListSortActiveGrayClass : 'text-gray-600'}`}
         >
           {leftLabel}
           <span className="text-[10px] opacity-80" aria-hidden>
             {sortPhaseIcon(leftActive, phase)}
           </span>
         </button>
-        <span className="text-slate-300">/</span>
+        <span className="text-gray-400">/</span>
         <button
           type="button"
           onClick={(e) => {
             e.stopPropagation();
             onSortRight();
           }}
-          className={`inline-flex items-center gap-1 transition-colors hover:text-slate-800 ${rightActive ? counselorListSortActiveLightClass : 'text-slate-500'}`}
+          className={`inline-flex items-center gap-1 transition-colors hover:text-gray-900 ${rightActive ? counselorListSortActiveGrayClass : 'text-gray-600'}`}
         >
           {rightLabel}
           <span className="text-[10px] opacity-80" aria-hidden>
@@ -321,14 +321,14 @@ function SortableColumnHeader({
 }) {
   const active = activeKey === sortKey;
   return (
-    <th className={`px-3 py-2.5 text-left text-sm font-medium text-slate-600 ${className}`}>
+    <th className={`px-3 py-2.5 text-left text-sm font-medium text-gray-700 ${className}`}>
       <button
         type="button"
         onClick={() => onSort(sortKey)}
-        className="inline-flex items-center gap-1 text-slate-600 transition-colors hover:text-slate-800"
+        className="inline-flex items-center gap-1 text-gray-700 transition-colors hover:text-gray-900"
       >
         <span>{label}</span>
-        <span className={`text-[10px] ${active ? 'text-sky-600' : 'text-slate-400'}`} aria-hidden="true">
+        <span className={`text-[10px] ${active ? 'text-gray-800' : 'text-gray-500'}`} aria-hidden="true">
           {active ? (direction === 'asc' ? '▲' : '▼') : '↕'}
         </span>
       </button>
@@ -979,10 +979,10 @@ export default function AssessmentDispatchPanel({
                   <col className="w-36" />
                 </colgroup>
                 <thead>
-              <tr className={counselorListHeaderRowLightClass}>
-                <th className={counselorListNoThLightClass}>No.</th>
+              <tr className={counselorListHeaderRowGrayClass}>
+                <th className={counselorListNoThGrayClass}>No.</th>
                 {!adminClientProgressView ? (
-                  <th className={counselorListSelectThLightClass}>
+                  <th className={counselorListSelectThGrayClass}>
                     <input
                       type="checkbox"
                       checked={allSelected}
