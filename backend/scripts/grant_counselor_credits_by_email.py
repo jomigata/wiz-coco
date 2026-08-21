@@ -28,11 +28,16 @@ def resolve_counselor_uid(db, email: str) -> tuple[str, str]:
     if not email:
         raise ValueError("email required")
 
+    for udoc in db.collection(USERS_COLLECTION).where("email", "==", email).limit(20).stream():
+        role = (udoc.to_dict() or {}).get("role")
+        if role in ("counselor", "admin"):
+            return udoc.id, role or "counselor"
+
     try:
         auth_user = fb_auth.get_user_by_email(email)
         uid = auth_user.uid
     except Exception as exc:
-        raise ValueError(f"Firebase Auth 사용자 없음 ({email}): {exc}") from exc
+        raise ValueError(f"상담사 사용자를 찾을 수 없음 ({email}): {exc}") from exc
 
     user_doc = db.collection(USERS_COLLECTION).document(uid).get()
     if not user_doc.exists:
