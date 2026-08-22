@@ -21,6 +21,7 @@ from utils.test_result_queries import query_results_shared_to_assessment
 
 bp = Blueprint("results", __name__, url_prefix="/api/results")
 MSG_ACCESS_CODE_EXPIRED = "상담(코드) 사용기한이 종료되었습니다. 상담사에게 새 코드 발급을 요청해 주세요."
+MSG_TEST_ALREADY_COMPLETED = "이미 완료한 검사입니다. 수정은 검사 진행 현황에서 할 수 있습니다."
 
 
 def _responses_equal(a, b) -> bool:
@@ -98,6 +99,77 @@ def _legacy_password_valid(d: dict, password: str) -> bool:
     return bool(password) and verify_password(password, ph)
 
 
+def _has_completed_result_for_test(
+    db,
+    access_code: str,
+    test_id: str,
+    *,
+    portal_id: str | None = None,
+    participant_id: str | None = None,
+    guest_id: str | None = None,
+    client_uid: str | None = None,
+    token_email: str | None = None,
+) -> bool:
+    """동일 검사(testId)에 대한 완료 결과가 이미 있으면 True — 재검사(신규 제출) 차단."""
+    tid = (test_id or "").strip()
+    if not tid:
+        return False
+
+    def _matches(doc) -> bool:
+        d = doc.to_dict() or {}
+        if str(d.get("testId") or "").strip() != tid:
+            return False
+        return (d.get("status") or "").strip() == "completed"
+
+    if portal_id:
+        refs = (
+            db.collection(TEST_RESULTS_COLLECTION)
+            .where("accessCode", "==", access_code)
+            .where("portalId", "==", portal_id)
+            .get()
+        )
+        return any(_matches(doc) for doc in refs)
+
+    if participant_id:
+        refs = (
+            db.collection(TEST_RESULTS_COLLECTION)
+            .where("accessCode", "==", access_code)
+            .where("participantId", "==", participant_id)
+            .get()
+        )
+        return any(_matches(doc) for doc in refs)
+
+    if guest_id:
+        refs = (
+            db.collection(TEST_RESULTS_COLLECTION)
+            .where("accessCode", "==", access_code)
+            .where("guestId", "==", guest_id)
+            .get()
+        )
+        return any(_matches(doc) for doc in refs)
+
+    if client_uid:
+        refs = (
+            db.collection(TEST_RESULTS_COLLECTION)
+            .where("accessCode", "==", access_code)
+            .where("clientUid", "==", client_uid)
+            .get()
+        )
+        if any(_matches(doc) for doc in refs):
+            return True
+
+    if token_email:
+        legacy_refs = (
+            db.collection(TEST_RESULTS_COLLECTION)
+            .where("accessCode", "==", access_code)
+            .where("clientEmail", "==", token_email)
+            .get()
+        )
+        return any(_matches(doc) for doc in legacy_refs)
+
+    return False
+
+
 @bp.route("", methods=["POST"])
 @limit_access_code
 def submit_result():
@@ -152,6 +224,20 @@ def submit_result():
     if _is_assessment_expired(ass_data):
         return jsonify({"error": "Gone", "message": MSG_ACCESS_CODE_EXPIRED}), 410
     assessment_id = ass_doc.id
+
+    duplicate_kwargs = {"portal_id": None, "participant_id": None, "guest_id": None, "client_uid": None, "token_email": None}
+    if portal_session:
+        duplicate_kwargs["portal_id"] = (portal_session.get("portalId") or "").strip()
+    elif participant_session:
+        duplicate_kwargs["participant_id"] = (participant_session.get("participantId") or "").strip()
+    elif guest_session:
+        duplicate_kwargs["guest_id"] = (guest_session.get("guestId") or "").strip()
+    else:
+        duplicate_kwargs["client_uid"] = client_uid
+        duplicate_kwargs["token_email"] = client_email
+
+    if _has_completed_result_for_test(db, access_code, test_id, **duplicate_kwargs):
+        return jsonify({"error": "Conflict", "message": MSG_TEST_ALREADY_COMPLETED}), 409
 
     result_data = compute_result_data(test_id, responses if isinstance(responses, (dict, list)) else {})
 

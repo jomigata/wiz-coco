@@ -299,10 +299,17 @@ function ClientPortalContent() {
   }, [assessments, loadResults]);
 
   const openTest = (a: PortalAssessment, testId: string, resultId?: string) => {
+    const code = normalizeAccessCodeInput(a.accessCode);
+    if (!resultId) {
+      const results = resultsByCode[code] || [];
+      const alreadyCompleted = results.some(
+        (r) => r.status === 'completed' && String(r.testId) === String(testId),
+      );
+      if (alreadyCompleted) return;
+    }
     setPortalReturnPath('/portal/');
     clearJoinGuestSession();
     clearJoinParticipantSession();
-    const code = normalizeAccessCodeInput(a.accessCode);
     clearForceGuestForAccessCode(code);
     clearJoinFreshParticipantFlow(code);
     persistJoinAssessmentSession(code, {

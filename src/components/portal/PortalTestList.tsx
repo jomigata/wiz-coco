@@ -37,7 +37,7 @@ export type PortalTestListProps = {
     accessCode: string;
     roundNumber: number | null;
   }) => void;
-  /** 이전 상담 레거시 — 시작·수정·삭제·재검사 비활성 */
+  /** 이전 상담 레거시 — 시작·수정·삭제 비활성 */
   readOnly?: boolean;
 };
 
@@ -192,15 +192,6 @@ export default function PortalTestList({
                     </div>
                   </div>
                 ))}
-                {!readOnly ? (
-                  <button
-                    type="button"
-                    onClick={() => onStartTest(String(t.testId))}
-                    className="text-xs text-cyan-400 hover:text-cyan-300 px-1 py-1"
-                  >
-                    재검사하기
-                  </button>
-                ) : null}
               </div>
             ) : null}
           </li>
