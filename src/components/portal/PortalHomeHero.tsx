@@ -31,7 +31,7 @@ export default function PortalHomeHero({
   return (
     <div className="space-y-4">
       <section className="rounded-2xl border border-slate-600 bg-gradient-to-b from-slate-800/90 to-slate-900/90 p-6 shadow-xl">
-        <p className="text-sm text-slate-400">나의 공간</p>
+        <p className="text-sm text-slate-400">내 검사실</p>
         <h1 className="mt-1 text-2xl font-bold text-white">{displayName}님</h1>
 
         <div className="mt-5 flex items-start gap-3 rounded-xl border border-indigo-500/30 bg-indigo-950/30 p-4">
