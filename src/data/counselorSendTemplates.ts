@@ -31,9 +31,8 @@ export const COUNSELOR_SEND_TEMPLATES: CounselorSendTemplate[] = [
   },
 ];
 
-/** 카톡·안내 기본 문구. 상담사가 다시 쓰지 않는다. */
-export const QUICK_SEND_MESSAGE =
-  '아래 링크로 3분만 해 주세요. 회원가입은 필요 없습니다.';
+/** 카톡·안내 기본 문구. 상담사가 검사 보내기 화면에서 수정할 수 있다. */
+export const QUICK_SEND_MESSAGE = '아래 링크로 진행하여 주세요.';
 
 export function resolveTemplateTestList(
   template: CounselorSendTemplate,

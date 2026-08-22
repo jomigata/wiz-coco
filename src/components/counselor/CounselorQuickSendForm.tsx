@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { pushWithAuthSession } from '@/utils/authSessionLifecycle';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
@@ -10,6 +10,7 @@ import { prependCounselorAssessmentToListCache, type CounselorAssessment } from 
 import { formatPhoneDisplay, normalizeRecipientPhone } from '@/lib/phoneFormat';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
+import WelcomeMessageSampleHoverPicker from '@/components/counselor/WelcomeMessageSampleHoverPicker';
 import AuthLink from '@/components/auth/AuthLink';
 import {
   COUNSELOR_SEND_TEMPLATES,
@@ -18,9 +19,17 @@ import {
   type CounselorSendTemplateId,
 } from '@/data/counselorSendTemplates';
 import { fetchMyCredits } from '@/lib/commerceApi';
+import { GROUP_RECIPIENT_MAX } from '@/lib/groupRecipientLimits';
+import {
+  mergeRecipients,
+  parseRecipientFile,
+  type RecipientRow,
+} from '@/lib/recipientImport';
 
 const INPUT =
   'w-full rounded-lg border border-white/15 bg-[#121f38]/95 px-3 py-2.5 text-base text-slate-100 placeholder:text-slate-500 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500/35 focus:border-sky-400/55 disabled:opacity-55';
+
+const EMPTY_ROW: RecipientRow = { displayName: '', email: '', phone: '' };
 
 type Props = {
   variant?: 'page' | 'modal';
@@ -39,12 +48,15 @@ export default function CounselorQuickSendForm({
   const router = useRouter();
   const { user, authPending, showLoginRequired } = useAuthResolved();
   const [templateId, setTemplateId] = useState<CounselorSendTemplateId | null>(null);
-  const [displayName, setDisplayName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
+  const [welcomeMessage, setWelcomeMessage] = useState(QUICK_SEND_MESSAGE);
+  const [manualRows, setManualRows] = useState<RecipientRow[]>([{ ...EMPTY_ROW }]);
+  const [fileRows, setFileRows] = useState<RecipientRow[]>([]);
+  const [fileLabel, setFileLabel] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [firstSendTrialEligible, setFirstSendTrialEligible] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const recipientNameRefs = useRef<Array<HTMLInputElement | null>>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -59,6 +71,7 @@ export default function CounselorQuickSendForm({
 
   const template = COUNSELOR_SEND_TEMPLATES.find((t) => t.id === templateId) ?? null;
   const testList = template ? resolveTemplateTestList(template) : [];
+  const recipients = useMemo(() => mergeRecipients(manualRows, fileRows), [manualRows, fileRows]);
 
   const finish = (assessmentId: string) => {
     if (variant === 'modal') {
@@ -71,6 +84,58 @@ export default function CounselorQuickSendForm({
     pushWithAuthSession(router, href);
   };
 
+  const updateRow = (index: number, field: keyof RecipientRow, value: string) => {
+    setManualRows((prev) => {
+      const next = [...prev];
+      next[index] = {
+        ...next[index],
+        [field]: field === 'phone' ? formatPhoneDisplay(value) || value : value,
+      };
+      return next;
+    });
+  };
+
+  const addRow = (focusNewRow = false) => {
+    setManualRows((prev) => {
+      const next = [...prev, { ...EMPTY_ROW }];
+      if (focusNewRow) {
+        const newIdx = next.length - 1;
+        setTimeout(() => recipientNameRefs.current[newIdx]?.focus(), 0);
+      }
+      return next;
+    });
+  };
+
+  const handleNameBlur = (index: number, value: string) => {
+    const name = value.trim();
+    if (!name) return;
+    setManualRows((prev) => {
+      if (index !== prev.length - 1) return prev;
+      return [...prev, { ...EMPTY_ROW }];
+    });
+  };
+
+  const handleRecipientFieldKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== 'Enter' || loading) return;
+    e.preventDefault();
+    addRow(true);
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setFileLabel(file.name);
+    try {
+      const parsed = await parseRecipientFile(file);
+      setFileRows(parsed);
+      setError('');
+    } catch {
+      setFileRows([]);
+      setFileLabel('');
+      setError('파일을 읽지 못했습니다. CSV·텍스트·엑셀 형식을 확인해 주세요.');
+    }
+  };
+
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -78,44 +143,57 @@ export default function CounselorQuickSendForm({
       setError('기본 · 관계 · 스트레스 중 하나를 골라 주세요.');
       return;
     }
-    const name = displayName.trim();
-    if (!name) {
-      setError('내담자 이름을 입력해 주세요.');
+    if (recipients.length === 0) {
+      setError('내담자 1명 이상(이름·이메일 또는 휴대폰)을 입력하거나 명단을 첨부해 주세요.');
       return;
     }
-    const phoneNorm = normalizeRecipientPhone(phone);
-    const emailNorm = email.trim();
-    if (!phoneNorm && !emailNorm) {
-      setError('휴대폰 또는 이메일을 입력해 주세요.');
-      return;
-    }
-    if (emailNorm && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailNorm)) {
-      setError('이메일 형식을 확인해 주세요.');
+    if (recipients.length > GROUP_RECIPIENT_MAX) {
+      setError(`한 번에 최대 ${GROUP_RECIPIENT_MAX.toLocaleString('ko-KR')}명까지 보낼 수 있습니다.`);
       return;
     }
 
+    const invalid = recipients.find((r) => {
+      const emailNorm = r.email.trim();
+      const phoneNorm = normalizeRecipientPhone(r.phone);
+      if (emailNorm && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailNorm)) return true;
+      return !phoneNorm && !emailNorm;
+    });
+    if (invalid) {
+      if (invalid.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(invalid.email.trim())) {
+        setError(`「${invalid.displayName}」님의 이메일 형식을 확인해 주세요.`);
+      } else {
+        setError(`「${invalid.displayName}」님의 휴대폰 또는 이메일을 입력해 주세요.`);
+      }
+      return;
+    }
+
+    const message = welcomeMessage.trim() || QUICK_SEND_MESSAGE;
+    const firstName = recipients[0].displayName.trim();
+    const title =
+      recipients.length > 1
+        ? `${template.name} · ${recipients.length}명`.slice(0, 200)
+        : `${template.name} · ${firstName}`.slice(0, 200);
+
     setLoading(true);
     try {
-      const title = `${template.name} · ${name}`.slice(0, 200);
       const result = await bulkCreateClientPortals({
-        cohortName: name.slice(0, 120),
+        cohortName: firstName.slice(0, 120),
         title,
-        welcomeMessage: QUICK_SEND_MESSAGE,
+        welcomeMessage: message,
         testList,
         codeCategory: 'individual',
-        rows: [
-          {
-            displayName: name,
-            phone: phoneNorm || undefined,
-            email: emailNorm || undefined,
-            queueNotify: true,
-          },
-        ],
+        rows: recipients.map((r) => ({
+          displayName: r.displayName.trim(),
+          phone: normalizeRecipientPhone(r.phone) || undefined,
+          email: r.email.trim() || undefined,
+          queueNotify: true,
+        })),
         queueNotify: true,
       });
 
       const assessmentId = result.assessmentId || '';
       const accessCode = result.joinAccessCode || result.created?.[0]?.joinAccessCode || '';
+      const createdCount = result.created?.length ?? recipients.length;
       if (assessmentId && accessCode) {
         const optimistic: CounselorAssessment = {
           id: assessmentId,
@@ -124,15 +202,15 @@ export default function CounselorQuickSendForm({
           title,
           issueType: 'individual',
           targetAudience: '개인',
-          welcomeMessage: QUICK_SEND_MESSAGE,
+          welcomeMessage: message,
           testList,
           createdAt: new Date().toISOString(),
-          cohortName: name,
+          cohortName: firstName,
           codeCategory: 'individual',
-          dispatchSentCount: 1,
+          dispatchSentCount: createdCount,
           dispatchFailedCount: 0,
           testCompleteCount: 0,
-          testIncompleteCount: 1,
+          testIncompleteCount: createdCount,
         };
         prependCounselorAssessmentToListCache(optimistic);
       }
@@ -220,48 +298,110 @@ export default function CounselorQuickSendForm({
 
         <div>
           <p className="mb-2 text-sm font-semibold text-slate-200">2. 누구에게 보낼까요?</p>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <label className="block">
-              <span className="mb-1.5 block text-xs text-slate-400">이름</span>
-              <input
-                className={INPUT}
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                placeholder="내담자 이름"
-                autoComplete="name"
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".csv,.txt,.tsv,.xlsx,.xls,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+            className="hidden"
+            onChange={handleFileChange}
+          />
+          <div className="mb-1.5 hidden gap-3 text-xs text-slate-400 sm:grid sm:grid-cols-3">
+            <span>이름</span>
+            <span>휴대폰</span>
+            <div className="flex items-center justify-between gap-2">
+              <span>이메일</span>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
                 disabled={loading}
-              />
-            </label>
-            <label className="block">
-              <span className="mb-1.5 block text-xs text-slate-400">휴대폰</span>
-              <input
-                className={INPUT}
-                value={phone}
-                onChange={(e) => setPhone(formatPhoneDisplay(e.target.value) || e.target.value)}
-                placeholder="010-0000-0000"
-                inputMode="tel"
-                autoComplete="tel"
-                disabled={loading}
-              />
-            </label>
-            <label className="block">
-              <span className="mb-1.5 block text-xs text-slate-400">이메일</span>
-              <input
-                className={INPUT}
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="name@example.com"
-                autoComplete="email"
-                disabled={loading}
-              />
-            </label>
+                className="shrink-0 text-sky-300 transition hover:text-sky-200 disabled:opacity-50"
+              >
+                명단 첨부하기
+              </button>
+            </div>
+          </div>
+          <div className="mb-2 flex justify-end sm:hidden">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={loading}
+              className="text-xs text-sky-300 transition hover:text-sky-200 disabled:opacity-50"
+            >
+              명단 첨부하기
+            </button>
+          </div>
+          {fileLabel ? (
+            <p className="mb-2 text-xs text-sky-300/90">
+              첨부: {fileLabel}
+              {fileRows.length > 0 ? ` · ${fileRows.length.toLocaleString('ko-KR')}명` : ''}
+            </p>
+          ) : null}
+          <div className="space-y-2">
+            {manualRows.map((row, idx) => (
+              <div key={idx} className="grid gap-3 sm:grid-cols-3">
+                <label className="block">
+                  <span className="mb-1.5 block text-xs text-slate-400 sm:hidden">이름</span>
+                  <input
+                    ref={(el) => {
+                      recipientNameRefs.current[idx] = el;
+                    }}
+                    className={INPUT}
+                    value={row.displayName}
+                    onChange={(e) => updateRow(idx, 'displayName', e.target.value)}
+                    onBlur={(e) => handleNameBlur(idx, e.target.value)}
+                    onKeyDown={handleRecipientFieldKeyDown}
+                    placeholder="내담자 이름"
+                    autoComplete="name"
+                    disabled={loading}
+                  />
+                </label>
+                <label className="block">
+                  <span className="mb-1.5 block text-xs text-slate-400 sm:hidden">휴대폰</span>
+                  <input
+                    className={INPUT}
+                    value={row.phone}
+                    onChange={(e) => updateRow(idx, 'phone', e.target.value)}
+                    onKeyDown={handleRecipientFieldKeyDown}
+                    placeholder="010-0000-0000"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    disabled={loading}
+                  />
+                </label>
+                <label className="block">
+                  <span className="mb-1.5 block text-xs text-slate-400 sm:hidden">이메일</span>
+                  <input
+                    className={INPUT}
+                    type="email"
+                    value={row.email}
+                    onChange={(e) => updateRow(idx, 'email', e.target.value)}
+                    onKeyDown={handleRecipientFieldKeyDown}
+                    placeholder="name@example.com"
+                    autoComplete="email"
+                    disabled={loading}
+                  />
+                </label>
+              </div>
+            ))}
           </div>
         </div>
 
         <div className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2.5">
-          <p className="text-xs font-medium text-slate-400">보낼 문구 (수정하지 않아도 됩니다)</p>
-          <p className="mt-1 text-sm text-slate-200">{QUICK_SEND_MESSAGE}</p>
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+            <p className="text-xs font-medium text-slate-400">기본 안내 문구 (수정 가능합니다)</p>
+            <WelcomeMessageSampleHoverPicker
+              disabled={loading}
+              onPick={(text) => setWelcomeMessage(text)}
+            />
+          </div>
+          <textarea
+            rows={3}
+            className={`${INPUT} mt-2 min-h-[4.5rem] resize-y text-sm leading-relaxed`}
+            value={welcomeMessage}
+            onChange={(e) => setWelcomeMessage(e.target.value)}
+            placeholder="내담자에게 보여줄 안내 문구"
+            disabled={loading}
+          />
         </div>
 
         {error ? (
