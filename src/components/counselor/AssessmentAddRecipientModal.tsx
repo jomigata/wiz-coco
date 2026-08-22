@@ -199,7 +199,7 @@ export default function AssessmentAddRecipientModal({
       setAddComplete({
         title: addSendNow ? '발송 완료' : '추가 완료',
         message: addSendNow
-          ? `${rows.length}명에게 접속 정보 발송을 요청했습니다.`
+          ? `${rows.length}명에게 접속 정보를 발송했습니다.`
           : `${rows.length}명을 추가했습니다.`,
         sent: addSendNow,
       });
