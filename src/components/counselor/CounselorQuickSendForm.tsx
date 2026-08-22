@@ -421,7 +421,7 @@ export default function CounselorQuickSendForm({
       <CounselorActionProgressOverlay
         open={loading}
         title="보내는 중…"
-        message="상담코드를 만들고 카톡·문자로 링크를 넣고 있습니다."
+        message={`${Math.max(recipients.length, 1)}명의 내담자에게 검사진행 링크를 보내고 있습니다.`}
       />
     </CounselorPageSection>
   );
