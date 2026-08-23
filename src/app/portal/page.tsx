@@ -1,6 +1,6 @@
 'use client';
 
-import React, { Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import React, { Suspense, useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { fetchPortalDashboard, fetchPortalCareAssignments, changeClientPortalPin, type PortalDashboardAssessment, type PortalLegacyTestGroup } from '@/lib/clientPortalApi';
@@ -12,7 +12,6 @@ import PortalCareAssignmentsPanel from '@/components/portal/PortalCareAssignment
 import PortalLegacyMaterialsPanel from '@/components/portal/PortalLegacyMaterialsPanel';
 import PortalResultViewModal, { type PortalResultViewState } from '@/components/portal/PortalResultViewModal';
 import {
-  findFirstCompletedExpandKey,
   resultSubmittedLabel,
   resultUpdatedLabel,
 } from '@/lib/portalTestResults';
@@ -65,9 +64,6 @@ function ClientPortalContent() {
   const [legacyTests, setLegacyTests] = useState<PortalLegacyTestGroup[]>([]);
   const [resultsByCode, setResultsByCode] = useState<Record<string, TestResultItem[]>>({});
 
-  const [expandedTestKey, setExpandedTestKey] = useState<string | null>(null);
-  const expandFromUrlRef = useRef(false);
-  const autoExpandDoneRef = useRef(false);
   const [deleteModal, setDeleteModal] = useState<{
     resultId: string;
     testName: string;
@@ -229,61 +225,22 @@ function ClientPortalContent() {
   }, [searchParams]);
 
   useEffect(() => {
-    const expand = (searchParams.get('expand') || '').trim();
     const focusResults = (searchParams.get('focus') || '').trim() === 'results';
-    if (!expand && !focusResults) return;
+    if (!focusResults) return;
 
-    if (expand) {
-      expandFromUrlRef.current = true;
-      setExpandedTestKey(expand);
-    }
+    setShowRecords(true);
+    setPortalTab('tests');
 
     if (typeof window !== 'undefined') {
-      window.history.replaceState(null, '', focusResults ? '/portal/?focus=results' : '/portal/');
-      if (focusResults) {
-        requestAnimationFrame(() => {
-          document.getElementById('portal-results')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        });
-      }
+      window.history.replaceState(null, '', '/portal/');
+      requestAnimationFrame(() => {
+        document.getElementById('portal-results')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
     }
     if (assessments.length) {
       void loadResults(assessments);
     }
   }, [searchParams, assessments, loadResults]);
-
-  useEffect(() => {
-    if ((searchParams.get('focus') || '').trim() !== 'results') return;
-    if (!assessments.length || !Object.keys(resultsByCode).length) return;
-    if (expandedTestKey) return;
-    const key = findFirstCompletedExpandKey(
-      assessments.map((a) => ({
-        assessmentId: a.assessmentId,
-        accessCode: a.accessCode,
-        testList: a.testList || [],
-      })),
-      resultsByCode,
-      normalizeAccessCodeInput,
-    );
-    if (key) setExpandedTestKey(key);
-  }, [searchParams, assessments, resultsByCode, expandedTestKey]);
-
-  useEffect(() => {
-    if (expandFromUrlRef.current || autoExpandDoneRef.current || expandedTestKey) return;
-    if (!assessments.length || !Object.keys(resultsByCode).length) return;
-    const key = findFirstCompletedExpandKey(
-      assessments.map((a) => ({
-        assessmentId: a.assessmentId,
-        accessCode: a.accessCode,
-        testList: a.testList || [],
-      })),
-      resultsByCode,
-      normalizeAccessCodeInput,
-    );
-    if (key) {
-      setExpandedTestKey(key);
-      autoExpandDoneRef.current = true;
-    }
-  }, [assessments, resultsByCode, expandedTestKey]);
 
   useEffect(() => {
     const refresh = () => {
@@ -352,6 +309,9 @@ function ClientPortalContent() {
     try {
       await deleteResult(deleteModal.resultId, undefined, deleteModal.accessCode);
       setDeleteModal(null);
+      if (assessments.length) {
+        await loadResults(assessments);
+      }
       await load();
     } catch (err) {
       setActionError(err instanceof Error ? err.message : '삭제에 실패했습니다.');
@@ -520,13 +480,6 @@ function ClientPortalContent() {
                 ← 홈으로
               </button>
 
-              <div className="bg-slate-800/80 rounded-2xl border border-slate-600 p-5 shadow-xl">
-                <h2 className="text-lg font-bold text-white">기록 · 도움말</h2>
-                <p className="text-sm text-slate-400 mt-1">
-                  검사 진행, 과제, 자료를 확인할 수 있습니다.
-                </p>
-              </div>
-
           <div className="flex gap-2 border-b border-slate-700/80 overflow-x-auto">
             <button
               type="button"
@@ -568,8 +521,6 @@ function ClientPortalContent() {
           ) : portalTab === 'materials' ? (
             <PortalLegacyMaterialsPanel
               legacyTests={legacyTests}
-              expandedTestKey={expandedTestKey}
-              onExpandedChange={setExpandedTestKey}
               onViewResult={(accessCode, params) =>
                 openResultView(
                   accessCode,
@@ -628,8 +579,6 @@ function ClientPortalContent() {
                       assessmentId={a.assessmentId}
                       testList={a.testList}
                       results={results}
-                      expandedTestKey={expandedTestKey}
-                      onExpandedChange={setExpandedTestKey}
                       onStartTest={(testId, resultId) => openTest(a, testId, resultId)}
                       onViewResult={({ testName, resultId, roundNumber, resultItem }) =>
                         openResultView(code, testName, resultId, roundNumber, resultItem)

@@ -5,7 +5,6 @@ import { TestResultItem } from '@/lib/assessmentApi';
 import {
   assignRoundNumbers,
   formatCompletedAt,
-  makeTestExpandKey,
   pickFinalResultId,
   resultSubmittedLabel,
   resultUpdatedLabel,
@@ -22,8 +21,6 @@ export type PortalTestListProps = {
   assessmentId: string;
   testList: PortalTestListItem[];
   results: TestResultItem[];
-  expandedTestKey: string | null;
-  onExpandedChange: (key: string | null) => void;
   onStartTest: (testId: string, resultId?: string) => void;
   onViewResult: (params: {
     testName: string;
@@ -43,11 +40,8 @@ export type PortalTestListProps = {
 
 export default function PortalTestList({
   accessCode,
-  assessmentId,
   testList,
   results,
-  expandedTestKey,
-  onExpandedChange,
   onStartTest,
   onViewResult,
   onDeleteResult,
@@ -71,129 +65,118 @@ export default function PortalTestList({
           finalResultId,
         );
         const hasCompleted = completedResults.length > 0;
-        const expandKey = makeTestExpandKey(assessmentId, String(t.testId));
-        const isExpanded = expandedTestKey === expandKey;
 
         return (
-          <li key={t.testId}>
-            <button
-              type="button"
-              onClick={() => {
-                if (readOnly) return;
-                if (!hasCompleted) {
-                  onStartTest(String(t.testId));
-                  return;
-                }
-                onExpandedChange(isExpanded ? null : expandKey);
-              }}
-              className={`w-full text-left py-3 px-4 rounded-lg bg-slate-700/80 border border-slate-600 transition-colors ${readOnly && !hasCompleted ? 'opacity-60 cursor-default' : 'hover:bg-slate-700'}`}
-            >
-              <div className="flex items-start gap-3">
-                <span
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-cyan-500/35 bg-cyan-950/40 text-sm font-bold tabular-nums text-cyan-300"
-                  aria-hidden
-                >
-                  {index + 1}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-white font-medium">{testName}</span>
-                    <span className="text-slate-400 text-sm">
-                      {hasCompleted
-                        ? `${completedResults.length}회 완료 · ${isExpanded ? '접기' : '내역 보기'}`
-                        : readOnly
-                          ? '미완료'
-                          : '미완료 · 시작하기'}{' '}
-                      {hasCompleted || !readOnly ? '→' : ''}
-                    </span>
-                  </div>
-                  <span
-                    className={`inline-block mt-2 text-xs px-2 py-0.5 rounded ${
-                      hasCompleted
-                        ? 'bg-emerald-900/50 text-emerald-300 border border-emerald-700/40'
-                        : 'bg-amber-900/40 text-amber-200 border border-amber-700/30'
-                    }`}
-                  >
-                    {hasCompleted ? '검사 실시 완료' : '미실시'}
-                  </span>
+          <li
+            key={t.testId}
+            className="rounded-lg border border-slate-600 bg-slate-700/80 px-4 py-3"
+          >
+            <div className="flex items-start gap-3">
+              <span
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-cyan-500/35 bg-cyan-950/40 text-sm font-bold tabular-nums text-cyan-300"
+                aria-hidden
+              >
+                {index + 1}
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <span className="font-medium text-white">{testName}</span>
+                  {!hasCompleted && !readOnly ? (
+                    <button
+                      type="button"
+                      onClick={() => onStartTest(String(t.testId))}
+                      className="shrink-0 text-sm text-cyan-300 transition hover:text-cyan-200"
+                    >
+                      시작하기 →
+                    </button>
+                  ) : null}
                 </div>
-              </div>
-            </button>
+                <span
+                  className={`mt-2 inline-block rounded px-2 py-0.5 text-xs ${
+                    hasCompleted
+                      ? 'border border-emerald-700/40 bg-emerald-900/50 text-emerald-300'
+                      : 'border border-amber-700/30 bg-amber-900/40 text-amber-200'
+                  }`}
+                >
+                  {hasCompleted ? '검사 실시 완료' : '미실시'}
+                </span>
 
-            {hasCompleted && isExpanded ? (
-              <div className="mt-2 ml-2 pl-3 border-l-2 border-slate-600 space-y-2">
-                {completedResultsForDisplay.map((r) => (
-                  <div
-                    key={r.resultId}
-                    className="rounded-lg bg-slate-800/80 border border-slate-600 px-3 py-2.5 text-sm"
-                  >
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="text-white font-medium">
-                          <span>
-                            {roundById.get(r.resultId) ?? '—'}회차
-                            {finalResultId && r.resultId === finalResultId ? (
-                              <span className="ml-1.5 text-red-400 font-semibold">✓ 최종</span>
-                            ) : null}
-                          </span>
-                          <span className="text-slate-300 font-normal">
-                            {' '}
-                            · 제출 {formatCompletedAt(resultSubmittedLabel(r))}
-                            {resultUpdatedLabel(r) ? (
-                              <span className="text-slate-400">
-                                {' '}
-                                (수정 {formatCompletedAt(resultUpdatedLabel(r))})
+                {hasCompleted ? (
+                  <div className="mt-3 space-y-2 border-t border-slate-600/70 pt-3">
+                    {completedResultsForDisplay.map((r) => (
+                      <div
+                        key={r.resultId}
+                        className="rounded-lg border border-slate-600 bg-slate-800/80 px-3 py-2.5 text-sm"
+                      >
+                        <div className="flex flex-wrap items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="font-medium text-white">
+                              <span>
+                                {roundById.get(r.resultId) ?? '—'}회차
+                                {finalResultId && r.resultId === finalResultId ? (
+                                  <span className="ml-1.5 font-semibold text-red-400">✓ 최종</span>
+                                ) : null}
                               </span>
+                              <span className="font-normal text-slate-300">
+                                {' '}
+                                · 제출 {formatCompletedAt(resultSubmittedLabel(r))}
+                                {resultUpdatedLabel(r) ? (
+                                  <span className="text-slate-400">
+                                    {' '}
+                                    (수정 {formatCompletedAt(resultUpdatedLabel(r))})
+                                  </span>
+                                ) : null}
+                              </span>
+                            </p>
+                          </div>
+                          <div className="flex shrink-0 items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                onViewResult({
+                                  testName,
+                                  resultId: r.resultId,
+                                  roundNumber: roundById.get(r.resultId) ?? null,
+                                  resultItem: r,
+                                })
+                              }
+                              className="text-xs text-emerald-400 hover:text-emerald-300"
+                            >
+                              결과보기
+                            </button>
+                            {!readOnly && !r.isShared ? (
+                              <button
+                                type="button"
+                                onClick={() => onStartTest(String(t.testId), r.resultId)}
+                                className="text-xs text-blue-400 hover:text-blue-300"
+                              >
+                                수정
+                              </button>
                             ) : null}
-                          </span>
-                        </p>
+                            {!readOnly && !r.isShared ? (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  onDeleteResult({
+                                    resultId: r.resultId,
+                                    testName,
+                                    accessCode,
+                                    roundNumber: roundById.get(r.resultId) ?? null,
+                                  })
+                                }
+                                className="text-xs text-red-400 hover:text-red-300"
+                              >
+                                삭제
+                              </button>
+                            ) : null}
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            onViewResult({
-                              testName,
-                              resultId: r.resultId,
-                              roundNumber: roundById.get(r.resultId) ?? null,
-                              resultItem: r,
-                            })
-                          }
-                          className="text-emerald-400 hover:text-emerald-300 text-xs"
-                        >
-                          결과보기
-                        </button>
-                        {!readOnly && !r.isShared ? (
-                          <button
-                            type="button"
-                            onClick={() => onStartTest(String(t.testId), r.resultId)}
-                            className="text-blue-400 hover:text-blue-300 text-xs"
-                          >
-                            수정
-                          </button>
-                        ) : null}
-                        {!readOnly && !r.isShared ? (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              onDeleteResult({
-                                resultId: r.resultId,
-                                testName,
-                                accessCode,
-                                roundNumber: roundById.get(r.resultId) ?? null,
-                              })
-                            }
-                            className="text-red-400 hover:text-red-300 text-xs"
-                          >
-                            삭제
-                          </button>
-                        ) : null}
-                      </div>
-                    </div>
+                    ))}
                   </div>
-                ))}
+                ) : null}
               </div>
-            ) : null}
+            </div>
           </li>
         );
       })}

@@ -109,7 +109,7 @@ export function portalHomeTaskButtonLabel(task: PortalHomeTask): string {
   if (task.kind === 'all_done') {
     return '기록 보기';
   }
-  return '도움말 보기';
+  return '기록 보기';
 }
 
 export function portalHomeTaskSubtitle(task: PortalHomeTask): string {

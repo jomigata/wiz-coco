@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link';
 import {
   portalHomeTaskButtonLabel,
   portalHomeTaskSubtitle,
@@ -67,22 +66,6 @@ export default function PortalHomeHero({
           {portalHomeTaskButtonLabel(task)}
         </button>
       </section>
-
-      <div className="flex flex-wrap items-center justify-between gap-3 px-1">
-        <button
-          type="button"
-          onClick={onOpenRecords}
-          className="text-sm font-medium text-slate-400 underline-offset-2 hover:text-slate-200 hover:underline"
-        >
-          기록 · 도움말
-        </button>
-        <Link
-          href="/portal/guide/"
-          className="text-sm font-medium text-sky-300 underline-offset-2 hover:text-sky-200 hover:underline"
-        >
-          이용 안내
-        </Link>
-      </div>
     </div>
   );
 }

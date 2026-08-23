@@ -19,8 +19,6 @@ function toTestResultItems(items: PortalLegacyResultItem[]): TestResultItem[] {
 
 export type PortalLegacyMaterialsPanelProps = {
   legacyTests: PortalLegacyTestGroup[];
-  expandedTestKey: string | null;
-  onExpandedChange: (key: string | null) => void;
   onViewResult: (
     accessCode: string,
     params: {
@@ -41,8 +39,6 @@ export type PortalLegacyMaterialsPanelProps = {
 /** 기타 자료 — 이전 상담 완료 검사 (검사명만 표시) */
 export default function PortalLegacyMaterialsPanel({
   legacyTests,
-  expandedTestKey,
-  onExpandedChange,
   onViewResult,
   onDeleteResult,
 }: PortalLegacyMaterialsPanelProps) {
@@ -75,8 +71,6 @@ export default function PortalLegacyMaterialsPanel({
           assessmentId={entry.assessmentKey}
           testList={[entry.test]}
           results={entry.results}
-          expandedTestKey={expandedTestKey}
-          onExpandedChange={onExpandedChange}
           onStartTest={() => {}}
           onViewResult={({ testName, resultId, roundNumber, resultItem }) =>
             onViewResult(entry.accessCode, { testName, resultId, roundNumber, resultItem })
