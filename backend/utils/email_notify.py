@@ -28,6 +28,17 @@ DEFAULT_PORTAL_ACCESS_INTRO = (
     "WizCoCo 검사 접속 정보입니다. 아래 나의코드·비밀번호 또는 바로 시작 링크로 검사를 진행해 주세요."
 )
 
+_NOTIFY_INTRO_OMIT_PHRASES = (
+    "안내드린 기한 안에 모든 검사를 완료해 주세요.",
+)
+
+
+def _sanitize_portal_notify_intro(message: str) -> str:
+    text = (message or "").strip()
+    for phrase in _NOTIFY_INTRO_OMIT_PHRASES:
+        text = text.replace(phrase, " ")
+    return " ".join(text.split())
+
 
 def _format_assessment_group_title(cohort_name: str = "", assessment_title: str = "") -> str:
     org = (cohort_name or "").strip() or (assessment_title or "").strip()
@@ -44,7 +55,7 @@ def _format_email_header_display(group_title: str = "") -> str:
 
 
 def _portal_access_intro(welcome_message: str = "") -> str:
-    custom = (welcome_message or "").strip()
+    custom = _sanitize_portal_notify_intro(welcome_message)
     return custom or DEFAULT_PORTAL_ACCESS_INTRO
 
 

@@ -30,7 +30,7 @@ import { clearJoinParticipantSession } from '@/lib/joinParticipantSession';
 import { setPortalReturnPath } from '@/lib/portalReturnPath';
 import { clearJoinFreshParticipantFlow } from '@/lib/joinFlowMode';
 import { getJoinTestPath } from '@/lib/portalTestNavigation';
-import { pickPortalHomeTask } from '@/lib/portalHomeTask';
+import { buildPortalHomeOverview, type PortalHomeTestItem } from '@/lib/portalHomeTask';
 import type { PortalCareAssignmentItem } from '@/types/careAssignment';
 
 type PortalAssessment = PortalDashboardAssessment;
@@ -344,9 +344,9 @@ function ClientPortalContent() {
     setPinSuccess('');
   };
 
-  const homeTask = React.useMemo(
+  const homeOverview = React.useMemo(
     () =>
-      pickPortalHomeTask({
+      buildPortalHomeOverview({
         assessments: assessments.map((a) => ({
           assessmentId: a.assessmentId,
           accessCode: a.accessCode,
@@ -360,27 +360,21 @@ function ClientPortalContent() {
     [assessments, resultsByCode, careItems],
   );
 
-  const handlePrimaryHomeAction = () => {
-    if (homeTask.kind === 'test') {
-      const assessment = assessments.find((a) => a.assessmentId === homeTask.assessmentId);
-      if (assessment) {
-        openTest(assessment, homeTask.testId, homeTask.resultId);
-      }
-      return;
+  const handleHomeTestAction = (item: PortalHomeTestItem) => {
+    const assessment = assessments.find((a) => a.assessmentId === item.assessmentId);
+    if (assessment) {
+      openTest(assessment, item.testId, item.resultId);
     }
-    if (homeTask.kind === 'care') {
-      setShowRecords(true);
-      setPortalTab('care');
-      return;
-    }
-    setShowRecords(true);
   };
 
-  const openRecords = () => {
+  const handleHomeCareAction = () => {
     setShowRecords(true);
-    if (homeTask.kind === 'all_done') {
-      setPortalTab('tests');
-    }
+    setPortalTab('care');
+  };
+
+  const openMySpace = () => {
+    setShowRecords(true);
+    setPortalTab('tests');
   };
 
   if (loading) return <PortalLoading />;
@@ -413,9 +407,10 @@ function ClientPortalContent() {
                 displayName={displayName}
                 counselorName={counselorName}
                 counselorEmail={counselorEmail}
-                task={homeTask}
-                onPrimaryAction={handlePrimaryHomeAction}
-                onOpenRecords={openRecords}
+                overview={homeOverview}
+                onTestAction={handleHomeTestAction}
+                onCareAction={homeOverview.careTask ? handleHomeCareAction : undefined}
+                onOpenMySpace={openMySpace}
               />
               <div className="rounded-xl border border-slate-700/60 bg-slate-800/40 px-4 py-3 text-sm text-slate-400 flex flex-wrap items-center justify-between gap-2">
                 <span>
