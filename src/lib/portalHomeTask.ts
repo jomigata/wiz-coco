@@ -147,10 +147,11 @@ export function pickPortalHomeTask(params: {
   return { kind: 'empty' };
 }
 
-export function portalHomeTestButtonLabel(item: PortalHomeTestItem): string {
-  if (item.completed) return `${item.testName} 완료`;
-  if (item.mode === 'continue') return `${item.testName} 이어하기`;
-  return `${item.testName} 시작하기`;
+export function portalHomeTestButtonLabel(item: PortalHomeTestItem, index: number): string {
+  const prefix = `${index + 1}. `;
+  if (item.completed) return `${prefix}${item.testName} 완료`;
+  if (item.mode === 'continue') return `${prefix}${item.testName} 이어하기`;
+  return `${prefix}${item.testName} 시작하기`;
 }
 
 export function portalHomeTaskButtonLabel(task: PortalHomeTask): string {

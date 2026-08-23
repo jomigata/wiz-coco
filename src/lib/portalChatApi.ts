@@ -29,6 +29,7 @@ export type PortalChatThread = {
   portalId: string;
   displayName: string;
   accessCode: string;
+  cohortName: string;
   lastMessage: string;
   lastMessageAt: string | null;
   unreadCount: number;

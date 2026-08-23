@@ -158,6 +158,7 @@ def list_counselor_chat_threads(db, counselor_uid: str | None) -> list[dict]:
                 "portalId": pid,
                 "displayName": item.get("displayName") or "내담자",
                 "accessCode": item.get("accessCode") or "",
+                "cohortName": item.get("cohortName") or "",
                 "lastMessage": meta.get("lastMessage") or "",
                 "lastMessageAt": meta.get("lastMessageAt"),
                 "unreadCount": int(meta.get("unreadCount") or 0),

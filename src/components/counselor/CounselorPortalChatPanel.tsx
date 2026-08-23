@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import {
   fetchCounselorChatMessages,
@@ -11,6 +11,26 @@ import {
   type PortalChatThread,
 } from '@/lib/portalChatApi';
 import { LoadingMessage } from '@/components/ui/LoadingMessage';
+
+function threadTitle(thread: PortalChatThread): string {
+  const name = (thread.displayName || '').trim() || '내담자';
+  const group = (thread.cohortName || '').trim();
+  return group ? `${name} / ${group}` : name;
+}
+
+function sortThreads(threads: PortalChatThread[], selectedPortalId: string | null): PortalChatThread[] {
+  return [...threads].sort((a, b) => {
+    if (selectedPortalId) {
+      if (a.portalId === selectedPortalId) return -1;
+      if (b.portalId === selectedPortalId) return 1;
+    }
+    const unreadDiff = (b.unreadCount || 0) - (a.unreadCount || 0);
+    if (unreadDiff !== 0) return unreadDiff;
+    const timeDiff = (b.lastMessageAt || '').localeCompare(a.lastMessageAt || '');
+    if (timeDiff !== 0) return timeDiff;
+    return threadTitle(a).localeCompare(threadTitle(b), 'ko');
+  });
+}
 
 export default function CounselorPortalChatPanel() {
   const [threads, setThreads] = useState<PortalChatThread[]>([]);
@@ -23,17 +43,23 @@ export default function CounselorPortalChatPanel() {
   const [error, setError] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  const sortedThreads = useMemo(
+    () => sortThreads(threads, selectedPortalId),
+    [threads, selectedPortalId],
+  );
   const selectedThread = threads.find((t) => t.portalId === selectedPortalId) || null;
 
-  const loadThreads = useCallback(async () => {
+  const loadThreads = useCallback(async (keepSelection = true) => {
     setError('');
     try {
       const items = await fetchCounselorChatThreads();
       setThreads(items);
-      setSelectedPortalId((prev) => {
-        if (prev && items.some((t) => t.portalId === prev)) return prev;
-        return items[0]?.portalId || null;
-      });
+      if (keepSelection) {
+        setSelectedPortalId((prev) => {
+          if (prev && items.some((t) => t.portalId === prev)) return prev;
+          return items[0]?.portalId || null;
+        });
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : '채팅 목록 조회에 실패했습니다.');
     } finally {
@@ -57,10 +83,6 @@ export default function CounselorPortalChatPanel() {
 
   useEffect(() => {
     void loadThreads();
-    const timer = window.setInterval(() => {
-      void loadThreads();
-    }, 20000);
-    return () => window.clearInterval(timer);
   }, [loadThreads]);
 
   useEffect(() => {
@@ -69,16 +91,17 @@ export default function CounselorPortalChatPanel() {
       return;
     }
     void loadMessages(selectedPortalId);
-    const timer = window.setInterval(() => {
-      void loadMessages(selectedPortalId);
-    }, 10000);
-    return () => window.clearInterval(timer);
   }, [selectedPortalId, loadMessages]);
 
   useEffect(() => {
     const el = scrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages, selectedPortalId]);
+
+  const handleSelectThread = (portalId: string) => {
+    if (portalId === selectedPortalId) return;
+    setSelectedPortalId(portalId);
+  };
 
   const handleSend = async () => {
     const text = draft.trim();
@@ -89,7 +112,7 @@ export default function CounselorPortalChatPanel() {
       const item = await sendCounselorChatMessage(selectedPortalId, text);
       setDraft('');
       setMessages((prev) => [...prev, item]);
-      void loadThreads();
+      await loadThreads(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : '메시지 전송에 실패했습니다.');
     } finally {
@@ -104,30 +127,30 @@ export default function CounselorPortalChatPanel() {
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(240px,320px)_1fr] lg:min-h-[520px]">
       <aside className="rounded-xl border border-slate-700/80 bg-slate-900/40">
-        <div className="border-b border-slate-700/70 px-4 py-3">
-          <h3 className="text-sm font-semibold text-slate-200">내담자</h3>
-          <p className="mt-0.5 text-xs text-slate-500">{threads.length}명</p>
-        </div>
-        <ul className="max-h-[420px] overflow-y-auto divide-y divide-slate-800/80">
-          {threads.length === 0 ? (
+        <ul className="max-h-[480px] overflow-y-auto divide-y divide-slate-800/80">
+          {sortedThreads.length === 0 ? (
             <li className="px-4 py-6 text-sm text-slate-500">등록된 내담자가 없습니다.</li>
           ) : (
-            threads.map((thread) => {
+            sortedThreads.map((thread) => {
               const active = thread.portalId === selectedPortalId;
               return (
                 <li key={thread.portalId}>
                   <button
                     type="button"
-                    onClick={() => setSelectedPortalId(thread.portalId)}
-                    className={`w-full px-4 py-3 text-left transition ${
-                      active ? 'bg-cyan-950/40' : 'hover:bg-white/5'
+                    onClick={() => handleSelectThread(thread.portalId)}
+                    className={`w-full border-l-2 px-4 py-3 text-left transition ${
+                      active
+                        ? 'border-cyan-400 bg-cyan-950/40 ring-1 ring-inset ring-cyan-500/35'
+                        : 'border-transparent hover:bg-white/5'
                     }`}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-medium text-white">{thread.displayName}</p>
-                        <p className="truncate text-xs text-slate-500">
-                          {formatAccessCodeDisplay(thread.accessCode)}
+                        <p className="truncate text-sm font-medium text-white">{threadTitle(thread)}</p>
+                        <p className="mt-1 text-xs text-slate-500">
+                          {thread.lastMessageAt
+                            ? formatChatTimestamp(thread.lastMessageAt)
+                            : '대화 없음'}
                         </p>
                       </div>
                       {thread.unreadCount > 0 ? (
@@ -136,11 +159,6 @@ export default function CounselorPortalChatPanel() {
                         </span>
                       ) : null}
                     </div>
-                    {thread.lastMessage ? (
-                      <p className="mt-1 truncate text-xs text-slate-400">{thread.lastMessage}</p>
-                    ) : (
-                      <p className="mt-1 text-xs text-slate-600">아직 대화 없음</p>
-                    )}
                   </button>
                 </li>
               );
@@ -153,7 +171,7 @@ export default function CounselorPortalChatPanel() {
         {selectedThread ? (
           <>
             <div className="border-b border-slate-700/70 px-4 py-3">
-              <h3 className="text-sm font-semibold text-white">{selectedThread.displayName}</h3>
+              <h3 className="text-sm font-semibold text-white">{threadTitle(selectedThread)}</h3>
               <p className="text-xs text-slate-500">
                 나의코드 {formatAccessCodeDisplay(selectedThread.accessCode)}
               </p>

@@ -70,7 +70,7 @@ export default function PortalHomeHero({
             onClick={onOpenMySpace}
             className="shrink-0 rounded-lg border border-white/15 px-3 py-1.5 text-xs font-medium text-slate-200 transition hover:border-white/40 hover:bg-white/5"
           >
-            나의 공간
+            나의 검사목록
           </button>
         </div>
         <p className="mt-2 text-sm leading-relaxed text-slate-300">
@@ -79,7 +79,7 @@ export default function PortalHomeHero({
 
         {overview.testItems.length > 0 ? (
           <div className="mt-4 space-y-2">
-            {overview.testItems.map((item) => {
+            {overview.testItems.map((item, index) => {
               const enabled = !item.completed;
               return (
                 <button
@@ -93,7 +93,7 @@ export default function PortalHomeHero({
                       : 'cursor-not-allowed border border-slate-600/80 bg-slate-800/50 text-slate-500'
                   }`}
                 >
-                  {portalHomeTestButtonLabel(item)}
+                  {portalHomeTestButtonLabel(item, index)}
                 </button>
               );
             })}

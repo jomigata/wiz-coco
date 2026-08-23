@@ -27,11 +27,18 @@ export default function CounselorQuickSendTestPickerModal({
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return counselorAssessmentTestOptions;
-    return counselorAssessmentTestOptions.filter(
-      (t) => t.name.toLowerCase().includes(q) || t.testId.toLowerCase().includes(q),
-    );
-  }, [query]);
+    const base = q
+      ? counselorAssessmentTestOptions.filter(
+          (t) => t.name.toLowerCase().includes(q) || t.testId.toLowerCase().includes(q),
+        )
+      : counselorAssessmentTestOptions;
+    return [...base].sort((a, b) => {
+      const aSelected = draft.has(a.testId) ? 0 : 1;
+      const bSelected = draft.has(b.testId) ? 0 : 1;
+      if (aSelected !== bSelected) return aSelected - bSelected;
+      return a.name.localeCompare(b.name, 'ko');
+    });
+  }, [query, draft]);
 
   if (!open) return null;
 
@@ -61,7 +68,7 @@ export default function CounselorQuickSendTestPickerModal({
           <h3 id="quick-send-test-picker-title" className="text-lg font-semibold text-white">
             검사 구성 선택
           </h3>
-          <p className="mt-1 text-sm text-slate-400">맞춤 보내기에 포함할 검사를 고르세요.</p>
+          <p className="mt-1 text-sm text-slate-400">포함할 검사를 선택하세요.</p>
         </div>
 
         <div className="border-b border-white/10 px-5 py-3">
@@ -120,16 +127,3 @@ export default function CounselorQuickSendTestPickerModal({
     </div>
   );
 }
-
-function customOrgFontClass(value: string): string {
-  const text = value.trim();
-  if (!text) return 'text-sm font-semibold';
-  const len = text.length;
-  if (len <= 12) return 'text-base font-bold leading-snug';
-  if (len <= 22) return 'text-sm font-bold leading-snug';
-  if (len <= 36) return 'text-xs font-bold leading-tight';
-  if (len <= 56) return 'text-[11px] font-bold leading-tight';
-  return 'text-[10px] font-bold leading-tight';
-}
-
-export { customOrgFontClass };

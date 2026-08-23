@@ -443,12 +443,12 @@ function ClientPortalContent() {
               <button
                 type="button"
                 onClick={() => setShowRecords(false)}
-                className="text-sm text-slate-400 hover:text-white flex items-center gap-1"
+                className="rounded-lg border border-white/15 bg-slate-800/60 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-white/40 hover:bg-slate-700/80"
               >
-                ← 홈으로
+                내 검사실
               </button>
 
-          <div className="flex gap-2 border-b border-slate-700/80 overflow-x-auto">
+          <div className="flex flex-wrap gap-x-1 gap-y-1 border-b border-slate-700/80">
             <button
               type="button"
               onClick={() => setPortalTab('tests')}

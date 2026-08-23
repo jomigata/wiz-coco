@@ -80,7 +80,7 @@ export default function PortalCounselorInquiryChat({ counselorName }: PortalCoun
         <div>
           <h3 className="text-sm font-semibold text-slate-200">상담사에게 문의하기</h3>
           <p className="mt-1 text-sm text-slate-400">
-            {label}에게 검사·이용 관련 질문을 남기면 답변을 받을 수 있습니다.
+            상담사에게 검사·이용 관련 질문을 남기면 답변을 받을 수 있습니다.
           </p>
         </div>
       </div>

@@ -11,9 +11,7 @@ import { formatPhoneDisplay, normalizeRecipientPhone } from '@/lib/phoneFormat';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
 import WelcomeMessageSampleHoverPicker from '@/components/counselor/WelcomeMessageSampleHoverPicker';
-import CounselorQuickSendTestPickerModal, {
-  customOrgFontClass,
-} from '@/components/counselor/CounselorQuickSendTestPickerModal';
+import CounselorQuickSendTestPickerModal from '@/components/counselor/CounselorQuickSendTestPickerModal';
 import AuthLink from '@/components/auth/AuthLink';
 import { counselorAssessmentTestOptions } from '@/data/counselorAssessmentTests';
 import {
@@ -90,6 +88,10 @@ export default function CounselorQuickSendForm({
   }, [user]);
 
   const template = COUNSELOR_SEND_TEMPLATES.find((t) => t.id === templateId) ?? null;
+  const customSelectedTests = useMemo(
+    () => counselorAssessmentTestOptions.filter((t) => customTestIds.has(t.testId)),
+    [customTestIds],
+  );
   const testList = useMemo(() => {
     if (!template) return [];
     if (templateId === 'custom') {
@@ -327,12 +329,12 @@ export default function CounselorQuickSendForm({
                 return (
                   <div
                     key={item.id}
-                    className={`flex aspect-square flex-col rounded-xl border px-3 py-3 transition-colors ${templateCardBorder(active)}`}
+                    className={`flex aspect-square flex-col rounded-xl border px-3 py-3 text-center transition-colors ${templateCardBorder(active)}`}
                   >
                     <div className="relative min-h-0 flex-1">
                       {!customCohortName.trim() ? (
                         <span
-                          className="pointer-events-none absolute inset-0 flex items-start text-sm font-semibold text-slate-600"
+                          className="pointer-events-none absolute inset-0 flex items-center justify-center text-sm font-semibold text-slate-600"
                           aria-hidden
                         >
                           기관/단체/그룹명
@@ -348,7 +350,7 @@ export default function CounselorQuickSendForm({
                         maxLength={120}
                         rows={3}
                         disabled={loading}
-                        className={`relative h-full w-full resize-none overflow-hidden break-words bg-transparent outline-none ${customOrgFontClass(customCohortName)} ${
+                        className={`relative h-full w-full resize-none overflow-hidden break-words bg-transparent text-center text-sm font-bold leading-snug outline-none ${
                           active ? 'text-white' : 'text-slate-200'
                         }`}
                         aria-label="기관/단체/그룹명"
@@ -361,11 +363,20 @@ export default function CounselorQuickSendForm({
                         setTemplateId('custom');
                         setTestPickerOpen(true);
                       }}
-                      className="mt-1 shrink-0 text-left text-[11px] leading-snug text-sky-300 underline-offset-2 hover:text-sky-200 hover:underline disabled:opacity-50"
+                      className="mt-1 shrink-0 text-center text-[11px] leading-snug text-sky-300 underline-offset-2 hover:text-sky-200 hover:underline disabled:opacity-50"
                     >
                       검사 구성을 직접 선택
                       {customTestIds.size > 0 ? ` (${customTestIds.size}개)` : ''}
                     </button>
+                    {customSelectedTests.length > 0 ? (
+                      <ul className="mt-1 max-h-16 space-y-0.5 overflow-hidden text-[10px] leading-tight text-slate-400">
+                        {customSelectedTests.map((t) => (
+                          <li key={t.testId} className="truncate">
+                            {t.name}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
                   </div>
                 );
               }
@@ -376,14 +387,16 @@ export default function CounselorQuickSendForm({
                   type="button"
                   disabled={loading}
                   onClick={() => setTemplateId(item.id)}
-                  className={`flex aspect-square flex-col rounded-xl border px-3 py-4 text-left transition-colors ${templateCardBorder(active)} ${
+                  className={`flex aspect-square flex-col items-center justify-center rounded-xl border px-3 py-4 text-center transition-colors ${templateCardBorder(active)} ${
                     active ? 'text-white' : 'text-slate-200'
                   }`}
                 >
                   <span className="block text-base font-bold leading-snug">
                     {item.name}
                     {recommend ? (
-                      <span className="ml-1 text-[10px] font-medium text-emerald-300">첫 보내기 추천</span>
+                      <span className="ml-1 block text-[10px] font-medium text-emerald-300 sm:inline">
+                        첫 보내기 추천
+                      </span>
                     ) : null}
                   </span>
                   <span className="mt-1 block text-xs text-slate-400">{item.description}</span>
@@ -402,7 +415,7 @@ export default function CounselorQuickSendForm({
               disabled={loading}
               className="shrink-0 text-xs text-sky-300 transition hover:text-sky-200 disabled:opacity-50"
             >
-              명단 첨부하기
+              명단(엑셀/메모) 첨부하기
             </button>
           </div>
           <input
@@ -427,7 +440,7 @@ export default function CounselorQuickSendForm({
             {manualRows.map((row, idx) => (
               <div key={idx} className="grid gap-3 sm:grid-cols-3">
                 <label className="block">
-                  <span className="mb-1.5 block text-xs text-slate-400">
+                  <span className="mb-1.5 block text-xs text-slate-400 sm:hidden">
                     {nameFieldLabel(idx, manualRows.length)}
                   </span>
                   <div className="relative">
