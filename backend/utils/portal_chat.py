@@ -7,7 +7,6 @@ from firebase_admin.firestore import SERVER_TIMESTAMP
 
 from config import CLIENT_PORTALS_COLLECTION, PORTAL_CHAT_MESSAGES_COLLECTION, USERS_COLLECTION
 from utils.client_portal_list import get_counselor_client_portal_detail, list_counselor_client_portals
-from utils.counselor_scope import resource_owned_by_scope
 
 
 def _iso_timestamp(value) -> str | None:
@@ -176,11 +175,11 @@ def assert_counselor_can_access_portal(db, counselor_uid: str | None, portal_id:
     detail = get_counselor_client_portal_detail(db, counselor_uid, portal_id)
     if not detail:
         raise PermissionError("forbidden")
-    portal = detail.get("portal") or {}
-    counselor_id = (portal.get("counselorId") or "").strip()
-    if not resource_owned_by_scope(counselor_id):
+    counselor_id, _ = _get_portal_counselor_id(db, portal_id)
+    if not counselor_id:
         raise PermissionError("forbidden")
-    return portal
+    portal = detail.get("portal") or {}
+    return {**portal, "counselorId": counselor_id}
 
 
 def assert_portal_session(db, portal_id: str) -> tuple[str, dict]:
