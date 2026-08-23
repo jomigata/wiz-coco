@@ -20,6 +20,7 @@ from routes.b2c import bp as b2c_bp
 from routes.public_api import bp as public_api_bp, admin_bp as developer_admin_bp
 from routes.care_assignments import bp as care_assignments_bp
 from routes.ai_credits import bp as ai_credits_bp
+from routes.portal_chat import bp as portal_chat_bp
 
 
 def create_app():
@@ -49,6 +50,7 @@ def create_app():
     app.register_blueprint(admin_organizations_bp)
     app.register_blueprint(care_assignments_bp)
     app.register_blueprint(ai_credits_bp)
+    app.register_blueprint(portal_chat_bp)
 
     @app.route("/", methods=["GET"])
     def root():

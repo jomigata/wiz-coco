@@ -3,11 +3,9 @@
 import React from 'react';
 import { TestResultItem } from '@/lib/assessmentApi';
 import {
-  assignRoundNumbers,
   formatCompletedAt,
   pickFinalResultId,
   resultSubmittedLabel,
-  resultUpdatedLabel,
   sortCompletedResultsForDisplay,
 } from '@/lib/portalTestResults';
 
@@ -28,23 +26,15 @@ export type PortalTestListProps = {
     roundNumber: number | null;
     resultItem: TestResultItem;
   }) => void;
-  onDeleteResult: (params: {
-    resultId: string;
-    testName: string;
-    accessCode: string;
-    roundNumber: number | null;
-  }) => void;
-  /** 이전 상담 레거시 — 시작·수정·삭제 비활성 */
+  /** 이전 상담 레거시 — 시작 비활성 */
   readOnly?: boolean;
 };
 
 export default function PortalTestList({
-  accessCode,
   testList,
   results,
   onStartTest,
   onViewResult,
-  onDeleteResult,
   readOnly = false,
 }: PortalTestListProps) {
   if (!testList.length) {
@@ -58,7 +48,6 @@ export default function PortalTestList({
         const completedResults = results.filter(
           (r) => r.status === 'completed' && String(r.testId) === String(t.testId),
         );
-        const roundById = assignRoundNumbers(completedResults);
         const finalResultId = pickFinalResultId(completedResults);
         const completedResultsForDisplay = sortCompletedResultsForDisplay(
           completedResults,
@@ -106,71 +95,28 @@ export default function PortalTestList({
                     {completedResultsForDisplay.map((r) => (
                       <div
                         key={r.resultId}
-                        className="rounded-lg border border-slate-600 bg-slate-800/80 px-3 py-2.5 text-sm"
+                        className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-600 bg-slate-800/80 px-3 py-2.5 text-sm"
                       >
-                        <div className="flex flex-wrap items-start justify-between gap-2">
-                          <div className="min-w-0">
-                            <p className="font-medium text-white">
-                              <span>
-                                {roundById.get(r.resultId) ?? '—'}회차
-                                {finalResultId && r.resultId === finalResultId ? (
-                                  <span className="ml-1.5 font-semibold text-red-400">✓ 최종</span>
-                                ) : null}
-                              </span>
-                              <span className="font-normal text-slate-300">
-                                {' '}
-                                · 제출 {formatCompletedAt(resultSubmittedLabel(r))}
-                                {resultUpdatedLabel(r) ? (
-                                  <span className="text-slate-400">
-                                    {' '}
-                                    (수정 {formatCompletedAt(resultUpdatedLabel(r))})
-                                  </span>
-                                ) : null}
-                              </span>
-                            </p>
-                          </div>
-                          <div className="flex shrink-0 items-center gap-2">
-                            <button
-                              type="button"
-                              onClick={() =>
-                                onViewResult({
-                                  testName,
-                                  resultId: r.resultId,
-                                  roundNumber: roundById.get(r.resultId) ?? null,
-                                  resultItem: r,
-                                })
-                              }
-                              className="text-xs text-emerald-400 hover:text-emerald-300"
-                            >
-                              결과보기
-                            </button>
-                            {!readOnly && !r.isShared ? (
-                              <button
-                                type="button"
-                                onClick={() => onStartTest(String(t.testId), r.resultId)}
-                                className="text-xs text-blue-400 hover:text-blue-300"
-                              >
-                                수정
-                              </button>
-                            ) : null}
-                            {!readOnly && !r.isShared ? (
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  onDeleteResult({
-                                    resultId: r.resultId,
-                                    testName,
-                                    accessCode,
-                                    roundNumber: roundById.get(r.resultId) ?? null,
-                                  })
-                                }
-                                className="text-xs text-red-400 hover:text-red-300"
-                              >
-                                삭제
-                              </button>
-                            ) : null}
-                          </div>
-                        </div>
+                        <p className="text-slate-300">
+                          검사 일시{' '}
+                          <span className="font-medium text-white">
+                            {formatCompletedAt(resultSubmittedLabel(r))}
+                          </span>
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onViewResult({
+                              testName,
+                              resultId: r.resultId,
+                              roundNumber: null,
+                              resultItem: r,
+                            })
+                          }
+                          className="shrink-0 text-xs text-emerald-400 hover:text-emerald-300"
+                        >
+                          결과보기
+                        </button>
                       </div>
                     ))}
                   </div>

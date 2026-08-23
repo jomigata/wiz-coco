@@ -88,6 +88,7 @@ API_KEYS_COLLECTION = "apiKeys"
 CARE_ASSIGNMENTS_COLLECTION = "careAssignments"
 CARE_PROGRESS_COLLECTION = "careProgress"
 DAILY_RECORDS_COLLECTION = "dailyRecords"
+PORTAL_CHAT_MESSAGES_COLLECTION = "portalChatMessages"
 
 # Wave 3 — AI 토큰·크레딧 (T-3-01)
 COUNSELOR_AI_CREDITS_COLLECTION = "counselorAiCredits"

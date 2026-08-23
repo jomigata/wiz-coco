@@ -28,19 +28,12 @@ export type PortalLegacyMaterialsPanelProps = {
       resultItem: TestResultItem;
     },
   ) => void;
-  onDeleteResult: (params: {
-    resultId: string;
-    testName: string;
-    accessCode: string;
-    roundNumber: number | null;
-  }) => void;
 };
 
 /** 기타 자료 — 이전 상담 완료 검사 (검사명만 표시) */
 export default function PortalLegacyMaterialsPanel({
   legacyTests,
   onViewResult,
-  onDeleteResult,
 }: PortalLegacyMaterialsPanelProps) {
   const entries = legacyTests.flatMap((group) => {
     const code = normalizeAccessCodeInput(group.originAccessCode);
@@ -75,7 +68,6 @@ export default function PortalLegacyMaterialsPanel({
           onViewResult={({ testName, resultId, roundNumber, resultItem }) =>
             onViewResult(entry.accessCode, { testName, resultId, roundNumber, resultItem })
           }
-          onDeleteResult={onDeleteResult}
           readOnly
         />
       ))}

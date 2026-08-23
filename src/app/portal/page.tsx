@@ -4,10 +4,10 @@ import React, { Suspense, useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { fetchPortalDashboard, fetchPortalCareAssignments, changeClientPortalPin, type PortalDashboardAssessment, type PortalLegacyTestGroup } from '@/lib/clientPortalApi';
-import { listResults, deleteResult, getClientResult, TestResultItem, clearForceGuestForAccessCode } from '@/lib/assessmentApi';
+import { listResults, getClientResult, TestResultItem, clearForceGuestForAccessCode } from '@/lib/assessmentApi';
 import PortalTestList from '@/components/portal/PortalTestList';
 import PortalHomeHero from '@/components/portal/PortalHomeHero';
-import PortalOptionalPurchaseCard from '@/components/portal/PortalOptionalPurchaseCard';
+import PortalCounselorInquiryChat from '@/components/portal/PortalCounselorInquiryChat';
 import PortalCareAssignmentsPanel from '@/components/portal/PortalCareAssignmentsPanel';
 import PortalLegacyMaterialsPanel from '@/components/portal/PortalLegacyMaterialsPanel';
 import PortalResultViewModal, { type PortalResultViewState } from '@/components/portal/PortalResultViewModal';
@@ -63,15 +63,6 @@ function ClientPortalContent() {
   const [assessments, setAssessments] = useState<PortalAssessment[]>([]);
   const [legacyTests, setLegacyTests] = useState<PortalLegacyTestGroup[]>([]);
   const [resultsByCode, setResultsByCode] = useState<Record<string, TestResultItem[]>>({});
-
-  const [deleteModal, setDeleteModal] = useState<{
-    resultId: string;
-    testName: string;
-    accessCode: string;
-    roundNumber: number | null;
-  } | null>(null);
-  const [actionLoading, setActionLoading] = useState(false);
-  const [actionError, setActionError] = useState('');
 
   const [resultView, setResultView] = useState<PortalResultViewState | null>(null);
   const [resultDetail, setResultDetail] = useState<Awaited<ReturnType<typeof getClientResult>> | null>(null);
@@ -302,24 +293,6 @@ function ClientPortalContent() {
     setResultViewError('');
   };
 
-  const handleDeleteResult = async () => {
-    if (!deleteModal) return;
-    setActionLoading(true);
-    setActionError('');
-    try {
-      await deleteResult(deleteModal.resultId, undefined, deleteModal.accessCode);
-      setDeleteModal(null);
-      if (assessments.length) {
-        await loadResults(assessments);
-      }
-      await load();
-    } catch (err) {
-      setActionError(err instanceof Error ? err.message : '삭제에 실패했습니다.');
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
   const handleChangePin = async () => {
     const session = readClientPortalSession();
     if (!session?.portalToken) {
@@ -530,10 +503,6 @@ function ClientPortalContent() {
                   params.resultItem,
                 )
               }
-              onDeleteResult={({ resultId, testName, accessCode: resultCode, roundNumber }) => {
-                setActionError('');
-                setDeleteModal({ resultId, testName, accessCode: resultCode, roundNumber });
-              }}
             />
           ) : (
             <div id="portal-results" className="scroll-mt-24 space-y-6">
@@ -583,10 +552,6 @@ function ClientPortalContent() {
                       onViewResult={({ testName, resultId, roundNumber, resultItem }) =>
                         openResultView(code, testName, resultId, roundNumber, resultItem)
                       }
-                      onDeleteResult={({ resultId, testName, accessCode: resultCode, roundNumber }) => {
-                        setActionError('');
-                        setDeleteModal({ resultId, testName, accessCode: resultCode, roundNumber });
-                      }}
                     />
                   )}
                 </section>
@@ -596,7 +561,7 @@ function ClientPortalContent() {
             </div>
           )}
 
-          <PortalOptionalPurchaseCard />
+          <PortalCounselorInquiryChat counselorName={counselorName} />
             </>
           )}
         </main>
@@ -610,61 +575,6 @@ function ClientPortalContent() {
           error={resultViewError}
           onClose={closeResultView}
         />
-      ) : null}
-
-      {deleteModal ? (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
-          onClick={() => !actionLoading && setDeleteModal(null)}
-        >
-          <div
-            className="w-full max-w-sm rounded-xl border-2 border-red-500/40 bg-[#151c28] p-6 shadow-xl shadow-red-950/25"
-            onClick={(e) => e.stopPropagation()}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="portal-delete-title"
-          >
-            <h4 id="portal-delete-title" className="text-lg font-semibold text-white">
-              검사 결과 삭제
-            </h4>
-            <p className="mt-3 text-sm leading-relaxed text-slate-300">
-              {deleteModal.roundNumber ? (
-                <>
-                  선택된 {deleteModal.roundNumber}회차 「{deleteModal.testName}」의 내용/결과가
-                  삭제됩니다.
-                </>
-              ) : (
-                <>선택된 「{deleteModal.testName}」의 내용/결과가 삭제됩니다.</>
-              )}
-            </p>
-            <p className="mt-3 rounded-md border border-red-500/35 bg-red-950/30 px-3 py-2 text-sm font-medium text-red-200">
-              삭제 후에는 복구할 수 없습니다.
-            </p>
-            {actionError ? (
-              <p className="mt-3 rounded-md border border-red-500/30 bg-red-950/40 px-3 py-2 text-sm text-red-300">
-                {actionError}
-              </p>
-            ) : null}
-            <div className="mt-6 flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => !actionLoading && setDeleteModal(null)}
-                disabled={actionLoading}
-                className="rounded-lg px-4 py-2 text-sm text-slate-300 hover:bg-white/5 disabled:opacity-50"
-              >
-                취소
-              </button>
-              <button
-                type="button"
-                onClick={() => void handleDeleteResult()}
-                disabled={actionLoading}
-                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500 disabled:opacity-50"
-              >
-                {actionLoading ? '처리 중…' : '삭제'}
-              </button>
-            </div>
-          </div>
-        </div>
       ) : null}
 
       {pinModalOpen ? (

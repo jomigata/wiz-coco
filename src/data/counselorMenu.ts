@@ -117,8 +117,8 @@ export const counselorMenuCategories: CounselorMainCategory[] = [
         items: [
           {
             name: '1:1 채팅',
-            href: '/chat',
-            description: '내담자와 실시간 채팅',
+            href: '/counselor/chat',
+            description: '내담자와 1:1 문의 채팅',
             icon: '💬',
           },
           {
