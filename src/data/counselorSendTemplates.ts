@@ -1,25 +1,27 @@
 import { counselorAssessmentTestOptions } from './counselorAssessmentTests';
 
-export type CounselorSendTemplateId = 'basic' | 'relation' | 'stress';
+export type CounselorSendTemplateId = 'basic' | 'relation' | 'stress' | 'custom';
 
 export type CounselorSendTemplate = {
   id: CounselorSendTemplateId;
   name: string;
   description: string;
   testIds: string[];
+  /** 기관/단체/그룹명 직접 입력 카드 */
+  customOrgInput?: boolean;
 };
 
-/** 상담사가 고르는 검사 세트 3종. 끝까지 되는 검사만 넣는다. */
+/** 상담사가 고르는 검사 세트. 끝까지 되는 검사만 넣는다. */
 export const COUNSELOR_SEND_TEMPLATES: CounselorSendTemplate[] = [
   {
     id: 'basic',
-    name: '기본',
+    name: '이고-오케이그램',
     description: '성격 유형을 짧게 봅니다',
     testIds: ['mbti'],
   },
   {
     id: 'relation',
-    name: '관계',
+    name: '커플·가족·관계',
     description: '관계·궁합을 봅니다',
     testIds: ['inside-mbti'],
   },
@@ -28,6 +30,13 @@ export const COUNSELOR_SEND_TEMPLATES: CounselorSendTemplate[] = [
     name: '스트레스',
     description: '3분 마음 체크 (6문항)',
     testIds: ['generic'],
+  },
+  {
+    id: 'custom',
+    name: '맞춤',
+    description: '검사 구성을 직접 선택',
+    testIds: ['generic'],
+    customOrgInput: true,
   },
 ];
 

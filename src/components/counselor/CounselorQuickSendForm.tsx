@@ -48,7 +48,9 @@ export default function CounselorQuickSendForm({
   const router = useRouter();
   const { user, authPending, showLoginRequired } = useAuthResolved();
   const [templateId, setTemplateId] = useState<CounselorSendTemplateId | null>(null);
+  const [customCohortName, setCustomCohortName] = useState('');
   const [welcomeMessage, setWelcomeMessage] = useState(QUICK_SEND_MESSAGE);
+  const [showWelcomeHint, setShowWelcomeHint] = useState(false);
   const [manualRows, setManualRows] = useState<RecipientRow[]>([{ ...EMPTY_ROW }]);
   const [fileRows, setFileRows] = useState<RecipientRow[]>([]);
   const [fileLabel, setFileLabel] = useState('');
@@ -56,6 +58,7 @@ export default function CounselorQuickSendForm({
   const [error, setError] = useState('');
   const [firstSendTrialEligible, setFirstSendTrialEligible] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const welcomeTextareaRef = useRef<HTMLTextAreaElement>(null);
   const recipientNameRefs = useRef<Array<HTMLInputElement | null>>([]);
 
   useEffect(() => {
@@ -140,7 +143,11 @@ export default function CounselorQuickSendForm({
     e.preventDefault();
     setError('');
     if (!template || testList.length === 0) {
-      setError('기본 · 관계 · 스트레스 중 하나를 골라 주세요.');
+      setError('검사 세트를 하나 골라 주세요.');
+      return;
+    }
+    if (templateId === 'custom' && !customCohortName.trim()) {
+      setError('기관/단체/그룹명을 입력해 주세요.');
       return;
     }
     if (recipients.length === 0) {
@@ -169,19 +176,27 @@ export default function CounselorQuickSendForm({
 
     const message = welcomeMessage.trim() || QUICK_SEND_MESSAGE;
     const firstName = recipients[0].displayName.trim();
+    const cohortName =
+      templateId === 'custom'
+        ? customCohortName.trim().slice(0, 120)
+        : firstName.slice(0, 120);
+    const templateLabel =
+      templateId === 'custom'
+        ? customCohortName.trim() || '맞춤'
+        : template.name;
     const title =
       recipients.length > 1
-        ? `${template.name} · ${recipients.length}명`.slice(0, 200)
-        : `${template.name} · ${firstName}`.slice(0, 200);
+        ? `${templateLabel} · ${recipients.length}명`.slice(0, 200)
+        : `${templateLabel} · ${firstName}`.slice(0, 200);
 
     setLoading(true);
     try {
       const result = await bulkCreateClientPortals({
-        cohortName: firstName.slice(0, 120),
+        cohortName,
         title,
         welcomeMessage: message,
         testList,
-        codeCategory: 'individual',
+        codeCategory: templateId === 'custom' ? 'group' : 'individual',
         rows: recipients.map((r) => ({
           displayName: r.displayName.trim(),
           phone: normalizeRecipientPhone(r.phone) || undefined,
@@ -205,8 +220,8 @@ export default function CounselorQuickSendForm({
           welcomeMessage: message,
           testList,
           createdAt: new Date().toISOString(),
-          cohortName: firstName,
-          codeCategory: 'individual',
+          cohortName,
+          codeCategory: templateId === 'custom' ? 'group' : 'individual',
           dispatchSentCount: createdCount,
           dispatchFailedCount: 0,
           testCompleteCount: 0,
@@ -267,10 +282,51 @@ export default function CounselorQuickSendForm({
       <form onSubmit={handleSend} className="mx-auto flex max-w-2xl flex-col gap-5 p-1">
         <div>
           <p className="mb-2 text-sm font-semibold text-slate-200">1. 어떤 검사인가요?</p>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             {COUNSELOR_SEND_TEMPLATES.map((item) => {
               const active = templateId === item.id;
               const recommend = firstSendTrialEligible && item.id === 'stress';
+
+              if (item.customOrgInput) {
+                return (
+                  <div
+                    key={item.id}
+                    className={`rounded-xl border px-3 py-4 transition-colors ${
+                      active
+                        ? 'border-sky-400/60 bg-sky-500/20'
+                        : 'border-white/12 bg-[#121f38]/80 hover:border-sky-400/30'
+                    }`}
+                  >
+                    <div className="relative min-h-[2.75rem]">
+                      {!customCohortName.trim() ? (
+                        <span
+                          className="pointer-events-none absolute inset-0 flex items-center text-sm font-semibold text-slate-600"
+                          aria-hidden
+                        >
+                          기관/단체/그룹명
+                        </span>
+                      ) : null}
+                      <input
+                        type="text"
+                        value={customCohortName}
+                        onChange={(e) => {
+                          setCustomCohortName(e.target.value);
+                          setTemplateId('custom');
+                        }}
+                        onFocus={() => setTemplateId('custom')}
+                        maxLength={120}
+                        disabled={loading}
+                        className={`relative w-full bg-transparent text-base font-bold outline-none ${
+                          active ? 'text-white' : 'text-slate-200'
+                        }`}
+                        aria-label="기관/단체/그룹명"
+                      />
+                    </div>
+                    <span className="mt-1 block text-xs text-slate-400">{item.description}</span>
+                  </div>
+                );
+              }
+
               return (
                 <button
                   key={item.id}
@@ -283,7 +339,7 @@ export default function CounselorQuickSendForm({
                       : 'border-white/12 bg-[#121f38]/80 text-slate-200 hover:border-sky-400/30'
                   }`}
                 >
-                  <span className="block text-base font-bold">
+                  <span className="block text-base font-bold leading-snug">
                     {item.name}
                     {recommend ? (
                       <span className="ml-1 text-[10px] font-medium text-emerald-300">첫 보내기 추천</span>
@@ -297,7 +353,17 @@ export default function CounselorQuickSendForm({
         </div>
 
         <div>
-          <p className="mb-2 text-sm font-semibold text-slate-200">2. 누구에게 보낼까요?</p>
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <p className="text-sm font-semibold text-slate-200">2. 누구에게 보낼까요?</p>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={loading}
+              className="shrink-0 text-xs text-sky-300 transition hover:text-sky-200 disabled:opacity-50"
+            >
+              명단 첨부하기
+            </button>
+          </div>
           <input
             ref={fileInputRef}
             type="file"
@@ -308,27 +374,7 @@ export default function CounselorQuickSendForm({
           <div className="mb-1.5 hidden gap-3 text-xs text-slate-400 sm:grid sm:grid-cols-3">
             <span>이름</span>
             <span>휴대폰</span>
-            <div className="flex items-center justify-between gap-2">
-              <span>이메일</span>
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={loading}
-                className="shrink-0 text-sky-300 transition hover:text-sky-200 disabled:opacity-50"
-              >
-                명단 첨부하기
-              </button>
-            </div>
-          </div>
-          <div className="mb-2 flex justify-end sm:hidden">
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={loading}
-              className="text-xs text-sky-300 transition hover:text-sky-200 disabled:opacity-50"
-            >
-              명단 첨부하기
-            </button>
+            <span>이메일</span>
           </div>
           {fileLabel ? (
             <p className="mb-2 text-xs text-sky-300/90">
@@ -388,13 +434,39 @@ export default function CounselorQuickSendForm({
 
         <div className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2.5">
           <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-            <p className="text-xs font-medium text-slate-400">기본 안내 문구 (수정 가능합니다)</p>
+            <div
+              className="relative"
+              onMouseEnter={() => setShowWelcomeHint(true)}
+              onMouseLeave={() => setShowWelcomeHint(false)}
+            >
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => welcomeTextareaRef.current?.focus()}
+                className="text-left text-xs font-medium text-slate-400 underline-offset-2 transition hover:text-slate-200 hover:underline disabled:opacity-50"
+              >
+                기본 안내 문구 (수정 가능합니다)
+              </button>
+              {showWelcomeHint ? (
+                <div
+                  className="pointer-events-none absolute left-0 bottom-full z-30 mb-1.5 w-[min(100vw-2rem,20rem)] rounded-lg border border-sky-500/40 bg-slate-950 p-3 text-left shadow-2xl"
+                  role="tooltip"
+                >
+                  <p className="text-xs leading-relaxed text-slate-200">
+                    내담자에게 보내는 안내 문구입니다. 아래 입력란에서 직접 수정하거나, 샘플을
+                    클릭해 적용할 수 있습니다.
+                  </p>
+                </div>
+              ) : null}
+            </div>
             <WelcomeMessageSampleHoverPicker
               disabled={loading}
+              tooltipPlacement="top"
               onPick={(text) => setWelcomeMessage(text)}
             />
           </div>
           <textarea
+            ref={welcomeTextareaRef}
             rows={3}
             className={`${INPUT} mt-2 min-h-[4.5rem] resize-y text-sm leading-relaxed`}
             value={welcomeMessage}
