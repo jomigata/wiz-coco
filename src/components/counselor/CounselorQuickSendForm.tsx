@@ -50,7 +50,6 @@ export default function CounselorQuickSendForm({
   const [templateId, setTemplateId] = useState<CounselorSendTemplateId | null>(null);
   const [customCohortName, setCustomCohortName] = useState('');
   const [welcomeMessage, setWelcomeMessage] = useState(QUICK_SEND_MESSAGE);
-  const [showWelcomeHint, setShowWelcomeHint] = useState(false);
   const [manualRows, setManualRows] = useState<RecipientRow[]>([{ ...EMPTY_ROW }]);
   const [fileRows, setFileRows] = useState<RecipientRow[]>([]);
   const [fileLabel, setFileLabel] = useState('');
@@ -115,6 +114,13 @@ export default function CounselorQuickSendForm({
     setManualRows((prev) => {
       if (index !== prev.length - 1) return prev;
       return [...prev, { ...EMPTY_ROW }];
+    });
+  };
+
+  const removeRow = (index: number) => {
+    setManualRows((prev) => {
+      if (prev.length <= 1) return [{ ...EMPTY_ROW }];
+      return prev.filter((_, i) => i !== index);
     });
   };
 
@@ -386,20 +392,34 @@ export default function CounselorQuickSendForm({
             {manualRows.map((row, idx) => (
               <div key={idx} className="grid gap-3 sm:grid-cols-3">
                 <label className="block">
-                  <span className="mb-1.5 block text-xs text-slate-400 sm:hidden">이름</span>
-                  <input
-                    ref={(el) => {
-                      recipientNameRefs.current[idx] = el;
-                    }}
-                    className={INPUT}
-                    value={row.displayName}
-                    onChange={(e) => updateRow(idx, 'displayName', e.target.value)}
-                    onBlur={(e) => handleNameBlur(idx, e.target.value)}
-                    onKeyDown={handleRecipientFieldKeyDown}
-                    placeholder="내담자 이름"
-                    autoComplete="name"
-                    disabled={loading}
-                  />
+                  <span className="mb-1.5 block text-xs text-slate-400">이름 {idx + 1}</span>
+                  <div className="relative">
+                    <input
+                      ref={(el) => {
+                        recipientNameRefs.current[idx] = el;
+                      }}
+                      className={`${INPUT} pr-9`}
+                      value={row.displayName}
+                      onChange={(e) => updateRow(idx, 'displayName', e.target.value)}
+                      onBlur={(e) => handleNameBlur(idx, e.target.value)}
+                      onKeyDown={handleRecipientFieldKeyDown}
+                      placeholder={`이름 ${idx + 1}`}
+                      autoComplete="name"
+                      disabled={loading}
+                      aria-label={`이름 ${idx + 1}`}
+                    />
+                    {manualRows.length > 1 || row.displayName.trim() ? (
+                      <button
+                        type="button"
+                        onClick={() => removeRow(idx)}
+                        disabled={loading}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-slate-400 transition hover:bg-white/10 hover:text-red-300 disabled:opacity-50"
+                        aria-label={`이름 ${idx + 1} 줄 삭제`}
+                      >
+                        ×
+                      </button>
+                    ) : null}
+                  </div>
                 </label>
                 <label className="block">
                   <span className="mb-1.5 block text-xs text-slate-400 sm:hidden">휴대폰</span>
@@ -434,31 +454,7 @@ export default function CounselorQuickSendForm({
 
         <div className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2.5">
           <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-            <div
-              className="relative"
-              onMouseEnter={() => setShowWelcomeHint(true)}
-              onMouseLeave={() => setShowWelcomeHint(false)}
-            >
-              <button
-                type="button"
-                disabled={loading}
-                onClick={() => welcomeTextareaRef.current?.focus()}
-                className="text-left text-xs font-medium text-slate-400 underline-offset-2 transition hover:text-slate-200 hover:underline disabled:opacity-50"
-              >
-                기본 안내 문구 (수정 가능합니다)
-              </button>
-              {showWelcomeHint ? (
-                <div
-                  className="pointer-events-none absolute left-0 bottom-full z-30 mb-1.5 w-[min(100vw-2rem,20rem)] rounded-lg border border-sky-500/40 bg-slate-950 p-3 text-left shadow-2xl"
-                  role="tooltip"
-                >
-                  <p className="text-xs leading-relaxed text-slate-200">
-                    내담자에게 보내는 안내 문구입니다. 아래 입력란에서 직접 수정하거나, 샘플을
-                    클릭해 적용할 수 있습니다.
-                  </p>
-                </div>
-              ) : null}
-            </div>
+            <p className="text-xs font-medium text-slate-400">안내 문구</p>
             <WelcomeMessageSampleHoverPicker
               disabled={loading}
               tooltipPlacement="top"

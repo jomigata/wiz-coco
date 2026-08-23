@@ -10,7 +10,7 @@ type Props = {
   inline?: boolean;
 };
 
-/** 안내 메시지 — 샘플 1·2·3 클릭 시 textarea에 적용 */
+/** 안내 메시지 — 샘플 1·2·3·4 클릭 시 textarea에 적용 */
 export default function WelcomeMessageSamplePicker({ onPick, disabled, inline }: Props) {
   const sampleLinks = WELCOME_MESSAGE_SAMPLES.map((sample) => (
     <button
