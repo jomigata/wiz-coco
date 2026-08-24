@@ -54,6 +54,7 @@ export default function PortalTestList({
           finalResultId,
         );
         const hasCompleted = completedResults.length > 0;
+        const latestResult = completedResultsForDisplay[0];
 
         return (
           <li
@@ -80,46 +81,39 @@ export default function PortalTestList({
                     </button>
                   ) : null}
                 </div>
-                <span
-                  className={`mt-2 inline-block rounded px-2 py-0.5 text-xs ${
-                    hasCompleted
-                      ? 'border border-emerald-700/40 bg-emerald-900/50 text-emerald-300'
-                      : 'border border-amber-700/30 bg-amber-900/40 text-amber-200'
-                  }`}
-                >
-                  {hasCompleted ? '검사 실시 완료' : '미실시'}
-                </span>
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <span
+                    className={`inline-block rounded px-2 py-0.5 text-xs ${
+                      hasCompleted
+                        ? 'border border-emerald-700/40 bg-emerald-900/50 text-emerald-300'
+                        : 'border border-amber-700/30 bg-amber-900/40 text-amber-200'
+                    }`}
+                  >
+                    {hasCompleted ? '검사 실시 완료' : '미실시'}
+                  </span>
+                  {hasCompleted && latestResult ? (
+                    <span className="text-[11px] text-slate-400">
+                      {formatCompletedAt(resultSubmittedLabel(latestResult))}
+                    </span>
+                  ) : null}
+                </div>
 
-                {hasCompleted ? (
-                  <div className="mt-3 space-y-2 border-t border-slate-600/70 pt-3">
-                    {completedResultsForDisplay.map((r) => (
-                      <div
-                        key={r.resultId}
-                        className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-600 bg-slate-800/80 px-3 py-2.5 text-sm"
-                      >
-                        <p className="text-slate-300">
-                          검사 일시{' '}
-                          <span className="font-medium text-white">
-                            {formatCompletedAt(resultSubmittedLabel(r))}
-                          </span>
-                        </p>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            onViewResult({
-                              testName,
-                              resultId: r.resultId,
-                              roundNumber: null,
-                              resultItem: r,
-                            })
-                          }
-                          className="shrink-0 text-xs text-emerald-400 hover:text-emerald-300"
-                        >
-                          결과보기
-                        </button>
-                      </div>
-                    ))}
-                  </div>
+                {hasCompleted && latestResult ? (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      onViewResult({
+                        testName,
+                        resultId: latestResult.resultId,
+                        roundNumber: null,
+                        resultItem: latestResult,
+                      })
+                    }
+                    className="mt-3 flex w-full items-center justify-between rounded-lg border border-slate-600 bg-slate-800/80 px-3 py-2.5 text-left text-sm transition hover:border-emerald-500/40 hover:bg-slate-800"
+                  >
+                    <span className="text-slate-300">검사 결과</span>
+                    <span className="shrink-0 text-emerald-400">결과보기 →</span>
+                  </button>
                 ) : null}
               </div>
             </div>

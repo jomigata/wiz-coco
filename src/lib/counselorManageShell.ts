@@ -21,6 +21,14 @@ const PSYCH_TESTS_ROUTE_PREFIXES = [
   '/counselor/sessions',
 ] as const;
 
+const TOOLS_ROUTE_PREFIXES = [
+  '/counselor/chat',
+  '/counselor/notes',
+  '/counselor/treatment-plans',
+  '/counselor/daily-records',
+  '/counselor/resources',
+] as const;
+
 function normalizePath(pathname: string): string {
   const base = (pathname || '').split('?')[0].replace(/\/+$/, '') || '/counselor';
   return base;
@@ -31,6 +39,17 @@ export function isPsychTestsWorkspaceRoute(pathname: string): boolean {
   return PSYCH_TESTS_ROUTE_PREFIXES.some(
     (prefix) => path === prefix || path.startsWith(`${prefix}/`),
   );
+}
+
+export function isToolsWorkspaceRoute(pathname: string): boolean {
+  const path = normalizePath(pathname);
+  return TOOLS_ROUTE_PREFIXES.some(
+    (prefix) => path === prefix || path.startsWith(`${prefix}/`),
+  );
+}
+
+export function isCounselorManageShellRoute(pathname: string): boolean {
+  return isPsychTestsWorkspaceRoute(pathname) || isToolsWorkspaceRoute(pathname);
 }
 
 export function getPsychTestsCategory(): CounselorMainCategory | undefined {

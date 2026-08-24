@@ -8,6 +8,11 @@ import {
   type PortalChatMessage,
 } from '@/lib/portalChatApi';
 import { readClientPortalSession } from '@/lib/clientPortalSession';
+import {
+  PORTAL_INQUIRY_SECTION_DESC,
+  PORTAL_INQUIRY_SECTION_TITLE,
+  PORTAL_CARE_MANAGER_CHAT_LABEL,
+} from '@/lib/portalCareManagerLabels';
 
 export type PortalCounselorInquiryChatProps = {
   counselorName?: string;
@@ -72,16 +77,14 @@ export default function PortalCounselorInquiryChat({ counselorName }: PortalCoun
     }
   };
 
-  const label = (counselorName || '').trim() || '담당 상담사';
+  const chatSenderLabel = (counselorName || '').trim() || PORTAL_CARE_MANAGER_CHAT_LABEL;
 
   return (
     <section className="rounded-xl border border-slate-700/80 bg-slate-800/40 p-5">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
-          <h3 className="text-sm font-semibold text-slate-200">상담사에게 문의하기</h3>
-          <p className="mt-1 text-sm text-slate-400">
-            상담사에게 검사·이용 관련 질문을 남기면 답변을 받을 수 있습니다.
-          </p>
+          <h3 className="text-sm font-semibold text-slate-200">{PORTAL_INQUIRY_SECTION_TITLE}</h3>
+          <p className="mt-1 text-sm text-slate-400">{PORTAL_INQUIRY_SECTION_DESC}</p>
         </div>
       </div>
 
@@ -108,7 +111,7 @@ export default function PortalCounselorInquiryChat({ counselorName }: PortalCoun
                 >
                   <p className="whitespace-pre-wrap break-words">{msg.message}</p>
                   <p className={`mt-1 text-[11px] ${mine ? 'text-cyan-200/70' : 'text-slate-400'}`}>
-                    {mine ? '나' : label} · {formatChatTimestamp(msg.createdAt)}
+                    {mine ? '나' : chatSenderLabel} · {formatChatTimestamp(msg.createdAt)}
                   </p>
                 </div>
               </div>

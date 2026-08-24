@@ -7,6 +7,11 @@ import {
   type PortalHomeOverview,
   type PortalHomeTestItem,
 } from '@/lib/portalHomeTask';
+import {
+  PORTAL_CARE_MANAGER_TITLE,
+  PORTAL_MY_TEST_LIST_LABEL,
+  portalCareManagerDisplayName,
+} from '@/lib/portalCareManagerLabels';
 
 type Props = {
   displayName: string;
@@ -27,7 +32,7 @@ export default function PortalHomeHero({
   onCareAction,
   onOpenMySpace,
 }: Props) {
-  const counselorLabel = (counselorName || '').trim() || '담당 상담사';
+  const managerLabel = portalCareManagerDisplayName(counselorName);
   const allTestsDone = overview.totalTests > 0 && overview.pendingTests === 0;
 
   return (
@@ -44,18 +49,20 @@ export default function PortalHomeHero({
             👤
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-medium uppercase tracking-wide text-indigo-200/80">담당 상담사</p>
-            <p className="mt-0.5 truncate text-base font-semibold text-white">{counselorLabel}</p>
+            <p className="text-xs font-medium uppercase tracking-wide text-indigo-200/80">
+              {PORTAL_CARE_MANAGER_TITLE}
+            </p>
+            <p className="mt-0.5 truncate text-base font-semibold text-white">{managerLabel}</p>
             {counselorEmail ? (
               <p className="mt-0.5 truncate text-xs text-slate-400">{counselorEmail}</p>
             ) : null}
             {allTestsDone ? (
               <p className="mt-2 inline-flex items-center rounded-full border border-emerald-500/40 bg-emerald-950/40 px-2.5 py-0.5 text-xs font-medium text-emerald-200">
-                상담사 확인 중
+                검사 케어 매니저 확인 중
               </p>
             ) : overview.pendingTests > 0 ? (
               <p className="mt-2 inline-flex items-center rounded-full border border-cyan-500/40 bg-cyan-950/40 px-2.5 py-0.5 text-xs font-medium text-cyan-200">
-                상담사와 함께 진행 중
+                검사 케어 매니저와 함께 진행 중
               </p>
             ) : null}
           </div>
@@ -70,7 +77,7 @@ export default function PortalHomeHero({
             onClick={onOpenMySpace}
             className="shrink-0 rounded-lg border border-white/15 px-3 py-1.5 text-xs font-medium text-slate-200 transition hover:border-white/40 hover:bg-white/5"
           >
-            나의 검사목록
+            {PORTAL_MY_TEST_LIST_LABEL} →
           </button>
         </div>
         <p className="mt-2 text-sm leading-relaxed text-slate-300">
@@ -112,7 +119,7 @@ export default function PortalHomeHero({
 
         {allTestsDone && overview.totalTests > 0 ? (
           <p className="mt-4 text-sm text-emerald-200/90">
-            배정된 검사를 모두 마쳤습니다. 상담사가 결과를 확인합니다.
+            배정된 검사를 모두 마쳤습니다. 검사 케어 매니저가 결과를 확인합니다.
           </p>
         ) : null}
       </section>

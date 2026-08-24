@@ -39,11 +39,6 @@ function templateCardBorder(active: boolean): string {
     : 'border-white/10 bg-[#121f38]/80 hover:border-white';
 }
 
-function nameFieldLabel(index: number, totalRows: number): string {
-  if (totalRows <= 1) return '이름';
-  return `이름 ${index + 1}`;
-}
-
 type Props = {
   variant?: 'page' | 'modal';
   onClose?: () => void;
@@ -321,9 +316,10 @@ export default function CounselorQuickSendForm({
         <div>
           <p className="mb-2 text-sm font-semibold text-slate-200">1. 어떤 검사인가요?</p>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            {COUNSELOR_SEND_TEMPLATES.map((item) => {
+            {COUNSELOR_SEND_TEMPLATES.map((item, templateIndex) => {
               const active = templateId === item.id;
               const recommend = firstSendTrialEligible && item.id === 'stress';
+              const templateOrder = templateIndex + 1;
 
               if (item.customOrgInput) {
                 return (
@@ -331,6 +327,9 @@ export default function CounselorQuickSendForm({
                     key={item.id}
                     className={`flex aspect-square flex-col rounded-xl border px-3 py-3 text-center transition-colors ${templateCardBorder(active)}`}
                   >
+                    <span className="shrink-0 text-[10px] font-semibold tabular-nums text-slate-500">
+                      {templateOrder}
+                    </span>
                     <div className="relative min-h-0 flex-1">
                       {!customCohortName.trim() ? (
                         <span
@@ -370,11 +369,26 @@ export default function CounselorQuickSendForm({
                     </button>
                     {customSelectedTests.length > 0 ? (
                       <ul className="mt-1 max-h-16 space-y-0.5 overflow-hidden text-[10px] leading-tight text-slate-400">
-                        {customSelectedTests.map((t) => (
+                        {customSelectedTests.slice(0, 2).map((t, idx) => (
                           <li key={t.testId} className="truncate">
-                            {t.name}
+                            {idx + 1}. {t.name}
                           </li>
                         ))}
+                        {customSelectedTests.length > 2 ? (
+                          <li>
+                            <button
+                              type="button"
+                              disabled={loading}
+                              onClick={() => {
+                                setTemplateId('custom');
+                                setTestPickerOpen(true);
+                              }}
+                              className="text-sky-300 underline-offset-2 hover:text-sky-200 hover:underline disabled:opacity-50"
+                            >
+                              +{customSelectedTests.length - 2} 확인
+                            </button>
+                          </li>
+                        ) : null}
                       </ul>
                     ) : null}
                   </div>
@@ -391,6 +405,9 @@ export default function CounselorQuickSendForm({
                     active ? 'text-white' : 'text-slate-200'
                   }`}
                 >
+                  <span className="mb-1 text-[10px] font-semibold tabular-nums text-slate-500">
+                    {templateOrder}
+                  </span>
                   <span className="block text-base font-bold leading-snug">
                     {item.name}
                     {recommend ? (
@@ -426,7 +443,7 @@ export default function CounselorQuickSendForm({
             onChange={handleFileChange}
           />
           <div className="mb-1.5 hidden gap-3 text-xs text-slate-400 sm:grid sm:grid-cols-3">
-            <span>{nameFieldLabel(0, manualRows.length)}</span>
+            <span>이름</span>
             <span>휴대폰</span>
             <span>이메일</span>
           </div>
@@ -440,9 +457,7 @@ export default function CounselorQuickSendForm({
             {manualRows.map((row, idx) => (
               <div key={idx} className="grid gap-3 sm:grid-cols-3">
                 <label className="block">
-                  <span className="mb-1.5 block text-xs text-slate-400 sm:hidden">
-                    {nameFieldLabel(idx, manualRows.length)}
-                  </span>
+                  <span className="mb-1.5 block text-xs text-slate-400 sm:hidden">이름</span>
                   <div className="relative">
                     <input
                       ref={(el) => {
@@ -453,10 +468,10 @@ export default function CounselorQuickSendForm({
                       onChange={(e) => updateRow(idx, 'displayName', e.target.value)}
                       onBlur={(e) => handleNameBlur(idx, e.target.value)}
                       onKeyDown={handleRecipientFieldKeyDown}
-                      placeholder={nameFieldLabel(idx, manualRows.length)}
+                      placeholder="이름"
                       autoComplete="name"
                       disabled={loading}
-                      aria-label={nameFieldLabel(idx, manualRows.length)}
+                      aria-label="이름"
                     />
                     {manualRows.length > 1 || row.displayName.trim() ? (
                       <button
@@ -464,7 +479,7 @@ export default function CounselorQuickSendForm({
                         onClick={() => removeRow(idx)}
                         disabled={loading}
                         className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-slate-400 transition hover:bg-white/10 hover:text-red-300 disabled:opacity-50"
-                        aria-label={`${nameFieldLabel(idx, manualRows.length)} 줄 삭제`}
+                        aria-label="이름 줄 삭제"
                       >
                         ×
                       </button>

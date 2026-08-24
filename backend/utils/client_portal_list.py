@@ -240,6 +240,7 @@ def list_counselor_client_portals(
                     for t in (pdata.get("counselorTags") or [])
                     if str(t).strip()
                 ][:10],
+                "chatReplyStatus": (pdata.get("chatReplyStatus") or "").strip() or None,
                 "progress": {
                     "totalTests": total_tests,
                     "completedTests": completed_tests,

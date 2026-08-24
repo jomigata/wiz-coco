@@ -31,6 +31,7 @@ import { setPortalReturnPath } from '@/lib/portalReturnPath';
 import { clearJoinFreshParticipantFlow } from '@/lib/joinFlowMode';
 import { getJoinTestPath } from '@/lib/portalTestNavigation';
 import { buildPortalHomeOverview, type PortalHomeTestItem } from '@/lib/portalHomeTask';
+import { PORTAL_MY_TEST_LIST_LABEL } from '@/lib/portalCareManagerLabels';
 import type { PortalCareAssignmentItem } from '@/types/careAssignment';
 
 type PortalAssessment = PortalDashboardAssessment;
@@ -45,7 +46,7 @@ type PortalTab = 'tests' | 'care' | 'materials';
 
 function PortalLoading() {
   return (
-    <div className="min-h-screen bg-gray-900 pt-24 flex justify-center">
+    <div className="min-h-screen bg-gray-900 px-4 pt-4 flex justify-center">
       <p className="text-slate-400">내 검사실로 이동 중…</p>
     </div>
   );
@@ -399,7 +400,7 @@ function ClientPortalContent() {
 
   return (
     <div className="min-h-screen bg-gray-900">
-      <div className="pt-24 pb-12 px-4">
+      <div className="px-4 pt-4 pb-12">
         <main className="max-w-3xl mx-auto space-y-6">
           {!showRecords ? (
             <>
@@ -440,13 +441,18 @@ function ClientPortalContent() {
             </>
           ) : (
             <>
-              <button
-                type="button"
-                onClick={() => setShowRecords(false)}
-                className="rounded-lg border border-white/15 bg-slate-800/60 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-white/40 hover:bg-slate-700/80"
-              >
-                내 검사실
-              </button>
+              <div className="relative flex items-center py-1">
+                <button
+                  type="button"
+                  onClick={() => setShowRecords(false)}
+                  className="rounded-lg border border-white/15 bg-slate-800/60 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-white/40 hover:bg-slate-700/80"
+                >
+                  ← 내 검사실
+                </button>
+                <h1 className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-base font-semibold text-white sm:text-lg">
+                  {PORTAL_MY_TEST_LIST_LABEL}
+                </h1>
+              </div>
 
           <div className="flex flex-wrap gap-x-1 gap-y-1 border-b border-slate-700/80">
             <button

@@ -1,13 +1,18 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import AuthLink from '@/components/auth/AuthLink';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
+import { counselorClientProgressHref } from '@/lib/counselorClientRoutes';
 import {
+  counselorChatProgressHref,
   fetchCounselorChatMessages,
   fetchCounselorChatThreads,
   formatChatTimestamp,
   sendCounselorChatMessage,
+  threadMatchesSearch,
   type PortalChatMessage,
+  type PortalChatReplyStatus,
   type PortalChatThread,
 } from '@/lib/portalChatApi';
 import { LoadingMessage } from '@/components/ui/LoadingMessage';
@@ -24,6 +29,9 @@ function sortThreads(threads: PortalChatThread[], selectedPortalId: string | nul
       if (a.portalId === selectedPortalId) return -1;
       if (b.portalId === selectedPortalId) return 1;
     }
+    const pendingDiff =
+      (a.chatReplyStatus === 'pending' ? 0 : 1) - (b.chatReplyStatus === 'pending' ? 0 : 1);
+    if (pendingDiff !== 0) return pendingDiff;
     const unreadDiff = (b.unreadCount || 0) - (a.unreadCount || 0);
     if (unreadDiff !== 0) return unreadDiff;
     const timeDiff = (b.lastMessageAt || '').localeCompare(a.lastMessageAt || '');
@@ -32,22 +40,41 @@ function sortThreads(threads: PortalChatThread[], selectedPortalId: string | nul
   });
 }
 
+function toLocalDateTimeInputValue(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
 export default function CounselorPortalChatPanel() {
   const [threads, setThreads] = useState<PortalChatThread[]>([]);
   const [selectedPortalId, setSelectedPortalId] = useState<string | null>(null);
   const [messages, setMessages] = useState<PortalChatMessage[]>([]);
   const [draft, setDraft] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [replyStatus, setReplyStatus] = useState<PortalChatReplyStatus>('done');
+  const [scheduleEnabled, setScheduleEnabled] = useState(false);
+  const [scheduledAt, setScheduledAt] = useState('');
   const [loadingThreads, setLoadingThreads] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  const filteredThreads = useMemo(
+    () => threads.filter((thread) => threadMatchesSearch(thread, searchQuery)),
+    [threads, searchQuery],
+  );
   const sortedThreads = useMemo(
-    () => sortThreads(threads, selectedPortalId),
-    [threads, selectedPortalId],
+    () => sortThreads(filteredThreads, selectedPortalId),
+    [filteredThreads, selectedPortalId],
   );
   const selectedThread = threads.find((t) => t.portalId === selectedPortalId) || null;
+  const progressHref = selectedThread
+    ? counselorChatProgressHref(selectedThread) ||
+      (selectedThread.primaryAssessmentId
+        ? counselorClientProgressHref(selectedThread.primaryAssessmentId, selectedThread.portalId)
+        : null)
+    : null;
 
   const loadThreads = useCallback(async (keepSelection = true) => {
     setError('');
@@ -101,17 +128,43 @@ export default function CounselorPortalChatPanel() {
   const handleSelectThread = (portalId: string) => {
     if (portalId === selectedPortalId) return;
     setSelectedPortalId(portalId);
+    const thread = threads.find((t) => t.portalId === portalId);
+    if (thread?.chatReplyStatus) {
+      setReplyStatus(thread.chatReplyStatus);
+    }
   };
 
   const handleSend = async () => {
     const text = draft.trim();
     if (!text || !selectedPortalId || sending) return;
+
+    let scheduledIso: string | undefined;
+    if (scheduleEnabled && scheduledAt) {
+      const dt = new Date(scheduledAt);
+      if (Number.isNaN(dt.getTime())) {
+        setError('예약 일시 형식을 확인해 주세요.');
+        return;
+      }
+      if (dt.getTime() <= Date.now()) {
+        setError('예약 일시는 현재 시각 이후여야 합니다.');
+        return;
+      }
+      scheduledIso = dt.toISOString();
+    }
+
     setSending(true);
     setError('');
     try {
-      const item = await sendCounselorChatMessage(selectedPortalId, text);
+      const item = await sendCounselorChatMessage(selectedPortalId, text, {
+        replyStatus,
+        scheduledAt: scheduledIso,
+      });
       setDraft('');
-      setMessages((prev) => [...prev, item]);
+      if (item.isScheduled && item.scheduledPending) {
+        setMessages((prev) => [...prev, item]);
+      } else {
+        setMessages((prev) => [...prev, item]);
+      }
       await loadThreads(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : '메시지 전송에 실패했습니다.');
@@ -125,124 +178,212 @@ export default function CounselorPortalChatPanel() {
   }
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[minmax(240px,320px)_1fr] lg:min-h-[520px]">
-      <aside className="rounded-xl border border-slate-700/80 bg-slate-900/40">
-        <ul className="max-h-[480px] overflow-y-auto divide-y divide-slate-800/80">
-          {sortedThreads.length === 0 ? (
-            <li className="px-4 py-6 text-sm text-slate-500">등록된 내담자가 없습니다.</li>
-          ) : (
-            sortedThreads.map((thread) => {
-              const active = thread.portalId === selectedPortalId;
-              return (
-                <li key={thread.portalId}>
-                  <button
-                    type="button"
-                    onClick={() => handleSelectThread(thread.portalId)}
-                    className={`w-full border-l-2 px-4 py-3 text-left transition ${
-                      active
-                        ? 'border-cyan-400 bg-cyan-950/40 ring-1 ring-inset ring-cyan-500/35'
-                        : 'border-transparent hover:bg-white/5'
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-2">
+    <div className="space-y-3">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <input
+          type="search"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="내담자 이름·이메일·전화번호·그룹명·나의코드 검색"
+          className="w-full rounded-lg border border-slate-600 bg-slate-950/70 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-indigo-500/50 focus:outline-none sm:max-w-md"
+        />
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-[minmax(260px,340px)_1fr] lg:min-h-[520px]">
+        <aside className="rounded-xl border border-slate-700/80 bg-slate-900/40">
+          <div className="grid grid-cols-[1fr_auto] gap-2 border-b border-slate-800/80 px-3 py-2 text-[11px] font-medium uppercase tracking-wide text-slate-500">
+            <span>내담자</span>
+            <span className="w-14 text-center">답변</span>
+          </div>
+          <ul className="max-h-[480px] overflow-y-auto divide-y divide-slate-800/80">
+            {sortedThreads.length === 0 ? (
+              <li className="px-4 py-6 text-sm text-slate-500">
+                {searchQuery.trim() ? '검색 결과가 없습니다.' : '등록된 내담자가 없습니다.'}
+              </li>
+            ) : (
+              sortedThreads.map((thread) => {
+                const active = thread.portalId === selectedPortalId;
+                return (
+                  <li key={thread.portalId}>
+                    <button
+                      type="button"
+                      onClick={() => handleSelectThread(thread.portalId)}
+                      className={`grid w-full grid-cols-[1fr_auto] items-start gap-2 border-l-2 px-3 py-3 text-left transition ${
+                        active
+                          ? 'border-cyan-400 bg-cyan-950/40 ring-1 ring-inset ring-cyan-500/35'
+                          : 'border-transparent hover:bg-white/5'
+                      }`}
+                    >
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-medium text-white">{threadTitle(thread)}</p>
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="truncate text-sm font-medium text-white">{threadTitle(thread)}</p>
+                          {thread.unreadCount > 0 ? (
+                            <span className="shrink-0 rounded-full bg-red-600 px-2 py-0.5 text-[11px] font-semibold text-white">
+                              {thread.unreadCount}
+                            </span>
+                          ) : null}
+                        </div>
                         <p className="mt-1 text-xs text-slate-500">
                           {thread.lastMessageAt
                             ? formatChatTimestamp(thread.lastMessageAt)
                             : '대화 없음'}
                         </p>
                       </div>
-                      {thread.unreadCount > 0 ? (
-                        <span className="shrink-0 rounded-full bg-red-600 px-2 py-0.5 text-[11px] font-semibold text-white">
-                          {thread.unreadCount}
-                        </span>
-                      ) : null}
-                    </div>
-                  </button>
-                </li>
-              );
-            })
-          )}
-        </ul>
-      </aside>
-
-      <section className="flex min-h-[420px] flex-col rounded-xl border border-slate-700/80 bg-slate-900/40">
-        {selectedThread ? (
-          <>
-            <div className="border-b border-slate-700/70 px-4 py-3">
-              <h3 className="text-sm font-semibold text-white">{threadTitle(selectedThread)}</h3>
-              <p className="text-xs text-slate-500">
-                나의코드 {formatAccessCodeDisplay(selectedThread.accessCode)}
-              </p>
-            </div>
-
-            <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto p-4">
-              {loadingMessages ? (
-                <p className="text-sm text-slate-500">대화를 불러오는 중…</p>
-              ) : messages.length === 0 ? (
-                <p className="text-sm text-slate-500">아직 메시지가 없습니다.</p>
-              ) : (
-                messages.map((msg) => {
-                  const mine = msg.senderRole === 'counselor';
-                  return (
-                    <div key={msg.messageId} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
-                      <div
-                        className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${
-                          mine
-                            ? 'rounded-br-md bg-indigo-900/60 text-indigo-50'
-                            : 'rounded-bl-md border border-slate-600 bg-slate-800 text-slate-100'
+                      <span
+                        className={`mt-0.5 w-14 shrink-0 rounded-full px-1.5 py-0.5 text-center text-[10px] font-medium ${
+                          thread.chatReplyStatus === 'pending'
+                            ? 'bg-amber-900/50 text-amber-200'
+                            : 'bg-emerald-900/40 text-emerald-200'
                         }`}
                       >
-                        <p className="whitespace-pre-wrap break-words">{msg.message}</p>
-                        <p className={`mt-1 text-[11px] ${mine ? 'text-indigo-200/70' : 'text-slate-400'}`}>
-                          {mine ? '나' : selectedThread.displayName} · {formatChatTimestamp(msg.createdAt)}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
+                        {thread.chatReplyStatus === 'pending' ? '미완료' : '완료'}
+                      </span>
+                    </button>
+                  </li>
+                );
+              })
+            )}
+          </ul>
+        </aside>
 
-            {error ? (
-              <p className="mx-4 mb-2 rounded-md border border-red-500/30 bg-red-950/40 px-3 py-2 text-sm text-red-300">
-                {error}
-              </p>
-            ) : null}
-
-            <div className="border-t border-slate-700/70 p-4">
-              <div className="flex gap-2">
-                <textarea
-                  value={draft}
-                  onChange={(e) => setDraft(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      void handleSend();
-                    }
-                  }}
-                  rows={2}
-                  placeholder="답변을 입력하세요 (Enter 전송)"
-                  className="min-h-[44px] flex-1 resize-y rounded-lg border border-slate-600 bg-slate-950/70 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-indigo-500/50 focus:outline-none"
-                />
-                <button
-                  type="button"
-                  onClick={() => void handleSend()}
-                  disabled={sending || !draft.trim()}
-                  className="shrink-0 self-end rounded-lg bg-indigo-700 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-600 disabled:opacity-50"
-                >
-                  {sending ? '전송 중…' : '보내기'}
-                </button>
+        <section className="flex min-h-[420px] flex-col rounded-xl border border-slate-700/80 bg-slate-900/40">
+          {selectedThread ? (
+            <>
+              <div className="flex flex-wrap items-start justify-between gap-2 border-b border-slate-700/70 px-4 py-3">
+                <div className="min-w-0">
+                  <h3 className="text-sm font-semibold text-white">{threadTitle(selectedThread)}</h3>
+                  <p className="text-xs text-slate-500">
+                    나의코드 {formatAccessCodeDisplay(selectedThread.accessCode)}
+                  </p>
+                </div>
+                {progressHref ? (
+                  <AuthLink
+                    href={progressHref}
+                    className="shrink-0 rounded-lg border border-sky-500/40 bg-sky-950/40 px-3 py-1.5 text-xs font-medium text-sky-200 transition hover:bg-sky-900/50"
+                  >
+                    상담진행 현황
+                  </AuthLink>
+                ) : null}
               </div>
+
+              <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto p-4">
+                {loadingMessages ? (
+                  <p className="text-sm text-slate-500">대화를 불러오는 중…</p>
+                ) : messages.length === 0 ? (
+                  <p className="text-sm text-slate-500">아직 메시지가 없습니다.</p>
+                ) : (
+                  messages.map((msg) => {
+                    const mine = msg.senderRole === 'counselor';
+                    const scheduled = Boolean(msg.isScheduled && msg.scheduledPending);
+                    return (
+                      <div key={msg.messageId} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
+                        <div
+                          className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${
+                            scheduled
+                              ? 'rounded-br-md border border-dashed border-indigo-400/50 bg-indigo-950/30 text-indigo-100'
+                              : mine
+                                ? 'rounded-br-md bg-indigo-900/60 text-indigo-50'
+                                : 'rounded-bl-md border border-slate-600 bg-slate-800 text-slate-100'
+                          }`}
+                        >
+                          {scheduled ? (
+                            <p className="mb-1 text-[10px] font-medium text-indigo-300">
+                              예약 전송 · {formatChatTimestamp(msg.scheduledAt)}
+                            </p>
+                          ) : null}
+                          <p className="whitespace-pre-wrap break-words">{msg.message}</p>
+                          <p className={`mt-1 text-[11px] ${mine ? 'text-indigo-200/70' : 'text-slate-400'}`}>
+                            {mine ? '나' : selectedThread.displayName} ·{' '}
+                            {formatChatTimestamp(scheduled ? msg.scheduledAt : msg.createdAt)}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              {error ? (
+                <p className="mx-4 mb-2 rounded-md border border-red-500/30 bg-red-950/40 px-3 py-2 text-sm text-red-300">
+                  {error}
+                </p>
+              ) : null}
+
+              <div className="space-y-3 border-t border-slate-700/70 p-4">
+                <div className="flex flex-wrap items-center gap-3 text-xs text-slate-300">
+                  <label className="inline-flex items-center gap-1.5">
+                    <input
+                      type="radio"
+                      name="chat-reply-status"
+                      checked={replyStatus === 'done'}
+                      onChange={() => setReplyStatus('done')}
+                    />
+                    답변 완료
+                  </label>
+                  <label className="inline-flex items-center gap-1.5">
+                    <input
+                      type="radio"
+                      name="chat-reply-status"
+                      checked={replyStatus === 'pending'}
+                      onChange={() => setReplyStatus('pending')}
+                    />
+                    답변 미완료
+                  </label>
+                  <label className="inline-flex items-center gap-1.5">
+                    <input
+                      type="checkbox"
+                      checked={scheduleEnabled}
+                      onChange={(e) => {
+                        setScheduleEnabled(e.target.checked);
+                        if (e.target.checked && !scheduledAt) {
+                          const next = new Date(Date.now() + 60 * 60 * 1000);
+                          setScheduledAt(toLocalDateTimeInputValue(next));
+                        }
+                      }}
+                    />
+                    예약 전송
+                  </label>
+                  {scheduleEnabled ? (
+                    <input
+                      type="datetime-local"
+                      value={scheduledAt}
+                      onChange={(e) => setScheduledAt(e.target.value)}
+                      className="rounded border border-slate-600 bg-slate-950/70 px-2 py-1 text-xs text-white"
+                    />
+                  ) : null}
+                </div>
+                <div className="flex gap-2">
+                  <textarea
+                    value={draft}
+                    onChange={(e) => setDraft(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        void handleSend();
+                      }
+                    }}
+                    rows={2}
+                    placeholder="답변을 입력하세요 (Enter 전송)"
+                    className="min-h-[44px] flex-1 resize-y rounded-lg border border-slate-600 bg-slate-950/70 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-indigo-500/50 focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => void handleSend()}
+                    disabled={sending || !draft.trim()}
+                    className="shrink-0 self-end rounded-lg bg-indigo-700 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-600 disabled:opacity-50"
+                  >
+                    {sending ? '전송 중…' : scheduleEnabled ? '예약' : '보내기'}
+                  </button>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-1 items-center justify-center p-8 text-sm text-slate-500">
+              왼쪽에서 내담자를 선택하세요.
             </div>
-          </>
-        ) : (
-          <div className="flex flex-1 items-center justify-center p-8 text-sm text-slate-500">
-            왼쪽에서 내담자를 선택하세요.
-          </div>
-        )}
-      </section>
+          )}
+        </section>
+      </div>
     </div>
   );
 }

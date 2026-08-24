@@ -1,5 +1,5 @@
 /**
- * 내 검사실 ↔ 담당 상담사 1:1 문의 채팅 API
+ * 내 검사실 ↔ 검사 케어 매니저 1:1 문의 채팅 API
  */
 
 import { getCounselorToken } from '@/lib/assessmentApi';
@@ -14,6 +14,8 @@ const getBaseUrl = (): string => {
   return 'http://localhost:5000';
 };
 
+export type PortalChatReplyStatus = 'pending' | 'done';
+
 export type PortalChatMessage = {
   messageId: string;
   portalId: string;
@@ -23,13 +25,20 @@ export type PortalChatMessage = {
   createdAt: string | null;
   readByPortal: boolean;
   readByCounselor: boolean;
+  scheduledAt?: string | null;
+  isScheduled?: boolean;
+  scheduledPending?: boolean;
 };
 
 export type PortalChatThread = {
   portalId: string;
   displayName: string;
+  email?: string;
+  phone?: string;
   accessCode: string;
   cohortName: string;
+  primaryAssessmentId?: string;
+  chatReplyStatus: PortalChatReplyStatus;
   lastMessage: string;
   lastMessageAt: string | null;
   unreadCount: number;
@@ -93,12 +102,22 @@ export async function fetchCounselorChatMessages(portalId: string): Promise<Port
   return (data.messages || []) as PortalChatMessage[];
 }
 
+export type SendCounselorChatOptions = {
+  replyStatus?: PortalChatReplyStatus;
+  scheduledAt?: string;
+};
+
 export async function sendCounselorChatMessage(
   portalId: string,
   message: string,
+  options?: SendCounselorChatOptions,
 ): Promise<PortalChatMessage> {
   const token = await getCounselorToken();
   if (!token) throw new Error('전문가·상담사 로그인이 필요합니다.');
+
+  const body: Record<string, string> = { message };
+  if (options?.replyStatus) body.replyStatus = options.replyStatus;
+  if (options?.scheduledAt) body.scheduledAt = options.scheduledAt;
 
   const res = await fetch(`${getBaseUrl()}/api/portal-chat/threads/${encodeURIComponent(portalId)}/messages`, {
     method: 'POST',
@@ -106,13 +125,34 @@ export async function sendCounselorChatMessage(
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ message }),
+    body: JSON.stringify(body),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     throw new Error(typeof data?.message === 'string' ? data.message : '메시지 전송에 실패했습니다.');
   }
   return data.message as PortalChatMessage;
+}
+
+export async function updateCounselorChatReplyStatus(
+  portalId: string,
+  replyStatus: PortalChatReplyStatus,
+): Promise<void> {
+  const token = await getCounselorToken();
+  if (!token) throw new Error('전문가·상담사 로그인이 필요합니다.');
+
+  const res = await fetch(`${getBaseUrl()}/api/portal-chat/threads/${encodeURIComponent(portalId)}/reply-status`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ replyStatus }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(typeof data?.message === 'string' ? data.message : '답변 상태 변경에 실패했습니다.');
+  }
 }
 
 export function formatChatTimestamp(iso: string | null | undefined): string {
@@ -125,4 +165,31 @@ export function formatChatTimestamp(iso: string | null | undefined): string {
     hour: '2-digit',
     minute: '2-digit',
   });
+}
+
+export function threadMatchesSearch(thread: PortalChatThread, query: string): boolean {
+  const q = query.trim().toLowerCase();
+  if (!q) return true;
+  const hay = [
+    thread.displayName,
+    thread.email,
+    thread.phone,
+    thread.accessCode,
+    thread.cohortName,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+  return hay.includes(q);
+}
+
+export function counselorChatProgressHref(thread: PortalChatThread): string | null {
+  const assessmentId = (thread.primaryAssessmentId || '').trim();
+  if (!assessmentId) return null;
+  const params = new URLSearchParams({
+    assessmentId,
+    portalId: thread.portalId,
+    from: 'chat',
+  });
+  return `/counselor/assessments/progress?${params.toString()}`;
 }

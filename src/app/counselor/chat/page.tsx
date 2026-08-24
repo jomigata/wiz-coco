@@ -1,9 +1,8 @@
 'use client';
 
-import AdminPageLayout from '@/components/AdminPageLayout';
-import CounselorPortalChatPanel from '@/components/counselor/CounselorPortalChatPanel';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
+import CounselorPortalChatPanel from '@/components/counselor/CounselorPortalChatPanel';
 
 export default function CounselorChatPage() {
   const { authPending, showLoginRequired } = useAuthResolved();
@@ -19,12 +18,11 @@ export default function CounselorChatPage() {
   }
 
   return (
-    <AdminPageLayout
-      sectionTitle="1:1 채팅"
-      description="내 검사실에서 문의한 내담자와 1:1로 대화합니다."
-      noBodyPadding
-    >
+    <div className="space-y-3">
+      <div>
+        <h1 className="text-lg font-semibold text-white">1:1 채팅</h1>
+      </div>
       <CounselorPortalChatPanel />
-    </AdminPageLayout>
+    </div>
   );
 }

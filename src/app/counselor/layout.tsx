@@ -8,7 +8,7 @@ import { useRequireLoginRedirect } from '@/hooks/useRequireLoginRedirect';
 import RoleGuard from '@/components/RoleGuard';
 import CounselorManageShell from '@/components/counselor/CounselorManageShell';
 import { getCounselorCategoryBySlug } from '@/data/counselorMenu';
-import { isPsychTestsWorkspaceRoute } from '@/lib/counselorManageShell';
+import { isCounselorManageShellRoute } from '@/lib/counselorManageShell';
 import { counselorHubClasses } from '@/components/layout/appChromeTheme';
 import { CounselorPageBody } from '@/components/counselor/CounselorPageSection';
 import CounselorPageTitle from '@/components/counselor/CounselorPageTitle';
@@ -164,7 +164,7 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
 
   const isHubPage = pathname?.startsWith('/counselor/hub/') ?? false;
   const isDashboardHome = pathname === '/counselor' || pathname === '/counselor/';
-  const useManageShell = isPsychTestsWorkspaceRoute(pathname || '');
+  const useManageShell = isCounselorManageShellRoute(pathname || '');
 
   return (
     <RoleGuard allowedRoles={['counselor', 'admin']}>

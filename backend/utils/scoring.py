@@ -21,7 +21,7 @@ def _score_generic_mini_check(responses: dict | list) -> dict:
         "maxScore": scored.get("maxScore"),
         "hookMessage": hook,
         "summary": hook,
-        "counselorNote": "담당 상담사가 곧 확인해 드립니다.",
+        "counselorNote": "검사 케어 매니저가 곧 확인해 드립니다.",
         "responseCount": len(responses),
     }
 

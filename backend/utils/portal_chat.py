@@ -1,11 +1,15 @@
-"""내 검사실 ↔ 담당 상담사 1:1 문의 채팅."""
+"""내 검사실 ↔ 검사 케어 매니저 1:1 문의 채팅."""
 from __future__ import annotations
 
 from datetime import datetime, timezone
 
 from firebase_admin.firestore import SERVER_TIMESTAMP
 
-from config import CLIENT_PORTALS_COLLECTION, PORTAL_CHAT_MESSAGES_COLLECTION, USERS_COLLECTION
+from config import (
+    CLIENT_PORTALS_COLLECTION,
+    PORTAL_CHAT_MESSAGES_COLLECTION,
+    PORTAL_CHAT_SCHEDULED_COLLECTION,
+)
 from utils.client_portal_list import get_counselor_client_portal_detail, list_counselor_client_portals
 
 
@@ -15,10 +19,23 @@ def _iso_timestamp(value) -> str | None:
     return value.isoformat() if hasattr(value, "isoformat") else str(value)
 
 
-def _message_json(doc) -> dict:
+def _parse_scheduled_at(value: str | None) -> datetime | None:
+    raw = (value or "").strip()
+    if not raw:
+        return None
+    try:
+        dt = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt
+
+
+def _message_json(doc, *, scheduled: bool = False, scheduled_id: str | None = None) -> dict:
     d = doc.to_dict() or {}
-    return {
-        "messageId": doc.id,
+    item = {
+        "messageId": scheduled_id or doc.id,
         "portalId": d.get("portalId", ""),
         "counselorId": d.get("counselorId", ""),
         "senderRole": d.get("senderRole", ""),
@@ -27,6 +44,11 @@ def _message_json(doc) -> dict:
         "readByPortal": bool(d.get("readByPortal")),
         "readByCounselor": bool(d.get("readByCounselor")),
     }
+    if scheduled:
+        item["scheduledAt"] = _iso_timestamp(d.get("scheduledAt"))
+        item["isScheduled"] = True
+        item["scheduledPending"] = not bool(d.get("sent"))
+    return item
 
 
 def _get_portal_counselor_id(db, portal_id: str) -> tuple[str | None, dict | None]:
@@ -41,7 +63,105 @@ def _get_portal_counselor_id(db, portal_id: str) -> tuple[str | None, dict | Non
     return (pdata.get("counselorId") or "").strip() or None, pdata
 
 
-def list_portal_chat_messages(db, portal_id: str, *, limit: int = 100) -> list[dict]:
+def update_portal_chat_reply_status(db, portal_id: str, status: str) -> None:
+    pid = (portal_id or "").strip()
+    if not pid:
+        raise ValueError("portalId required")
+    normalized = (status or "").strip().lower()
+    if normalized not in ("pending", "done"):
+        raise ValueError("invalid reply status")
+    db.collection(CLIENT_PORTALS_COLLECTION).document(pid).update({"chatReplyStatus": normalized})
+
+
+def process_due_scheduled_portal_chat(db, counselor_uid: str | None = None) -> None:
+    now = datetime.now(timezone.utc)
+    query = (
+        db.collection(PORTAL_CHAT_SCHEDULED_COLLECTION)
+        .where("sent", "==", False)
+        .limit(100)
+    )
+    for doc in query.stream():
+        data = doc.to_dict() or {}
+        if counselor_uid and (data.get("counselorId") or "").strip() != counselor_uid.strip():
+            continue
+        scheduled_at = data.get("scheduledAt")
+        if scheduled_at is None:
+            continue
+        if hasattr(scheduled_at, "timestamp"):
+            due = datetime.fromtimestamp(scheduled_at.timestamp(), tz=timezone.utc)
+        else:
+            due = _parse_scheduled_at(_iso_timestamp(scheduled_at))
+        if not due or due > now:
+            continue
+        send_portal_chat_message(
+            db,
+            portal_id=(data.get("portalId") or "").strip(),
+            counselor_id=(data.get("counselorId") or "").strip(),
+            sender_role="counselor",
+            message=(data.get("message") or "").strip(),
+            reply_status=(data.get("replyStatus") or "").strip() or None,
+        )
+        doc.reference.update({"sent": True, "sentAt": SERVER_TIMESTAMP})
+
+
+def schedule_portal_chat_message(
+    db,
+    *,
+    portal_id: str,
+    counselor_id: str,
+    message: str,
+    scheduled_at: datetime,
+    reply_status: str | None = None,
+) -> dict:
+    text = (message or "").strip()
+    if not text:
+        raise ValueError("message required")
+    pid = (portal_id or "").strip()
+    cid = (counselor_id or "").strip()
+    if not pid or not cid:
+        raise ValueError("portalId and counselorId required")
+    if scheduled_at.tzinfo is None:
+        scheduled_at = scheduled_at.replace(tzinfo=timezone.utc)
+    if scheduled_at <= datetime.now(timezone.utc):
+        raise ValueError("scheduledAt must be in the future")
+
+    normalized_reply = (reply_status or "").strip().lower() or None
+    if normalized_reply and normalized_reply not in ("pending", "done"):
+        raise ValueError("invalid reply status")
+
+    data = {
+        "portalId": pid,
+        "counselorId": cid,
+        "senderRole": "counselor",
+        "message": text[:4000],
+        "scheduledAt": scheduled_at,
+        "replyStatus": normalized_reply,
+        "sent": False,
+        "createdAt": SERVER_TIMESTAMP,
+    }
+    ref = db.collection(PORTAL_CHAT_SCHEDULED_COLLECTION).document()
+    ref.set(data)
+    snap = ref.get()
+    return _message_json(snap, scheduled=True, scheduled_id=ref.id)
+
+
+def list_pending_scheduled_portal_chat(db, portal_id: str) -> list[dict]:
+    pid = (portal_id or "").strip()
+    if not pid:
+        return []
+    docs = (
+        db.collection(PORTAL_CHAT_SCHEDULED_COLLECTION)
+        .where("portalId", "==", pid)
+        .where("sent", "==", False)
+        .limit(50)
+        .stream()
+    )
+    items = [_message_json(doc, scheduled=True, scheduled_id=doc.id) for doc in docs]
+    items.sort(key=lambda m: m.get("scheduledAt") or "")
+    return items
+
+
+def list_portal_chat_messages(db, portal_id: str, *, limit: int = 100, include_scheduled: bool = False) -> list[dict]:
     pid = (portal_id or "").strip()
     if not pid:
         return []
@@ -53,7 +173,9 @@ def list_portal_chat_messages(db, portal_id: str, *, limit: int = 100) -> list[d
         .stream()
     )
     items = [_message_json(doc) for doc in docs]
-    items.sort(key=lambda m: m.get("createdAt") or "")
+    if include_scheduled:
+        items.extend(list_pending_scheduled_portal_chat(db, pid))
+    items.sort(key=lambda m: m.get("scheduledAt") or m.get("createdAt") or "")
     return items[-cap:]
 
 
@@ -64,6 +186,7 @@ def send_portal_chat_message(
     counselor_id: str,
     sender_role: str,
     message: str,
+    reply_status: str | None = None,
 ) -> dict:
     text = (message or "").strip()
     if not text:
@@ -87,7 +210,14 @@ def send_portal_chat_message(
     ref = db.collection(PORTAL_CHAT_MESSAGES_COLLECTION).document()
     ref.set(data)
     snap = ref.get()
-    return _message_json(snap)
+    item = _message_json(snap)
+
+    if sender_role == "portal":
+        update_portal_chat_reply_status(db, pid, "pending")
+    elif reply_status:
+        update_portal_chat_reply_status(db, pid, reply_status)
+
+    return item
 
 
 def mark_portal_chat_read(db, portal_id: str, *, reader_role: str) -> None:
@@ -115,6 +245,8 @@ def mark_portal_chat_read(db, portal_id: str, *, reader_role: str) -> None:
 
 def list_counselor_chat_threads(db, counselor_uid: str | None) -> list[dict]:
     """상담사용 — 내담자별 최근 메시지 스레드."""
+    process_due_scheduled_portal_chat(db, counselor_uid)
+
     portal_result = list_counselor_client_portals(db, counselor_uid, status="active")
     portal_items = portal_result.get("items") or []
 
@@ -153,12 +285,23 @@ def list_counselor_chat_threads(db, counselor_uid: str | None) -> list[dict]:
         if not pid:
             continue
         meta = meta_by_portal.get(pid) or {}
+        assessments = item.get("assessments") or []
+        primary_assessment_id = ""
+        if assessments:
+            primary_assessment_id = (assessments[0].get("assessmentId") or "").strip()
+        reply_status = (item.get("chatReplyStatus") or "").strip().lower()
+        if reply_status not in ("pending", "done"):
+            reply_status = "pending" if int(meta.get("unreadCount") or 0) > 0 else "done"
         threads.append(
             {
                 "portalId": pid,
                 "displayName": item.get("displayName") or "내담자",
+                "email": item.get("email") or "",
+                "phone": item.get("phone") or "",
                 "accessCode": item.get("accessCode") or "",
                 "cohortName": item.get("cohortName") or "",
+                "primaryAssessmentId": primary_assessment_id,
+                "chatReplyStatus": reply_status,
                 "lastMessage": meta.get("lastMessage") or "",
                 "lastMessageAt": meta.get("lastMessageAt"),
                 "unreadCount": int(meta.get("unreadCount") or 0),
@@ -166,8 +309,12 @@ def list_counselor_chat_threads(db, counselor_uid: str | None) -> list[dict]:
         )
 
     threads.sort(
-        key=lambda t: (t.get("lastMessageAt") or "", t.get("displayName") or ""),
-        reverse=True,
+        key=lambda t: (
+            0 if t.get("chatReplyStatus") == "pending" else 1,
+            -(int(t.get("unreadCount") or 0)),
+            t.get("lastMessageAt") or "",
+            t.get("displayName") or "",
+        ),
     )
     return threads
 
