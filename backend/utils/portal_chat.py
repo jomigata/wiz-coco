@@ -1,4 +1,4 @@
-"""내 검사실 ↔ 검사 케어 매니저 1:1 문의 채팅."""
+"""내 검사실 ↔ 심리 매니저 1:1 문의 채팅."""
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -335,3 +335,38 @@ def assert_portal_session(db, portal_id: str) -> tuple[str, dict]:
     if not cid or not pdata:
         raise LookupError("portal not found")
     return cid, pdata
+
+
+def _get_scheduled_doc(db, scheduled_id: str, counselor_uid: str | None):
+    sid = (scheduled_id or "").strip()
+    if not sid:
+        raise LookupError("not found")
+    ref = db.collection(PORTAL_CHAT_SCHEDULED_COLLECTION).document(sid)
+    doc = ref.get()
+    if not doc.exists:
+        raise LookupError("not found")
+    data = doc.to_dict() or {}
+    if data.get("sent"):
+        raise ValueError("already sent")
+    if counselor_uid and (data.get("counselorId") or "").strip() != counselor_uid.strip():
+        raise PermissionError("forbidden")
+    return ref, data
+
+
+def cancel_scheduled_portal_chat(db, scheduled_id: str, counselor_uid: str | None) -> None:
+    ref, _ = _get_scheduled_doc(db, scheduled_id, counselor_uid)
+    ref.delete()
+
+
+def send_scheduled_portal_chat_now(db, scheduled_id: str, counselor_uid: str | None) -> dict:
+    ref, data = _get_scheduled_doc(db, scheduled_id, counselor_uid)
+    item = send_portal_chat_message(
+        db,
+        portal_id=(data.get("portalId") or "").strip(),
+        counselor_id=(data.get("counselorId") or "").strip(),
+        sender_role="counselor",
+        message=(data.get("message") or "").strip(),
+        reply_status=(data.get("replyStatus") or "").strip() or None,
+    )
+    ref.update({"sent": True, "sentAt": SERVER_TIMESTAMP})
+    return item

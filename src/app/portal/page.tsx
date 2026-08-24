@@ -1,7 +1,6 @@
 'use client';
 
 import React, { Suspense, useCallback, useEffect, useState } from 'react';
-import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { fetchPortalDashboard, fetchPortalCareAssignments, changeClientPortalPin, type PortalDashboardAssessment, type PortalLegacyTestGroup } from '@/lib/clientPortalApi';
 import { listResults, getClientResult, TestResultItem, clearForceGuestForAccessCode } from '@/lib/assessmentApi';
@@ -9,7 +8,7 @@ import PortalTestList from '@/components/portal/PortalTestList';
 import PortalHomeHero from '@/components/portal/PortalHomeHero';
 import PortalCounselorInquiryChat from '@/components/portal/PortalCounselorInquiryChat';
 import PortalCareAssignmentsPanel from '@/components/portal/PortalCareAssignmentsPanel';
-import PortalLegacyMaterialsPanel from '@/components/portal/PortalLegacyMaterialsPanel';
+import PortalReportsPanel from '@/components/portal/PortalReportsPanel';
 import PortalResultViewModal, { type PortalResultViewState } from '@/components/portal/PortalResultViewModal';
 import {
   resultSubmittedLabel,
@@ -31,7 +30,7 @@ import { setPortalReturnPath } from '@/lib/portalReturnPath';
 import { clearJoinFreshParticipantFlow } from '@/lib/joinFlowMode';
 import { getJoinTestPath } from '@/lib/portalTestNavigation';
 import { buildPortalHomeOverview, type PortalHomeTestItem } from '@/lib/portalHomeTask';
-import { PORTAL_MY_TEST_LIST_LABEL } from '@/lib/portalCareManagerLabels';
+import { PORTAL_INQUIRY_SECTION_TITLE, PORTAL_MY_TEST_LIST_LABEL } from '@/lib/portalCareManagerLabels';
 import type { PortalCareAssignmentItem } from '@/types/careAssignment';
 
 type PortalAssessment = PortalDashboardAssessment;
@@ -42,7 +41,7 @@ function portalAssessmentGroupTitle(a: PortalAssessment): string {
   if (!title || title === org) return org;
   return `${org} / ${title}`;
 }
-type PortalTab = 'tests' | 'care' | 'materials';
+type PortalTab = 'tests' | 'chat' | 'reports';
 
 function PortalLoading() {
   return (
@@ -204,14 +203,14 @@ function ClientPortalContent() {
 
   useEffect(() => {
     const tab = (searchParams.get('tab') || '').trim();
-    if (tab === 'care') {
-      setPortalTab('care');
-      setShowRecords(true);
-    } else if (tab === 'materials') {
-      setPortalTab('materials');
-      setShowRecords(true);
-    } else if (tab === 'tests') {
+    if (tab === 'care' || tab === 'tests') {
       setPortalTab('tests');
+      setShowRecords(true);
+    } else if (tab === 'chat') {
+      setPortalTab('chat');
+      setShowRecords(true);
+    } else if (tab === 'reports' || tab === 'materials') {
+      setPortalTab('reports');
       setShowRecords(true);
     }
   }, [searchParams]);
@@ -370,7 +369,7 @@ function ClientPortalContent() {
 
   const handleHomeCareAction = () => {
     setShowRecords(true);
-    setPortalTab('care');
+    setPortalTab('tests');
   };
 
   const openMySpace = () => {
@@ -380,19 +379,18 @@ function ClientPortalContent() {
 
   if (loading) return <PortalLoading />;
 
-  const legacyMaterialsCount = legacyTests.reduce(
-    (sum, g) => sum + (g.testList?.length || 0),
-    0,
-  );
-
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-900 pt-24 px-4">
+      <div className="min-h-screen bg-gray-900 px-4 pt-4">
         <div className="max-w-lg mx-auto text-center">
           <p className="text-red-400 mb-4">{error}</p>
-          <Link href="/portal/login/" className="text-blue-400 hover:text-blue-300">
+          <button
+            type="button"
+            onClick={() => router.push('/portal/login/')}
+            className="text-blue-400 hover:text-blue-300"
+          >
             다시 로그인
-          </Link>
+          </button>
         </div>
       </div>
     );
@@ -441,7 +439,8 @@ function ClientPortalContent() {
             </>
           ) : (
             <>
-              <div className="relative flex items-center py-1">
+              <div className="sticky top-16 z-30 -mx-4 border-b border-slate-800/80 bg-gray-900/95 px-4 pb-0 backdrop-blur-sm">
+              <div className="relative flex items-center py-2">
                 <button
                   type="button"
                   onClick={() => setShowRecords(false)}
@@ -468,43 +467,33 @@ function ClientPortalContent() {
             </button>
             <button
               type="button"
-              onClick={() => setPortalTab('care')}
+              onClick={() => setPortalTab('chat')}
               className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
-                portalTab === 'care'
+                portalTab === 'chat'
+                  ? 'border-indigo-400 text-indigo-300'
+                  : 'border-transparent text-slate-500 hover:text-slate-300'
+              }`}
+            >
+              {PORTAL_INQUIRY_SECTION_TITLE}
+            </button>
+            <button
+              type="button"
+              onClick={() => setPortalTab('reports')}
+              className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
+                portalTab === 'reports'
                   ? 'border-violet-400 text-violet-300'
                   : 'border-transparent text-slate-500 hover:text-slate-300'
               }`}
             >
-              추가 과제·치료 ({careTotalCount})
-            </button>
-            <button
-              type="button"
-              onClick={() => setPortalTab('materials')}
-              className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
-                portalTab === 'materials'
-                  ? 'border-amber-400 text-amber-300'
-                  : 'border-transparent text-slate-500 hover:text-slate-300'
-              }`}
-            >
-              기타 자료 ({legacyMaterialsCount})
+              결과보고서
             </button>
           </div>
+              </div>
 
-          {portalTab === 'care' ? (
-            <PortalCareAssignmentsPanel assignedAssessmentIds={assessments.map((a) => a.assessmentId)} />
-          ) : portalTab === 'materials' ? (
-            <PortalLegacyMaterialsPanel
-              legacyTests={legacyTests}
-              onViewResult={(accessCode, params) =>
-                openResultView(
-                  accessCode,
-                  params.testName,
-                  params.resultId,
-                  params.roundNumber,
-                  params.resultItem,
-                )
-              }
-            />
+          {portalTab === 'chat' ? (
+            <PortalCounselorInquiryChat counselorName={counselorName} embeddedInTab />
+          ) : portalTab === 'reports' ? (
+            <PortalReportsPanel />
           ) : (
             <div id="portal-results" className="scroll-mt-24 space-y-6">
           {assessments.length === 0 ? (
@@ -559,10 +548,10 @@ function ClientPortalContent() {
               );
             })
           )}
+
+              <PortalCareAssignmentsPanel assignedAssessmentIds={assessments.map((a) => a.assessmentId)} />
             </div>
           )}
-
-          <PortalCounselorInquiryChat counselorName={counselorName} />
             </>
           )}
         </main>

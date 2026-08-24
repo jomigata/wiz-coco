@@ -26,7 +26,6 @@ export type PortalTestListProps = {
     roundNumber: number | null;
     resultItem: TestResultItem;
   }) => void;
-  /** 이전 상담 레거시 — 시작 비활성 */
   readOnly?: boolean;
 };
 
@@ -56,10 +55,35 @@ export default function PortalTestList({
         const hasCompleted = completedResults.length > 0;
         const latestResult = completedResultsForDisplay[0];
 
+        const openResult = () => {
+          if (!latestResult) return;
+          onViewResult({
+            testName,
+            resultId: latestResult.resultId,
+            roundNumber: null,
+            resultItem: latestResult,
+          });
+        };
+
         return (
           <li
             key={t.testId}
-            className="rounded-lg border border-slate-600 bg-slate-700/80 px-4 py-3"
+            className={`rounded-lg border border-slate-600 bg-slate-700/80 px-4 py-3 ${
+              hasCompleted ? 'cursor-pointer transition hover:border-emerald-500/35 hover:bg-slate-700' : ''
+            }`}
+            onClick={hasCompleted ? openResult : undefined}
+            onKeyDown={
+              hasCompleted
+                ? (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      openResult();
+                    }
+                  }
+                : undefined
+            }
+            role={hasCompleted ? 'button' : undefined}
+            tabIndex={hasCompleted ? 0 : undefined}
           >
             <div className="flex items-start gap-3">
               <span
@@ -69,12 +93,17 @@ export default function PortalTestList({
                 {index + 1}
               </span>
               <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-start justify-between gap-2">
+                <div className="flex items-start justify-between gap-2">
                   <span className="font-medium text-white">{testName}</span>
-                  {!hasCompleted && !readOnly ? (
+                  {hasCompleted ? (
+                    <span className="shrink-0 text-sm text-emerald-400">결과보기 →</span>
+                  ) : !readOnly ? (
                     <button
                       type="button"
-                      onClick={() => onStartTest(String(t.testId))}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onStartTest(String(t.testId));
+                      }}
                       className="shrink-0 text-sm text-cyan-300 transition hover:text-cyan-200"
                     >
                       시작하기 →
@@ -97,24 +126,6 @@ export default function PortalTestList({
                     </span>
                   ) : null}
                 </div>
-
-                {hasCompleted && latestResult ? (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      onViewResult({
-                        testName,
-                        resultId: latestResult.resultId,
-                        roundNumber: null,
-                        resultItem: latestResult,
-                      })
-                    }
-                    className="mt-3 flex w-full items-center justify-between rounded-lg border border-slate-600 bg-slate-800/80 px-3 py-2.5 text-left text-sm transition hover:border-emerald-500/40 hover:bg-slate-800"
-                  >
-                    <span className="text-slate-300">검사 결과</span>
-                    <span className="shrink-0 text-emerald-400">결과보기 →</span>
-                  </button>
-                ) : null}
               </div>
             </div>
           </li>

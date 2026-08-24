@@ -1,4 +1,4 @@
-"""내 검사실 ↔ 검사 케어 매니저 1:1 문의 채팅 API."""
+"""내 검사실 ↔ 심리 매니저 1:1 문의 채팅 API."""
 from flask import Blueprint, jsonify, request
 
 from auth_middleware import require_counselor
@@ -14,6 +14,8 @@ from utils.portal_chat import (
     process_due_scheduled_portal_chat,
     schedule_portal_chat_message,
     send_portal_chat_message,
+    send_scheduled_portal_chat_now,
+    cancel_scheduled_portal_chat,
     update_portal_chat_reply_status,
     _parse_scheduled_at,
 )
@@ -165,3 +167,33 @@ def counselor_update_reply_status(portal_id: str):
     except ValueError as exc:
         return jsonify({"error": "Bad Request", "message": str(exc)}), 400
     return jsonify({"ok": True, "replyStatus": reply_status})
+
+
+@bp.route("/scheduled/<scheduled_id>", methods=["DELETE"])
+@require_counselor
+def counselor_cancel_scheduled(scheduled_id: str):
+    db = get_firestore()
+    try:
+        cancel_scheduled_portal_chat(db, scheduled_id, scope_counselor_uid())
+    except LookupError:
+        return jsonify({"error": "Not Found", "message": "예약 메시지를 찾을 수 없습니다."}), 404
+    except PermissionError:
+        return jsonify({"error": "Forbidden", "message": "접근 권한이 없습니다."}), 403
+    except ValueError as exc:
+        return jsonify({"error": "Bad Request", "message": str(exc)}), 400
+    return jsonify({"ok": True})
+
+
+@bp.route("/scheduled/<scheduled_id>/send-now", methods=["POST"])
+@require_counselor
+def counselor_send_scheduled_now(scheduled_id: str):
+    db = get_firestore()
+    try:
+        item = send_scheduled_portal_chat_now(db, scheduled_id, scope_counselor_uid())
+    except LookupError:
+        return jsonify({"error": "Not Found", "message": "예약 메시지를 찾을 수 없습니다."}), 404
+    except PermissionError:
+        return jsonify({"error": "Forbidden", "message": "접근 권한이 없습니다."}), 403
+    except ValueError as exc:
+        return jsonify({"error": "Bad Request", "message": str(exc)}), 400
+    return jsonify({"message": item})

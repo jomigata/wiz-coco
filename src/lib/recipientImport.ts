@@ -85,3 +85,37 @@ export async function parseRecipientFile(file: File): Promise<RecipientRow[]> {
   const text = await file.text();
   return parseRecipientText(text);
 }
+
+const SAMPLE_ROWS: RecipientRow[] = [
+  { displayName: '홍길동', email: 'hong@example.com', phone: '010-1234-5678' },
+  { displayName: '김영희', email: 'kim@example.com', phone: '010-9876-5432' },
+];
+
+function triggerBrowserDownload(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
+
+export function downloadRecipientSampleText(): void {
+  const lines = ['이름,이메일,휴대폰', ...SAMPLE_ROWS.map((r) => `${r.displayName},${r.email},${r.phone}`)];
+  const blob = new Blob([`\uFEFF${lines.join('\n')}`], { type: 'text/csv;charset=utf-8' });
+  triggerBrowserDownload(blob, 'wizcoco-recipient-sample.csv');
+}
+
+export function downloadRecipientSampleExcel(): void {
+  const sheet = XLSX.utils.aoa_to_sheet([
+    ['이름', '이메일', '휴대폰'],
+    ...SAMPLE_ROWS.map((r) => [r.displayName, r.email, r.phone]),
+  ]);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, sheet, '명단');
+  const buffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+  const blob = new Blob([buffer], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  });
+  triggerBrowserDownload(blob, 'wizcoco-recipient-sample.xlsx');
+}

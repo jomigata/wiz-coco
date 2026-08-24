@@ -11,14 +11,19 @@ import { readClientPortalSession } from '@/lib/clientPortalSession';
 import {
   PORTAL_INQUIRY_SECTION_DESC,
   PORTAL_INQUIRY_SECTION_TITLE,
-  PORTAL_CARE_MANAGER_CHAT_LABEL,
+  PORTAL_PSYCH_MANAGER_CHAT_LABEL,
 } from '@/lib/portalCareManagerLabels';
 
 export type PortalCounselorInquiryChatProps = {
   counselorName?: string;
+  /** 탭 안에 넣을 때 섹션 타이틀 중복 숨김 */
+  embeddedInTab?: boolean;
 };
 
-export default function PortalCounselorInquiryChat({ counselorName }: PortalCounselorInquiryChatProps) {
+export default function PortalCounselorInquiryChat({
+  counselorName,
+  embeddedInTab = false,
+}: PortalCounselorInquiryChatProps) {
   const [messages, setMessages] = useState<PortalChatMessage[]>([]);
   const [draft, setDraft] = useState('');
   const [loading, setLoading] = useState(true);
@@ -77,16 +82,20 @@ export default function PortalCounselorInquiryChat({ counselorName }: PortalCoun
     }
   };
 
-  const chatSenderLabel = (counselorName || '').trim() || PORTAL_CARE_MANAGER_CHAT_LABEL;
+  const chatSenderLabel = (counselorName || '').trim() || PORTAL_PSYCH_MANAGER_CHAT_LABEL;
 
   return (
     <section className="rounded-xl border border-slate-700/80 bg-slate-800/40 p-5">
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div>
-          <h3 className="text-sm font-semibold text-slate-200">{PORTAL_INQUIRY_SECTION_TITLE}</h3>
-          <p className="mt-1 text-sm text-slate-400">{PORTAL_INQUIRY_SECTION_DESC}</p>
+      {!embeddedInTab ? (
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div>
+            <h3 className="text-sm font-semibold text-slate-200">{PORTAL_INQUIRY_SECTION_TITLE}</h3>
+            <p className="mt-1 text-sm text-slate-400">{PORTAL_INQUIRY_SECTION_DESC}</p>
+          </div>
         </div>
-      </div>
+      ) : (
+        <p className="text-sm text-slate-400">{PORTAL_INQUIRY_SECTION_DESC}</p>
+      )}
 
       <div
         ref={scrollRef}

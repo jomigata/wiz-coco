@@ -5,11 +5,13 @@ import AuthLink from '@/components/auth/AuthLink';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import { counselorClientProgressHref } from '@/lib/counselorClientRoutes';
 import {
+  cancelCounselorScheduledMessage,
   counselorChatProgressHref,
   fetchCounselorChatMessages,
   fetchCounselorChatThreads,
   formatChatTimestamp,
   sendCounselorChatMessage,
+  sendCounselorScheduledMessageNow,
   threadMatchesSearch,
   type PortalChatMessage,
   type PortalChatReplyStatus,
@@ -173,19 +175,48 @@ export default function CounselorPortalChatPanel() {
     }
   };
 
+  const handleSendScheduledNow = async (scheduledId: string) => {
+    if (!selectedPortalId || sending) return;
+    setSending(true);
+    setError('');
+    try {
+      await sendCounselorScheduledMessageNow(scheduledId);
+      await loadMessages(selectedPortalId);
+      await loadThreads(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '즉시 발송에 실패했습니다.');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleCancelScheduled = async (scheduledId: string) => {
+    if (!selectedPortalId || sending) return;
+    setSending(true);
+    setError('');
+    try {
+      await cancelCounselorScheduledMessage(scheduledId);
+      await loadMessages(selectedPortalId);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '예약 취소에 실패했습니다.');
+    } finally {
+      setSending(false);
+    }
+  };
+
   if (loadingThreads) {
     return <LoadingMessage className="py-12" message="채팅 목록을 불러오는 중…" />;
   }
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+      <div className="sticky top-16 z-20 -mx-1 rounded-lg border border-slate-800/80 bg-[#0b1120]/95 px-1 py-2 backdrop-blur-sm">
         <input
           type="search"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="내담자 이름·이메일·전화번호·그룹명·나의코드 검색"
-          className="w-full rounded-lg border border-slate-600 bg-slate-950/70 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-indigo-500/50 focus:outline-none sm:max-w-md"
+          className="w-full rounded-lg border border-slate-600 bg-slate-950/70 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-indigo-500/50 focus:outline-none"
         />
       </div>
 
@@ -292,8 +323,28 @@ export default function CounselorPortalChatPanel() {
                             </p>
                           ) : null}
                           <p className="whitespace-pre-wrap break-words">{msg.message}</p>
+                          {scheduled ? (
+                            <div className="mt-2 flex flex-wrap gap-2">
+                              <button
+                                type="button"
+                                disabled={sending}
+                                onClick={() => void handleSendScheduledNow(msg.messageId)}
+                                className="rounded-md bg-indigo-700 px-2 py-1 text-[11px] font-medium text-white hover:bg-indigo-600 disabled:opacity-50"
+                              >
+                                지금 발송
+                              </button>
+                              <button
+                                type="button"
+                                disabled={sending}
+                                onClick={() => void handleCancelScheduled(msg.messageId)}
+                                className="rounded-md border border-slate-500 px-2 py-1 text-[11px] text-slate-200 hover:bg-white/5 disabled:opacity-50"
+                              >
+                                취소
+                              </button>
+                            </div>
+                          ) : null}
                           <p className={`mt-1 text-[11px] ${mine ? 'text-indigo-200/70' : 'text-slate-400'}`}>
-                            {mine ? '나' : selectedThread.displayName} ·{' '}
+                            {mine ? '매니저' : selectedThread.displayName} ·{' '}
                             {formatChatTimestamp(scheduled ? msg.scheduledAt : msg.createdAt)}
                           </p>
                         </div>
@@ -343,15 +394,18 @@ export default function CounselorPortalChatPanel() {
                     />
                     예약 전송
                   </label>
-                  {scheduleEnabled ? (
+                </div>
+                {scheduleEnabled ? (
+                  <div className="flex flex-col-reverse items-start gap-2">
                     <input
                       type="datetime-local"
                       value={scheduledAt}
                       onChange={(e) => setScheduledAt(e.target.value)}
-                      className="rounded border border-slate-600 bg-slate-950/70 px-2 py-1 text-xs text-white"
+                      className="rounded border border-slate-600 bg-slate-950/70 px-2 py-1.5 text-xs text-white"
                     />
-                  ) : null}
-                </div>
+                    <p className="text-[11px] text-slate-500">예약 일시 (캘린더는 입력란 위쪽으로 열립니다)</p>
+                  </div>
+                ) : null}
                 <div className="flex gap-2">
                   <textarea
                     value={draft}

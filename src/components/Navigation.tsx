@@ -25,6 +25,7 @@ import CounselorMainCategoryDropdown from '@/components/nav/CounselorMainCategor
 import ThreeTierMobileMenuSection from '@/components/nav/ThreeTierMobileMenuSection';
 import { readClientPortalSession } from '@/lib/clientPortalSession';
 import { navigateToClientPortalLogin } from '@/lib/portalLoginNavigation';
+import { useAppChromeNav } from '@/components/AppChrome';
 import ProfessionalAccessIcons from '@/components/nav/ProfessionalAccessIcons';
 import NavMenuDivider from '@/components/nav/NavMenuDivider';
 import NavMegaMenuBackdrop from '@/components/nav/NavMegaMenuBackdrop';
@@ -34,6 +35,8 @@ import { NAV_MEGA_MENU_BG } from '@/components/layout/appChromeTheme';
 export default function Navigation() {
   const router = useRouter();
   const pathname = usePathname();
+  const { topNavMode } = useAppChromeNav();
+  const compactHeader = topNavMode === 'compact';
   const navigateTo = (href: string) => pushWithAuthSession(router, href);
   const { user, logout } = useFirebaseAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -426,11 +429,8 @@ export default function Navigation() {
             </span>
           </Link>
 
-          {/* Desktop Navigation
-               ★ overflow-x-auto/hidden 을 이 계층 어디에도 쓰면 안 됨 ★
-               CSS 명세: 한 축이 auto/scroll/hidden 이면 다른 축의 visible 이 auto 로 강제됨
-               → absolute 드롭다운이 clip 되어 호버 메뉴가 보이지 않는 현상 발생
-               해결: 모든 래퍼에 overflow: visible(기본값) 유지 */}
+          {/* Desktop Navigation — compact 모드에서는 브랜드만 표시 */}
+          {!compactHeader ? (
           <div className="hidden min-h-0 md:flex min-w-0 flex-1 items-center justify-end gap-3 xl:gap-5">
             <div className="flex min-w-0 flex-1 flex-nowrap items-center justify-end gap-0.5 sm:gap-1 lg:gap-1.5">
               {/* 검사시작 — 나의코드 로그인 또는 내 검사실 */}
@@ -944,8 +944,10 @@ export default function Navigation() {
               </div>
             </div>
           </div>
+          ) : null}
 
-          {/* 모바일: 전문가 아이콘 + 햄버거 */}
+          {/* 모바일: 전문가 아이콘 + 햄버거 — compact 모드에서는 숨김 */}
+          {!compactHeader ? (
           <div className="flex md:hidden shrink-0 items-center gap-1">
             <ProfessionalAccessIcons
               variant="nav"
@@ -983,11 +985,12 @@ export default function Navigation() {
               </svg>
             </button>
           </div>
+          ) : null}
         </div>
       </nav>
 
       {/* 모바일 메뉴 오버레이 */}
-      {isMobileMenuOpen && (
+      {!compactHeader && isMobileMenuOpen && (
         <>
           {/* 배경 오버레이 */}
           <div 

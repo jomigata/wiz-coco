@@ -197,7 +197,9 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
                   </div>
                 }
               >
-                <CounselorManageShell>{children}</CounselorManageShell>
+                <div className="flex min-h-0 flex-1 flex-col overflow-hidden lg:max-h-[calc(100dvh-4.25rem)]">
+                  <CounselorManageShell>{children}</CounselorManageShell>
+                </div>
               </Suspense>
             ) : (
               <>
