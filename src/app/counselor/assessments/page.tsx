@@ -4,9 +4,11 @@ import React, { Suspense, useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import AssessmentList from '@/components/counselor/AssessmentList';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
+import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
 import { LoadingMessage } from '@/components/ui/LoadingMessage';
 import { isLoginRequiredError } from '@/lib/authRedirect';
+import { isCounselorRoleRequiredMessage, syncCounselorRoleViaApi } from '@/lib/counselorAuth';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
 import { parseAssessmentListSearchFromUrl } from '@/lib/counselorAssessmentListSearch';
 import {
@@ -24,6 +26,7 @@ function AssessmentListPageContent() {
   const searchParams = useSearchParams();
   const initialSearchQuery = parseAssessmentListSearchFromUrl(searchParams.get('search'));
   const { user, authPending, showLoginRequired } = useAuthResolved();
+  const { refreshAuthRole } = useFirebaseAuth();
   const counselorUid = user?.uid;
   const adminUser = isAdmin(user?.role ?? getAppRoleSync());
   const [assessments, setAssessments] = useState<CounselorAssessment[]>([]);
@@ -128,8 +131,26 @@ function AssessmentListPageContent() {
         <AuthRequiredState description="Firebase에 로그인한 상태에서 다시 시도해 주세요." />
       ) : error ? (
         <div className="rounded-xl bg-red-900/20 border border-red-600/30 p-5">
-          <p className="text-red-200 font-medium">{error}</p>
-          <p className="text-red-400/70 text-sm mt-0.5">Firebase에 로그인한 상태에서 다시 시도해 주세요.</p>
+          <p className="text-red-200 font-medium">
+            {isCounselorRoleRequiredMessage(error)
+              ? '상담사 권한 동기화가 필요합니다. 아래 버튼으로 다시 시도해 주세요.'
+              : error}
+          </p>
+          {isCounselorRoleRequiredMessage(error) ? (
+            <button
+              type="button"
+              onClick={() => {
+                void syncCounselorRoleViaApi()
+                  .then(() => refreshAuthRole())
+                  .finally(() => window.location.reload());
+              }}
+              className="mt-3 rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500"
+            >
+              권한 동기화 후 새로고침
+            </button>
+          ) : (
+            <p className="text-red-400/70 text-sm mt-0.5">Firebase에 로그인한 상태에서 다시 시도해 주세요.</p>
+          )}
         </div>
       ) : (
         <>

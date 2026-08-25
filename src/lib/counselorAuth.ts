@@ -9,6 +9,13 @@ import { readSWRCache, writeSWRCache } from '@/utils/staleWhileRevalidateCache';
 const TOKEN_CACHE_KEY = 'swr:counselorIdToken';
 const TOKEN_CACHE_MAX_AGE_MS = 4 * 60 * 1000;
 
+function getFlaskApiBaseUrl(): string {
+  if (process.env.NEXT_PUBLIC_FLASK_API_URL) {
+    return process.env.NEXT_PUBLIC_FLASK_API_URL;
+  }
+  return 'http://localhost:5000';
+}
+
 let inFlightToken: Promise<string | null> | null = null;
 
 /** 로그인 직후 API 호출을 앞당기기 위해 토큰을 미리 캐시 */
@@ -67,6 +74,32 @@ export async function getCounselorToken(): Promise<string | null> {
     inFlightToken = null;
   });
   return inFlightToken;
+}
+
+/** 상담사 API 403 — 승인됐으나 Firestore role 미동기화 */
+export function isCounselorRoleRequiredMessage(message: unknown): boolean {
+  return /counselor role required/i.test(String(message || ''));
+}
+
+/** bootstrap-role API로 승인 상담사 role 동기화 후 토큰 갱신 */
+export async function syncCounselorRoleViaApi(): Promise<boolean> {
+  if (typeof window === 'undefined') return false;
+  try {
+    const { auth } = initializeFirebase();
+    const user = auth?.currentUser;
+    if (!user) return false;
+    const token = await user.getIdToken(true);
+    primeCounselorIdToken(token);
+    const res = await fetch(`${getFlaskApiBaseUrl()}/api/auth/bootstrap-role`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) return false;
+    const data = (await res.json().catch(() => ({}))) as { role?: string; upgraded?: boolean };
+    return data.role === 'counselor' || data.role === 'admin';
+  } catch {
+    return false;
+  }
 }
 
 /** Firebase auth.currentUser.uid (동기). 로그인 전이면 null */

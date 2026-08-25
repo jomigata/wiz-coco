@@ -4,7 +4,7 @@
  */
 
 import { isValidAccessCodeInput, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
-import { getCounselorToken, getCounselorUid, getCounselorUidSync } from '@/lib/counselorAuth';
+import { getCounselorToken, getCounselorUid, getCounselorUidSync, isCounselorRoleRequiredMessage, syncCounselorRoleViaApi } from '@/lib/counselorAuth';
 import { getAppRoleSync, isAdmin } from '@/utils/roleUtils';
 import { readClientPortalSession } from '@/lib/clientPortalSession';
 import { getJoinParticipantAuthHeader } from '@/lib/joinParticipantSession';
@@ -687,14 +687,24 @@ export async function listAssessmentsPage(params?: {
   if (params?.ownOnly) search.set('ownOnly', '1');
 
   const qs = search.toString() ? `?${search.toString()}` : '';
-  const res = await fetch(`${getBaseUrl()}/api/assessments${qs}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new Error(data?.message || data?.error || '목록 조회에 실패했습니다.');
-  }
-  return data as AssessmentListPageResult;
+  const fetchPage = async (retried = false): Promise<AssessmentListPageResult> => {
+    const authToken = await getCounselorToken();
+    if (!authToken) throw new Error('로그인이 필요합니다.');
+    const res = await fetch(`${getBaseUrl()}/api/assessments${qs}`, {
+      headers: { Authorization: `Bearer ${authToken}` },
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const msg = data?.message || data?.error || '목록 조회에 실패했습니다.';
+      if (!retried && res.status === 403 && isCounselorRoleRequiredMessage(msg)) {
+        const synced = await syncCounselorRoleViaApi();
+        if (synced) return fetchPage(true);
+      }
+      throw new Error(msg);
+    }
+    return data as AssessmentListPageResult;
+  };
+  return fetchPage();
 }
 
 export async function fetchAssessmentListStats(

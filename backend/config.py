@@ -35,6 +35,7 @@ USERS_COLLECTION = "users"
 CLIENT_PORTALS_COLLECTION = "clientPortals"
 NOTIFICATION_QUEUE_COLLECTION = "notificationQueue"
 JOIN_PARTICIPANTS_COLLECTION = "joinParticipants"
+COUNSELOR_APPLICATIONS_COLLECTION = "counselorApplications"
 
 # 그룹코드 일괄 발급 시 내담자 수 상한
 BULK_PORTAL_MAX_ROWS = int(os.getenv("BULK_PORTAL_MAX_ROWS", "2000"))

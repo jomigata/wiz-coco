@@ -6,10 +6,43 @@ from flask import request, jsonify
 
 from firebase_init import verify_id_token, verify_id_token_claims
 from firebase_init import get_firestore
-from config import ORGANIZATIONS_COLLECTION, USERS_COLLECTION, BOOTSTRAP_ADMIN_EMAILS, BOOTSTRAP_COUNSELOR_EMAILS
+from config import ORGANIZATIONS_COLLECTION, USERS_COLLECTION, BOOTSTRAP_ADMIN_EMAILS, BOOTSTRAP_COUNSELOR_EMAILS, COUNSELOR_APPLICATIONS_COLLECTION
 
 _ROLE_CACHE: dict[str, tuple[str | None, float]] = {}
 _ROLE_CACHE_TTL_SEC = 300
+
+
+def invalidate_role_cache(uid: str) -> None:
+    _ROLE_CACHE.pop(uid, None)
+
+
+def promote_role_from_approved_application(uid: str, email: str | None = None) -> str | None:
+    """
+    승인된 상담사 신청(counselorApplications.status=approved)이 있으면
+    users/{uid}.role 을 counselor 로 승격.
+    """
+    if not uid:
+        return None
+    try:
+        db = get_firestore()
+        apps = (
+            db.collection(COUNSELOR_APPLICATIONS_COLLECTION)
+            .where("applicantUid", "==", uid)
+            .where("status", "==", "approved")
+            .limit(1)
+            .stream()
+        )
+        if not any(True for _ in apps):
+            return None
+        user_ref = db.collection(USERS_COLLECTION).document(uid)
+        payload: dict[str, str] = {"role": "counselor"}
+        if email:
+            payload["email"] = email.strip().lower()
+        user_ref.set(payload, merge=True)
+        invalidate_role_cache(uid)
+        return "counselor"
+    except Exception:
+        return None
 
 
 def get_bearer_uid():
@@ -73,6 +106,12 @@ def _resolve_counselor_role(uid: str, email: str | None) -> str | None:
             if bootstrap_role:
                 user_ref.set({"role": bootstrap_role, "email": email_norm}, merge=True)
                 role = bootstrap_role
+                invalidate_role_cache(uid)
+
+        if role not in ("admin", "counselor"):
+            promoted = promote_role_from_approved_application(uid, email)
+            if promoted:
+                role = promoted
     except Exception:
         role = None
 

@@ -3,7 +3,7 @@ from flask import Blueprint, jsonify
 from firebase_admin.firestore import SERVER_TIMESTAMP
 
 from firebase_init import get_firestore
-from auth_middleware import get_bearer_uid, get_bearer_email_optional
+from auth_middleware import get_bearer_uid, get_bearer_email_optional, promote_role_from_approved_application
 from config import (
     USERS_COLLECTION,
     TEST_RESULTS_COLLECTION,
@@ -51,7 +51,15 @@ def bootstrap_role():
         return jsonify({"uid": uid, "role": desired, "upgraded": True}), 200
 
     if role in ("admin", "counselor", "user", "org_admin"):
+        if role not in ("admin", "counselor"):
+            promoted = promote_role_from_approved_application(uid, email or None)
+            if promoted:
+                return jsonify({"uid": uid, "role": promoted, "upgraded": True}), 200
         return jsonify({"uid": uid, "role": role}), 200
+
+    promoted = promote_role_from_approved_application(uid, email or None)
+    if promoted:
+        return jsonify({"uid": uid, "role": promoted, "upgraded": True}), 200
 
     bootstrap_role_value = desired or "user"
     ref.set(
@@ -81,64 +89,72 @@ def link_legacy_data():
             }
         ), 200
 
-    db = get_firestore()
-    linked = 0
-    seen_ids: set[str] = set()
+    try:
+        db = get_firestore()
+        linked = 0
+        seen_ids: set[str] = set()
 
-    def _link_snap(snap) -> None:
-        nonlocal linked
-        if snap.id in seen_ids:
-            return
-        seen_ids.add(snap.id)
-        data = snap.to_dict() or {}
-        updates: dict = {}
-        if data.get("uid") != uid:
-            updates["uid"] = uid
-        if data.get("clientUid") != uid:
-            updates["clientUid"] = uid
-        if updates:
-            updates["updatedAt"] = SERVER_TIMESTAMP
-            snap.reference.update(updates)
-            linked += 1
+        def _link_snap(snap) -> None:
+            nonlocal linked
+            if snap.id in seen_ids:
+                return
+            seen_ids.add(snap.id)
+            data = snap.to_dict() or {}
+            updates: dict = {}
+            if data.get("uid") != uid:
+                updates["uid"] = uid
+            if data.get("clientUid") != uid:
+                updates["clientUid"] = uid
+            if updates:
+                updates["updatedAt"] = SERVER_TIMESTAMP
+                snap.reference.update(updates)
+                linked += 1
 
-    for field in ("email", "clientEmail"):
-        refs = (
-            db.collection(TEST_RESULTS_COLLECTION)
-            .where(field, "==", email)
-            .limit(500)
-            .stream()
+        for field in ("email", "clientEmail"):
+            refs = (
+                db.collection(TEST_RESULTS_COLLECTION)
+                .where(field, "==", email)
+                .limit(500)
+                .stream()
+            )
+            for snap in refs:
+                _link_snap(snap)
+
+        for udoc in db.collection(USERS_COLLECTION).where("email", "==", email).limit(20).stream():
+            old_uid = udoc.id
+            if not old_uid or old_uid == uid:
+                continue
+            for snap in (
+                db.collection(TEST_RESULTS_COLLECTION)
+                .where("uid", "==", old_uid)
+                .limit(500)
+                .stream()
+            ):
+                _link_snap(snap)
+
+        user_ref = db.collection(USERS_COLLECTION).document(uid)
+        user_ref.set(
+            {
+                "email": email,
+                "linkedLegacyAt": SERVER_TIMESTAMP,
+            },
+            merge=True,
         )
-        for snap in refs:
-            _link_snap(snap)
 
-    # users 컬렉션에 같은 이메일로 남아 있는 예전 uid 문서 기준 연결
-    for udoc in db.collection(USERS_COLLECTION).where("email", "==", email).limit(20).stream():
-        old_uid = udoc.id
-        if not old_uid or old_uid == uid:
-            continue
-        for snap in (
-            db.collection(TEST_RESULTS_COLLECTION)
-            .where("uid", "==", old_uid)
-            .limit(500)
-            .stream()
-        ):
-            _link_snap(snap)
-
-    # users 컬렉션: 동일 이메일 다른 uid 프로필에 연결 힌트 저장(관리용)
-    user_ref = db.collection(USERS_COLLECTION).document(uid)
-    user_ref.set(
-        {
-            "email": email,
-            "linkedLegacyAt": SERVER_TIMESTAMP,
-        },
-        merge=True,
-    )
-
-    return jsonify(
-        {
-            "uid": uid,
-            "email": email,
-            "linkedTestResults": linked,
-        }
-    ), 200
+        return jsonify(
+            {
+                "uid": uid,
+                "email": email,
+                "linkedTestResults": linked,
+            }
+        ), 200
+    except Exception as exc:
+        return jsonify(
+            {
+                "uid": uid,
+                "email": email,
+                "linkedTestResults": 0,
+                "message": f"레거시 연결을 건너뛰었습니다: {str(exc)[:120]}",
+            }
+        ), 200
 
