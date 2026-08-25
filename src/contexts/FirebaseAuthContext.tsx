@@ -655,4 +655,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
 export function useFirebaseAuth(): FirebaseAuthContextValue {
   const ctx = useContext(FirebaseAuthContext);
   if (!ctx) {
-    thro
+    throw new Error('useFirebaseAuth must be used within FirebaseAuthProvider');
+  }
+  return ctx;
+}
