@@ -17,6 +17,7 @@ import type {
 } from '@/types/clientPortal';
 import type { PortalCareAssignmentsResult, SubmitPortalCareProgressInput, SubmitPortalCareProgressResult } from '@/types/careAssignment';
 import { getCounselorToken } from '@/lib/assessmentApi';
+import { isCounselorRoleRequiredMessage, syncCounselorRoleViaApi } from '@/lib/counselorAuth';
 import { normalizeAccessCodeInput, normalizeMyCodeInput, normalizeJoinPinDigits } from '@/lib/accessCodeFormat';
 
 const getBaseUrl = (): string => {
@@ -731,38 +732,48 @@ export async function pushAssessmentsToPortals(body: {
   return data as CounselorPushAssessmentResult;
 }
 
+async function counselorGetJson<T>(path: string, fallbackMessage: string): Promise<T> {
+  const fetchOnce = async (): Promise<Response> => {
+    const token = await getCounselorToken();
+    if (!token) throw new Error('전문가·상담사 로그인이 필요합니다.');
+    return fetch(`${getBaseUrl()}${path}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  };
+
+  let res = await fetchOnce();
+  let data = await res.json().catch(() => ({}));
+  const msg = typeof data?.message === 'string' ? data.message : fallbackMessage;
+  if (!res.ok && res.status === 403 && isCounselorRoleRequiredMessage(msg)) {
+    const synced = await syncCounselorRoleViaApi();
+    if (synced.ok) {
+      res = await fetchOnce();
+      data = await res.json().catch(() => ({}));
+    }
+  }
+  if (!res.ok) {
+    throw new Error(typeof data?.message === 'string' ? data.message : fallbackMessage);
+  }
+  return data as T;
+}
+
 export async function fetchCounselorMonitoringHub(params?: {
   cohortId?: string;
 }): Promise<CounselorMonitoringHubResult> {
-  const token = await getCounselorToken();
-  if (!token) throw new Error('전문가·상담사 로그인이 필요합니다.');
-
   const search = new URLSearchParams();
   if (params?.cohortId) search.set('cohortId', params.cohortId);
   const qs = search.toString() ? `?${search.toString()}` : '';
-
-  const res = await fetch(`${getBaseUrl()}/api/client-portals/monitoring${qs}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new Error(typeof data?.message === 'string' ? data.message : '모니터링 허브 조회에 실패했습니다.');
-  }
-  return data as CounselorMonitoringHubResult;
+  return counselorGetJson<CounselorMonitoringHubResult>(
+    `/api/client-portals/monitoring${qs}`,
+    '모니터링 허브 조회에 실패했습니다.',
+  );
 }
 
 export async function fetchCounselorCohortMonitoring(): Promise<CounselorCohortMonitoringResult> {
-  const token = await getCounselorToken();
-  if (!token) throw new Error('전문가·상담사 로그인이 필요합니다.');
-
-  const res = await fetch(`${getBaseUrl()}/api/client-portals/monitoring/cohorts`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new Error(typeof data?.message === 'string' ? data.message : '그룹 모니터링 조회에 실패했습니다.');
-  }
-  return data as CounselorCohortMonitoringResult;
+  return counselorGetJson<CounselorCohortMonitoringResult>(
+    '/api/client-portals/monitoring/cohorts',
+    '그룹 모니터링 조회에 실패했습니다.',
+  );
 }
 
 export interface CounselorOrgLiaison {

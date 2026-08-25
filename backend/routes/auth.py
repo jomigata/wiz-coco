@@ -4,7 +4,7 @@ from firebase_admin.firestore import SERVER_TIMESTAMP
 
 from firebase_init import get_firestore
 from auth_middleware import get_bearer_uid, get_bearer_email_optional, invalidate_role_cache
-from utils.counselor_role_sync import persist_user_role, resolve_counselor_access_role
+from utils.counselor_role_sync import coerce_role, persist_user_role, resolve_counselor_access_role
 from config import (
     USERS_COLLECTION,
     TEST_RESULTS_COLLECTION,
@@ -25,39 +25,37 @@ def bootstrap_role():
         return jsonify({"error": "Unauthorized", "message": "Valid Firebase ID token required"}), 401
 
     email = get_bearer_email_optional()
+    stored_role = None
     try:
         db = get_firestore()
         ref = db.collection(USERS_COLLECTION).document(uid)
         doc = ref.get()
         existing = (doc.to_dict() or {}) if doc.exists else {}
         stored_role = existing.get("role")
+    except Exception:
+        stored_role = None
 
+    try:
         resolved = resolve_counselor_access_role(uid, email, stored_role)
-        if resolved in ("admin", "counselor"):
-            invalidate_role_cache(uid)
-            upgraded = resolved != stored_role
-            return jsonify({"uid": uid, "role": resolved, "upgraded": upgraded}), 200
-
-        if stored_role in ("admin", "counselor", "user", "org_admin"):
-            invalidate_role_cache(uid)
-            return jsonify({"uid": uid, "role": stored_role}), 200
-
-        bootstrap_role_value = "user"
-        persist_user_role(uid, bootstrap_role_value, email)
         invalidate_role_cache(uid)
-        return jsonify({"uid": uid, "role": bootstrap_role_value}), 200
-    except Exception as exc:
-        # Firestore 일시 오류 — 부트스트랩 이메일이면 API role만 반환
-        fallback = resolve_counselor_access_role(uid, email, None)
-        if fallback in ("admin", "counselor"):
-            invalidate_role_cache(uid)
-            return jsonify({"uid": uid, "role": fallback, "upgraded": True}), 200
-        return jsonify(
-            {
-                "error": "Internal Server Error",
-                "message": f"Role bootstrap failed: {str(exc)[:160]}",
-            }
-        ), 500
+        if resolved in ("admin", "counselor"):
+            return jsonify(
+                {
+                    "uid": uid,
+                    "role": resolved,
+                    "upgraded": resolved != stored_role,
+                }
+            ), 200
+
+        current = coerce_role(stored_role) or "user"
+        if current == "user" and stored_role is not None:
+            persist_user_role(uid, current, email)
+        return jsonify({"uid": uid, "role": current}), 200
+    except Exception:
+        fallback = resolve_counselor_access_role(uid, email, stored_role)
+        invalidate_role_cache(uid)
+        role = fallback if fallback in ("admin", "counselor") else "user"
+        return jsonify({"uid": uid, "role": role, "degraded": True}), 200
 
 
 @bp.route("/link-legacy-data", methods=["POST"])

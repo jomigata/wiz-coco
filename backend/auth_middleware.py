@@ -67,7 +67,10 @@ def _resolve_counselor_role(uid: str, email: str | None) -> str | None:
     except Exception:
         stored_role = None
 
-    role = resolve_counselor_access_role(uid, email, stored_role)
+    try:
+        role = resolve_counselor_access_role(uid, email, stored_role)
+    except Exception:
+        role = None
     if role in ("admin", "counselor"):
         _ROLE_CACHE[uid] = (role, now)
     return role

@@ -22,7 +22,9 @@ import {
   writeCachedCounselorDashboard,
 } from '@/lib/counselorDashboardCache';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
+import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
+import { isCounselorRoleRequiredMessage, syncCounselorRoleViaApi } from '@/lib/counselorAuth';
 import type {
   CounselorCohortMonitoringResult,
   CounselorMonitoringHubResult,
@@ -103,6 +105,7 @@ type TodayRow = {
 
 export default function CounselorHomeDashboard() {
   const { user, authPending, showLoginRequired } = useAuthResolved();
+  const { refreshAuthRole } = useFirebaseAuth();
   const counselorUid = user?.uid;
   const initialCache = useMemo(
     () => (counselorUid ? readCachedCounselorDashboard(counselorUid) : null),
@@ -240,9 +243,29 @@ export default function CounselorHomeDashboard() {
   }
 
   if (error && !hub && !cohorts) {
+    const roleError = isCounselorRoleRequiredMessage(error);
     return (
       <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-        {error}
+        <p>
+          {roleError
+            ? '상담사 권한 동기화가 필요합니다. 아래 버튼으로 다시 시도해 주세요.'
+            : error}
+        </p>
+        {roleError ? (
+          <button
+            type="button"
+            onClick={() => {
+              void syncCounselorRoleViaApi()
+                .then((result) => {
+                  if (result.ok) return refreshAuthRole();
+                })
+                .finally(() => window.location.reload());
+            }}
+            className="mt-3 rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500"
+          >
+            권한 동기화 후 새로고침
+          </button>
+        ) : null}
       </div>
     );
   }
