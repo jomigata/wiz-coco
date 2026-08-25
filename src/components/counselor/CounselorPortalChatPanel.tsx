@@ -14,7 +14,6 @@ import {
   sendCounselorScheduledMessageNow,
   threadMatchesSearch,
   type PortalChatMessage,
-  type PortalChatReplyStatus,
   type PortalChatThread,
 } from '@/lib/portalChatApi';
 import { LoadingMessage } from '@/components/ui/LoadingMessage';
@@ -31,9 +30,6 @@ function sortThreads(threads: PortalChatThread[], selectedPortalId: string | nul
       if (a.portalId === selectedPortalId) return -1;
       if (b.portalId === selectedPortalId) return 1;
     }
-    const pendingDiff =
-      (a.chatReplyStatus === 'pending' ? 0 : 1) - (b.chatReplyStatus === 'pending' ? 0 : 1);
-    if (pendingDiff !== 0) return pendingDiff;
     const unreadDiff = (b.unreadCount || 0) - (a.unreadCount || 0);
     if (unreadDiff !== 0) return unreadDiff;
     const timeDiff = (b.lastMessageAt || '').localeCompare(a.lastMessageAt || '');
@@ -53,7 +49,6 @@ export default function CounselorPortalChatPanel() {
   const [messages, setMessages] = useState<PortalChatMessage[]>([]);
   const [draft, setDraft] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [replyStatus, setReplyStatus] = useState<PortalChatReplyStatus>('done');
   const [scheduleEnabled, setScheduleEnabled] = useState(false);
   const [scheduledAt, setScheduledAt] = useState('');
   const [loadingThreads, setLoadingThreads] = useState(true);
@@ -130,10 +125,6 @@ export default function CounselorPortalChatPanel() {
   const handleSelectThread = (portalId: string) => {
     if (portalId === selectedPortalId) return;
     setSelectedPortalId(portalId);
-    const thread = threads.find((t) => t.portalId === portalId);
-    if (thread?.chatReplyStatus) {
-      setReplyStatus(thread.chatReplyStatus);
-    }
   };
 
   const handleSend = async () => {
@@ -141,6 +132,7 @@ export default function CounselorPortalChatPanel() {
     if (!text || !selectedPortalId || sending) return;
 
     let scheduledIso: string | undefined;
+    const wasScheduled = scheduleEnabled && Boolean(scheduledAt);
     if (scheduleEnabled && scheduledAt) {
       const dt = new Date(scheduledAt);
       if (Number.isNaN(dt.getTime())) {
@@ -158,14 +150,13 @@ export default function CounselorPortalChatPanel() {
     setError('');
     try {
       const item = await sendCounselorChatMessage(selectedPortalId, text, {
-        replyStatus,
         scheduledAt: scheduledIso,
       });
       setDraft('');
-      if (item.isScheduled && item.scheduledPending) {
-        setMessages((prev) => [...prev, item]);
-      } else {
-        setMessages((prev) => [...prev, item]);
+      setMessages((prev) => [...prev, item]);
+      if (wasScheduled) {
+        setScheduleEnabled(false);
+        setScheduledAt('');
       }
       await loadThreads(true);
     } catch (err) {
@@ -209,8 +200,8 @@ export default function CounselorPortalChatPanel() {
   }
 
   return (
-    <div className="space-y-3">
-      <div className="sticky top-16 z-20 -mx-1 rounded-lg border border-slate-800/80 bg-[#0b1120]/95 px-1 py-2 backdrop-blur-sm">
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
+      <div className="shrink-0">
         <input
           type="search"
           value={searchQuery}
@@ -220,13 +211,12 @@ export default function CounselorPortalChatPanel() {
         />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(260px,340px)_1fr] lg:min-h-[520px]">
-        <aside className="rounded-xl border border-slate-700/80 bg-slate-900/40">
-          <div className="grid grid-cols-[1fr_auto] gap-2 border-b border-slate-800/80 px-3 py-2 text-[11px] font-medium uppercase tracking-wide text-slate-500">
-            <span>내담자</span>
-            <span className="w-14 text-center">답변</span>
+      <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-[minmax(260px,340px)_1fr]">
+        <aside className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-700/80 bg-slate-900/40">
+          <div className="shrink-0 border-b border-slate-800/80 px-3 py-2 text-[11px] font-medium uppercase tracking-wide text-slate-500">
+            내담자
           </div>
-          <ul className="max-h-[480px] overflow-y-auto divide-y divide-slate-800/80">
+          <ul className="min-h-0 flex-1 divide-y divide-slate-800/80 overflow-y-auto">
             {sortedThreads.length === 0 ? (
               <li className="px-4 py-6 text-sm text-slate-500">
                 {searchQuery.trim() ? '검색 결과가 없습니다.' : '등록된 내담자가 없습니다.'}
@@ -239,36 +229,23 @@ export default function CounselorPortalChatPanel() {
                     <button
                       type="button"
                       onClick={() => handleSelectThread(thread.portalId)}
-                      className={`grid w-full grid-cols-[1fr_auto] items-start gap-2 border-l-2 px-3 py-3 text-left transition ${
+                      className={`w-full border-l-2 px-3 py-3 text-left transition ${
                         active
                           ? 'border-cyan-400 bg-cyan-950/40 ring-1 ring-inset ring-cyan-500/35'
                           : 'border-transparent hover:bg-white/5'
                       }`}
                     >
-                      <div className="min-w-0">
-                        <div className="flex items-start justify-between gap-2">
-                          <p className="truncate text-sm font-medium text-white">{threadTitle(thread)}</p>
-                          {thread.unreadCount > 0 ? (
-                            <span className="shrink-0 rounded-full bg-red-600 px-2 py-0.5 text-[11px] font-semibold text-white">
-                              {thread.unreadCount}
-                            </span>
-                          ) : null}
-                        </div>
-                        <p className="mt-1 text-xs text-slate-500">
-                          {thread.lastMessageAt
-                            ? formatChatTimestamp(thread.lastMessageAt)
-                            : '대화 없음'}
-                        </p>
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="truncate text-sm font-medium text-white">{threadTitle(thread)}</p>
+                        {thread.unreadCount > 0 ? (
+                          <span className="shrink-0 rounded-full bg-red-600 px-2 py-0.5 text-[11px] font-semibold text-white">
+                            {thread.unreadCount}
+                          </span>
+                        ) : null}
                       </div>
-                      <span
-                        className={`mt-0.5 w-14 shrink-0 rounded-full px-1.5 py-0.5 text-center text-[10px] font-medium ${
-                          thread.chatReplyStatus === 'pending'
-                            ? 'bg-amber-900/50 text-amber-200'
-                            : 'bg-emerald-900/40 text-emerald-200'
-                        }`}
-                      >
-                        {thread.chatReplyStatus === 'pending' ? '미완료' : '완료'}
-                      </span>
+                      <p className="mt-1 text-xs text-slate-500">
+                        {thread.lastMessageAt ? formatChatTimestamp(thread.lastMessageAt) : '대화 없음'}
+                      </p>
                     </button>
                   </li>
                 );
@@ -277,10 +254,10 @@ export default function CounselorPortalChatPanel() {
           </ul>
         </aside>
 
-        <section className="flex min-h-[420px] flex-col rounded-xl border border-slate-700/80 bg-slate-900/40">
+        <section className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-700/80 bg-slate-900/40">
           {selectedThread ? (
             <>
-              <div className="flex flex-wrap items-start justify-between gap-2 border-b border-slate-700/70 px-4 py-3">
+              <div className="flex shrink-0 flex-wrap items-start justify-between gap-2 border-b border-slate-700/70 px-4 py-3">
                 <div className="min-w-0">
                   <h3 className="text-sm font-semibold text-white">{threadTitle(selectedThread)}</h3>
                   <p className="text-xs text-slate-500">
@@ -297,7 +274,7 @@ export default function CounselorPortalChatPanel() {
                 ) : null}
               </div>
 
-              <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto p-4">
+              <div ref={scrollRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
                 {loadingMessages ? (
                   <p className="text-sm text-slate-500">대화를 불러오는 중…</p>
                 ) : messages.length === 0 ? (
@@ -331,7 +308,7 @@ export default function CounselorPortalChatPanel() {
                                 onClick={() => void handleSendScheduledNow(msg.messageId)}
                                 className="rounded-md bg-indigo-700 px-2 py-1 text-[11px] font-medium text-white hover:bg-indigo-600 disabled:opacity-50"
                               >
-                                지금 발송
+                                즉시발송
                               </button>
                               <button
                                 type="button"
@@ -354,32 +331,26 @@ export default function CounselorPortalChatPanel() {
                 )}
               </div>
 
-              {error ? (
-                <p className="mx-4 mb-2 rounded-md border border-red-500/30 bg-red-950/40 px-3 py-2 text-sm text-red-300">
-                  {error}
-                </p>
-              ) : null}
+              <div className="shrink-0 space-y-3 border-t border-slate-700/70 p-4">
+                {error ? (
+                  <p className="rounded-md border border-red-500/30 bg-red-950/40 px-3 py-2 text-sm text-red-300">
+                    {error}
+                  </p>
+                ) : null}
 
-              <div className="space-y-3 border-t border-slate-700/70 p-4">
+                {scheduleEnabled ? (
+                  <div className="flex flex-col gap-2">
+                    <input
+                      type="datetime-local"
+                      value={scheduledAt}
+                      onChange={(e) => setScheduledAt(e.target.value)}
+                      className="rounded border border-slate-600 bg-slate-950/70 px-2 py-1.5 text-xs text-white"
+                    />
+                    <p className="text-[11px] text-slate-500">예약 일시를 선택하세요.</p>
+                  </div>
+                ) : null}
+
                 <div className="flex flex-wrap items-center gap-3 text-xs text-slate-300">
-                  <label className="inline-flex items-center gap-1.5">
-                    <input
-                      type="radio"
-                      name="chat-reply-status"
-                      checked={replyStatus === 'done'}
-                      onChange={() => setReplyStatus('done')}
-                    />
-                    답변 완료
-                  </label>
-                  <label className="inline-flex items-center gap-1.5">
-                    <input
-                      type="radio"
-                      name="chat-reply-status"
-                      checked={replyStatus === 'pending'}
-                      onChange={() => setReplyStatus('pending')}
-                    />
-                    답변 미완료
-                  </label>
                   <label className="inline-flex items-center gap-1.5">
                     <input
                       type="checkbox"
@@ -395,17 +366,7 @@ export default function CounselorPortalChatPanel() {
                     예약 전송
                   </label>
                 </div>
-                {scheduleEnabled ? (
-                  <div className="flex flex-col-reverse items-start gap-2">
-                    <input
-                      type="datetime-local"
-                      value={scheduledAt}
-                      onChange={(e) => setScheduledAt(e.target.value)}
-                      className="rounded border border-slate-600 bg-slate-950/70 px-2 py-1.5 text-xs text-white"
-                    />
-                    <p className="text-[11px] text-slate-500">예약 일시 (캘린더는 입력란 위쪽으로 열립니다)</p>
-                  </div>
-                ) : null}
+
                 <div className="flex gap-2">
                   <textarea
                     value={draft}
@@ -432,7 +393,7 @@ export default function CounselorPortalChatPanel() {
               </div>
             </>
           ) : (
-            <div className="flex flex-1 items-center justify-center p-8 text-sm text-slate-500">
+            <div className="flex min-h-0 flex-1 items-center justify-center p-8 text-sm text-slate-500">
               왼쪽에서 내담자를 선택하세요.
             </div>
           )}

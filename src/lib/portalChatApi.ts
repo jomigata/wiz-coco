@@ -1,5 +1,5 @@
 /**
- * 내 검사실 ↔ 심리 매니저 1:1 문의 채팅 API
+ * 내 검사실 ↔ 검사 매니저 1:1 문의 채팅 API
  */
 
 import { getCounselorToken } from '@/lib/assessmentApi';
@@ -58,14 +58,18 @@ export async function fetchPortalChatMessages(portalToken: string): Promise<Port
 export async function sendPortalChatMessage(
   portalToken: string,
   message: string,
+  options?: { scheduledAt?: string },
 ): Promise<PortalChatMessage> {
+  const body: Record<string, string> = { message };
+  if (options?.scheduledAt) body.scheduledAt = options.scheduledAt;
+
   const res = await fetch(`${getBaseUrl()}/api/portal-chat/me/messages`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Portal ${portalToken}`,
     },
-    body: JSON.stringify({ message }),
+    body: JSON.stringify(body),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {

@@ -7,6 +7,8 @@ import CounselorCategoryHub from '@/components/counselor/CounselorCategoryHub';
 import { getCounselorCategoryBySlug } from '@/data/counselorMenu';
 import {
   COUNSELOR_PSYCH_TESTS_SLUG,
+  COUNSELOR_TOOLS_SLUG,
+  getCounselorCategoryDefaultHref,
   getPsychTestsDefaultHref,
 } from '@/lib/counselorManageShell';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
@@ -24,6 +26,8 @@ export default function CounselorCategoryHubPageClient({ slug }: Props) {
   useEffect(() => {
     if (slug === COUNSELOR_PSYCH_TESTS_SLUG) {
       router.replace(getPsychTestsDefaultHref());
+    } else if (slug === COUNSELOR_TOOLS_SLUG) {
+      router.replace(getCounselorCategoryDefaultHref(COUNSELOR_TOOLS_SLUG));
     }
   }, [slug, router]);
 
@@ -33,6 +37,10 @@ export default function CounselorCategoryHubPageClient({ slug }: Props) {
 
   if (slug === COUNSELOR_PSYCH_TESTS_SLUG) {
     return <AuthLoadingState className="py-8" message="심리검사 관리로 이동 중…" />;
+  }
+
+  if (slug === COUNSELOR_TOOLS_SLUG) {
+    return <AuthLoadingState className="py-8" message="1:1 채팅으로 이동 중…" />;
   }
 
   if (authPending) {

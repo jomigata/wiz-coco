@@ -18,6 +18,7 @@ import { clearAssessmentListSearch } from '@/lib/counselorAssessmentListSearch';
 import { getAppRoleSync, isAdmin } from '@/utils/roleUtils';
 import {
   COUNSELOR_PSYCH_TESTS_SLUG,
+  getCounselorCategoryDefaultHref,
   isMenuItemActive,
   resolveCounselorCategorySlugForPath,
 } from '@/lib/counselorManageShell';
@@ -296,10 +297,6 @@ function stripCategoryNumber(label: string): string {
   return label.replace(/^\d+\.\s*/, '');
 }
 
-function getPsychTestsEntryHref(category: (typeof counselorMenuCategories)[number]): string {
-  return category.subcategories[0]?.items[0]?.href || '/counselor/assessments';
-}
-
 function getCategoryEntryHref(
   category: (typeof counselorMenuCategories)[number],
   adminUser: boolean,
@@ -307,8 +304,5 @@ function getCategoryEntryHref(
   if (category.slug === 'data' && adminUser) {
     return PERMANENTLY_DELETED_ASSESSMENTS_HREF;
   }
-  if (category.slug === COUNSELOR_PSYCH_TESTS_SLUG) {
-    return getPsychTestsEntryHref(category);
-  }
-  return getCounselorCategoryHubHref(category.slug);
+  return getCounselorCategoryDefaultHref(category.slug);
 }

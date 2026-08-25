@@ -1,4 +1,4 @@
-"""내 검사실 ↔ 심리 매니저 1:1 문의 채팅 API."""
+"""내 검사실 ↔ 검사 매니저 1:1 문의 채팅 API."""
 from flask import Blueprint, jsonify, request
 
 from auth_middleware import require_counselor
@@ -40,7 +40,8 @@ def portal_list_messages():
         return jsonify({"error": "Not Found", "message": "나의코드를 찾을 수 없습니다."}), 404
 
     limit = request.args.get("limit", 100)
-    messages = list_portal_chat_messages(db, portal_id, limit=limit)
+    process_due_scheduled_portal_chat(db, portal_id=portal_id)
+    messages = list_portal_chat_messages(db, portal_id, limit=limit, include_scheduled=True)
     mark_portal_chat_read(db, portal_id, reader_role="portal")
     return jsonify({"messages": messages})
 
@@ -60,6 +61,9 @@ def portal_send_message():
     if not message:
         return jsonify({"error": "Bad Request", "message": "메시지를 입력해 주세요."}), 400
 
+    scheduled_raw = (body.get("scheduledAt") or "").strip() or None
+    scheduled_at = _parse_scheduled_at(scheduled_raw)
+
     db = get_firestore()
     try:
         counselor_id, _ = assert_portal_session(db, portal_id)
@@ -67,13 +71,23 @@ def portal_send_message():
         return jsonify({"error": "Not Found", "message": "나의코드를 찾을 수 없습니다."}), 404
 
     try:
-        item = send_portal_chat_message(
-            db,
-            portal_id=portal_id,
-            counselor_id=counselor_id,
-            sender_role="portal",
-            message=message,
-        )
+        if scheduled_at:
+            item = schedule_portal_chat_message(
+                db,
+                portal_id=portal_id,
+                counselor_id=counselor_id,
+                message=message,
+                scheduled_at=scheduled_at,
+                sender_role="portal",
+            )
+        else:
+            item = send_portal_chat_message(
+                db,
+                portal_id=portal_id,
+                counselor_id=counselor_id,
+                sender_role="portal",
+                message=message,
+            )
     except ValueError as exc:
         return jsonify({"error": "Bad Request", "message": str(exc)}), 400
     return jsonify({"message": item}), 201

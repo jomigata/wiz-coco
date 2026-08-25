@@ -405,11 +405,14 @@ function ClientPortalContent() {
               <PortalHomeHero
                 displayName={displayName}
                 counselorName={counselorName}
-                counselorEmail={counselorEmail}
                 overview={homeOverview}
                 onTestAction={handleHomeTestAction}
                 onCareAction={homeOverview.careTask ? handleHomeCareAction : undefined}
                 onOpenMySpace={openMySpace}
+                onOpenInquiry={() => {
+                  setShowRecords(true);
+                  setPortalTab('chat');
+                }}
               />
               <div className="rounded-xl border border-slate-700/60 bg-slate-800/40 px-4 py-3 text-sm text-slate-400 flex flex-wrap items-center justify-between gap-2">
                 <span>
@@ -493,7 +496,13 @@ function ClientPortalContent() {
           {portalTab === 'chat' ? (
             <PortalCounselorInquiryChat counselorName={counselorName} embeddedInTab />
           ) : portalTab === 'reports' ? (
-            <PortalReportsPanel />
+            <PortalReportsPanel
+              assessments={assessments}
+              resultsByCode={resultsByCode}
+              onViewResult={({ accessCode, testName, resultId, roundNumber, resultItem }) =>
+                openResultView(accessCode, testName, resultId, roundNumber, resultItem)
+              }
+            />
           ) : (
             <div id="portal-results" className="scroll-mt-24 space-y-6">
           {assessments.length === 0 ? (

@@ -171,20 +171,29 @@ export function portalHomeTaskSubtitle(task: PortalHomeTask): string {
   if (task.kind === 'test') {
     return task.mode === 'continue'
       ? '중간까지 진행한 검사를 이어서 마무리해 주세요.'
-      : '오늘 할 검사입니다. 편한 시간에 진행해 주세요.';
+      : '진행 현황에서 남은 검사를 진행해 주세요.';
   }
   if (task.kind === 'care') {
-    return '심리 매니저가 남긴 과제입니다.';
+    return '검사 매니저가 남긴 과제입니다.';
   }
   if (task.kind === 'all_done') {
-    return '배정된 검사를 모두 마쳤습니다. 심리 매니저가 결과를 확인합니다.';
+    return '배정된 검사를 모두 마쳤습니다. 검사 매니저가 결과를 확인합니다.';
   }
-  return '배정된 검사가 없습니다. 심리 매니저에게 문의해 주세요.';
+  return '배정된 검사가 없습니다. 검사 매니저에게 문의해 주세요.';
 }
 
-export function portalHomeTestsSubtitle(pendingTests: number, totalTests: number): string {
+export function portalProgressSubtitle(pendingTests: number, totalTests: number): string {
   if (totalTests <= 0) {
-    return '배정된 검사가 없습니다. 심리 매니저에게 문의해 주세요.';
+    return '배정된 검사가 없습니다. 검사 매니저에게 문의해 주세요.';
   }
-  return `오늘할 검사 (${pendingTests}/${totalTests})입니다.`;
+  const completed = totalTests - pendingTests;
+  if (pendingTests <= 0) {
+    return `검사 진행 현황 (${completed}/${totalTests}) — 배정된 검사를 모두 완료했습니다.`;
+  }
+  return `검사 진행 현황 (${completed}/${totalTests}) — 남은 검사를 진행해 주세요.`;
+}
+
+/** @deprecated use portalProgressSubtitle */
+export function portalHomeTestsSubtitle(pendingTests: number, totalTests: number): string {
+  return portalProgressSubtitle(pendingTests, totalTests);
 }

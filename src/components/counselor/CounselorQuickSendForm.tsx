@@ -23,8 +23,11 @@ import {
 import { fetchMyCredits } from '@/lib/commerceApi';
 import { GROUP_RECIPIENT_MAX } from '@/lib/groupRecipientLimits';
 import {
-  downloadRecipientSampleExcel,
-  downloadRecipientSampleText,
+  downloadGroupRecipientSampleCsv,
+  downloadGroupRecipientSampleTxt,
+  getGroupRecipientSamplePreviewText,
+} from '@/lib/groupRecipientSampleDownload';
+import {
   formatRecipientRowsPreview,
   mergeRecipients,
   parseRecipientFile,
@@ -67,7 +70,8 @@ export default function CounselorQuickSendForm({
   const [manualRows, setManualRows] = useState<RecipientRow[]>([{ ...EMPTY_ROW }]);
   const [fileRows, setFileRows] = useState<RecipientRow[]>([]);
   const [fileLabel, setFileLabel] = useState('');
-  const [filePreview, setFilePreview] = useState('');
+  const [samplePreviewKind, setSamplePreviewKind] = useState<'txt' | 'csv' | null>(null);
+  const [showFilePreview, setShowFilePreview] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [firstSendTrialEligible, setFirstSendTrialEligible] = useState(false);
@@ -101,6 +105,34 @@ export default function CounselorQuickSendForm({
     return resolveTemplateTestList(template);
   }, [template, templateId, customTestIds]);
   const recipients = useMemo(() => mergeRecipients(manualRows, fileRows), [manualRows, fileRows]);
+
+  const filePreviewText = useMemo(
+    () => (fileRows.length > 0 ? formatRecipientRowsPreview(fileRows) : ''),
+    [fileRows],
+  );
+
+  const filePreviewLayout = useMemo(() => {
+    if (!filePreviewText) return null;
+    const lines = filePreviewText.split('\n');
+    const lineCount = lines.length;
+    const longestLine = lines.reduce((max, line) => Math.max(max, line.length), 0);
+    const widthCh = Math.min(Math.max(longestLine + 2, 28), 120);
+    return { widthCh, lineCount };
+  }, [filePreviewText]);
+
+  const samplePreviewText = useMemo(
+    () => (samplePreviewKind ? getGroupRecipientSamplePreviewText() : ''),
+    [samplePreviewKind],
+  );
+
+  const samplePreviewLayout = useMemo(() => {
+    if (!samplePreviewText) return null;
+    const lines = samplePreviewText.split('\n');
+    const lineCount = lines.length;
+    const longestLine = lines.reduce((max, line) => Math.max(max, line.length), 0);
+    const widthCh = Math.min(Math.max(longestLine + 2, 32), 120);
+    return { widthCh, lineCount };
+  }, [samplePreviewText]);
 
   const finish = (assessmentId: string) => {
     if (variant === 'modal') {
@@ -164,12 +196,10 @@ export default function CounselorQuickSendForm({
     try {
       const parsed = await parseRecipientFile(file);
       setFileRows(parsed);
-      setFilePreview(formatRecipientRowsPreview(parsed));
       setError('');
     } catch {
       setFileRows([]);
       setFileLabel('');
-      setFilePreview('');
       setError('파일을 읽지 못했습니다. CSV·텍스트·엑셀 형식을 확인해 주세요.');
     }
   };
@@ -430,60 +460,7 @@ export default function CounselorQuickSendForm({
         </div>
 
         <div>
-          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-            <p className="text-sm font-semibold text-slate-200">2. 누구에게 보낼까요?</p>
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={loading}
-                className="text-sky-300 transition hover:text-sky-200 disabled:opacity-50"
-              >
-                파일 첨부하기
-              </button>
-              <span className="text-slate-600" aria-hidden>
-                |
-              </span>
-              <span className="text-slate-500">샘플받기</span>
-              <button
-                type="button"
-                disabled={loading}
-                onClick={downloadRecipientSampleExcel}
-                className="text-sky-300 transition hover:text-sky-200 disabled:opacity-50"
-              >
-                (엑셀)
-              </button>
-              <button
-                type="button"
-                disabled={loading}
-                onClick={downloadRecipientSampleText}
-                className="text-sky-300 transition hover:text-sky-200 disabled:opacity-50"
-              >
-                (텍스트)
-              </button>
-            </div>
-          </div>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".csv,.txt,.tsv,.xlsx,.xls,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
-            className="hidden"
-            onChange={handleFileChange}
-          />
-          {fileLabel ? (
-            <div className="group relative mb-2 inline-block max-w-full">
-              <p className="inline-flex cursor-default items-center gap-2 rounded-lg border border-sky-500/30 bg-sky-950/25 px-3 py-1.5 text-xs text-sky-200">
-                <span aria-hidden>📎</span>
-                첨부: {fileLabel}
-                {fileRows.length > 0 ? ` · ${fileRows.length.toLocaleString('ko-KR')}명` : ''}
-              </p>
-              {filePreview ? (
-                <div className="pointer-events-none absolute bottom-full left-0 z-20 mb-1 hidden max-h-48 w-[min(100vw-2rem,24rem)] overflow-auto whitespace-pre-wrap rounded-lg border border-sky-500/40 bg-slate-950 p-3 text-left text-[11px] leading-relaxed text-slate-200 shadow-2xl group-hover:block">
-                  {filePreview}
-                </div>
-              ) : null}
-            </div>
-          ) : null}
+          <p className="mb-2 text-sm font-semibold text-slate-200">2. 누구에게 보낼까요?</p>
           <div className="mb-1.5 hidden gap-3 text-xs text-slate-400 sm:grid sm:grid-cols-3">
             <span>이름</span>
             <span>휴대폰</span>
@@ -550,6 +527,118 @@ export default function CounselorQuickSendForm({
                 </label>
               </div>
             ))}
+          </div>
+
+          <div className="relative z-20 mt-4 flex flex-col gap-2 overflow-visible border-t border-white/10 pt-3">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv,.txt,.tsv,.xlsx,.xls,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+              className="hidden"
+              onChange={handleFileChange}
+            />
+            <div className="relative" onMouseLeave={() => setSamplePreviewKind(null)}>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="rounded-lg border border-white/10 bg-[#101f38]/80 px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-slate-800/80"
+                  disabled={loading}
+                >
+                  텍스트/엑셀 파일 첨부하기
+                </button>
+                <span className="text-sm text-slate-400">샘플받기</span>
+                <button
+                  type="button"
+                  onClick={downloadGroupRecipientSampleTxt}
+                  onMouseEnter={() => setSamplePreviewKind('txt')}
+                  onFocus={() => setSamplePreviewKind('txt')}
+                  onBlur={() => setSamplePreviewKind(null)}
+                  className="text-sm text-sky-300 transition hover:text-sky-200"
+                  disabled={loading}
+                >
+                  (텍스트파일)
+                </button>
+                <button
+                  type="button"
+                  onClick={downloadGroupRecipientSampleCsv}
+                  onMouseEnter={() => setSamplePreviewKind('csv')}
+                  onFocus={() => setSamplePreviewKind('csv')}
+                  onBlur={() => setSamplePreviewKind(null)}
+                  className="text-sm text-sky-300 transition hover:text-sky-200"
+                  disabled={loading}
+                >
+                  (엑셀파일)
+                </button>
+              </div>
+              {samplePreviewKind && samplePreviewText && samplePreviewLayout ? (
+                <div
+                  className="pointer-events-none absolute bottom-full left-0 z-[120] mb-1.5 w-full rounded-lg border border-sky-500/40 bg-slate-950 p-3 text-left shadow-2xl"
+                  role="tooltip"
+                  style={{
+                    width: `min(100%, ${samplePreviewLayout.widthCh}ch)`,
+                  }}
+                >
+                  <p className="mb-2 text-xs font-semibold text-sky-300">
+                    {samplePreviewKind === 'txt' ? '샘플 텍스트 미리보기' : '샘플 엑셀(CSV) 미리보기'}
+                  </p>
+                  <pre className="max-h-56 overflow-y-auto whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-slate-200">
+                    {samplePreviewText}
+                  </pre>
+                </div>
+              ) : null}
+            </div>
+            <p className="text-xs leading-relaxed text-slate-500">
+              첨부파일은 1개만 가능합니다. 최대 {GROUP_RECIPIENT_MAX.toLocaleString('ko-KR')}명
+            </p>
+            {fileLabel ? (
+              <div
+                className="rounded-lg border border-sky-500/25 bg-sky-950/25 px-3 py-2.5"
+                role="status"
+                aria-live="polite"
+              >
+                <p className="text-xs font-medium text-sky-300/90">첨부된 파일</p>
+                <div className="relative mt-1 max-w-full">
+                  <p
+                    className="inline cursor-help break-all text-sm font-medium leading-snug text-white underline decoration-dotted decoration-sky-400/60 underline-offset-4"
+                    onMouseEnter={() => setShowFilePreview(true)}
+                    onMouseLeave={() => setShowFilePreview(false)}
+                    onFocus={() => setShowFilePreview(true)}
+                    onBlur={() => setShowFilePreview(false)}
+                    tabIndex={0}
+                    role="button"
+                    aria-label={`${fileLabel} 파일 내용 미리보기`}
+                  >
+                    {fileLabel}
+                  </p>
+                  {showFilePreview && filePreviewText && filePreviewLayout ? (
+                    <div
+                      className="pointer-events-none absolute bottom-full left-0 z-[120] mb-2 w-max max-w-full rounded-lg border border-sky-500/40 bg-slate-950 p-3 text-left shadow-2xl"
+                      role="tooltip"
+                      style={{
+                        width: `min(100%, ${filePreviewLayout.widthCh}ch)`,
+                      }}
+                    >
+                      <p className="mb-2 text-xs font-semibold text-sky-300">파일 내용 미리보기</p>
+                      <pre className="max-h-56 overflow-y-auto whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-slate-200">
+                        {filePreviewText}
+                        {filePreviewText.length >= 4000 ? '\n… (일부만 표시)' : ''}
+                      </pre>
+                    </div>
+                  ) : null}
+                </div>
+                <p className="mt-1 text-xs text-slate-400">
+                  파일에서{' '}
+                  <span className="font-semibold tabular-nums text-emerald-300">
+                    {fileRows.length.toLocaleString('ko-KR')}
+                  </span>
+                  명 인식
+                  {fileRows.length === 0 ? (
+                    <span className="text-amber-300/90"> · 유효한 행이 없습니다</span>
+                  ) : null}
+                </p>
+              </div>
+            ) : null}
           </div>
         </div>
 

@@ -3,42 +3,52 @@
 import React from 'react';
 import {
   portalHomeTestButtonLabel,
-  portalHomeTestsSubtitle,
+  portalProgressSubtitle,
   type PortalHomeOverview,
   type PortalHomeTestItem,
 } from '@/lib/portalHomeTask';
 import {
-  PORTAL_PSYCH_MANAGER_TITLE,
   PORTAL_MY_TEST_LIST_LABEL,
-  portalPsychManagerDisplayName,
+  PORTAL_PROGRESS_SECTION_TITLE,
+  PORTAL_TEST_MANAGER_TITLE,
+  portalTestManagerDisplayName,
 } from '@/lib/portalCareManagerLabels';
 
 type Props = {
   displayName: string;
   counselorName?: string;
-  counselorEmail?: string;
   overview: PortalHomeOverview;
   onTestAction: (item: PortalHomeTestItem) => void;
   onCareAction?: () => void;
   onOpenMySpace: () => void;
+  onOpenInquiry: () => void;
 };
 
 export default function PortalHomeHero({
   displayName,
   counselorName,
-  counselorEmail,
   overview,
   onTestAction,
   onCareAction,
   onOpenMySpace,
+  onOpenInquiry,
 }: Props) {
-  const managerLabel = portalPsychManagerDisplayName(counselorName);
+  const managerLabel = portalTestManagerDisplayName(counselorName);
   const allTestsDone = overview.totalTests > 0 && overview.pendingTests === 0;
 
   return (
     <div className="space-y-4">
       <section className="rounded-2xl border border-slate-600 bg-gradient-to-b from-slate-800/90 to-slate-900/90 p-6 shadow-xl">
-        <p className="text-sm text-slate-400">내 검사실</p>
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-sm text-slate-400">내 검사실</p>
+          <button
+            type="button"
+            onClick={onOpenMySpace}
+            className="shrink-0 rounded-lg border border-white/15 px-3 py-1.5 text-xs font-medium text-slate-200 transition hover:border-white/40 hover:bg-white/5"
+          >
+            {PORTAL_MY_TEST_LIST_LABEL} →
+          </button>
+        </div>
         <h1 className="mt-1 text-2xl font-bold text-white">{displayName}님</h1>
 
         <div className="mt-5 flex items-start gap-3 rounded-xl border border-indigo-500/30 bg-indigo-950/30 p-4">
@@ -48,40 +58,40 @@ export default function PortalHomeHero({
           >
             👤
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <p className="text-xs font-medium uppercase tracking-wide text-indigo-200/80">
-              {PORTAL_PSYCH_MANAGER_TITLE}
+              {PORTAL_TEST_MANAGER_TITLE}
             </p>
             <p className="mt-0.5 truncate text-base font-semibold text-white">{managerLabel}</p>
-            {counselorEmail ? (
-              <p className="mt-0.5 truncate text-xs text-slate-400">{counselorEmail}</p>
-            ) : null}
             {allTestsDone ? (
               <p className="mt-2 inline-flex items-center rounded-full border border-emerald-500/40 bg-emerald-950/40 px-2.5 py-0.5 text-xs font-medium text-emerald-200">
-                심리 매니저 확인 중
+                검사 매니저 확인 중
               </p>
             ) : overview.pendingTests > 0 ? (
               <p className="mt-2 inline-flex items-center rounded-full border border-cyan-500/40 bg-cyan-950/40 px-2.5 py-0.5 text-xs font-medium text-cyan-200">
-                심리 매니저와 함께 진행 중
+                검사 매니저와 함께 진행 중
               </p>
             ) : null}
           </div>
+          <button
+            type="button"
+            onClick={onOpenInquiry}
+            className="shrink-0 self-center rounded-lg border border-indigo-400/40 bg-indigo-900/50 px-3 py-2 text-xs font-semibold text-indigo-100 transition hover:bg-indigo-800/60"
+          >
+            문의하기
+          </button>
         </div>
       </section>
 
       <section className="rounded-2xl border border-cyan-500/35 bg-cyan-950/20 p-6 shadow-lg shadow-cyan-950/20">
-        <div className="flex items-start justify-between gap-3">
-          <p className="text-sm font-semibold text-cyan-200">오늘 할 일</p>
-          <button
-            type="button"
-            onClick={onOpenMySpace}
-            className="shrink-0 rounded-lg border border-white/15 px-3 py-1.5 text-xs font-medium text-slate-200 transition hover:border-white/40 hover:bg-white/5"
-          >
-            {PORTAL_MY_TEST_LIST_LABEL} →
-          </button>
-        </div>
+        <p className="text-sm font-semibold text-cyan-200">
+          {PORTAL_PROGRESS_SECTION_TITLE}
+          {overview.totalTests > 0
+            ? ` (${overview.totalTests - overview.pendingTests}/${overview.totalTests})`
+            : ''}
+        </p>
         <p className="mt-2 text-sm leading-relaxed text-slate-300">
-          {portalHomeTestsSubtitle(overview.pendingTests, overview.totalTests)}
+          {portalProgressSubtitle(overview.pendingTests, overview.totalTests)}
         </p>
 
         {overview.testItems.length > 0 ? (
@@ -119,7 +129,7 @@ export default function PortalHomeHero({
 
         {allTestsDone && overview.totalTests > 0 ? (
           <p className="mt-4 text-sm text-emerald-200/90">
-            배정된 검사를 모두 마쳤습니다. 심리 매니저가 결과를 확인합니다.
+            배정된 검사를 모두 마쳤습니다. 검사 매니저가 결과를 확인합니다.
           </p>
         ) : null}
       </section>

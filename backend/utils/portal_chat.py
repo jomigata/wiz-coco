@@ -1,4 +1,4 @@
-"""내 검사실 ↔ 심리 매니저 1:1 문의 채팅."""
+"""내 검사실 ↔ 검사 매니저 1:1 문의 채팅."""
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -73,8 +73,13 @@ def update_portal_chat_reply_status(db, portal_id: str, status: str) -> None:
     db.collection(CLIENT_PORTALS_COLLECTION).document(pid).update({"chatReplyStatus": normalized})
 
 
-def process_due_scheduled_portal_chat(db, counselor_uid: str | None = None) -> None:
+def process_due_scheduled_portal_chat(
+    db,
+    counselor_uid: str | None = None,
+    portal_id: str | None = None,
+) -> None:
     now = datetime.now(timezone.utc)
+    pid_filter = (portal_id or "").strip()
     query = (
         db.collection(PORTAL_CHAT_SCHEDULED_COLLECTION)
         .where("sent", "==", False)
@@ -82,6 +87,9 @@ def process_due_scheduled_portal_chat(db, counselor_uid: str | None = None) -> N
     )
     for doc in query.stream():
         data = doc.to_dict() or {}
+        pid = (data.get("portalId") or "").strip()
+        if pid_filter and pid != pid_filter:
+            continue
         if counselor_uid and (data.get("counselorId") or "").strip() != counselor_uid.strip():
             continue
         scheduled_at = data.get("scheduledAt")
@@ -95,9 +103,9 @@ def process_due_scheduled_portal_chat(db, counselor_uid: str | None = None) -> N
             continue
         send_portal_chat_message(
             db,
-            portal_id=(data.get("portalId") or "").strip(),
+            portal_id=pid,
             counselor_id=(data.get("counselorId") or "").strip(),
-            sender_role="counselor",
+            sender_role=(data.get("senderRole") or "counselor").strip() or "counselor",
             message=(data.get("message") or "").strip(),
             reply_status=(data.get("replyStatus") or "").strip() or None,
         )
@@ -111,6 +119,7 @@ def schedule_portal_chat_message(
     counselor_id: str,
     message: str,
     scheduled_at: datetime,
+    sender_role: str = "counselor",
     reply_status: str | None = None,
 ) -> dict:
     text = (message or "").strip()
@@ -129,10 +138,13 @@ def schedule_portal_chat_message(
     if normalized_reply and normalized_reply not in ("pending", "done"):
         raise ValueError("invalid reply status")
 
+    if sender_role not in ("portal", "counselor"):
+        raise ValueError("invalid sender role")
+
     data = {
         "portalId": pid,
         "counselorId": cid,
-        "senderRole": "counselor",
+        "senderRole": sender_role,
         "message": text[:4000],
         "scheduledAt": scheduled_at,
         "replyStatus": normalized_reply,
