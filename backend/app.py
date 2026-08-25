@@ -1,7 +1,8 @@
 # WizCoCo Flask API - 상담사/내담자 API 진입점
 import os
-from flask import Flask
+from flask import Flask, jsonify, request
 from flask_cors import CORS
+from werkzeug.exceptions import HTTPException
 
 from config import FLASK_ENV, SECRET_KEY
 from utils.cors_config import CORS_ALLOW_HEADERS, get_cors_origins
@@ -51,6 +52,22 @@ def create_app():
     app.register_blueprint(care_assignments_bp)
     app.register_blueprint(ai_credits_bp)
     app.register_blueprint(portal_chat_bp)
+
+    @app.errorhandler(Exception)
+    def handle_unexpected_error(exc):
+        """미처리 예외 — 500 대신 진단 가능한 JSON 반환 (프론트가 message를 그대로 노출)."""
+        if isinstance(exc, HTTPException):
+            return exc
+        app.logger.exception("Unhandled exception on %s %s", request.method, request.path)
+        return (
+            jsonify(
+                {
+                    "error": "Internal Server Error",
+                    "message": f"{type(exc).__name__}: {exc}",
+                }
+            ),
+            500,
+        )
 
     @app.route("/", methods=["GET"])
     def root():
