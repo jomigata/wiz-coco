@@ -103,6 +103,44 @@ def create_app():
     def health():
         return {"status": "ok", "service": "wizcoco-api"}
 
+    @app.route("/api/debug/firestore-check", methods=["GET"])
+    def debug_firestore_check():
+        """임시 진단용 — 배포된 패키지 버전과 Firestore 연결 상태를 그대로 노출."""
+        import importlib.metadata as md
+
+        versions = {}
+        for pkg in (
+            "firebase-admin",
+            "google-cloud-firestore",
+            "google-api-core",
+            "google-auth",
+            "grpcio",
+            "protobuf",
+        ):
+            try:
+                versions[pkg] = md.version(pkg)
+            except Exception as exc:
+                versions[pkg] = f"unknown ({exc})"
+
+        firestore_result = None
+        firestore_error = None
+        try:
+            from firebase_init import get_firestore
+
+            db = get_firestore()
+            list(db.collection("_debug_healthcheck").limit(1).stream())
+            firestore_result = "ok"
+        except Exception as exc:
+            firestore_error = f"{type(exc).__name__}: {exc}"
+
+        return jsonify(
+            {
+                "versions": versions,
+                "firestoreResult": firestore_result,
+                "firestoreError": firestore_error,
+            }
+        )
+
     return app
 
 
