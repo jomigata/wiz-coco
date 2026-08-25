@@ -1,12 +1,11 @@
 # 상담사 인증: Firebase ID 토큰 검증
-import re
 import time
 from functools import wraps
 from flask import request, jsonify
 
-from firebase_init import verify_id_token, verify_id_token_claims
-from firebase_init import get_firestore
-from config import ORGANIZATIONS_COLLECTION, USERS_COLLECTION, BOOTSTRAP_ADMIN_EMAILS, BOOTSTRAP_COUNSELOR_EMAILS, COUNSELOR_APPLICATIONS_COLLECTION
+from firebase_init import verify_id_token, verify_id_token_claims, get_firestore
+from config import USERS_COLLECTION
+from utils.counselor_role_sync import resolve_counselor_access_role
 
 _ROLE_CACHE: dict[str, tuple[str | None, float]] = {}
 _ROLE_CACHE_TTL_SEC = 300
@@ -14,35 +13,6 @@ _ROLE_CACHE_TTL_SEC = 300
 
 def invalidate_role_cache(uid: str) -> None:
     _ROLE_CACHE.pop(uid, None)
-
-
-def promote_role_from_approved_application(uid: str, email: str | None = None) -> str | None:
-    """
-    승인된 상담사 신청(counselorApplications.status=approved)이 있으면
-    users/{uid}.role 을 counselor 로 승격.
-    """
-    if not uid:
-        return None
-    try:
-        db = get_firestore()
-        apps = (
-            db.collection(COUNSELOR_APPLICATIONS_COLLECTION)
-            .where("applicantUid", "==", uid)
-            .where("status", "==", "approved")
-            .limit(1)
-            .stream()
-        )
-        if not any(True for _ in apps):
-            return None
-        user_ref = db.collection(USERS_COLLECTION).document(uid)
-        payload: dict[str, str] = {"role": "counselor"}
-        if email:
-            payload["email"] = email.strip().lower()
-        user_ref.set(payload, merge=True)
-        invalidate_role_cache(uid)
-        return "counselor"
-    except Exception:
-        return None
 
 
 def get_bearer_uid():
@@ -83,39 +53,23 @@ def get_bearer_email_optional():
 
 
 def _resolve_counselor_role(uid: str, email: str | None) -> str | None:
-    """Firestore users/{uid}.role — 짧은 TTL 메모리 캐시."""
+    """Firestore users/{uid}.role — 짧은 TTL 메모리 캐시 (실패·거부 role은 캐시하지 않음)."""
     now = time.time()
     cached = _ROLE_CACHE.get(uid)
     if cached and now - cached[1] < _ROLE_CACHE_TTL_SEC:
         return cached[0]
 
-    role = None
+    stored_role = None
     try:
         db = get_firestore()
-        user_ref = db.collection(USERS_COLLECTION).document(uid)
-        doc = user_ref.get()
-        role = (doc.to_dict() or {}).get("role") if doc.exists else None
-
-        if role not in ("admin", "counselor") and email:
-            email_norm = email.strip().lower()
-            bootstrap_role = None
-            if email_norm in BOOTSTRAP_ADMIN_EMAILS:
-                bootstrap_role = "admin"
-            elif email_norm in BOOTSTRAP_COUNSELOR_EMAILS:
-                bootstrap_role = "counselor"
-            if bootstrap_role:
-                user_ref.set({"role": bootstrap_role, "email": email_norm}, merge=True)
-                role = bootstrap_role
-                invalidate_role_cache(uid)
-
-        if role not in ("admin", "counselor"):
-            promoted = promote_role_from_approved_application(uid, email)
-            if promoted:
-                role = promoted
+        doc = db.collection(USERS_COLLECTION).document(uid).get()
+        stored_role = (doc.to_dict() or {}).get("role") if doc.exists else None
     except Exception:
-        role = None
+        stored_role = None
 
-    _ROLE_CACHE[uid] = (role, now)
+    role = resolve_counselor_access_role(uid, email, stored_role)
+    if role in ("admin", "counselor"):
+        _ROLE_CACHE[uid] = (role, now)
     return role
 
 
@@ -145,6 +99,8 @@ def require_admin(f):
         if not uid:
             return jsonify({"error": "Unauthorized", "message": "Valid Firebase ID token required"}), 401
         try:
+            from utils.counselor_role_sync import bootstrap_role_for_email, persist_user_role
+
             db = get_firestore()
             user_ref = db.collection(USERS_COLLECTION).document(uid)
             doc = user_ref.get()
@@ -152,10 +108,9 @@ def require_admin(f):
 
             if role != "admin":
                 email = get_bearer_email_optional()
-                if email:
-                    email = email.strip().lower()
-                if email and email in BOOTSTRAP_ADMIN_EMAILS:
-                    user_ref.set({"role": "admin", "email": email}, merge=True)
+                desired = bootstrap_role_for_email(email)
+                if desired == "admin":
+                    persist_user_role(uid, "admin", email)
                     role = "admin"
         except Exception:
             role = None
@@ -188,6 +143,8 @@ def require_org_admin(f):
         if not uid:
             return jsonify({"error": "Unauthorized", "message": "Valid Firebase ID token required"}), 401
         try:
+            from config import ORGANIZATIONS_COLLECTION
+
             db = get_firestore()
             user_doc = db.collection(USERS_COLLECTION).document(uid).get()
             data = user_doc.to_dict() or {} if user_doc.exists else {}

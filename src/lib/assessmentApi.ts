@@ -698,7 +698,7 @@ export async function listAssessmentsPage(params?: {
       const msg = data?.message || data?.error || '목록 조회에 실패했습니다.';
       if (!retried && res.status === 403 && isCounselorRoleRequiredMessage(msg)) {
         const synced = await syncCounselorRoleViaApi();
-        if (synced) return fetchPage(true);
+        if (synced.ok) return fetchPage(true);
       }
       throw new Error(msg);
     }

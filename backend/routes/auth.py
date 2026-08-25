@@ -3,70 +3,61 @@ from flask import Blueprint, jsonify
 from firebase_admin.firestore import SERVER_TIMESTAMP
 
 from firebase_init import get_firestore
-from auth_middleware import get_bearer_uid, get_bearer_email_optional, promote_role_from_approved_application
+from auth_middleware import get_bearer_uid, get_bearer_email_optional, invalidate_role_cache
+from utils.counselor_role_sync import persist_user_role, resolve_counselor_access_role
 from config import (
     USERS_COLLECTION,
     TEST_RESULTS_COLLECTION,
-    BOOTSTRAP_ADMIN_EMAILS,
-    BOOTSTRAP_COUNSELOR_EMAILS,
 )
 
 bp = Blueprint("auth", __name__, url_prefix="/api/auth")
-
-
-def _desired_bootstrap_role(email: str | None) -> str | None:
-    if not email:
-        return None
-    e = email.strip().lower()
-    if e in BOOTSTRAP_ADMIN_EMAILS:
-        return "admin"
-    if e in BOOTSTRAP_COUNSELOR_EMAILS:
-        return "counselor"
-    return None
 
 
 @bp.route("/bootstrap-role", methods=["POST"])
 def bootstrap_role():
     """
     로그인 사용자의 Firestore users/{uid}.role 부트스트랩.
-    - 부트스트랩 이메일이면 admin/counselor로 승격(기존 user여도 갱신)
+    - 부트스트랩 이메일이면 admin/counselor로 승격
+    - 승인된 상담사 신청이 있으면 counselor로 승격
     """
     uid = get_bearer_uid()
     if not uid:
         return jsonify({"error": "Unauthorized", "message": "Valid Firebase ID token required"}), 401
 
-    email = (get_bearer_email_optional() or "").strip().lower()
-    db = get_firestore()
-    ref = db.collection(USERS_COLLECTION).document(uid)
-    doc = ref.get()
-    existing = (doc.to_dict() or {}) if doc.exists else {}
-    role = existing.get("role")
+    email = get_bearer_email_optional()
+    try:
+        db = get_firestore()
+        ref = db.collection(USERS_COLLECTION).document(uid)
+        doc = ref.get()
+        existing = (doc.to_dict() or {}) if doc.exists else {}
+        stored_role = existing.get("role")
 
-    desired = _desired_bootstrap_role(email)
-    if desired and role != desired:
-        ref.set(
-            {"role": desired, **({"email": email} if email else {})},
-            merge=True,
-        )
-        return jsonify({"uid": uid, "role": desired, "upgraded": True}), 200
+        resolved = resolve_counselor_access_role(uid, email, stored_role)
+        if resolved in ("admin", "counselor"):
+            invalidate_role_cache(uid)
+            upgraded = resolved != stored_role
+            return jsonify({"uid": uid, "role": resolved, "upgraded": upgraded}), 200
 
-    if role in ("admin", "counselor", "user", "org_admin"):
-        if role not in ("admin", "counselor"):
-            promoted = promote_role_from_approved_application(uid, email or None)
-            if promoted:
-                return jsonify({"uid": uid, "role": promoted, "upgraded": True}), 200
-        return jsonify({"uid": uid, "role": role}), 200
+        if stored_role in ("admin", "counselor", "user", "org_admin"):
+            invalidate_role_cache(uid)
+            return jsonify({"uid": uid, "role": stored_role}), 200
 
-    promoted = promote_role_from_approved_application(uid, email or None)
-    if promoted:
-        return jsonify({"uid": uid, "role": promoted, "upgraded": True}), 200
-
-    bootstrap_role_value = desired or "user"
-    ref.set(
-        {"role": bootstrap_role_value, **({"email": email} if email else {})},
-        merge=True,
-    )
-    return jsonify({"uid": uid, "role": bootstrap_role_value}), 200
+        bootstrap_role_value = "user"
+        persist_user_role(uid, bootstrap_role_value, email)
+        invalidate_role_cache(uid)
+        return jsonify({"uid": uid, "role": bootstrap_role_value}), 200
+    except Exception as exc:
+        # Firestore 일시 오류 — 부트스트랩 이메일이면 API role만 반환
+        fallback = resolve_counselor_access_role(uid, email, None)
+        if fallback in ("admin", "counselor"):
+            invalidate_role_cache(uid)
+            return jsonify({"uid": uid, "role": fallback, "upgraded": True}), 200
+        return jsonify(
+            {
+                "error": "Internal Server Error",
+                "message": f"Role bootstrap failed: {str(exc)[:160]}",
+            }
+        ), 500
 
 
 @bp.route("/link-legacy-data", methods=["POST"])
@@ -157,4 +148,3 @@ def link_legacy_data():
                 "message": f"레거시 연결을 건너뛰었습니다: {str(exc)[:120]}",
             }
         ), 200
-

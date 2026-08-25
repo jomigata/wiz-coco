@@ -299,7 +299,11 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
             try {
               const bootstrapRes = await fetch(`${baseUrl}/api/auth/bootstrap-role`, {
                 method: 'POST',
-                headers,
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  'Content-Type': 'application/json',
+                },
+                body: '{}',
               });
               if (bootstrapRes.ok) {
                 const boot = (await bootstrapRes.json().catch(() => ({}))) as { role?: AppRole };
@@ -591,7 +595,11 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
       try {
         const res = await fetch(`${getFlaskApiBaseUrl()}/api/auth/bootstrap-role`, {
           method: 'POST',
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: '{}',
         });
         if (res.ok) {
           const boot = (await res.json().catch(() => ({}))) as { role?: AppRole };
@@ -647,7 +655,4 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
 export function useFirebaseAuth(): FirebaseAuthContextValue {
   const ctx = useContext(FirebaseAuthContext);
   if (!ctx) {
-    throw new Error('useFirebaseAuth must be used within FirebaseAuthProvider');
-  }
-  return ctx;
-}
+    thro
