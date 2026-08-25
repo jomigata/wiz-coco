@@ -11,8 +11,9 @@ _db = None
 # gunicorn --workers 1 --threads 8 (app.py) — 콜드스타트 직후 여러 스레드가
 # 동시에 초기화를 시도하면 firebase_admin.initialize_app()이 두 번 호출되어
 # "The default Firebase app already exists" ValueError로 요청이 500 됩니다.
-# 더블 체크 락으로 경합을 막습니다.
-_init_lock = threading.Lock()
+# 더블 체크 락으로 경합을 막습니다. get_firestore()가 락을 쥔 채 get_firebase_app()을
+# 호출(같은 스레드 재진입)하므로 일반 Lock이 아닌 RLock을 사용합니다.
+_init_lock = threading.RLock()
 
 
 def get_firebase_app():
