@@ -39,6 +39,11 @@ const DATA_ROUTE_PREFIXES = [
   '/counselor/assessments/permanently-deleted-recipients',
 ] as const;
 
+const SALES_ROUTE_PREFIXES = [
+  '/discover',
+  '/partners',
+] as const;
+
 const SALES_HUB_PREFIX = '/counselor/hub/sales';
 
 function normalizePath(pathname: string): string {
@@ -62,6 +67,14 @@ export function isDataWorkspaceRoute(pathname: string): boolean {
   return matchesPrefix(normalizePath(pathname), DATA_ROUTE_PREFIXES);
 }
 
+export function isSalesWorkspaceRoute(pathname: string): boolean {
+  const path = normalizePath(pathname);
+  if (path === SALES_HUB_PREFIX || path.startsWith(`${SALES_HUB_PREFIX}/`)) {
+    return true;
+  }
+  return SALES_ROUTE_PREFIXES.some((prefix) => path === prefix || path.startsWith(`${prefix}/`));
+}
+
 export function isSalesHubRoute(pathname: string): boolean {
   const path = normalizePath(pathname);
   return path === SALES_HUB_PREFIX || path.startsWith(`${SALES_HUB_PREFIX}/`);
@@ -73,7 +86,8 @@ export function isCounselorManageShellRoute(pathname: string): boolean {
   return (
     isPsychTestsWorkspaceRoute(pathname) ||
     isToolsWorkspaceRoute(pathname) ||
-    isDataWorkspaceRoute(pathname)
+    isDataWorkspaceRoute(pathname) ||
+    isSalesWorkspaceRoute(pathname)
   );
 }
 
@@ -98,6 +112,9 @@ export function getCounselorCategoryDefaultHref(slug: string): string {
   if (slug === COUNSELOR_TOOLS_SLUG) {
     return '/counselor/chat';
   }
+  if (slug === 'sales') {
+    return '/discover/mini-check/';
+  }
   const category = getCounselorCategoryBySlug(slug);
   const first = category?.subcategories.flatMap((s) => s.items)[0]?.href;
   return first || getCounselorCategoryHubHref(slug);
@@ -121,6 +138,9 @@ export function resolveCounselorCategorySlugForPath(pathname: string): string | 
         }
       }
     }
+  }
+  if (path.startsWith('/discover') || path.startsWith('/partners')) {
+    return 'sales';
   }
   if (
     path.startsWith('/counselor/assessments/progress') ||

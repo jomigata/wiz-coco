@@ -9,6 +9,7 @@ import {
   sortCompletedResultsForDisplay,
 } from '@/lib/portalTestResults';
 import type { PortalDashboardAssessment } from '@/lib/clientPortalApi';
+import { PORTAL_COMPLETED_RESULTS_TITLE } from '@/lib/portalCareManagerLabels';
 
 type Props = {
   assessments: PortalDashboardAssessment[];
@@ -64,20 +65,17 @@ export default function PortalReportsPanel({ assessments, resultsByCode, onViewR
   if (!rows.length) {
     return (
       <section className="rounded-xl border border-slate-700/80 bg-slate-800/40 p-6">
-        <p className="text-sm text-slate-400">
-          완료된 검사 결과가 없습니다. 검사를 마치면 결과보고서에서 확인할 수 있습니다.
-        </p>
+        <h2 className="text-base font-semibold text-white">{PORTAL_COMPLETED_RESULTS_TITLE}</h2>
+        <p className="mt-3 text-sm text-slate-400">완료된 검사 결과가 없습니다.</p>
       </section>
     );
   }
 
   return (
     <section className="rounded-xl border border-slate-700/80 bg-slate-800/40 p-5">
-      <p className="mb-4 text-sm text-slate-400">
-        완료한 검사 결과를 한곳에서 확인할 수 있습니다.
-      </p>
+      <h2 className="mb-4 text-base font-semibold text-white">{PORTAL_COMPLETED_RESULTS_TITLE}</h2>
       <ul className="space-y-2">
-        {rows.map((row) => (
+        {rows.map((row, index) => (
           <li key={row.key}>
             <button
               type="button"
@@ -93,9 +91,11 @@ export default function PortalReportsPanel({ assessments, resultsByCode, onViewR
               className="flex w-full items-center justify-between gap-3 rounded-lg border border-slate-600 bg-slate-700/80 px-4 py-3 text-left transition hover:border-violet-500/40 hover:bg-slate-700"
             >
               <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-white">{row.testName}</p>
-                <p className="mt-0.5 truncate text-xs text-slate-400">{row.groupTitle}</p>
-                <p className="mt-1 text-[11px] text-slate-500">검사일시 {row.completedAt}</p>
+                <p className="truncate text-sm font-medium text-white">
+                  {index + 1}. {row.testName}
+                  <span className="ml-2 font-normal text-slate-400">· {row.completedAt}</span>
+                </p>
+                <p className="mt-0.5 truncate text-xs text-slate-500">{row.groupTitle}</p>
               </div>
               <span className="shrink-0 text-sm text-violet-300">결과보기 →</span>
             </button>

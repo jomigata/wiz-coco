@@ -65,11 +65,11 @@ export default function PortalHomeHero({
             <p className="mt-0.5 truncate text-base font-semibold text-white">{managerLabel}</p>
             {allTestsDone ? (
               <p className="mt-2 inline-flex items-center rounded-full border border-emerald-500/40 bg-emerald-950/40 px-2.5 py-0.5 text-xs font-medium text-emerald-200">
-                검사 매니저 확인 중
+                담당 상담사 확인 중
               </p>
             ) : overview.pendingTests > 0 ? (
               <p className="mt-2 inline-flex items-center rounded-full border border-cyan-500/40 bg-cyan-950/40 px-2.5 py-0.5 text-xs font-medium text-cyan-200">
-                검사 매니저와 함께 진행 중
+                담당 상담사와 함께 진행 중
               </p>
             ) : null}
           </div>
@@ -129,7 +129,7 @@ export default function PortalHomeHero({
 
         {allTestsDone && overview.totalTests > 0 ? (
           <p className="mt-4 text-sm text-emerald-200/90">
-            배정된 검사를 모두 마쳤습니다. 검사 매니저가 결과를 확인합니다.
+            배정된 검사를 모두 마쳤습니다. 담당 상담사가 결과를 확인합니다.
           </p>
         ) : null}
       </section>

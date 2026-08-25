@@ -174,17 +174,17 @@ export function portalHomeTaskSubtitle(task: PortalHomeTask): string {
       : '진행 현황에서 남은 검사를 진행해 주세요.';
   }
   if (task.kind === 'care') {
-    return '검사 매니저가 남긴 과제입니다.';
+    return '담당 상담사가 남긴 과제입니다.';
   }
   if (task.kind === 'all_done') {
-    return '배정된 검사를 모두 마쳤습니다. 검사 매니저가 결과를 확인합니다.';
+    return '배정된 검사를 모두 마쳤습니다. 담당 상담사가 결과를 확인합니다.';
   }
-  return '배정된 검사가 없습니다. 검사 매니저에게 문의해 주세요.';
+  return '배정된 검사가 없습니다. 담당 상담사에게 문의해 주세요.';
 }
 
 export function portalProgressSubtitle(pendingTests: number, totalTests: number): string {
   if (totalTests <= 0) {
-    return '배정된 검사가 없습니다. 검사 매니저에게 문의해 주세요.';
+    return '배정된 검사가 없습니다. 담당 상담사에게 문의해 주세요.';
   }
   const completed = totalTests - pendingTests;
   if (pendingTests <= 0) {

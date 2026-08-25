@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { fetchPortalDashboard, fetchPortalCareAssignments, changeClientPortalPin, type PortalDashboardAssessment, type PortalLegacyTestGroup } from '@/lib/clientPortalApi';
 import { listResults, getClientResult, TestResultItem, clearForceGuestForAccessCode } from '@/lib/assessmentApi';
 import PortalTestList from '@/components/portal/PortalTestList';
-import PortalHomeHero from '@/components/portal/PortalHomeHero';
 import PortalCounselorInquiryChat from '@/components/portal/PortalCounselorInquiryChat';
 import PortalCareAssignmentsPanel from '@/components/portal/PortalCareAssignmentsPanel';
 import PortalReportsPanel from '@/components/portal/PortalReportsPanel';
@@ -29,7 +28,6 @@ import { clearJoinParticipantSession } from '@/lib/joinParticipantSession';
 import { setPortalReturnPath } from '@/lib/portalReturnPath';
 import { clearJoinFreshParticipantFlow } from '@/lib/joinFlowMode';
 import { getJoinTestPath } from '@/lib/portalTestNavigation';
-import { buildPortalHomeOverview, type PortalHomeTestItem } from '@/lib/portalHomeTask';
 import { PORTAL_INQUIRY_SECTION_TITLE, PORTAL_MY_TEST_LIST_LABEL } from '@/lib/portalCareManagerLabels';
 import type { PortalCareAssignmentItem } from '@/types/careAssignment';
 
@@ -46,7 +44,7 @@ type PortalTab = 'tests' | 'chat' | 'reports';
 function PortalLoading() {
   return (
     <div className="min-h-screen bg-gray-900 px-4 pt-4 flex justify-center">
-      <p className="text-slate-400">내 검사실로 이동 중…</p>
+      <p className="text-slate-400">나의 검사목록으로 이동 중…</p>
     </div>
   );
 }
@@ -78,7 +76,6 @@ function ClientPortalContent() {
   const [pinSuccess, setPinSuccess] = useState('');
   const [careTotalCount, setCareTotalCount] = useState(0);
   const [careItems, setCareItems] = useState<PortalCareAssignmentItem[]>([]);
-  const [showRecords, setShowRecords] = useState(false);
 
   useEffect(() => {
     if (!resultView) {
@@ -205,13 +202,10 @@ function ClientPortalContent() {
     const tab = (searchParams.get('tab') || '').trim();
     if (tab === 'care' || tab === 'tests') {
       setPortalTab('tests');
-      setShowRecords(true);
     } else if (tab === 'chat') {
       setPortalTab('chat');
-      setShowRecords(true);
     } else if (tab === 'reports' || tab === 'materials') {
       setPortalTab('reports');
-      setShowRecords(true);
     }
   }, [searchParams]);
 
@@ -219,7 +213,6 @@ function ClientPortalContent() {
     const focusResults = (searchParams.get('focus') || '').trim() === 'results';
     if (!focusResults) return;
 
-    setShowRecords(true);
     setPortalTab('tests');
 
     if (typeof window !== 'undefined') {
@@ -344,37 +337,9 @@ function ClientPortalContent() {
     setPinSuccess('');
   };
 
-  const homeOverview = React.useMemo(
-    () =>
-      buildPortalHomeOverview({
-        assessments: assessments.map((a) => ({
-          assessmentId: a.assessmentId,
-          accessCode: a.accessCode,
-          title: a.title,
-          testList: a.testList,
-        })),
-        resultsByCode,
-        careItems,
-        normalizeCode: normalizeAccessCodeInput,
-      }),
-    [assessments, resultsByCode, careItems],
-  );
-
-  const handleHomeTestAction = (item: PortalHomeTestItem) => {
-    const assessment = assessments.find((a) => a.assessmentId === item.assessmentId);
-    if (assessment) {
-      openTest(assessment, item.testId, item.resultId);
-    }
-  };
-
-  const handleHomeCareAction = () => {
-    setShowRecords(true);
-    setPortalTab('tests');
-  };
-
-  const openMySpace = () => {
-    setShowRecords(true);
-    setPortalTab('tests');
+  const handleLogout = () => {
+    clearClientPortalSession();
+    router.push('/portal/login/');
   };
 
   if (loading) return <PortalLoading />;
@@ -400,98 +365,73 @@ function ClientPortalContent() {
     <div className="min-h-screen bg-gray-900">
       <div className="px-4 pt-4 pb-12">
         <main className="max-w-3xl mx-auto space-y-6">
-          {!showRecords ? (
-            <>
-              <PortalHomeHero
-                displayName={displayName}
-                counselorName={counselorName}
-                overview={homeOverview}
-                onTestAction={handleHomeTestAction}
-                onCareAction={homeOverview.careTask ? handleHomeCareAction : undefined}
-                onOpenMySpace={openMySpace}
-                onOpenInquiry={() => {
-                  setShowRecords(true);
-                  setPortalTab('chat');
-                }}
-              />
-              <div className="rounded-xl border border-slate-700/60 bg-slate-800/40 px-4 py-3 text-sm text-slate-400 flex flex-wrap items-center justify-between gap-2">
-                <span>
+          <div className="sticky top-0 z-40 -mx-4 border-b border-slate-800/80 bg-gray-900/95 px-4 backdrop-blur-sm">
+            <div className="flex items-start justify-between gap-3 py-3">
+              <div className="min-w-0 rounded-lg border border-white/15 bg-slate-800/60 px-4 py-2">
+                <p className="truncate text-sm font-medium text-white">{displayName}</p>
+                <p className="mt-0.5 text-xs text-slate-400">
                   나의코드{' '}
                   <span className="font-mono text-cyan-300">{formatAccessCodeDisplay(myCode)}</span>
-                </span>
-                <div className="flex items-center gap-3 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => setPinModalOpen(true)}
-                    className="text-xs text-sky-300 hover:text-sky-200 underline"
-                  >
-                    비밀번호 변경
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      clearClientPortalSession();
-                      router.push('/portal/login/');
-                    }}
-                    className="text-xs text-slate-400 hover:text-slate-200 underline"
-                  >
-                    로그아웃
-                  </button>
-                </div>
+                </p>
               </div>
-            </>
-          ) : (
-            <>
-              <div className="sticky top-16 z-30 -mx-4 border-b border-slate-800/80 bg-gray-900/95 px-4 pb-0 backdrop-blur-sm">
-              <div className="relative flex items-center py-2">
+              <div className="flex shrink-0 flex-col items-end gap-2">
                 <button
                   type="button"
-                  onClick={() => setShowRecords(false)}
-                  className="rounded-lg border border-white/15 bg-slate-800/60 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-white/40 hover:bg-slate-700/80"
+                  onClick={handleLogout}
+                  className="text-xs text-slate-400 underline hover:text-slate-200"
                 >
-                  ← 내 검사실
+                  로그아웃
                 </button>
-                <h1 className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-base font-semibold text-white sm:text-lg">
-                  {PORTAL_MY_TEST_LIST_LABEL}
-                </h1>
+                <button
+                  type="button"
+                  onClick={() => setPinModalOpen(true)}
+                  className="text-xs text-sky-300 underline hover:text-sky-200"
+                >
+                  비밀번호 변경
+                </button>
               </div>
+            </div>
 
-          <div className="flex flex-wrap gap-x-1 gap-y-1 border-b border-slate-700/80">
-            <button
-              type="button"
-              onClick={() => setPortalTab('tests')}
-              className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
-                portalTab === 'tests'
-                  ? 'border-cyan-400 text-cyan-300'
-                  : 'border-transparent text-slate-500 hover:text-slate-300'
-              }`}
-            >
-              검사 진행 현황 ({testProgressSummary.total})
-            </button>
-            <button
-              type="button"
-              onClick={() => setPortalTab('chat')}
-              className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
-                portalTab === 'chat'
-                  ? 'border-indigo-400 text-indigo-300'
-                  : 'border-transparent text-slate-500 hover:text-slate-300'
-              }`}
-            >
-              {PORTAL_INQUIRY_SECTION_TITLE}
-            </button>
-            <button
-              type="button"
-              onClick={() => setPortalTab('reports')}
-              className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
-                portalTab === 'reports'
-                  ? 'border-violet-400 text-violet-300'
-                  : 'border-transparent text-slate-500 hover:text-slate-300'
-              }`}
-            >
-              결과보고서
-            </button>
+            <h1 className="pb-2 text-base font-semibold text-white sm:text-lg">
+              {PORTAL_MY_TEST_LIST_LABEL}
+            </h1>
+
+            <div className="flex flex-wrap gap-x-1 gap-y-1 border-b border-slate-700/80">
+              <button
+                type="button"
+                onClick={() => setPortalTab('tests')}
+                className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
+                  portalTab === 'tests'
+                    ? 'border-cyan-400 text-cyan-300'
+                    : 'border-transparent text-slate-500 hover:text-slate-300'
+                }`}
+              >
+                검사 진행 현황 ({testProgressSummary.total})
+              </button>
+              <button
+                type="button"
+                onClick={() => setPortalTab('chat')}
+                className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
+                  portalTab === 'chat'
+                    ? 'border-indigo-400 text-indigo-300'
+                    : 'border-transparent text-slate-500 hover:text-slate-300'
+                }`}
+              >
+                {PORTAL_INQUIRY_SECTION_TITLE}
+              </button>
+              <button
+                type="button"
+                onClick={() => setPortalTab('reports')}
+                className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
+                  portalTab === 'reports'
+                    ? 'border-violet-400 text-violet-300'
+                    : 'border-transparent text-slate-500 hover:text-slate-300'
+                }`}
+              >
+                결과보고서
+              </button>
+            </div>
           </div>
-              </div>
 
           {portalTab === 'chat' ? (
             <PortalCounselorInquiryChat counselorName={counselorName} embeddedInTab />
@@ -504,64 +444,64 @@ function ClientPortalContent() {
               }
             />
           ) : (
-            <div id="portal-results" className="scroll-mt-24 space-y-6">
-          {assessments.length === 0 ? (
-            <p className="text-slate-400 text-sm">배정된 검사가 없습니다. 담당자에게 상담(코드)·나의코드를 확인해 주세요.</p>
-          ) : (
-            assessments.map((a) => {
-              const code = normalizeAccessCodeInput(a.accessCode);
-              const results = resultsByCode[code] || [];
+            <div id="portal-results" className="scroll-mt-40 space-y-6">
+              {assessments.length === 0 ? (
+                <p className="text-slate-400 text-sm">
+                  배정된 검사가 없습니다. 담당자에게 상담(코드)·나의코드를 확인해 주세요.
+                </p>
+              ) : (
+                assessments.map((a) => {
+                  const code = normalizeAccessCodeInput(a.accessCode);
+                  const results = resultsByCode[code] || [];
 
-              return (
-                <section
-                  key={a.assessmentId}
-                  className="bg-slate-800/80 rounded-2xl border border-slate-600 p-5 space-y-3"
-                >
-                  <div className="border-b border-slate-700/40 pb-2.5 mb-1">
-                    <h3 className="text-base sm:text-lg font-medium text-slate-400">
-                      {portalAssessmentGroupTitle(a)}
-                    </h3>
-                    {a.isLinkedShared || a.isFromLinkedPortal ? (
-                      <p className="text-sm text-slate-400 mt-1">
-                        {a.isLinkedShared ? (
-                          <span className="text-xs text-purple-300 border border-purple-500/40 rounded px-1.5 py-0.5">
-                            수동 연결
-                          </span>
+                  return (
+                    <section
+                      key={a.assessmentId}
+                      className="bg-slate-800/80 rounded-2xl border border-slate-600 p-5 space-y-3"
+                    >
+                      <div className="border-b border-slate-700/40 pb-2.5 mb-1">
+                        <h3 className="text-base sm:text-lg font-medium text-slate-400">
+                          {portalAssessmentGroupTitle(a)}
+                        </h3>
+                        {a.isLinkedShared || a.isFromLinkedPortal ? (
+                          <p className="text-sm text-slate-400 mt-1">
+                            {a.isLinkedShared ? (
+                              <span className="text-xs text-purple-300 border border-purple-500/40 rounded px-1.5 py-0.5">
+                                수동 연결
+                              </span>
+                            ) : null}
+                            {a.isFromLinkedPortal ? (
+                              <span
+                                className={`text-xs text-indigo-300 border border-indigo-500/40 rounded px-1.5 py-0.5${a.isLinkedShared ? ' ml-2' : ''}`}
+                              >
+                                연결 나의코드 {formatAccessCodeDisplay(a.sourceMyCode || '')}
+                              </span>
+                            ) : null}
+                          </p>
                         ) : null}
-                        {a.isFromLinkedPortal ? (
-                          <span
-                            className={`text-xs text-indigo-300 border border-indigo-500/40 rounded px-1.5 py-0.5${a.isLinkedShared ? ' ml-2' : ''}`}
-                          >
-                            연결 나의코드 {formatAccessCodeDisplay(a.sourceMyCode || '')}
-                          </span>
-                        ) : null}
-                      </p>
-                    ) : null}
-                  </div>
+                      </div>
 
-                  {!a.testList?.length ? (
-                    <p className="text-slate-500 text-sm">등록된 검사가 없습니다.</p>
-                  ) : (
-                    <PortalTestList
-                      accessCode={code}
-                      assessmentId={a.assessmentId}
-                      testList={a.testList}
-                      results={results}
-                      onStartTest={(testId, resultId) => openTest(a, testId, resultId)}
-                      onViewResult={({ testName, resultId, roundNumber, resultItem }) =>
-                        openResultView(code, testName, resultId, roundNumber, resultItem)
-                      }
-                    />
-                  )}
-                </section>
-              );
-            })
-          )}
+                      {!a.testList?.length ? (
+                        <p className="text-slate-500 text-sm">등록된 검사가 없습니다.</p>
+                      ) : (
+                        <PortalTestList
+                          accessCode={code}
+                          assessmentId={a.assessmentId}
+                          testList={a.testList}
+                          results={results}
+                          onStartTest={(testId, resultId) => openTest(a, testId, resultId)}
+                          onViewResult={({ testName, resultId, roundNumber, resultItem }) =>
+                            openResultView(code, testName, resultId, roundNumber, resultItem)
+                          }
+                        />
+                      )}
+                    </section>
+                  );
+                })
+              )}
 
               <PortalCareAssignmentsPanel assignedAssessmentIds={assessments.map((a) => a.assessmentId)} />
             </div>
-          )}
-            </>
           )}
         </main>
       </div>

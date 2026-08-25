@@ -16,6 +16,8 @@ from utils.portal_chat import (
     send_portal_chat_message,
     send_scheduled_portal_chat_now,
     cancel_scheduled_portal_chat,
+    cancel_scheduled_portal_chat_for_portal,
+    send_scheduled_portal_chat_now_for_portal,
     update_portal_chat_reply_status,
     _parse_scheduled_at,
 )
@@ -91,6 +93,50 @@ def portal_send_message():
     except ValueError as exc:
         return jsonify({"error": "Bad Request", "message": str(exc)}), 400
     return jsonify({"message": item}), 201
+
+
+@bp.route("/me/scheduled/<scheduled_id>", methods=["DELETE"])
+def portal_cancel_scheduled(scheduled_id: str):
+    payload = get_portal_session_from_request()
+    if not payload:
+        return jsonify({"error": "Unauthorized", "message": "세션이 만료되었습니다."}), 401
+
+    portal_id = (payload.get("portalId") or "").strip()
+    if not portal_id or portal_id.startswith("legacy:"):
+        return jsonify({"error": "Bad Request", "message": "예약을 취소할 수 없습니다."}), 400
+
+    db = get_firestore()
+    try:
+        cancel_scheduled_portal_chat_for_portal(db, scheduled_id, portal_id)
+    except LookupError:
+        return jsonify({"error": "Not Found", "message": "예약 메시지를 찾을 수 없습니다."}), 404
+    except PermissionError:
+        return jsonify({"error": "Forbidden", "message": "접근 권한이 없습니다."}), 403
+    except ValueError as exc:
+        return jsonify({"error": "Bad Request", "message": str(exc)}), 400
+    return jsonify({"ok": True})
+
+
+@bp.route("/me/scheduled/<scheduled_id>/send-now", methods=["POST"])
+def portal_send_scheduled_now(scheduled_id: str):
+    payload = get_portal_session_from_request()
+    if not payload:
+        return jsonify({"error": "Unauthorized", "message": "세션이 만료되었습니다."}), 401
+
+    portal_id = (payload.get("portalId") or "").strip()
+    if not portal_id or portal_id.startswith("legacy:"):
+        return jsonify({"error": "Bad Request", "message": "즉시 발송할 수 없습니다."}), 400
+
+    db = get_firestore()
+    try:
+        item = send_scheduled_portal_chat_now_for_portal(db, scheduled_id, portal_id)
+    except LookupError:
+        return jsonify({"error": "Not Found", "message": "예약 메시지를 찾을 수 없습니다."}), 404
+    except PermissionError:
+        return jsonify({"error": "Forbidden", "message": "접근 권한이 없습니다."}), 403
+    except ValueError as exc:
+        return jsonify({"error": "Bad Request", "message": str(exc)}), 400
+    return jsonify({"message": item})
 
 
 @bp.route("/threads", methods=["GET"])

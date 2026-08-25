@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import CounselorCategoryHub from '@/components/counselor/CounselorCategoryHub';
-import { getCounselorCategoryBySlug } from '@/data/counselorMenu';
+import { getCounselorCategoryBySlug, COUNSELOR_SALES_HUB_SLUG } from '@/data/counselorMenu';
 import {
   COUNSELOR_PSYCH_TESTS_SLUG,
   COUNSELOR_TOOLS_SLUG,
@@ -28,6 +28,8 @@ export default function CounselorCategoryHubPageClient({ slug }: Props) {
       router.replace(getPsychTestsDefaultHref());
     } else if (slug === COUNSELOR_TOOLS_SLUG) {
       router.replace(getCounselorCategoryDefaultHref(COUNSELOR_TOOLS_SLUG));
+    } else if (slug === COUNSELOR_SALES_HUB_SLUG) {
+      router.replace(getCounselorCategoryDefaultHref(COUNSELOR_SALES_HUB_SLUG));
     }
   }, [slug, router]);
 
@@ -41,6 +43,10 @@ export default function CounselorCategoryHubPageClient({ slug }: Props) {
 
   if (slug === COUNSELOR_TOOLS_SLUG) {
     return <AuthLoadingState className="py-8" message="1:1 채팅으로 이동 중…" />;
+  }
+
+  if (slug === COUNSELOR_SALES_HUB_SLUG) {
+    return <AuthLoadingState className="py-8" message="3분 마음 체크로 이동 중…" />;
   }
 
   if (authPending) {

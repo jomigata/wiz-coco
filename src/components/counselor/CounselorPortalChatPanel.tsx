@@ -17,6 +17,7 @@ import {
   type PortalChatThread,
 } from '@/lib/portalChatApi';
 import { LoadingMessage } from '@/components/ui/LoadingMessage';
+import DateTimeSpinFields, { defaultScheduledDate } from '@/components/ui/DateTimeSpinFields';
 
 function threadTitle(thread: PortalChatThread): string {
   const name = (thread.displayName || '').trim() || '내담자';
@@ -38,11 +39,6 @@ function sortThreads(threads: PortalChatThread[], selectedPortalId: string | nul
   });
 }
 
-function toLocalDateTimeInputValue(date: Date): string {
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
-}
-
 export default function CounselorPortalChatPanel() {
   const [threads, setThreads] = useState<PortalChatThread[]>([]);
   const [selectedPortalId, setSelectedPortalId] = useState<string | null>(null);
@@ -50,7 +46,7 @@ export default function CounselorPortalChatPanel() {
   const [draft, setDraft] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [scheduleEnabled, setScheduleEnabled] = useState(false);
-  const [scheduledAt, setScheduledAt] = useState('');
+  const [scheduledDate, setScheduledDate] = useState(() => defaultScheduledDate());
   const [loadingThreads, setLoadingThreads] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [sending, setSending] = useState(false);
@@ -72,6 +68,16 @@ export default function CounselorPortalChatPanel() {
         ? counselorClientProgressHref(selectedThread.primaryAssessmentId, selectedThread.portalId)
         : null)
     : null;
+
+  const sortedMessages = useMemo(
+    () =>
+      [...messages].sort((a, b) => {
+        const ta = a.scheduledAt || a.createdAt || '';
+        const tb = b.scheduledAt || b.createdAt || '';
+        return tb.localeCompare(ta);
+      }),
+    [messages],
+  );
 
   const loadThreads = useCallback(async (keepSelection = true) => {
     setError('');
@@ -119,8 +125,8 @@ export default function CounselorPortalChatPanel() {
 
   useEffect(() => {
     const el = scrollRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
-  }, [messages, selectedPortalId]);
+    if (el) el.scrollTop = 0;
+  }, [sortedMessages, selectedPortalId]);
 
   const handleSelectThread = (portalId: string) => {
     if (portalId === selectedPortalId) return;
@@ -132,18 +138,13 @@ export default function CounselorPortalChatPanel() {
     if (!text || !selectedPortalId || sending) return;
 
     let scheduledIso: string | undefined;
-    const wasScheduled = scheduleEnabled && Boolean(scheduledAt);
-    if (scheduleEnabled && scheduledAt) {
-      const dt = new Date(scheduledAt);
-      if (Number.isNaN(dt.getTime())) {
-        setError('예약 일시 형식을 확인해 주세요.');
-        return;
-      }
-      if (dt.getTime() <= Date.now()) {
+    const wasScheduled = scheduleEnabled;
+    if (scheduleEnabled) {
+      if (scheduledDate.getTime() <= Date.now()) {
         setError('예약 일시는 현재 시각 이후여야 합니다.');
         return;
       }
-      scheduledIso = dt.toISOString();
+      scheduledIso = scheduledDate.toISOString();
     }
 
     setSending(true);
@@ -156,7 +157,7 @@ export default function CounselorPortalChatPanel() {
       setMessages((prev) => [...prev, item]);
       if (wasScheduled) {
         setScheduleEnabled(false);
-        setScheduledAt('');
+        setScheduledDate(defaultScheduledDate());
       }
       await loadThreads(true);
     } catch (err) {
@@ -212,11 +213,11 @@ export default function CounselorPortalChatPanel() {
       </div>
 
       <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-[minmax(260px,340px)_1fr]">
-        <aside className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-700/80 bg-slate-900/40">
+        <aside className="flex min-h-0 max-h-[42vh] flex-col overflow-hidden rounded-xl border border-slate-700/80 bg-slate-900/40 lg:max-h-none">
           <div className="shrink-0 border-b border-slate-800/80 px-3 py-2 text-[11px] font-medium uppercase tracking-wide text-slate-500">
             내담자
           </div>
-          <ul className="min-h-0 flex-1 divide-y divide-slate-800/80 overflow-y-auto">
+          <ul className="min-h-0 flex-1 divide-y divide-slate-800/80 overflow-y-auto overscroll-contain">
             {sortedThreads.length === 0 ? (
               <li className="px-4 py-6 text-sm text-slate-500">
                 {searchQuery.trim() ? '검색 결과가 없습니다.' : '등록된 내담자가 없습니다.'}
@@ -274,13 +275,68 @@ export default function CounselorPortalChatPanel() {
                 ) : null}
               </div>
 
-              <div ref={scrollRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
+              <div className="shrink-0 space-y-3 border-b border-slate-700/70 p-4">
+                {error ? (
+                  <p className="rounded-md border border-red-500/30 bg-red-950/40 px-3 py-2 text-sm text-red-300">
+                    {error}
+                  </p>
+                ) : null}
+
+                <div className="flex flex-wrap items-center gap-3 text-xs text-slate-300">
+                  <label className="inline-flex items-center gap-1.5">
+                    <input
+                      type="checkbox"
+                      checked={scheduleEnabled}
+                      onChange={(e) => {
+                        setScheduleEnabled(e.target.checked);
+                        if (e.target.checked) {
+                          setScheduledDate(defaultScheduledDate());
+                        }
+                      }}
+                    />
+                    예약 전송
+                  </label>
+                </div>
+
+                {scheduleEnabled ? (
+                  <div className="space-y-2">
+                    <p className="text-[11px] text-slate-500">예약 일시</p>
+                    <DateTimeSpinFields value={scheduledDate} onChange={setScheduledDate} />
+                  </div>
+                ) : null}
+
+                <div className="flex gap-2">
+                  <textarea
+                    value={draft}
+                    onChange={(e) => setDraft(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        void handleSend();
+                      }
+                    }}
+                    rows={2}
+                    placeholder="답변을 입력하세요 (Enter 전송)"
+                    className="min-h-[44px] flex-1 resize-y rounded-lg border border-slate-600 bg-slate-950/70 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-indigo-500/50 focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => void handleSend()}
+                    disabled={sending || !draft.trim()}
+                    className="shrink-0 self-end rounded-lg bg-indigo-700 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-600 disabled:opacity-50"
+                  >
+                    {sending ? '전송 중…' : scheduleEnabled ? '예약' : '보내기'}
+                  </button>
+                </div>
+              </div>
+
+              <div ref={scrollRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain p-4">
                 {loadingMessages ? (
                   <p className="text-sm text-slate-500">대화를 불러오는 중…</p>
-                ) : messages.length === 0 ? (
+                ) : sortedMessages.length === 0 ? (
                   <p className="text-sm text-slate-500">아직 메시지가 없습니다.</p>
                 ) : (
-                  messages.map((msg) => {
+                  sortedMessages.map((msg) => {
                     const mine = msg.senderRole === 'counselor';
                     const scheduled = Boolean(msg.isScheduled && msg.scheduledPending);
                     return (
@@ -321,7 +377,7 @@ export default function CounselorPortalChatPanel() {
                             </div>
                           ) : null}
                           <p className={`mt-1 text-[11px] ${mine ? 'text-indigo-200/70' : 'text-slate-400'}`}>
-                            {mine ? '매니저' : selectedThread.displayName} ·{' '}
+                            {mine ? '상담사' : selectedThread.displayName} ·{' '}
                             {formatChatTimestamp(scheduled ? msg.scheduledAt : msg.createdAt)}
                           </p>
                         </div>
@@ -329,67 +385,6 @@ export default function CounselorPortalChatPanel() {
                     );
                   })
                 )}
-              </div>
-
-              <div className="shrink-0 space-y-3 border-t border-slate-700/70 p-4">
-                {error ? (
-                  <p className="rounded-md border border-red-500/30 bg-red-950/40 px-3 py-2 text-sm text-red-300">
-                    {error}
-                  </p>
-                ) : null}
-
-                {scheduleEnabled ? (
-                  <div className="flex flex-col gap-2">
-                    <input
-                      type="datetime-local"
-                      value={scheduledAt}
-                      onChange={(e) => setScheduledAt(e.target.value)}
-                      className="rounded border border-slate-600 bg-slate-950/70 px-2 py-1.5 text-xs text-white"
-                    />
-                    <p className="text-[11px] text-slate-500">예약 일시를 선택하세요.</p>
-                  </div>
-                ) : null}
-
-                <div className="flex flex-wrap items-center gap-3 text-xs text-slate-300">
-                  <label className="inline-flex items-center gap-1.5">
-                    <input
-                      type="checkbox"
-                      checked={scheduleEnabled}
-                      onChange={(e) => {
-                        setScheduleEnabled(e.target.checked);
-                        if (e.target.checked && !scheduledAt) {
-                          const next = new Date(Date.now() + 60 * 60 * 1000);
-                          setScheduledAt(toLocalDateTimeInputValue(next));
-                        }
-                      }}
-                    />
-                    예약 전송
-                  </label>
-                </div>
-
-                <div className="flex gap-2">
-                  <textarea
-                    value={draft}
-                    onChange={(e) => setDraft(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        void handleSend();
-                      }
-                    }}
-                    rows={2}
-                    placeholder="답변을 입력하세요 (Enter 전송)"
-                    className="min-h-[44px] flex-1 resize-y rounded-lg border border-slate-600 bg-slate-950/70 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-indigo-500/50 focus:outline-none"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => void handleSend()}
-                    disabled={sending || !draft.trim()}
-                    className="shrink-0 self-end rounded-lg bg-indigo-700 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-600 disabled:opacity-50"
-                  >
-                    {sending ? '전송 중…' : scheduleEnabled ? '예약' : '보내기'}
-                  </button>
-                </div>
               </div>
             </>
           ) : (

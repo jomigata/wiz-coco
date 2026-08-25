@@ -372,13 +372,43 @@ def cancel_scheduled_portal_chat(db, scheduled_id: str, counselor_uid: str | Non
 
 def send_scheduled_portal_chat_now(db, scheduled_id: str, counselor_uid: str | None) -> dict:
     ref, data = _get_scheduled_doc(db, scheduled_id, counselor_uid)
+    sender_role = (data.get("senderRole") or "counselor").strip()
+    if sender_role not in ("portal", "counselor"):
+        sender_role = "counselor"
     item = send_portal_chat_message(
         db,
         portal_id=(data.get("portalId") or "").strip(),
         counselor_id=(data.get("counselorId") or "").strip(),
-        sender_role="counselor",
+        sender_role=sender_role,
         message=(data.get("message") or "").strip(),
         reply_status=(data.get("replyStatus") or "").strip() or None,
+    )
+    ref.update({"sent": True, "sentAt": SERVER_TIMESTAMP})
+    return item
+
+
+def _get_scheduled_doc_for_portal(db, scheduled_id: str, portal_id: str):
+    ref, data = _get_scheduled_doc(db, scheduled_id, None)
+    if (data.get("portalId") or "").strip() != (portal_id or "").strip():
+        raise PermissionError("forbidden")
+    if (data.get("senderRole") or "").strip() != "portal":
+        raise PermissionError("forbidden")
+    return ref, data
+
+
+def cancel_scheduled_portal_chat_for_portal(db, scheduled_id: str, portal_id: str) -> None:
+    ref, _ = _get_scheduled_doc_for_portal(db, scheduled_id, portal_id)
+    ref.delete()
+
+
+def send_scheduled_portal_chat_now_for_portal(db, scheduled_id: str, portal_id: str) -> dict:
+    ref, data = _get_scheduled_doc_for_portal(db, scheduled_id, portal_id)
+    item = send_portal_chat_message(
+        db,
+        portal_id=(data.get("portalId") or "").strip(),
+        counselor_id=(data.get("counselorId") or "").strip(),
+        sender_role="portal",
+        message=(data.get("message") or "").strip(),
     )
     ref.update({"sent": True, "sentAt": SERVER_TIMESTAMP})
     return item

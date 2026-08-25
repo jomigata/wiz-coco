@@ -21,7 +21,7 @@ def _score_generic_mini_check(responses: dict | list) -> dict:
         "maxScore": scored.get("maxScore"),
         "hookMessage": hook,
         "summary": hook,
-        "counselorNote": "검사 매니저가 곧 확인해 드립니다.",
+        "counselorNote": "담당 상담사가 곧 확인해 드립니다.",
         "responseCount": len(responses),
     }
 
@@ -43,6 +43,6 @@ def compute_result_data(test_id: str, responses: dict | list) -> dict:
         count = 0
     return {
         "testId": tid,
-        "summary": f"응답 {count}건 제출됨. 상세 해석은 검사 매니저와 논의하세요.",
+        "summary": f"응답 {count}건 제출됨. 상세 해석은 담당 상담사와 논의하세요.",
         "responseCount": count,
     }

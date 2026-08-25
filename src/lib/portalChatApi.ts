@@ -1,5 +1,5 @@
 /**
- * 내 검사실 ↔ 검사 매니저 1:1 문의 채팅 API
+ * 내담자 ↔ 담당 상담사 1:1 문의 채팅 API
  */
 
 import { getCounselorToken } from '@/lib/assessmentApi';
@@ -74,6 +74,41 @@ export async function sendPortalChatMessage(
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     throw new Error(typeof data?.message === 'string' ? data.message : '메시지 전송에 실패했습니다.');
+  }
+  return data.message as PortalChatMessage;
+}
+
+export async function cancelPortalScheduledMessage(
+  portalToken: string,
+  scheduledId: string,
+): Promise<void> {
+  const res = await fetch(
+    `${getBaseUrl()}/api/portal-chat/me/scheduled/${encodeURIComponent(scheduledId)}`,
+    {
+      method: 'DELETE',
+      headers: { Authorization: `Portal ${portalToken}` },
+    },
+  );
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(typeof data?.message === 'string' ? data.message : '예약 취소에 실패했습니다.');
+  }
+}
+
+export async function sendPortalScheduledMessageNow(
+  portalToken: string,
+  scheduledId: string,
+): Promise<PortalChatMessage> {
+  const res = await fetch(
+    `${getBaseUrl()}/api/portal-chat/me/scheduled/${encodeURIComponent(scheduledId)}/send-now`,
+    {
+      method: 'POST',
+      headers: { Authorization: `Portal ${portalToken}` },
+    },
+  );
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(typeof data?.message === 'string' ? data.message : '즉시 발송에 실패했습니다.');
   }
   return data.message as PortalChatMessage;
 }
