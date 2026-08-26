@@ -8,6 +8,22 @@ export function sortPortalChatMessagesAsc(messages: PortalChatMessage[]): Portal
   });
 }
 
+/** API 응답 메시지를 목록에 즉시 반영 (새로고침 없이) */
+export function upsertPortalChatMessage(
+  messages: PortalChatMessage[],
+  item: PortalChatMessage,
+): PortalChatMessage[] {
+  const filtered = messages.filter((m) => m.messageId !== item.messageId);
+  return sortPortalChatMessagesAsc([...filtered, item]);
+}
+
+export function removePortalChatMessage(
+  messages: PortalChatMessage[],
+  messageId: string,
+): PortalChatMessage[] {
+  return messages.filter((m) => m.messageId !== messageId);
+}
+
 export function scrollToLatestChatAnchor(anchor: HTMLElement | null, behavior: ScrollBehavior = 'smooth') {
   if (!anchor) return;
   requestAnimationFrame(() => {

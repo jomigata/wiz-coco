@@ -19,7 +19,7 @@ import {
 } from '@/lib/portalChatApi';
 import { LoadingMessage } from '@/components/ui/LoadingMessage';
 import { defaultScheduledDate } from '@/components/ui/DateTimeSpinFields';
-import { scrollToLatestChatAnchor } from '@/lib/portalChatMessageUi';
+import { scrollToLatestChatAnchor, removePortalChatMessage, upsertPortalChatMessage } from '@/lib/portalChatMessageUi';
 import PortalChatMessageComposer, {
   PortalChatFixedComposerShell,
 } from '@/components/portal/PortalChatMessageComposer';
@@ -58,6 +58,7 @@ export default function CounselorPortalChatPanel() {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
   const latestAnchorRef = useRef<HTMLDivElement>(null);
+  const pendingScrollRef = useRef(false);
 
   const filteredThreads = useMemo(
     () => threads.filter((thread) => threadMatchesSearch(thread, searchQuery)),
@@ -79,6 +80,17 @@ export default function CounselorPortalChatPanel() {
     scrollToLatestChatAnchor(latestAnchorRef.current, behavior);
   }, []);
 
+  const appendMessage = useCallback((item: PortalChatMessage) => {
+    pendingScrollRef.current = true;
+    setMessages((prev) => upsertPortalChatMessage(prev, item));
+  }, []);
+
+  useEffect(() => {
+    if (!pendingScrollRef.current) return;
+    pendingScrollRef.current = false;
+    scrollToLatest('smooth');
+  }, [messages, scrollToLatest]);
+
   const loadThreads = useCallback(async (keepSelection = true) => {
     setError('');
     try {
@@ -97,23 +109,19 @@ export default function CounselorPortalChatPanel() {
     }
   }, []);
 
-  const loadMessages = useCallback(
-    async (portalId: string, scrollAfter = false) => {
-      setLoadingMessages(true);
-      setError('');
-      try {
-        const items = await fetchCounselorChatMessages(portalId);
-        setMessages(items);
-        if (scrollAfter) scrollToLatest();
-      } catch (err) {
-        setError(err instanceof Error ? err.message : '채팅 내역 조회에 실패했습니다.');
-        setMessages([]);
-      } finally {
-        setLoadingMessages(false);
-      }
-    },
-    [scrollToLatest],
-  );
+  const loadMessages = useCallback(async (portalId: string) => {
+    setLoadingMessages(true);
+    setError('');
+    try {
+      const items = await fetchCounselorChatMessages(portalId);
+      setMessages(items);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '채팅 내역 조회에 실패했습니다.');
+      setMessages([]);
+    } finally {
+      setLoadingMessages(false);
+    }
+  }, []);
 
   useEffect(() => {
     void loadThreads();
@@ -148,7 +156,7 @@ export default function CounselorPortalChatPanel() {
     setSending(true);
     setError('');
     try {
-      await sendCounselorChatMessage(selectedPortalId, text, {
+      const item = await sendCounselorChatMessage(selectedPortalId, text, {
         scheduledAt: scheduledIso,
       });
       setDraft('');
@@ -156,8 +164,8 @@ export default function CounselorPortalChatPanel() {
         setScheduleEnabled(false);
         setScheduledDate(defaultScheduledDate());
       }
-      await loadMessages(selectedPortalId, true);
-      await loadThreads(true);
+      appendMessage(item);
+      void loadThreads(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : '메시지 전송에 실패했습니다.');
     } finally {
@@ -170,9 +178,13 @@ export default function CounselorPortalChatPanel() {
     setSending(true);
     setError('');
     try {
-      await sendCounselorScheduledMessageNow(scheduledId);
-      await loadMessages(selectedPortalId, true);
-      await loadThreads(true);
+      const item = await sendCounselorScheduledMessageNow(scheduledId);
+      setMessages((prev) => {
+        const withoutScheduled = removePortalChatMessage(prev, scheduledId);
+        pendingScrollRef.current = true;
+        return upsertPortalChatMessage(withoutScheduled, item);
+      });
+      void loadThreads(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : '즉시 발송에 실패했습니다.');
     } finally {
@@ -186,7 +198,7 @@ export default function CounselorPortalChatPanel() {
     setError('');
     try {
       await cancelCounselorScheduledMessage(scheduledId);
-      await loadMessages(selectedPortalId, true);
+      setMessages((prev) => removePortalChatMessage(prev, scheduledId));
     } catch (err) {
       setError(err instanceof Error ? err.message : '예약 취소에 실패했습니다.');
     } finally {
@@ -200,8 +212,8 @@ export default function CounselorPortalChatPanel() {
     setError('');
     try {
       await deleteCounselorChatMessage(selectedPortalId, messageId);
-      await loadMessages(selectedPortalId, false);
-      await loadThreads(true);
+      setMessages((prev) => removePortalChatMessage(prev, messageId));
+      void loadThreads(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : '메시지 삭제에 실패했습니다.');
     } finally {

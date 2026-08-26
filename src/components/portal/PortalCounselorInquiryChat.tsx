@@ -15,7 +15,7 @@ import {
   PORTAL_INQUIRY_SECTION_TITLE,
   portalTestManagerChatSenderLabel,
 } from '@/lib/portalCareManagerLabels';
-import { scrollToLatestChatAnchor } from '@/lib/portalChatMessageUi';
+import { scrollToLatestChatAnchor, removePortalChatMessage, upsertPortalChatMessage } from '@/lib/portalChatMessageUi';
 import PortalChatMessageComposer, {
   PortalChatFixedComposerShell,
 } from '@/components/portal/PortalChatMessageComposer';
@@ -38,31 +38,39 @@ export default function PortalCounselorInquiryChat({
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
   const latestAnchorRef = useRef<HTMLDivElement>(null);
+  const pendingScrollRef = useRef(false);
 
   const scrollToLatest = useCallback((behavior: ScrollBehavior = 'smooth') => {
     scrollToLatestChatAnchor(latestAnchorRef.current, behavior);
   }, []);
 
-  const loadMessages = useCallback(
-    async (scrollAfter = false) => {
-      const session = readClientPortalSession();
-      if (!session?.portalToken) {
-        setLoading(false);
-        return;
-      }
-      setError('');
-      try {
-        const items = await fetchPortalChatMessages(session.portalToken);
-        setMessages(items);
-        if (scrollAfter) scrollToLatest();
-      } catch (err) {
-        setError(err instanceof Error ? err.message : '문의 내역을 불러오지 못했습니다.');
-      } finally {
-        setLoading(false);
-      }
-    },
-    [scrollToLatest],
-  );
+  const appendMessage = useCallback((item: Awaited<ReturnType<typeof fetchPortalChatMessages>>[number]) => {
+    pendingScrollRef.current = true;
+    setMessages((prev) => upsertPortalChatMessage(prev, item));
+  }, []);
+
+  useEffect(() => {
+    if (!pendingScrollRef.current) return;
+    pendingScrollRef.current = false;
+    scrollToLatest('smooth');
+  }, [messages, scrollToLatest]);
+
+  const loadMessages = useCallback(async () => {
+    const session = readClientPortalSession();
+    if (!session?.portalToken) {
+      setLoading(false);
+      return;
+    }
+    setError('');
+    try {
+      const items = await fetchPortalChatMessages(session.portalToken);
+      setMessages(items);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '문의 내역을 불러오지 못했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     void loadMessages();
@@ -93,7 +101,7 @@ export default function PortalCounselorInquiryChat({
     setSending(true);
     setError('');
     try {
-      await sendPortalChatMessage(session.portalToken, text, {
+      const item = await sendPortalChatMessage(session.portalToken, text, {
         scheduledAt: scheduledIso,
       });
       setDraft('');
@@ -101,7 +109,7 @@ export default function PortalCounselorInquiryChat({
         setScheduleEnabled(false);
         setScheduledDate(defaultScheduledDate());
       }
-      await loadMessages(true);
+      appendMessage(item);
     } catch (err) {
       setError(err instanceof Error ? err.message : '메시지 전송에 실패했습니다.');
     } finally {
@@ -115,8 +123,12 @@ export default function PortalCounselorInquiryChat({
     setSending(true);
     setError('');
     try {
-      await sendPortalScheduledMessageNow(session.portalToken, scheduledId);
-      await loadMessages(true);
+      const item = await sendPortalScheduledMessageNow(session.portalToken, scheduledId);
+      setMessages((prev) => {
+        const withoutScheduled = removePortalChatMessage(prev, scheduledId);
+        pendingScrollRef.current = true;
+        return upsertPortalChatMessage(withoutScheduled, item);
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : '즉시 발송에 실패했습니다.');
     } finally {
@@ -131,7 +143,7 @@ export default function PortalCounselorInquiryChat({
     setError('');
     try {
       await cancelPortalScheduledMessage(session.portalToken, scheduledId);
-      await loadMessages(true);
+      setMessages((prev) => removePortalChatMessage(prev, scheduledId));
     } catch (err) {
       setError(err instanceof Error ? err.message : '예약 취소에 실패했습니다.');
     } finally {
@@ -146,7 +158,7 @@ export default function PortalCounselorInquiryChat({
     setError('');
     try {
       await deletePortalChatMessage(session.portalToken, messageId);
-      await loadMessages(false);
+      setMessages((prev) => removePortalChatMessage(prev, messageId));
     } catch (err) {
       setError(err instanceof Error ? err.message : '메시지 삭제에 실패했습니다.');
     } finally {
