@@ -1,5 +1,20 @@
 import type { PortalChatMessage } from '@/lib/portalChatApi';
 
+export function sortPortalChatMessagesAsc(messages: PortalChatMessage[]): PortalChatMessage[] {
+  return [...messages].sort((a, b) => {
+    const ta = a.scheduledAt || a.createdAt || '';
+    const tb = b.scheduledAt || b.createdAt || '';
+    return ta.localeCompare(tb);
+  });
+}
+
+export function scrollToLatestChatAnchor(anchor: HTMLElement | null, behavior: ScrollBehavior = 'smooth') {
+  if (!anchor) return;
+  requestAnimationFrame(() => {
+    anchor.scrollIntoView({ behavior, block: 'end' });
+  });
+}
+
 export function isMessageReadByRecipient(
   msg: PortalChatMessage,
   viewerRole: 'portal' | 'counselor',

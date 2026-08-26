@@ -13,6 +13,8 @@ from config import (
     DAILY_RECORDS_COLLECTION,
     JOIN_PARTICIPANTS_COLLECTION,
     NOTIFICATION_QUEUE_COLLECTION,
+    PORTAL_CHAT_MESSAGES_COLLECTION,
+    PORTAL_CHAT_SCHEDULED_COLLECTION,
     TEST_RESULTS_COLLECTION,
 )
 from utils.access_code import reset_access_code_generation_meta
@@ -153,6 +155,8 @@ def purge_assessment_platform_data(db, *, dry_run: bool = False, include_all_tes
         "aiReports": _delete_entire_collection(db, AI_REPORTS_COLLECTION, dry_run),
         "aiUsageLedger": _delete_entire_collection(db, AI_USAGE_LEDGER_COLLECTION, dry_run),
         "b2cEntitlements": _delete_entire_collection(db, B2C_ENTITLEMENTS_COLLECTION, dry_run),
+        "portalChatMessages": _delete_entire_collection(db, PORTAL_CHAT_MESSAGES_COLLECTION, dry_run),
+        "portalChatScheduled": _delete_entire_collection(db, PORTAL_CHAT_SCHEDULED_COLLECTION, dry_run),
     }
     for name in PLATFORM_CONTENT_COLLECTIONS:
         counts[name] = _delete_entire_collection(db, name, dry_run)
