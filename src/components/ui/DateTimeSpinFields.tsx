@@ -8,86 +8,26 @@ type Props = {
   className?: string;
 };
 
-function SpinColumn({
-  label,
-  value,
-  onDec,
-  onInc,
-}: {
-  label: string;
-  value: string;
-  onDec: () => void;
-  onInc: () => void;
-}) {
-  return (
-    <div className="flex flex-col items-center gap-0.5">
-      <button
-        type="button"
-        onClick={onInc}
-        className="rounded px-2 py-0.5 text-xs text-slate-300 hover:bg-white/10"
-        aria-label={`${label} 증가`}
-      >
-        ▲
-      </button>
-      <span className="min-w-[2.5rem] rounded border border-slate-600 bg-slate-900/80 px-2 py-1 text-center font-mono text-sm text-white">
-        {value}
-      </span>
-      <button
-        type="button"
-        onClick={onDec}
-        className="rounded px-2 py-0.5 text-xs text-slate-300 hover:bg-white/10"
-        aria-label={`${label} 감소`}
-      >
-        ▼
-      </button>
-      <span className="text-[10px] text-slate-500">{label}</span>
-    </div>
-  );
+function toLocalInputValue(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
-/** 년·월·일·시·분 — 상하 화살표로 조절 */
+/** 예약 일시 — 브라우저 datetime-local 입력 (간편 선택) */
 export default function DateTimeSpinFields({ value, onChange, className = '' }: Props) {
-  const bump = (mutate: (d: Date) => void) => {
-    const next = new Date(value);
-    mutate(next);
-    onChange(next);
-  };
-
-  const pad = (n: number) => String(n).padStart(2, '0');
+  const minValue = toLocalInputValue(new Date());
 
   return (
-    <div className={`flex flex-wrap items-end gap-2 ${className}`}>
-      <SpinColumn
-        label="년"
-        value={String(value.getFullYear())}
-        onInc={() => bump((d) => d.setFullYear(d.getFullYear() + 1))}
-        onDec={() => bump((d) => d.setFullYear(d.getFullYear() - 1))}
-      />
-      <SpinColumn
-        label="월"
-        value={pad(value.getMonth() + 1)}
-        onInc={() => bump((d) => d.setMonth(d.getMonth() + 1))}
-        onDec={() => bump((d) => d.setMonth(d.getMonth() - 1))}
-      />
-      <SpinColumn
-        label="일"
-        value={pad(value.getDate())}
-        onInc={() => bump((d) => d.setDate(d.getDate() + 1))}
-        onDec={() => bump((d) => d.setDate(d.getDate() - 1))}
-      />
-      <SpinColumn
-        label="시"
-        value={pad(value.getHours())}
-        onInc={() => bump((d) => d.setHours(d.getHours() + 1))}
-        onDec={() => bump((d) => d.setHours(d.getHours() - 1))}
-      />
-      <SpinColumn
-        label="분"
-        value={pad(value.getMinutes())}
-        onInc={() => bump((d) => d.setMinutes(d.getMinutes() + 1))}
-        onDec={() => bump((d) => d.setMinutes(d.getMinutes() - 1))}
-      />
-    </div>
+    <input
+      type="datetime-local"
+      value={toLocalInputValue(value)}
+      min={minValue}
+      onChange={(e) => {
+        const next = new Date(e.target.value);
+        if (!Number.isNaN(next.getTime())) onChange(next);
+      }}
+      className={`rounded-lg border border-slate-600 bg-slate-950/70 px-3 py-2 text-sm text-white focus:border-indigo-500/50 focus:outline-none ${className}`}
+    />
   );
 }
 

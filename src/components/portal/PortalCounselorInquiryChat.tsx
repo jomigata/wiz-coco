@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   cancelPortalScheduledMessage,
+  deletePortalChatMessage,
   fetchPortalChatMessages,
   formatChatTimestamp,
   sendPortalChatMessage,
@@ -16,6 +17,10 @@ import {
   PORTAL_INQUIRY_SECTION_TITLE,
   portalTestManagerChatSenderLabel,
 } from '@/lib/portalCareManagerLabels';
+import {
+  canDeleteUnreadOwnMessage,
+  readReceiptLabel,
+} from '@/lib/portalChatMessageUi';
 
 export type PortalCounselorInquiryChatProps = {
   counselorName?: string;
@@ -71,9 +76,11 @@ export default function PortalCounselorInquiryChat({
   }, [loadMessages]);
 
   useEffect(() => {
-    const el = scrollRef.current;
-    if (el) el.scrollTop = 0;
-  }, [sortedMessages]);
+    if (!embeddedInTab) {
+      const el = scrollRef.current;
+      if (el) el.scrollTop = 0;
+    }
+  }, [sortedMessages, embeddedInTab]);
 
   const handleSend = async () => {
     const text = draft.trim();
@@ -142,10 +149,34 @@ export default function PortalCounselorInquiryChat({
     }
   };
 
+  const handleDeleteMessage = async (messageId: string) => {
+    const session = readClientPortalSession();
+    if (!session?.portalToken || sending) return;
+    setSending(true);
+    setError('');
+    try {
+      await deletePortalChatMessage(session.portalToken, messageId);
+      setMessages((prev) => prev.filter((m) => m.messageId !== messageId));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '메시지 삭제에 실패했습니다.');
+    } finally {
+      setSending(false);
+    }
+  };
+
   const chatSenderLabel = portalTestManagerChatSenderLabel(counselorName);
+  const messageListClass = embeddedInTab
+    ? 'mt-4 space-y-3'
+    : 'mt-4 min-h-0 flex-1 space-y-3 overflow-y-auto rounded-lg border border-slate-700/70 bg-slate-900/50 p-3';
 
   return (
-    <section className="flex min-h-[420px] flex-col rounded-xl border border-slate-700/80 bg-slate-800/40 p-5">
+    <section
+      className={
+        embeddedInTab
+          ? 'rounded-xl border border-slate-700/80 bg-slate-800/40 p-5'
+          : 'flex min-h-[420px] flex-col rounded-xl border border-slate-700/80 bg-slate-800/40 p-5'
+      }
+    >
       {!embeddedInTab ? (
         <div className="shrink-0 flex flex-wrap items-start justify-between gap-2">
           <div>
@@ -210,11 +241,7 @@ export default function PortalCounselorInquiryChat({
         </p>
       ) : null}
 
-      <div
-        ref={scrollRef}
-        className="mt-4 min-h-0 flex-1 space-y-3 overflow-y-auto rounded-lg border border-slate-700/70 bg-slate-900/50 p-3"
-        aria-live="polite"
-      >
+      <div ref={scrollRef} className={messageListClass} aria-live="polite">
         {loading ? (
           <p className="text-sm text-slate-500">문의 내역을 불러오는 중…</p>
         ) : sortedMessages.length === 0 ? (
@@ -223,6 +250,8 @@ export default function PortalCounselorInquiryChat({
           sortedMessages.map((msg) => {
             const mine = msg.senderRole === 'portal';
             const scheduled = Boolean(msg.isScheduled && msg.scheduledPending);
+            const receipt = readReceiptLabel(msg, 'portal', mine);
+            const deletable = canDeleteUnreadOwnMessage(msg, 'portal');
             return (
               <div key={msg.messageId} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
                 <div
@@ -260,10 +289,23 @@ export default function PortalCounselorInquiryChat({
                       </button>
                     </div>
                   ) : null}
-                  <p className={`mt-1 text-[11px] ${mine ? 'text-cyan-200/70' : 'text-slate-400'}`}>
-                    {mine ? '나' : chatSenderLabel} ·{' '}
-                    {formatChatTimestamp(scheduled ? msg.scheduledAt : msg.createdAt)}
-                  </p>
+                  <div className="mt-1 flex flex-wrap items-center gap-2">
+                    <p className={`text-[11px] ${mine ? 'text-cyan-200/70' : 'text-slate-400'}`}>
+                      {mine ? '나' : chatSenderLabel} ·{' '}
+                      {formatChatTimestamp(scheduled ? msg.scheduledAt : msg.createdAt)}
+                      {receipt ? ` · ${receipt}` : ''}
+                    </p>
+                    {deletable ? (
+                      <button
+                        type="button"
+                        disabled={sending}
+                        onClick={() => void handleDeleteMessage(msg.messageId)}
+                        className="text-[11px] text-red-300 hover:text-red-200 disabled:opacity-50"
+                      >
+                        삭제
+                      </button>
+                    ) : null}
+                  </div>
                 </div>
               </div>
             );

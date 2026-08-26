@@ -412,3 +412,45 @@ def send_scheduled_portal_chat_now_for_portal(db, scheduled_id: str, portal_id: 
     )
     ref.update({"sent": True, "sentAt": SERVER_TIMESTAMP})
     return item
+
+
+def _get_message_doc(db, message_id: str):
+    mid = (message_id or "").strip()
+    if not mid:
+        raise LookupError("not found")
+    ref = db.collection(PORTAL_CHAT_MESSAGES_COLLECTION).document(mid)
+    doc = ref.get()
+    if not doc.exists:
+        raise LookupError("not found")
+    return ref, doc.to_dict() or {}
+
+
+def delete_portal_chat_message_for_portal(db, message_id: str, portal_id: str) -> None:
+    ref, data = _get_message_doc(db, message_id)
+    pid = (portal_id or "").strip()
+    if (data.get("portalId") or "").strip() != pid:
+        raise PermissionError("forbidden")
+    if (data.get("senderRole") or "").strip() != "portal":
+        raise PermissionError("forbidden")
+    if bool(data.get("readByCounselor")):
+        raise ValueError("상대방이 이미 읽은 메시지는 삭제할 수 없습니다.")
+    ref.delete()
+
+
+def delete_portal_chat_message_for_counselor(
+    db,
+    message_id: str,
+    portal_id: str,
+    counselor_uid: str | None,
+) -> None:
+    assert_counselor_can_access_portal(db, counselor_uid, portal_id)
+    ref, data = _get_message_doc(db, message_id)
+    if (data.get("portalId") or "").strip() != (portal_id or "").strip():
+        raise PermissionError("forbidden")
+    if counselor_uid and (data.get("counselorId") or "").strip() != counselor_uid.strip():
+        raise PermissionError("forbidden")
+    if (data.get("senderRole") or "").strip() != "counselor":
+        raise PermissionError("forbidden")
+    if bool(data.get("readByPortal")):
+        raise ValueError("상대방이 이미 읽은 메시지는 삭제할 수 없습니다.")
+    ref.delete()

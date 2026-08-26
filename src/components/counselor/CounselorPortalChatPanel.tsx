@@ -7,6 +7,7 @@ import { counselorClientProgressHref } from '@/lib/counselorClientRoutes';
 import {
   cancelCounselorScheduledMessage,
   counselorChatProgressHref,
+  deleteCounselorChatMessage,
   fetchCounselorChatMessages,
   fetchCounselorChatThreads,
   formatChatTimestamp,
@@ -18,6 +19,10 @@ import {
 } from '@/lib/portalChatApi';
 import { LoadingMessage } from '@/components/ui/LoadingMessage';
 import DateTimeSpinFields, { defaultScheduledDate } from '@/components/ui/DateTimeSpinFields';
+import {
+  canDeleteUnreadOwnMessage,
+  readReceiptLabel,
+} from '@/lib/portalChatMessageUi';
 
 function threadTitle(thread: PortalChatThread): string {
   const name = (thread.displayName || '').trim() || '내담자';
@@ -196,12 +201,27 @@ export default function CounselorPortalChatPanel() {
     }
   };
 
+  const handleDeleteMessage = async (messageId: string) => {
+    if (!selectedPortalId || sending) return;
+    setSending(true);
+    setError('');
+    try {
+      await deleteCounselorChatMessage(selectedPortalId, messageId);
+      setMessages((prev) => prev.filter((m) => m.messageId !== messageId));
+      await loadThreads(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '메시지 삭제에 실패했습니다.');
+    } finally {
+      setSending(false);
+    }
+  };
+
   if (loadingThreads) {
     return <LoadingMessage className="py-12" message="채팅 목록을 불러오는 중…" />;
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3">
+    <div className="flex h-full min-h-0 flex-1 flex-col gap-3">
       <div className="shrink-0">
         <input
           type="search"
@@ -213,7 +233,7 @@ export default function CounselorPortalChatPanel() {
       </div>
 
       <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-[minmax(260px,340px)_1fr]">
-        <aside className="flex min-h-0 max-h-[42vh] flex-col overflow-hidden rounded-xl border border-slate-700/80 bg-slate-900/40 lg:max-h-none">
+        <aside className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-700/80 bg-slate-900/40">
           <div className="shrink-0 border-b border-slate-800/80 px-3 py-2 text-[11px] font-medium uppercase tracking-wide text-slate-500">
             내담자
           </div>
@@ -339,6 +359,8 @@ export default function CounselorPortalChatPanel() {
                   sortedMessages.map((msg) => {
                     const mine = msg.senderRole === 'counselor';
                     const scheduled = Boolean(msg.isScheduled && msg.scheduledPending);
+                    const receipt = readReceiptLabel(msg, 'counselor', mine);
+                    const deletable = canDeleteUnreadOwnMessage(msg, 'counselor');
                     return (
                       <div key={msg.messageId} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
                         <div
@@ -376,10 +398,23 @@ export default function CounselorPortalChatPanel() {
                               </button>
                             </div>
                           ) : null}
-                          <p className={`mt-1 text-[11px] ${mine ? 'text-indigo-200/70' : 'text-slate-400'}`}>
-                            {mine ? '상담사' : selectedThread.displayName} ·{' '}
-                            {formatChatTimestamp(scheduled ? msg.scheduledAt : msg.createdAt)}
-                          </p>
+                          <div className="mt-1 flex flex-wrap items-center gap-2">
+                            <p className={`text-[11px] ${mine ? 'text-indigo-200/70' : 'text-slate-400'}`}>
+                              {mine ? '상담사' : selectedThread.displayName} ·{' '}
+                              {formatChatTimestamp(scheduled ? msg.scheduledAt : msg.createdAt)}
+                              {receipt ? ` · ${receipt}` : ''}
+                            </p>
+                            {deletable ? (
+                              <button
+                                type="button"
+                                disabled={sending}
+                                onClick={() => void handleDeleteMessage(msg.messageId)}
+                                className="text-[11px] text-red-300 hover:text-red-200 disabled:opacity-50"
+                              >
+                                삭제
+                              </button>
+                            ) : null}
+                          </div>
                         </div>
                       </div>
                     );

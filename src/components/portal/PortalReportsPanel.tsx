@@ -88,16 +88,16 @@ export default function PortalReportsPanel({ assessments, resultsByCode, onViewR
                   resultItem: row.resultItem,
                 })
               }
-              className="flex w-full items-center justify-between gap-3 rounded-lg border border-slate-600 bg-slate-700/80 px-4 py-3 text-left transition hover:border-violet-500/40 hover:bg-slate-700"
+              className="flex w-full items-center justify-between gap-4 rounded-xl border border-slate-600 bg-slate-700/80 px-5 py-4 text-left transition hover:border-violet-500/40 hover:bg-slate-700"
             >
               <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-white">
+                <p className="truncate text-base font-semibold text-white">
                   {index + 1}. {row.testName}
-                  <span className="ml-2 font-normal text-slate-400">· {row.completedAt}</span>
+                  <span className="ml-2 text-sm font-normal text-slate-300">· {row.completedAt}</span>
                 </p>
-                <p className="mt-0.5 truncate text-xs text-slate-500">{row.groupTitle}</p>
+                <p className="mt-1.5 truncate text-sm text-slate-400">{row.groupTitle}</p>
               </div>
-              <span className="shrink-0 text-sm text-violet-300">결과보기 →</span>
+              <span className="shrink-0 text-sm font-medium text-violet-300">결과보기 →</span>
             </button>
           </li>
         ))}

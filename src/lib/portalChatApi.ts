@@ -113,6 +113,20 @@ export async function sendPortalScheduledMessageNow(
   return data.message as PortalChatMessage;
 }
 
+export async function deletePortalChatMessage(portalToken: string, messageId: string): Promise<void> {
+  const res = await fetch(
+    `${getBaseUrl()}/api/portal-chat/me/messages/${encodeURIComponent(messageId)}`,
+    {
+      method: 'DELETE',
+      headers: { Authorization: `Portal ${portalToken}` },
+    },
+  );
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(typeof data?.message === 'string' ? data.message : '메시지 삭제에 실패했습니다.');
+  }
+}
+
 export async function fetchCounselorChatThreads(): Promise<PortalChatThread[]> {
   const token = await getCounselorToken();
   if (!token) throw new Error('전문가·상담사 로그인이 필요합니다.');
@@ -224,6 +238,23 @@ export async function sendCounselorScheduledMessageNow(scheduledId: string): Pro
     throw new Error(typeof data?.message === 'string' ? data.message : '즉시 발송에 실패했습니다.');
   }
   return data.message as PortalChatMessage;
+}
+
+export async function deleteCounselorChatMessage(portalId: string, messageId: string): Promise<void> {
+  const token = await getCounselorToken();
+  if (!token) throw new Error('전문가·상담사 로그인이 필요합니다.');
+
+  const res = await fetch(
+    `${getBaseUrl()}/api/portal-chat/threads/${encodeURIComponent(portalId)}/messages/${encodeURIComponent(messageId)}`,
+    {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  );
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(typeof data?.message === 'string' ? data.message : '메시지 삭제에 실패했습니다.');
+  }
 }
 
 export function formatChatTimestamp(iso: string | null | undefined): string {
