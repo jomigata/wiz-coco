@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import AuthLink from '@/components/auth/AuthLink';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import { counselorClientProgressHref } from '@/lib/counselorClientRoutes';
@@ -56,7 +56,6 @@ export default function CounselorPortalChatPanel() {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
-  const scrollRef = useRef<HTMLDivElement>(null);
 
   const filteredThreads = useMemo(
     () => threads.filter((thread) => threadMatchesSearch(thread, searchQuery)),
@@ -127,11 +126,6 @@ export default function CounselorPortalChatPanel() {
     }
     void loadMessages(selectedPortalId);
   }, [selectedPortalId, loadMessages]);
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (el) el.scrollTop = 0;
-  }, [sortedMessages, selectedPortalId]);
 
   const handleSelectThread = (portalId: string) => {
     if (portalId === selectedPortalId) return;
@@ -221,8 +215,8 @@ export default function CounselorPortalChatPanel() {
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col gap-3">
-      <div className="shrink-0">
+    <div className="flex flex-col gap-3">
+      <div>
         <input
           type="search"
           value={searchQuery}
@@ -232,12 +226,12 @@ export default function CounselorPortalChatPanel() {
         />
       </div>
 
-      <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-[minmax(260px,340px)_1fr]">
-        <aside className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-700/80 bg-slate-900/40">
-          <div className="shrink-0 border-b border-slate-800/80 px-3 py-2 text-[11px] font-medium uppercase tracking-wide text-slate-500">
+      <div className="grid gap-4 lg:grid-cols-[minmax(260px,340px)_1fr]">
+        <aside className="rounded-xl border border-slate-700/80 bg-slate-900/40">
+          <div className="border-b border-slate-800/80 px-3 py-2 text-[11px] font-medium uppercase tracking-wide text-slate-500">
             내담자
           </div>
-          <ul className="min-h-0 flex-1 divide-y divide-slate-800/80 overflow-y-auto overscroll-contain">
+          <ul className="divide-y divide-slate-800/80">
             {sortedThreads.length === 0 ? (
               <li className="px-4 py-6 text-sm text-slate-500">
                 {searchQuery.trim() ? '검색 결과가 없습니다.' : '등록된 내담자가 없습니다.'}
@@ -275,10 +269,10 @@ export default function CounselorPortalChatPanel() {
           </ul>
         </aside>
 
-        <section className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-700/80 bg-slate-900/40">
+        <section className="rounded-xl border border-slate-700/80 bg-slate-900/40">
           {selectedThread ? (
             <>
-              <div className="flex shrink-0 flex-wrap items-start justify-between gap-2 border-b border-slate-700/70 px-4 py-3">
+              <div className="flex flex-wrap items-start justify-between gap-2 border-b border-slate-700/70 px-4 py-3">
                 <div className="min-w-0">
                   <h3 className="text-sm font-semibold text-white">{threadTitle(selectedThread)}</h3>
                   <p className="text-xs text-slate-500">
@@ -295,7 +289,7 @@ export default function CounselorPortalChatPanel() {
                 ) : null}
               </div>
 
-              <div className="shrink-0 space-y-3 border-b border-slate-700/70 p-4">
+              <div className="space-y-3 border-b border-slate-700/70 p-4">
                 {error ? (
                   <p className="rounded-md border border-red-500/30 bg-red-950/40 px-3 py-2 text-sm text-red-300">
                     {error}
@@ -329,14 +323,8 @@ export default function CounselorPortalChatPanel() {
                   <textarea
                     value={draft}
                     onChange={(e) => setDraft(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        void handleSend();
-                      }
-                    }}
                     rows={2}
-                    placeholder="답변을 입력하세요 (Enter 전송)"
+                    placeholder="답변을 입력하세요"
                     className="min-h-[44px] flex-1 resize-y rounded-lg border border-slate-600 bg-slate-950/70 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-indigo-500/50 focus:outline-none"
                   />
                   <button
@@ -350,7 +338,7 @@ export default function CounselorPortalChatPanel() {
                 </div>
               </div>
 
-              <div ref={scrollRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain p-4">
+              <div className="space-y-3 p-4">
                 {loadingMessages ? (
                   <p className="text-sm text-slate-500">대화를 불러오는 중…</p>
                 ) : sortedMessages.length === 0 ? (
@@ -423,7 +411,7 @@ export default function CounselorPortalChatPanel() {
               </div>
             </>
           ) : (
-            <div className="flex min-h-0 flex-1 items-center justify-center p-8 text-sm text-slate-500">
+            <div className="flex items-center justify-center p-8 text-sm text-slate-500">
               왼쪽에서 내담자를 선택하세요.
             </div>
           )}

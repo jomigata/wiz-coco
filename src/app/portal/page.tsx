@@ -158,6 +158,14 @@ function ClientPortalContent() {
     }
   }, [router, loadResults]);
 
+  const testListCount = React.useMemo(() => {
+    let total = 0;
+    for (const a of assessments) {
+      total += a.testList?.length || 0;
+    }
+    return total;
+  }, [assessments]);
+
   const completedResultsCount = React.useMemo(() => {
     let count = 0;
     for (const a of assessments) {
@@ -335,7 +343,7 @@ function ClientPortalContent() {
                   : 'border-transparent text-slate-500 hover:text-slate-300'
               }`}
             >
-              검사목록
+              검사목록 ({testListCount})
             </button>
             <button
               type="button"

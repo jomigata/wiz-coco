@@ -18,7 +18,7 @@ export default function CounselorChatPage() {
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
+    <div className="flex flex-col gap-3">
       <div className="shrink-0">
         <h1 className="text-lg font-semibold text-white">1:1 채팅</h1>
       </div>
