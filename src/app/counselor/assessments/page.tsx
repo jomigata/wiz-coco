@@ -16,10 +16,13 @@ import {
   listAssessmentsPage,
   readPortalMoveBanner,
   clearCounselorAssessmentsListCache,
+  readCachedAssessmentsList,
+  writeCachedAssessmentsList,
   type CounselorAssessment,
   type CreatedAssessmentBannerInfo,
   type PortalMoveBannerInfo,
 } from '@/lib/assessmentApi';
+import { consumeCounselorListSkipReload } from '@/lib/counselorListNavigationCache';
 import { getAppRoleSync, isAdmin } from '@/utils/roleUtils';
 
 function AssessmentListPageContent() {
@@ -88,11 +91,24 @@ function AssessmentListPageContent() {
 
     const searchQ = initialSearchQuery.trim() || undefined;
 
+    const skipReload = consumeCounselorListSkipReload();
+    if (skipReload === 'assessments' && !searchQ) {
+      const cached = readCachedAssessmentsList(counselorUid);
+      if (cached?.length) {
+        setAssessments(cached);
+        setLoading(false);
+        return;
+      }
+    }
+
     listAssessmentsPage({ limit: 50, q: searchQ, includeStats: true, ownOnly: adminUser })
       .then(async (firstPage) => {
         if (cancelled) return;
         const firstItems = firstPage.assessments || [];
         setAssessments(firstItems);
+        if (firstItems.length && !searchQ) {
+          writeCachedAssessmentsList(firstItems, counselorUid);
+        }
         if (!firstItems.length) {
           clearCounselorAssessmentsListCache(counselorUid);
         }
@@ -100,7 +116,12 @@ function AssessmentListPageContent() {
         if (!firstPage.nextCursor) return;
         setLoadingMore(true);
         const all = await listAssessments({ q: searchQ, includeStats: true, ownOnly: adminUser });
-        if (!cancelled) setAssessments(all.assessments || []);
+        if (!cancelled) {
+          setAssessments(all.assessments || []);
+          if (!searchQ && all.assessments?.length) {
+            writeCachedAssessmentsList(all.assessments, counselorUid);
+          }
+        }
       })
       .catch((err) => {
         if (!cancelled) setError(err instanceof Error ? err.message : '목록 조회 실패');
@@ -114,7 +135,7 @@ function AssessmentListPageContent() {
     return () => {
       cancelled = true;
     };
-  }, [authPending, user, showLoginRequired, initialSearchQuery, adminUser]);
+  }, [authPending, user, showLoginRequired, initialSearchQuery, adminUser, counselorUid]);
 
   useRedirectOnLoginRequiredError(error);
 

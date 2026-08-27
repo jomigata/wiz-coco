@@ -32,7 +32,7 @@ export default function CounselorManageShell({ children }: Props) {
   const pathname = usePathname() || '';
   const searchParams = useSearchParams();
   const search = searchParams.toString() ? `?${searchParams.toString()}` : '';
-  const activeCategorySlug = resolveCounselorCategorySlugForPath(pathname);
+  const activeCategorySlug = resolveCounselorCategorySlugForPath(pathname, search);
   const activeNested = resolveActiveNestedNavItem(pathname, search);
   const adminUser = isAdmin(getAppRoleSync());
 

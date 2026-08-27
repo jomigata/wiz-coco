@@ -61,3 +61,20 @@ export function readReceiptLabel(
   if (!mine || (msg.isScheduled && msg.scheduledPending)) return null;
   return isMessageReadByRecipient(msg, viewerRole) ? '읽음' : '안 읽음';
 }
+
+/** 내검사실 상담·문의 탭 배지 — 예약 대기 + 읽지 않은 송·수신 메시지 */
+export function portalInquiryAttentionCount(messages: PortalChatMessage[]): number {
+  return messages.filter((msg) => {
+    if (msg.isScheduled && msg.scheduledPending) return true;
+    if (msg.senderRole === 'counselor' && !msg.readByPortal) return true;
+    if (msg.senderRole === 'portal' && !msg.readByCounselor) return true;
+    return false;
+  }).length;
+}
+
+/** 상담사 화면 — 내담자 예약 전송 중 아직 발송되지 않은 메시지 제외 */
+export function filterCounselorVisibleChatMessages(messages: PortalChatMessage[]): PortalChatMessage[] {
+  return messages.filter(
+    (msg) => !(msg.senderRole === 'portal' && msg.isScheduled && msg.scheduledPending),
+  );
+}

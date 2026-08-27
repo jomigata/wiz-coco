@@ -15,7 +15,7 @@ import {
   PORTAL_INQUIRY_SECTION_TITLE,
   portalTestManagerChatSenderLabel,
 } from '@/lib/portalCareManagerLabels';
-import { scrollToLatestChatAnchor, removePortalChatMessage, upsertPortalChatMessage } from '@/lib/portalChatMessageUi';
+import { scrollToLatestChatAnchor, removePortalChatMessage, upsertPortalChatMessage, portalInquiryAttentionCount } from '@/lib/portalChatMessageUi';
 import PortalChatMessageComposer, {
   PortalChatFixedComposerShell,
 } from '@/components/portal/PortalChatMessageComposer';
@@ -24,11 +24,13 @@ import PortalChatMessageList from '@/components/portal/PortalChatMessageList';
 export type PortalCounselorInquiryChatProps = {
   counselorName?: string;
   embeddedInTab?: boolean;
+  onAttentionCountChange?: (count: number) => void;
 };
 
 export default function PortalCounselorInquiryChat({
   counselorName,
   embeddedInTab = false,
+  onAttentionCountChange,
 }: PortalCounselorInquiryChatProps) {
   const [messages, setMessages] = useState<Awaited<ReturnType<typeof fetchPortalChatMessages>>>([]);
   const [draft, setDraft] = useState('');
@@ -54,6 +56,10 @@ export default function PortalCounselorInquiryChat({
     pendingScrollRef.current = false;
     scrollToLatest('smooth');
   }, [messages, scrollToLatest]);
+
+  useEffect(() => {
+    onAttentionCountChange?.(portalInquiryAttentionCount(messages));
+  }, [messages, onAttentionCountChange]);
 
   const loadMessages = useCallback(async () => {
     const session = readClientPortalSession();

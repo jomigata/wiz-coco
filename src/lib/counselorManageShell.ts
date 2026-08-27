@@ -4,17 +4,24 @@ import {
   getCounselorCategoryHubHref,
   type CounselorMainCategory,
 } from '@/data/counselorMenu';
+import { resolveCounselorProgressFrom } from '@/lib/counselorNestedNav';
 
 export const COUNSELOR_PSYCH_TESTS_SLUG = 'psych-tests';
+export const COUNSELOR_DISPATCH_MGMT_SLUG = 'dispatch-mgmt';
 export const COUNSELOR_TOOLS_SLUG = 'tools';
 export const COUNSELOR_DATA_SLUG = 'data';
+
+/** 검사관리(검사발송 현황) 워크스페이스 */
+const DISPATCH_MGMT_ROUTE_PREFIXES = [
+  '/counselor/clients',
+  '/counselor/assessments/deleted-recipients',
+] as const;
 
 /** 심리검사 관리(통합) 워크스페이스 — 좌측 트리 + 우측 화면 */
 const PSYCH_TESTS_ROUTE_PREFIXES = [
   '/counselor/hub/psych-tests',
   '/counselor/assessments',
   '/counselor/credits',
-  '/counselor/clients',
   '/counselor/assign-tests',
   '/counselor/test-results',
   '/counselor/test-recommendations',
@@ -55,6 +62,10 @@ function matchesPrefix(path: string, prefixes: readonly string[]): boolean {
   return prefixes.some((prefix) => path === prefix || path.startsWith(`${prefix}/`));
 }
 
+export function isDispatchMgmtWorkspaceRoute(pathname: string): boolean {
+  return matchesPrefix(normalizePath(pathname), DISPATCH_MGMT_ROUTE_PREFIXES);
+}
+
 export function isPsychTestsWorkspaceRoute(pathname: string): boolean {
   return matchesPrefix(normalizePath(pathname), PSYCH_TESTS_ROUTE_PREFIXES);
 }
@@ -84,6 +95,7 @@ export function isCounselorManageShellRoute(pathname: string): boolean {
   const path = normalizePath(pathname);
   if (path.startsWith('/counselor/hub/')) return true;
   return (
+    isDispatchMgmtWorkspaceRoute(pathname) ||
     isPsychTestsWorkspaceRoute(pathname) ||
     isToolsWorkspaceRoute(pathname) ||
     isDataWorkspaceRoute(pathname) ||
@@ -106,6 +118,9 @@ export function getPsychTestsHubHref(): string {
 }
 
 export function getCounselorCategoryDefaultHref(slug: string): string {
+  if (slug === COUNSELOR_DISPATCH_MGMT_SLUG) {
+    return '/counselor/clients';
+  }
   if (slug === COUNSELOR_PSYCH_TESTS_SLUG) {
     return getPsychTestsDefaultHref();
   }
@@ -121,7 +136,7 @@ export function getCounselorCategoryDefaultHref(slug: string): string {
 }
 
 /** 현재 경로가 속한 대분류 slug (없으면 null) */
-export function resolveCounselorCategorySlugForPath(pathname: string): string | null {
+export function resolveCounselorCategorySlugForPath(pathname: string, search = ''): string | null {
   const path = normalizePath(pathname);
   if (
     path.startsWith('/counselor/assessments/permanently-deleted') ||
@@ -142,11 +157,15 @@ export function resolveCounselorCategorySlugForPath(pathname: string): string | 
   if (path.startsWith('/discover') || path.startsWith('/partners')) {
     return 'sales';
   }
-  if (
-    path.startsWith('/counselor/assessments/progress') ||
-    path.startsWith('/counselor/assessments/edit') ||
-    path.startsWith('/counselor/clients/detail')
-  ) {
+  if (path.startsWith('/counselor/clients/detail')) {
+    return COUNSELOR_DISPATCH_MGMT_SLUG;
+  }
+  if (path.startsWith('/counselor/assessments/progress')) {
+    return resolveCounselorProgressFrom(pathname, search) === 'clients'
+      ? COUNSELOR_DISPATCH_MGMT_SLUG
+      : COUNSELOR_PSYCH_TESTS_SLUG;
+  }
+  if (path.startsWith('/counselor/assessments/edit')) {
     return COUNSELOR_PSYCH_TESTS_SLUG;
   }
   if (path.startsWith('/counselor/hub/')) {

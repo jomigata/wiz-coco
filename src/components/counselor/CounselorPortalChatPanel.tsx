@@ -19,7 +19,7 @@ import {
 } from '@/lib/portalChatApi';
 import { LoadingMessage } from '@/components/ui/LoadingMessage';
 import { defaultScheduledDate } from '@/components/ui/DateTimeSpinFields';
-import { scrollToLatestChatAnchor, removePortalChatMessage, upsertPortalChatMessage } from '@/lib/portalChatMessageUi';
+import { scrollToLatestChatAnchor, removePortalChatMessage, upsertPortalChatMessage, filterCounselorVisibleChatMessages } from '@/lib/portalChatMessageUi';
 import PortalChatMessageComposer, {
   PortalChatFixedComposerShell,
 } from '@/components/portal/PortalChatMessageComposer';
@@ -31,18 +31,53 @@ function threadTitle(thread: PortalChatThread): string {
   return group ? `${name} / ${group}` : name;
 }
 
-function sortThreads(threads: PortalChatThread[], selectedPortalId: string | null): PortalChatThread[] {
+function sortThreads(
+  threads: PortalChatThread[],
+  sortKey: 'name' | 'group',
+  sortDir: 'asc' | 'desc',
+): PortalChatThread[] {
   return [...threads].sort((a, b) => {
-    if (selectedPortalId) {
-      if (a.portalId === selectedPortalId) return -1;
-      if (b.portalId === selectedPortalId) return 1;
-    }
-    const unreadDiff = (b.unreadCount || 0) - (a.unreadCount || 0);
-    if (unreadDiff !== 0) return unreadDiff;
-    const timeDiff = (b.lastMessageAt || '').localeCompare(a.lastMessageAt || '');
-    if (timeDiff !== 0) return timeDiff;
-    return threadTitle(a).localeCompare(threadTitle(b), 'ko');
+    const aName = (a.displayName || '').trim();
+    const bName = (b.displayName || '').trim();
+    const aGroup = (a.cohortName || '').trim();
+    const bGroup = (b.cohortName || '').trim();
+    const primary =
+      sortKey === 'name'
+        ? aName.localeCompare(bName, 'ko')
+        : aGroup.localeCompare(bGroup, 'ko') || aName.localeCompare(bName, 'ko');
+    return sortDir === 'asc' ? primary : -primary;
   });
+}
+
+type ThreadSortKey = 'name' | 'group';
+type ThreadSortDir = 'asc' | 'desc';
+
+function SortArrowButton({
+  label,
+  active,
+  direction,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  direction: ThreadSortDir;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium transition ${
+        active ? 'bg-slate-700/80 text-white' : 'text-slate-500 hover:bg-white/5 hover:text-slate-300'
+      }`}
+      title={`${label} ${direction === 'asc' ? '오름차순' : '내림차순'}`}
+    >
+      {label}
+      <span aria-hidden className="text-[9px]">
+        {active ? (direction === 'asc' ? '↑' : '↓') : '↕'}
+      </span>
+    </button>
+  );
 }
 
 export default function CounselorPortalChatPanel() {
@@ -51,6 +86,10 @@ export default function CounselorPortalChatPanel() {
   const [messages, setMessages] = useState<PortalChatMessage[]>([]);
   const [draft, setDraft] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [threadSortKey, setThreadSortKey] = useState<ThreadSortKey>('name');
+  const [threadSortDir, setThreadSortDir] = useState<ThreadSortDir>('asc');
+  const [dismissedUnreadPortalIds, setDismissedUnreadPortalIds] = useState<Set<string>>(() => new Set());
+  const [stickyUnreadByPortalId, setStickyUnreadByPortalId] = useState<Record<string, number>>({});
   const [scheduleEnabled, setScheduleEnabled] = useState(false);
   const [scheduledDate, setScheduledDate] = useState(() => defaultScheduledDate());
   const [loadingThreads, setLoadingThreads] = useState(true);
@@ -65,8 +104,12 @@ export default function CounselorPortalChatPanel() {
     [threads, searchQuery],
   );
   const sortedThreads = useMemo(
-    () => sortThreads(filteredThreads, selectedPortalId),
-    [filteredThreads, selectedPortalId],
+    () => sortThreads(filteredThreads, threadSortKey, threadSortDir),
+    [filteredThreads, threadSortKey, threadSortDir],
+  );
+  const visibleMessages = useMemo(
+    () => filterCounselorVisibleChatMessages(messages),
+    [messages],
   );
   const selectedThread = threads.find((t) => t.portalId === selectedPortalId) || null;
   const progressHref = selectedThread
@@ -96,6 +139,15 @@ export default function CounselorPortalChatPanel() {
     try {
       const items = await fetchCounselorChatThreads();
       setThreads(items);
+      setStickyUnreadByPortalId((prev) => {
+        const next = { ...prev };
+        for (const thread of items) {
+          if (thread.unreadCount > 0) {
+            next[thread.portalId] = Math.max(next[thread.portalId] || 0, thread.unreadCount);
+          }
+        }
+        return next;
+      });
       if (keepSelection) {
         setSelectedPortalId((prev) => {
           if (prev && items.some((t) => t.portalId === prev)) return prev;
@@ -108,6 +160,39 @@ export default function CounselorPortalChatPanel() {
       setLoadingThreads(false);
     }
   }, []);
+
+  const dismissThreadUnread = useCallback((portalId: string) => {
+    setDismissedUnreadPortalIds((prev) => {
+      if (prev.has(portalId)) return prev;
+      const next = new Set(prev);
+      next.add(portalId);
+      return next;
+    });
+    setThreads((prev) =>
+      prev.map((thread) =>
+        thread.portalId === portalId ? { ...thread, unreadCount: 0 } : thread,
+      ),
+    );
+    setStickyUnreadByPortalId((prev) => {
+      if (!(portalId in prev)) return prev;
+      const next = { ...prev };
+      delete next[portalId];
+      return next;
+    });
+  }, []);
+
+  const ackThreadRead = useCallback(
+    async (portalId: string) => {
+      if (!portalId) return;
+      dismissThreadUnread(portalId);
+      try {
+        await fetchCounselorChatMessages(portalId);
+      } catch {
+        // ignore — UI already cleared badge
+      }
+    },
+    [dismissThreadUnread],
+  );
 
   const loadMessages = useCallback(async (portalId: string) => {
     setLoadingMessages(true);
@@ -136,9 +221,30 @@ export default function CounselorPortalChatPanel() {
   }, [selectedPortalId, loadMessages]);
 
   const handleSelectThread = (portalId: string) => {
-    if (portalId === selectedPortalId) return;
     setSelectedPortalId(portalId);
+    void ackThreadRead(portalId);
   };
+
+  const handleMessageAreaReadAck = () => {
+    if (!selectedPortalId) return;
+    void ackThreadRead(selectedPortalId);
+  };
+
+  const toggleThreadSort = (key: ThreadSortKey) => {
+    if (threadSortKey === key) {
+      setThreadSortDir((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+      return;
+    }
+    setThreadSortKey(key);
+    setThreadSortDir('asc');
+  };
+
+  const displayUnreadCount = (thread: PortalChatThread) => {
+    if (dismissedUnreadPortalIds.has(thread.portalId)) return 0;
+    return Math.max(thread.unreadCount, stickyUnreadByPortalId[thread.portalId] || 0);
+  };
+
+  const showUnreadBadge = (thread: PortalChatThread) => displayUnreadCount(thread) > 0;
 
   const handleSend = async () => {
     const text = draft.trim();
@@ -261,8 +367,24 @@ export default function CounselorPortalChatPanel() {
 
         <div className="grid gap-4 lg:grid-cols-[minmax(260px,340px)_1fr]">
           <aside className="rounded-xl border border-slate-700/80 bg-slate-900/40">
-            <div className="border-b border-slate-800/80 px-3 py-2 text-[11px] font-medium uppercase tracking-wide text-slate-500">
-              내담자
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800/80 px-3 py-2">
+              <span className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
+                내담자
+              </span>
+              <div className="flex items-center gap-1">
+                <SortArrowButton
+                  label="이름"
+                  active={threadSortKey === 'name'}
+                  direction={threadSortDir}
+                  onClick={() => toggleThreadSort('name')}
+                />
+                <SortArrowButton
+                  label="그룹"
+                  active={threadSortKey === 'group'}
+                  direction={threadSortDir}
+                  onClick={() => toggleThreadSort('group')}
+                />
+              </div>
             </div>
             <ul className="divide-y divide-slate-800/80">
               {sortedThreads.length === 0 ? (
@@ -284,12 +406,14 @@ export default function CounselorPortalChatPanel() {
                         }`}
                       >
                         <div className="flex items-start justify-between gap-2">
-                          <p className="truncate text-sm font-medium text-white">{threadTitle(thread)}</p>
-                          {thread.unreadCount > 0 ? (
-                            <span className="shrink-0 rounded-full bg-red-600 px-2 py-0.5 text-[11px] font-semibold text-white">
-                              {thread.unreadCount}
-                            </span>
-                          ) : null}
+                          <p className="truncate text-sm font-medium text-white">
+                            {threadTitle(thread)}
+                            {showUnreadBadge(thread) ? (
+                              <span className="ml-1.5 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-red-600 px-1.5 py-0.5 text-[10px] font-semibold text-white align-middle">
+                                {displayUnreadCount(thread)}
+                              </span>
+                            ) : null}
+                          </p>
                         </div>
                         <p className="mt-1 text-xs text-slate-500">
                           {thread.lastMessageAt ? formatChatTimestamp(thread.lastMessageAt) : '대화 없음'}
@@ -328,9 +452,14 @@ export default function CounselorPortalChatPanel() {
                   </p>
                 ) : null}
 
-                <div className="space-y-3 p-4">
+                <div
+                  className="space-y-3 p-4"
+                  onClick={handleMessageAreaReadAck}
+                  onTouchStart={handleMessageAreaReadAck}
+                  role="presentation"
+                >
                   <PortalChatMessageList
-                    messages={messages}
+                    messages={visibleMessages}
                     loading={loadingMessages}
                     sending={sending}
                     viewerRole="counselor"

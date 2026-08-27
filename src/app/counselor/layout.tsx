@@ -36,7 +36,7 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
       label: '내담자 & 상담 관리',
       icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z',
       subItems: [
-        { id: 'client-list', label: '내담자 목록', href: '/counselor/clients', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z' },
+        { id: 'dispatch-status', label: '검사발송 현황', href: '/counselor/clients', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z' },
         { id: 'counseling-schedule', label: '상담 일정', href: '/counselor/schedule', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' },
         { id: 'counseling-records', label: '상담 기록', href: '/counselor/sessions', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
         { id: 'treatment-plans', label: '치료 계획', href: '/counselor/treatment-plans', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' }
@@ -116,8 +116,8 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
     if (path.startsWith('/counselor/assessments/dispatch')) return '진행현황';
     if (path.startsWith('/counselor/assessments/edit')) return '상담코드 수정';
     if (path.startsWith('/counselor/assessments')) return '상담코드';
-    if (path.startsWith('/counselor/clients/detail')) return '내담자 목록';
-    if (path.startsWith('/counselor/clients/') && path !== '/counselor/clients') return '내담자 목록';
+    if (path.startsWith('/counselor/clients/detail')) return '검사발송 현황';
+    if (path.startsWith('/counselor/clients/') && path !== '/counselor/clients') return '검사발송 현황';
     if (path.startsWith('/counselor/assign-tests')) return '검사 할당';
     if (path.startsWith('/counselor/credits')) return '크레딧 · AI';
     if (path.startsWith('/counselor/data-sharing')) return '데이터 공유 관리';
@@ -126,8 +126,8 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
     if (path.startsWith('/counselor/progress')) return '진행 현황';
     const titleMap: { [key: string]: string } = {
       '/counselor': '오늘',
-      '/counselor/clients': '내담자',
-      '/counselor/clients/detail': '내담자 목록',
+      '/counselor/clients': '검사발송 현황',
+      '/counselor/clients/detail': '검사발송 현황',
       '/counselor/assign-tests': '검사 할당',
       '/counselor/schedule': '상담 일정',
       '/counselor/sessions': '상담 기록',

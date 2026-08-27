@@ -808,6 +808,20 @@ export function readCachedAssessmentsList(counselorUid?: string | null): Counsel
   return null;
 }
 
+export function writeCachedAssessmentsList(
+  assessments: CounselorAssessment[],
+  counselorUid?: string | null,
+): void {
+  if (typeof window === 'undefined') return;
+  const uid = (counselorUid ?? getCounselorUidSync())?.trim();
+  const cacheKey = assessmentsListCacheKey(uid);
+  if (!cacheKey) return;
+  const normalized = (assessments || [])
+    .map(normalizeCounselorAssessment)
+    .filter((a) => a.id);
+  writeSWRCache(cacheKey, { assessments: normalized }, { scope: ASSESSMENTS_LIST_CACHE_SCOPE });
+}
+
 function sortAssessmentsByCreatedDesc(items: CounselorAssessment[]): CounselorAssessment[] {
   return [...items].sort((a, b) => {
     const ta = new Date(a.createdAt || 0).getTime();

@@ -3,6 +3,8 @@
 import React, { Suspense, useCallback, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { fetchPortalDashboard, fetchPortalCareAssignments, type PortalDashboardAssessment, type PortalLegacyTestGroup } from '@/lib/clientPortalApi';
+import { fetchPortalChatMessages } from '@/lib/portalChatApi';
+import { portalInquiryAttentionCount } from '@/lib/portalChatMessageUi';
 import { listResults, getClientResult, TestResultItem, clearForceGuestForAccessCode } from '@/lib/assessmentApi';
 import PortalTestList from '@/components/portal/PortalTestList';
 import PortalCounselorInquiryChat from '@/components/portal/PortalCounselorInquiryChat';
@@ -66,6 +68,7 @@ function ClientPortalContent() {
   const [resultViewLoading, setResultViewLoading] = useState(false);
   const [resultViewError, setResultViewError] = useState('');
   const [portalTab, setPortalTab] = useState<PortalTab>('tests');
+  const [inquiryBadgeCount, setInquiryBadgeCount] = useState(0);
   const [careTotalCount, setCareTotalCount] = useState(0);
   const [careItems, setCareItems] = useState<PortalCareAssignmentItem[]>([]);
 
@@ -206,6 +209,31 @@ function ClientPortalContent() {
       setPortalTab('reports');
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    if (loading || portalTab === 'chat') return;
+    const session = readClientPortalSession();
+    if (!session?.portalToken) return;
+
+    let cancelled = false;
+    const refreshInquiryBadge = async () => {
+      try {
+        const items = await fetchPortalChatMessages(session.portalToken);
+        if (!cancelled) setInquiryBadgeCount(portalInquiryAttentionCount(items));
+      } catch {
+        // ignore polling errors
+      }
+    };
+
+    void refreshInquiryBadge();
+    const timer = window.setInterval(() => {
+      void refreshInquiryBadge();
+    }, 15000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, [loading, portalTab]);
 
   useEffect(() => {
     const focusResults = (searchParams.get('focus') || '').trim() === 'results';
@@ -355,6 +383,7 @@ function ClientPortalContent() {
               }`}
             >
               {PORTAL_INQUIRY_SECTION_TITLE}
+              {inquiryBadgeCount > 0 ? ` (${inquiryBadgeCount})` : ''}
             </button>
             <button
               type="button"
@@ -374,7 +403,11 @@ function ClientPortalContent() {
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-12">
         <main className="mx-auto max-w-3xl space-y-6 pt-4">
           {portalTab === 'chat' ? (
-            <PortalCounselorInquiryChat counselorName={counselorName} embeddedInTab />
+            <PortalCounselorInquiryChat
+              counselorName={counselorName}
+              embeddedInTab
+              onAttentionCountChange={setInquiryBadgeCount}
+            />
           ) : portalTab === 'reports' ? (
             <PortalReportsPanel
               assessments={assessments}

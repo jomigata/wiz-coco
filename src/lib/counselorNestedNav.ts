@@ -18,7 +18,9 @@ export type AssessmentListNestedNavItem = {
   isActive: (path: string) => boolean;
 };
 
-/** 상담코드·내담자 메뉴 선택 시 항상 표시되는 고정 소분류 */
+import { markCounselorListSkipReload } from '@/lib/counselorListNavigationCache';
+
+/** 상담코드·검사발송 현황 메뉴 선택 시 항상 표시되는 고정 소분류 */
 export type CounselorParentSubmenuItem = AssessmentListNestedNavItem;
 
 const ASSESSMENTS_NEW_HREF = '/counselor/assessments/new';
@@ -32,7 +34,8 @@ export const DELETED_RECIPIENTS_HREF = '/counselor/assessments/deleted-recipient
 export const PERMANENTLY_DELETED_ASSESSMENTS_HREF = '/counselor/assessments/permanently-deleted';
 export const PERMANENTLY_DELETED_RECIPIENTS_HREF =
   '/counselor/assessments/permanently-deleted-recipients';
-const PARENT_SUBCATEGORY = '1a. 상담코드.내담자';
+const PARENT_SUBCATEGORY = '검사관리';
+const ASSESSMENTS_PARENT_SUBCATEGORY = '1a. 상담코드';
 
 export const counselorNestedNavItems: CounselorNestedNavItem[] = [];
 
@@ -64,6 +67,9 @@ export function rememberCounselorProgressFrom(source: 'clients' | 'assessments' 
   if (typeof window === 'undefined') return;
   try {
     sessionStorage.setItem(PROGRESS_FROM_KEY, source);
+    if (source === 'clients' || source === 'assessments') {
+      markCounselorListSkipReload(source);
+    }
   } catch {
     // ignore
   }
@@ -265,12 +271,12 @@ export function getAssessmentsParentSubmenuItems(options?: { admin?: boolean }):
   return items;
 }
 
-/** 내담자 메뉴 선택 시 고정 소분류 */
+/** 검사발송 현황 메뉴 선택 시 고정 소분류 */
 export function getClientsParentSubmenuItems(options?: { admin?: boolean }): CounselorParentSubmenuItem[] {
   const items: CounselorParentSubmenuItem[] = [
     {
       order: 0,
-      label: '내담자 목록',
+      label: '검사발송 현황',
       href: CLIENTS_LIST_HREF,
       isActive: (p) => p === CLIENTS_LIST_HREF,
     },
@@ -301,7 +307,7 @@ export function resolveActiveNestedNavItem(
     if (nested.isActive(path)) {
       return {
         item: {
-          parentSubcategoryName: PARENT_SUBCATEGORY,
+          parentSubcategoryName: ASSESSMENTS_PARENT_SUBCATEGORY,
           insertAfterHref: ASSESSMENT_LIST_HREF,
           order: nested.order,
           label: nested.label,

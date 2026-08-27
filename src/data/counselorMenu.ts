@@ -24,15 +24,37 @@ export interface CounselorMainCategory extends Omit<TestCategory, 'subcategories
 }
 
 /** 상담관리 메가 메뉴 — 3단계 구조 */
+export const COUNSELOR_DISPATCH_MGMT_SLUG = 'dispatch-mgmt';
+
 export const counselorMenuCategories: CounselorMainCategory[] = [
+  {
+    slug: COUNSELOR_DISPATCH_MGMT_SLUG,
+    category: '검사관리',
+    description: '검사 발송·내담자 현황',
+    icon: '📤',
+    subcategories: [
+      {
+        name: '검사관리',
+        icon: '📋',
+        items: [
+          {
+            name: '검사발송 현황',
+            href: '/counselor/clients',
+            description: '발송 내담자·검사 진행 현황',
+            icon: '📤',
+          },
+        ],
+      },
+    ],
+  },
   {
     slug: 'psych-tests',
     category: '1. 심리검사 관리',
-    description: '상담코드·내담자·검사·상담 운영',
+    description: '상담코드·검사·상담 운영',
     icon: '📦',
     subcategories: [
       {
-        name: '1a. 상담코드.내담자',
+        name: '1a. 상담코드',
         icon: '📋',
         items: [
           {
@@ -40,12 +62,6 @@ export const counselorMenuCategories: CounselorMainCategory[] = [
             href: '/counselor/assessments',
             description: '상담코드 발급·목록·진행현황',
             icon: '📦',
-          },
-          {
-            name: '내담자',
-            href: '/counselor/clients',
-            description: '발급 내담자 조회·검사·상담코드 연결 추적',
-            icon: '👥',
           },
         ],
       },

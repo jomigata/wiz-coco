@@ -429,6 +429,16 @@ export default function Navigation() {
             </span>
           </Link>
 
+          {compactHeader ? (
+            <div className="ml-auto flex shrink-0 items-center gap-1">
+              <ProfessionalAccessIcons
+                variant="nav"
+                isLoggedIn={isLoggedIn}
+                access={professionalIconAccess}
+              />
+            </div>
+          ) : null}
+
           {/* Desktop Navigation — compact 모드에서는 브랜드만 표시 */}
           {!compactHeader ? (
           <div className="hidden min-h-0 md:flex min-w-0 flex-1 items-center justify-end gap-3 xl:gap-5">

@@ -845,6 +845,7 @@ export default function AssessmentList({
                       <td className={`whitespace-nowrap ${counselorListTdCompactClass} text-center cursor-default`}>
                         <CounselorProgressMetricsInline
                           totalClients={dispatchTotal}
+                          showTotalClients={false}
                           items={[{ label: '검사완료', value: testComplete }]}
                         />
                       </td>
