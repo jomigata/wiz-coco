@@ -100,12 +100,6 @@ export const counselorMenuCategories: CounselorMainCategory[] = [
         icon: '📅',
         items: [
           {
-            name: '검사 관리',
-            href: '/counselor/test-management',
-            description: '신입생 통합 검사 관리',
-            icon: '🎓',
-          },
-          {
             name: '상담 일정',
             href: '/counselor/schedule',
             description: '상담 일정 관리',
