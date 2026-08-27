@@ -106,6 +106,7 @@ export default function CounselorPortalChatPanel() {
   const [error, setError] = useState('');
   const latestAnchorRef = useRef<HTMLDivElement>(null);
   const pendingScrollRef = useRef(false);
+  const messageLoadSeqRef = useRef(0);
 
   const filteredThreads = useMemo(
     () => threads.filter((thread) => threadMatchesSearch(thread, searchQuery)),
@@ -193,49 +194,20 @@ export default function CounselorPortalChatPanel() {
     async (portalId: string) => {
       if (!portalId) return;
       dismissThreadUnread(portalId);
+      const loadSeq = messageLoadSeqRef.current;
       try {
         const items = await fetchCounselorChatMessages(portalId);
+        if (loadSeq !== messageLoadSeqRef.current) return;
         const visible = filterCounselorVisibleChatMessages(items);
         writeCachedPortalChatMessages('counselor', portalId, visible);
         setMessages(items);
+        pendingScrollRef.current = true;
       } catch {
         // ignore — UI already cleared badge
       }
     },
     [dismissThreadUnread],
   );
-
-  const loadMessages = useCallback(async (portalId: string) => {
-    const cached = readCachedPortalChatMessages('counselor', portalId);
-    if (cached?.length) {
-      setMessages(cached);
-      pendingScrollRef.current = true;
-    } else {
-      setLoadingMessages(true);
-    }
-    setError('');
-    try {
-      const items = await fetchCounselorChatMessages(portalId);
-      const visible = filterCounselorVisibleChatMessages(items);
-      writeCachedPortalChatMessages('counselor', portalId, visible);
-      setMessages(items);
-      pendingScrollRef.current = true;
-      const attention = counselorChatAttentionCount(items);
-      if (attention > 0) {
-        setStickyUnreadByPortalId((prev) => ({
-          ...prev,
-          [portalId]: Math.max(prev[portalId] || 0, attention),
-        }));
-      }
-    } catch (err) {
-      if (!cached?.length) {
-        setError(err instanceof Error ? err.message : '채팅 내역 조회에 실패했습니다.');
-        setMessages([]);
-      }
-    } finally {
-      setLoadingMessages(false);
-    }
-  }, []);
 
   useEffect(() => {
     if (!selectedPortalId || messages.length === 0) return;
@@ -253,16 +225,49 @@ export default function CounselorPortalChatPanel() {
   useEffect(() => {
     if (!selectedPortalId) {
       setMessages([]);
+      setLoadingMessages(false);
       return;
     }
-    const cached = readCachedPortalChatMessages('counselor', selectedPortalId);
-    if (cached?.length) {
-      setMessages(cached);
-      setLoadingMessages(false);
+
+    const portalId = selectedPortalId;
+    const loadSeq = ++messageLoadSeqRef.current;
+
+    setError('');
+    const cached = readCachedPortalChatMessages('counselor', portalId) ?? [];
+    setMessages(cached);
+    setLoadingMessages(cached.length === 0);
+    if (cached.length > 0) {
       pendingScrollRef.current = true;
     }
-    void loadMessages(selectedPortalId);
-  }, [selectedPortalId, loadMessages]);
+
+    void (async () => {
+      try {
+        const items = await fetchCounselorChatMessages(portalId);
+        if (loadSeq !== messageLoadSeqRef.current) return;
+        const visible = filterCounselorVisibleChatMessages(items);
+        writeCachedPortalChatMessages('counselor', portalId, visible);
+        setMessages(items);
+        pendingScrollRef.current = true;
+        const attention = counselorChatAttentionCount(items);
+        if (attention > 0) {
+          setStickyUnreadByPortalId((prev) => ({
+            ...prev,
+            [portalId]: Math.max(prev[portalId] || 0, attention),
+          }));
+        }
+      } catch (err) {
+        if (loadSeq !== messageLoadSeqRef.current) return;
+        if (cached.length === 0) {
+          setError(err instanceof Error ? err.message : '채팅 내역 조회에 실패했습니다.');
+          setMessages([]);
+        }
+      } finally {
+        if (loadSeq === messageLoadSeqRef.current) {
+          setLoadingMessages(false);
+        }
+      }
+    })();
+  }, [selectedPortalId]);
 
   useEffect(() => {
     if (!selectedPortalId) return;
@@ -271,8 +276,9 @@ export default function CounselorPortalChatPanel() {
   }, [selectedPortalId, scrollToLatest]);
 
   const handleSelectThread = (portalId: string) => {
+    if (portalId === selectedPortalId) return;
     setSelectedPortalId(portalId);
-    void ackThreadRead(portalId);
+    dismissThreadUnread(portalId);
   };
 
   const handleMessageAreaReadAck = () => {
