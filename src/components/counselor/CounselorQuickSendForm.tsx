@@ -338,8 +338,8 @@ export default function CounselorQuickSendForm({
       dense
       description={
         firstSendTrialEligible
-          ? '첫 1명 보내기는 검사 크레딧을 차감하지 않습니다. 세트 고르기 → 이름·연락처 → 보내기.'
-          : '세트 고르기 → 이름·연락처 → 보내기. 내담자는 가입하지 않습니다.'
+          ? '첫 1명 보내기는 검사 크레딧을 차감하지 않습니다. 1. 검사 선택 → 2. 이름·연락처 입력 → 3. 보내기.'
+          : '1. 검사 선택 → 2. 이름·연락처 입력 → 3. 보내기.'
       }
       toolbar={fullLink}
     >
