@@ -15,7 +15,7 @@ import {
   PORTAL_INQUIRY_SECTION_TITLE,
   portalTestManagerChatSenderLabel,
 } from '@/lib/portalCareManagerLabels';
-import { scrollToLatestChatAnchor, removePortalChatMessage, upsertPortalChatMessage, portalInquiryAttentionCount, readCachedPortalChatMessages, writeCachedPortalChatMessages } from '@/lib/portalChatMessageUi';
+import { scrollToLatestChatAnchor, removePortalChatMessage, upsertPortalChatMessage, portalInquiryAttentionCount, readCachedPortalChatMessagesPreview, writeCachedPortalChatMessages } from '@/lib/portalChatMessageUi';
 import PortalChatMessageComposer, {
   PortalChatFixedComposerShell,
 } from '@/components/portal/PortalChatMessageComposer';
@@ -33,7 +33,7 @@ export default function PortalCounselorInquiryChat({
   onAttentionCountChange,
 }: PortalCounselorInquiryChatProps) {
   const portalCacheId = readClientPortalSession()?.portal?.accessCode || 'portal';
-  const initialCached = readCachedPortalChatMessages('portal', portalCacheId);
+  const initialCached = readCachedPortalChatMessagesPreview('portal', portalCacheId);
   const [messages, setMessages] = useState<Awaited<ReturnType<typeof fetchPortalChatMessages>>>(
     () => initialCached ?? [],
   );
@@ -77,10 +77,20 @@ export default function PortalCounselorInquiryChat({
       setLoading(false);
       return;
     }
+    const preview = readCachedPortalChatMessagesPreview('portal', portalCacheId);
+    if (preview?.length) {
+      setMessages(preview);
+      pendingScrollRef.current = true;
+    }
     setError('');
     try {
       const items = await fetchPortalChatMessages(session.portalToken);
-      setMessages(items);
+      setMessages((prev) => {
+        if (items.length !== prev.length) {
+          pendingScrollRef.current = true;
+        }
+        return items;
+      });
       writeCachedPortalChatMessages('portal', portalCacheId, items);
     } catch (err) {
       setError(err instanceof Error ? err.message : '문의 내역을 불러오지 못했습니다.');

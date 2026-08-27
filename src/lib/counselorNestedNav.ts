@@ -34,7 +34,7 @@ export const DELETED_RECIPIENTS_HREF = '/counselor/assessments/deleted-recipient
 export const PERMANENTLY_DELETED_ASSESSMENTS_HREF = '/counselor/assessments/permanently-deleted';
 export const PERMANENTLY_DELETED_RECIPIENTS_HREF =
   '/counselor/assessments/permanently-deleted-recipients';
-const PARENT_SUBCATEGORY = '검사 발송';
+const PARENT_SUBCATEGORY = '검사발송';
 const ASSESSMENTS_PARENT_SUBCATEGORY = '1a. 상담코드';
 
 export const counselorNestedNavItems: CounselorNestedNavItem[] = [];

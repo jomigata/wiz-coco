@@ -46,6 +46,7 @@ import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import CounselorSlashInfoCell from '@/components/counselor/CounselorSlashInfoCell';
 import CounselorListSearchInput from '@/components/counselor/CounselorListSearchInput';
 import CounselorProgressMetricsInline from '@/components/counselor/CounselorProgressMetricsInline';
+import { stripAssessmentTitleDispatchCountSuffix } from '@/lib/counselorAssessmentResultDisplay';
 import { buildAssessmentListHref, writeAssessmentListSearch } from '@/lib/counselorAssessmentListSearch';
 import { matchesWildcardFields } from '@/lib/wildcardSearch';
 import {
@@ -818,9 +819,11 @@ export default function AssessmentDispatchPanel({
     setDetailError('');
   };
 
+  const progressPageTitle = entryFrom === 'clients' ? '검사발송 현황' : '상담진행 현황';
+
   if (loading) {
     return (
-      <CounselorPageSection title="상담진행 현황" titleAccent="progress" dense className="flex min-h-0 flex-1">
+      <CounselorPageSection title={progressPageTitle} titleAccent="progress" dense className="flex min-h-0 flex-1">
         <LoadingMessage className="py-4" textClassName="text-sm text-slate-400" />
       </CounselorPageSection>
     );
@@ -828,7 +831,7 @@ export default function AssessmentDispatchPanel({
 
   if (error) {
     return (
-      <CounselorPageSection title="상담진행 현황" titleAccent="progress" dense className="flex min-h-0 flex-1">
+      <CounselorPageSection title={progressPageTitle} titleAccent="progress" dense className="flex min-h-0 flex-1">
         <p className="text-red-400 text-sm py-4">{error}</p>
       </CounselorPageSection>
     );
@@ -848,7 +851,7 @@ export default function AssessmentDispatchPanel({
     entryFrom === 'deleted-recipients'
       ? '삭제된 내담자'
       : entryFrom === 'clients'
-        ? '내담자'
+        ? '검사발송'
         : '상담코드';
 
   return (
@@ -856,7 +859,7 @@ export default function AssessmentDispatchPanel({
     <CounselorPageSection
       title={
         <span className="inline-flex flex-wrap items-center gap-2">
-          <span>상담진행 현황</span>
+          <span>{progressPageTitle}</span>
           {displayData.cohortName ? (
             <span className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-slate-900/50 px-2 py-1">
               <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">그룹</span>
@@ -865,7 +868,9 @@ export default function AssessmentDispatchPanel({
           ) : null}
           <span className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-slate-900/50 px-2 py-1">
             <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">제목</span>
-            <span className="text-sm text-slate-300">{displayData.title || '—'}</span>
+            <span className="text-sm text-slate-300">
+              {stripAssessmentTitleDispatchCountSuffix(displayData.title || '') || '—'}
+            </span>
           </span>
           <span className="inline-flex items-center gap-1.5 rounded-md border border-cyan-500/25 bg-cyan-950/30 px-2 py-1">
             <span className="text-[10px] font-semibold uppercase tracking-wide text-cyan-500/80">상담코드</span>

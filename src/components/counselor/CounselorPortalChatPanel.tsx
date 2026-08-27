@@ -19,7 +19,7 @@ import {
 } from '@/lib/portalChatApi';
 import { LoadingMessage } from '@/components/ui/LoadingMessage';
 import { defaultScheduledDate } from '@/components/ui/DateTimeSpinFields';
-import { scrollToLatestChatAnchor, removePortalChatMessage, upsertPortalChatMessage, filterCounselorVisibleChatMessages, counselorChatAttentionCount, readCachedPortalChatMessages, writeCachedPortalChatMessages } from '@/lib/portalChatMessageUi';
+import { scrollToLatestChatAnchor, removePortalChatMessage, upsertPortalChatMessage, filterCounselorVisibleChatMessages, counselorChatAttentionCount, readCachedPortalChatMessagesPreview, writeCachedPortalChatMessages } from '@/lib/portalChatMessageUi';
 import PortalChatMessageComposer, {
   PortalChatFixedComposerShell,
 } from '@/components/portal/PortalChatMessageComposer';
@@ -195,17 +195,20 @@ export default function CounselorPortalChatPanel() {
   );
 
   const loadMessages = useCallback(async (portalId: string) => {
-    const cached = readCachedPortalChatMessages('counselor', portalId);
-    if (cached?.length) {
-      setMessages(cached);
+    const cachedPreview = readCachedPortalChatMessagesPreview('counselor', portalId);
+    if (cachedPreview?.length) {
+      setMessages(cachedPreview);
+      pendingScrollRef.current = true;
     } else {
       setLoadingMessages(true);
     }
     setError('');
     try {
       const items = await fetchCounselorChatMessages(portalId);
-      writeCachedPortalChatMessages('counselor', portalId, filterCounselorVisibleChatMessages(items));
+      const visible = filterCounselorVisibleChatMessages(items);
+      writeCachedPortalChatMessages('counselor', portalId, visible);
       setMessages(items);
+      pendingScrollRef.current = true;
       const attention = counselorChatAttentionCount(items);
       if (attention > 0) {
         setStickyUnreadByPortalId((prev) => ({
@@ -214,7 +217,7 @@ export default function CounselorPortalChatPanel() {
         }));
       }
     } catch (err) {
-      if (!cached?.length) {
+      if (!cachedPreview?.length) {
         setError(err instanceof Error ? err.message : '채팅 내역 조회에 실패했습니다.');
         setMessages([]);
       }
@@ -232,13 +235,20 @@ export default function CounselorPortalChatPanel() {
       setMessages([]);
       return;
     }
-    const cached = readCachedPortalChatMessages('counselor', selectedPortalId);
-    if (cached?.length) {
-      setMessages(cached);
+    const cachedPreview = readCachedPortalChatMessagesPreview('counselor', selectedPortalId);
+    if (cachedPreview?.length) {
+      setMessages(cachedPreview);
       setLoadingMessages(false);
+      pendingScrollRef.current = true;
     }
     void loadMessages(selectedPortalId);
   }, [selectedPortalId, loadMessages]);
+
+  useEffect(() => {
+    if (!selectedPortalId) return;
+    pendingScrollRef.current = true;
+    scrollToLatest('auto');
+  }, [selectedPortalId, scrollToLatest]);
 
   const handleSelectThread = (portalId: string) => {
     setSelectedPortalId(portalId);
@@ -473,7 +483,7 @@ export default function CounselorPortalChatPanel() {
                 ) : null}
 
                 <div
-                  className="space-y-3 p-4"
+                  className="max-h-[min(52vh,520px)] space-y-3 overflow-y-auto overscroll-contain p-4"
                   onClick={handleMessageAreaReadAck}
                   onTouchStart={handleMessageAreaReadAck}
                   role="presentation"

@@ -31,11 +31,16 @@ export function formatTestIncompleteMetric(a: CounselorAssessment): string {
   return String(testIncomplete);
 }
 
+/** QuickSend 등에서 title 끝에 붙는 " · N명" (최초 발송 인원) — 목록 표시에서 제외 */
+export function stripAssessmentTitleDispatchCountSuffix(title: string): string {
+  return title.replace(/\s·\s*\d+명\s*$/, '').trim();
+}
+
 export function assessmentGroupTitleParts(
   a: CounselorAssessment,
 ): { primary: string; secondary: string | null } {
   const primary = getAssessmentOrgLabel(a);
-  const title = (a.title || '').trim();
+  const title = stripAssessmentTitleDispatchCountSuffix((a.title || '').trim());
   if (!title || title === '—' || title === primary || title === '완료') {
     return { primary, secondary: null };
   }

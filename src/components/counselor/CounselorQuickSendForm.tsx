@@ -255,7 +255,7 @@ export default function CounselorQuickSendForm({
         : template.name;
     const title =
       recipients.length > 1
-        ? `${templateLabel} · ${recipients.length}명`.slice(0, 200)
+        ? templateLabel.slice(0, 200)
         : `${templateLabel} · ${firstName}`.slice(0, 200);
 
     setLoading(true);

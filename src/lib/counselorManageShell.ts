@@ -62,12 +62,26 @@ function matchesPrefix(path: string, prefixes: readonly string[]): boolean {
   return prefixes.some((prefix) => path === prefix || path.startsWith(`${prefix}/`));
 }
 
-export function isDispatchMgmtWorkspaceRoute(pathname: string): boolean {
-  return matchesPrefix(normalizePath(pathname), DISPATCH_MGMT_ROUTE_PREFIXES);
+export function isDispatchMgmtWorkspaceRoute(pathname: string, search = ''): boolean {
+  const path = normalizePath(pathname);
+  if (
+    path.startsWith('/counselor/assessments/progress') &&
+    resolveCounselorProgressFrom(pathname, search) === 'clients'
+  ) {
+    return true;
+  }
+  return matchesPrefix(path, DISPATCH_MGMT_ROUTE_PREFIXES);
 }
 
-export function isPsychTestsWorkspaceRoute(pathname: string): boolean {
-  return matchesPrefix(normalizePath(pathname), PSYCH_TESTS_ROUTE_PREFIXES);
+export function isPsychTestsWorkspaceRoute(pathname: string, search = ''): boolean {
+  const path = normalizePath(pathname);
+  if (
+    path.startsWith('/counselor/assessments/progress') &&
+    resolveCounselorProgressFrom(pathname, search) === 'clients'
+  ) {
+    return false;
+  }
+  return matchesPrefix(path, PSYCH_TESTS_ROUTE_PREFIXES);
 }
 
 export function isToolsWorkspaceRoute(pathname: string): boolean {
@@ -91,12 +105,12 @@ export function isSalesHubRoute(pathname: string): boolean {
   return path === SALES_HUB_PREFIX || path.startsWith(`${SALES_HUB_PREFIX}/`);
 }
 
-export function isCounselorManageShellRoute(pathname: string): boolean {
+export function isCounselorManageShellRoute(pathname: string, search = ''): boolean {
   const path = normalizePath(pathname);
   if (path.startsWith('/counselor/hub/')) return true;
   return (
-    isDispatchMgmtWorkspaceRoute(pathname) ||
-    isPsychTestsWorkspaceRoute(pathname) ||
+    isDispatchMgmtWorkspaceRoute(pathname, search) ||
+    isPsychTestsWorkspaceRoute(pathname, search) ||
     isToolsWorkspaceRoute(pathname) ||
     isDataWorkspaceRoute(pathname) ||
     isSalesWorkspaceRoute(pathname)

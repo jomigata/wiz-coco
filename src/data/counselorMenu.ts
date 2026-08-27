@@ -34,7 +34,7 @@ export const counselorMenuCategories: CounselorMainCategory[] = [
     icon: '📤',
     subcategories: [
       {
-        name: '검사 발송',
+        name: '검사발송',
         icon: '📋',
         items: [
           {

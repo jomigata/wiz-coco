@@ -3,6 +3,7 @@ import { readSWRCache, writeSWRCache } from '@/utils/staleWhileRevalidateCache';
 
 const PORTAL_CHAT_CACHE_SCOPE = 'session';
 const PORTAL_CHAT_CACHE_MAX_AGE_MS = 1000 * 60 * 60 * 12;
+export const PORTAL_CHAT_CACHE_PREVIEW_COUNT = 10;
 
 export function sortPortalChatMessagesAsc(messages: PortalChatMessage[]): PortalChatMessage[] {
   return [...messages].sort((a, b) => {
@@ -132,6 +133,18 @@ export function readCachedPortalChatMessages(
     return sortPortalChatMessagesAsc(cached.data.messages || []);
   }
   return null;
+}
+
+/** 목록 진입 시 즉시 표시할 최근 N개 (전체 캐시의 마지막 구간) */
+export function readCachedPortalChatMessagesPreview(
+  scope: 'portal' | 'counselor',
+  id: string,
+  limit = PORTAL_CHAT_CACHE_PREVIEW_COUNT,
+): PortalChatMessage[] | null {
+  const cached = readCachedPortalChatMessages(scope, id);
+  if (!cached?.length) return null;
+  if (cached.length <= limit) return cached;
+  return cached.slice(-limit);
 }
 
 export function writeCachedPortalChatMessages(

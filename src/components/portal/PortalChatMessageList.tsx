@@ -7,6 +7,7 @@ import {
   chatMessageUnreadSymbol,
   sortPortalChatMessagesAsc,
 } from '@/lib/portalChatMessageUi';
+import { LoadingSpinner } from '@/components/ui/LoadingMessage';
 
 type Props = {
   messages: PortalChatMessage[];
@@ -30,7 +31,7 @@ const bubbleTheme = {
     scheduledLabel: 'text-cyan-300',
     mineMeta: 'text-cyan-200/70',
     sendNow: 'bg-cyan-700 hover:bg-cyan-600',
-    unread: 'text-amber-300',
+    unread: 'text-red-500',
   },
   counselor: {
     mine: 'rounded-br-md bg-indigo-900/60 text-indigo-50',
@@ -60,7 +61,11 @@ export default function PortalChatMessageList({
   const styles = bubbleTheme[theme];
 
   if (loading && sortedMessages.length === 0) {
-    return <p className="text-sm text-slate-500">{loadingMessage}</p>;
+    return (
+      <div className="flex items-center justify-center py-8" role="status" aria-label={loadingMessage}>
+        <LoadingSpinner size="md" />
+      </div>
+    );
   }
 
   if (!sortedMessages.length) {
@@ -69,6 +74,11 @@ export default function PortalChatMessageList({
 
   return (
     <div className="space-y-3" aria-live="polite">
+      {loading ? (
+        <div className="flex justify-center py-1" role="status" aria-label={loadingMessage}>
+          <LoadingSpinner size="sm" />
+        </div>
+      ) : null}
       {sortedMessages.map((msg) => {
         const mine =
           viewerRole === 'portal' ? msg.senderRole === 'portal' : msg.senderRole === 'counselor';

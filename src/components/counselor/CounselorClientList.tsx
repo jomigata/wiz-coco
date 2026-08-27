@@ -48,6 +48,7 @@ import {
   restoreArchivedDispatchRecipients,
   type ArchivedDispatchRecipient,
 } from '@/lib/clientPortalApi';
+import { stripAssessmentTitleDispatchCountSuffix } from '@/lib/counselorAssessmentResultDisplay';
 import { counselorClientProgressHref } from '@/lib/counselorClientRoutes';
 import { exportClientPortalItems } from '@/lib/clientPortalListExport';
 import { dispatchStatusDisplay } from '@/lib/dispatchRecipientDisplay';
@@ -1257,7 +1258,9 @@ export default function CounselorClientList({
                     const infoCode = primaryAssessment
                       ? formatAccessCodeDisplay(primaryAssessment.joinAccessCode || '')
                       : '—';
-                    const infoSecondary = primaryAssessment?.title || '—';
+                    const infoSecondary = stripAssessmentTitleDispatchCountSuffix(
+                      primaryAssessment?.title || '—',
+                    );
                     const usageEnd = primaryUsageEndDate(item, usageEndMap);
                     const dispatchView = dispatchStatusDisplay({
                       email: item.email,

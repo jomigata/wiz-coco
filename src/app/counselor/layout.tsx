@@ -2,13 +2,14 @@
 
 import React, { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { pushWithAuthSession } from '@/utils/authSessionLifecycle';
 import { useRequireLoginRedirect } from '@/hooks/useRequireLoginRedirect';
 import RoleGuard from '@/components/RoleGuard';
 import CounselorManageShell from '@/components/counselor/CounselorManageShell';
 import { getCounselorCategoryBySlug } from '@/data/counselorMenu';
 import { isCounselorManageShellRoute } from '@/lib/counselorManageShell';
+import { resolveCounselorProgressFrom } from '@/lib/counselorNestedNav';
 import { counselorHubClasses } from '@/components/layout/appChromeTheme';
 import { CounselorPageBody } from '@/components/counselor/CounselorPageSection';
 import CounselorPageTitle from '@/components/counselor/CounselorPageTitle';
@@ -17,6 +18,8 @@ import { LoadingMessage } from '@/components/ui/LoadingMessage';
 export default function CounselorLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const routeSearch = searchParams.toString() ? `?${searchParams.toString()}` : '';
   useRequireLoginRedirect();
   const [activeSection, setActiveSection] = useState<string>('');
   const [pageTitle, setPageTitle] = useState<string>('오늘');
@@ -103,7 +106,7 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
   };
 
   // 페이지 제목 결정 함수
-  const getPageTitle = (path: string): string => {
+  const getPageTitle = (path: string, search = ''): string => {
     if (path.startsWith('/counselor/hub/')) {
       const slug = path.replace('/counselor/hub/', '').split('/')[0];
       const hubCategory = getCounselorCategoryBySlug(slug);
@@ -112,7 +115,11 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
     if (path.startsWith('/counselor/assessments/deleted-recipients')) return '삭제된 내담자';
     if (path.startsWith('/counselor/assessments/deleted')) return '삭제된 상담코드';
     if (path.startsWith('/counselor/assessments/new')) return '검사 보내기';
-    if (path.startsWith('/counselor/assessments/progress')) return '상담진행 현황';
+    if (path.startsWith('/counselor/assessments/progress')) {
+      return resolveCounselorProgressFrom(path, search) === 'clients'
+        ? '검사발송 현황'
+        : '상담진행 현황';
+    }
     if (path.startsWith('/counselor/assessments/dispatch')) return '진행현황';
     if (path.startsWith('/counselor/assessments/edit')) return '상담코드 수정';
     if (path.startsWith('/counselor/assessments')) return '상담코드';
@@ -157,14 +164,14 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
   // 경로 변경 시 활성 섹션 업데이트
   useEffect(() => {
     const currentSection = getActiveSection(pathname);
-    const currentTitle = getPageTitle(pathname);
+    const currentTitle = getPageTitle(pathname, routeSearch);
     setActiveSection(currentSection);
     setPageTitle(currentTitle);
-  }, [pathname]);
+  }, [pathname, routeSearch]);
 
   const isHubPage = pathname?.startsWith('/counselor/hub/') ?? false;
   const isDashboardHome = pathname === '/counselor' || pathname === '/counselor/';
-  const useManageShell = isCounselorManageShellRoute(pathname || '');
+  const useManageShell = isCounselorManageShellRoute(pathname || '', routeSearch);
 
   return (
     <RoleGuard allowedRoles={['counselor', 'admin']}>
