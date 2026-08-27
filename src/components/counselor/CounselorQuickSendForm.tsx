@@ -63,6 +63,7 @@ export default function CounselorQuickSendForm({
   const { user, authPending, showLoginRequired } = useAuthResolved();
   const [templateId, setTemplateId] = useState<CounselorSendTemplateId | null>(null);
   const [customCohortName, setCustomCohortName] = useState('');
+  const [customCohortFocused, setCustomCohortFocused] = useState(false);
   const [welcomeMessage, setWelcomeMessage] = useState(QUICK_SEND_MESSAGE);
   const [showWelcomeHint, setShowWelcomeHint] = useState(false);
   const [customTestIds, setCustomTestIds] = useState<Set<string>>(() => new Set(['generic']));
@@ -77,6 +78,7 @@ export default function CounselorQuickSendForm({
   const [firstSendTrialEligible, setFirstSendTrialEligible] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const welcomeTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const customCohortTextareaRef = useRef<HTMLTextAreaElement>(null);
   const recipientNameRefs = useRef<Array<HTMLInputElement | null>>([]);
 
   useEffect(() => {
@@ -366,8 +368,14 @@ export default function CounselorQuickSendForm({
                     <span className="shrink-0 text-[10px] font-semibold tabular-nums text-slate-500">
                       {templateOrder}
                     </span>
-                    <div className="relative min-h-0 flex-1">
-                      {!customCohortName.trim() ? (
+                    <div
+                      className="relative min-h-0 flex-1 cursor-text"
+                      onClick={() => {
+                        setTemplateId('custom');
+                        customCohortTextareaRef.current?.focus();
+                      }}
+                    >
+                      {!customCohortName.trim() && !customCohortFocused ? (
                         <span
                           className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center leading-snug"
                           aria-hidden
@@ -377,16 +385,21 @@ export default function CounselorQuickSendForm({
                         </span>
                       ) : null}
                       <textarea
+                        ref={customCohortTextareaRef}
                         value={customCohortName}
                         onChange={(e) => {
                           setCustomCohortName(e.target.value);
                           setTemplateId('custom');
                         }}
-                        onFocus={() => setTemplateId('custom')}
+                        onFocus={() => {
+                          setCustomCohortFocused(true);
+                          setTemplateId('custom');
+                        }}
+                        onBlur={() => setCustomCohortFocused(false)}
                         maxLength={120}
                         rows={3}
                         disabled={loading}
-                        className={`relative h-full w-full resize-none overflow-hidden break-words bg-transparent text-center text-sm font-bold leading-snug outline-none ${
+                        className={`relative h-full w-full resize-none overflow-hidden break-words bg-transparent text-center text-sm font-bold leading-snug caret-white outline-none ${
                           active ? 'text-white' : 'text-slate-200'
                         }`}
                         aria-label="기관/단체/그룹명"

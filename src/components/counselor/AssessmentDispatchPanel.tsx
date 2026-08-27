@@ -852,7 +852,7 @@ export default function AssessmentDispatchPanel({
       ? '삭제된 내담자'
       : entryFrom === 'clients'
         ? '검사발송 목록'
-        : '상담코드';
+        : '상담코드 목록';
 
   return (
     <>
@@ -887,17 +887,13 @@ export default function AssessmentDispatchPanel({
       dense
       description={
         <span className="inline-flex w-full flex-wrap items-center gap-2">
-          {entryFrom !== 'assessments' ? (
-            <>
-              <CounselorListBackLink href={backHref} label={backButtonLabel} />
-              <AuthLink
-                href={backHref}
-                className="inline-flex shrink-0 items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1.5 text-sm text-slate-300 transition-colors hover:bg-white/5"
-              >
-                {backButtonLabel}
-              </AuthLink>
-            </>
-          ) : null}
+          <CounselorListBackLink href={backHref} label={backButtonLabel} />
+          <AuthLink
+            href={backHref}
+            className="inline-flex shrink-0 items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1.5 text-sm text-slate-300 transition-colors hover:bg-white/5"
+          >
+            {backButtonLabel}
+          </AuthLink>
           <span className="inline-flex items-center rounded-md border border-emerald-500/20 bg-emerald-950/25 px-2 py-1 text-sm">
             <CounselorProgressMetricsInline
               totalClients={totalRecipientCount}
