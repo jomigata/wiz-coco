@@ -851,7 +851,7 @@ export default function AssessmentDispatchPanel({
     entryFrom === 'deleted-recipients'
       ? '삭제된 내담자'
       : entryFrom === 'clients'
-        ? '검사발송'
+        ? '검사발송 목록'
         : '상담코드';
 
   return (
