@@ -607,6 +607,7 @@ export default function DeletedAssessmentsPage() {
                         <td className={`whitespace-nowrap ${counselorListTdCompactClass} text-center`}>
                           <CounselorProgressMetricsInline
                             totalClients={dispatchTotal}
+                            showTotalClients={false}
                             items={[{ label: '검사완료', value: testComplete }]}
                           />
                         </td>

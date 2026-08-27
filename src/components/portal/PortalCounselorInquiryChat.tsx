@@ -65,6 +65,12 @@ export default function PortalCounselorInquiryChat({
     onAttentionCountChange?.(portalInquiryAttentionCount(messages));
   }, [messages, onAttentionCountChange]);
 
+  useEffect(() => {
+    if (messages.length > 0) {
+      writeCachedPortalChatMessages('portal', portalCacheId, messages);
+    }
+  }, [messages, portalCacheId]);
+
   const loadMessages = useCallback(async () => {
     const session = readClientPortalSession();
     if (!session?.portalToken) {
