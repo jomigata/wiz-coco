@@ -398,9 +398,9 @@ export default function CounselorQuickSendForm({
                         setTemplateId('custom');
                         setTestPickerOpen(true);
                       }}
-                      className="mt-1 shrink-0 text-center text-[11px] leading-snug text-sky-300 underline-offset-2 hover:text-sky-200 hover:underline disabled:opacity-50"
+                      className="mt-1 shrink-0 text-center text-sm font-semibold leading-snug text-sky-300 underline-offset-2 hover:text-sky-200 hover:underline disabled:opacity-50"
                     >
-                      검사 구성을 직접 선택
+                      검사 선택
                       {customTestIds.size > 0 ? ` (${customTestIds.size}개)` : ''}
                     </button>
                     {customSelectedTests.length > 0 ? (

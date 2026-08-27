@@ -34,7 +34,7 @@ export const COUNSELOR_SEND_TEMPLATES: CounselorSendTemplate[] = [
   {
     id: 'custom',
     name: '맞춤',
-    description: '검사 구성을 직접 선택',
+    description: '검사 선택',
     testIds: ['generic'],
     customOrgInput: true,
   },
