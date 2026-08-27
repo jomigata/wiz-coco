@@ -162,12 +162,19 @@ function ClientPortalContent() {
   }, [router, loadResults]);
 
   const testListCount = React.useMemo(() => {
-    let total = 0;
+    let unresolved = 0;
     for (const a of assessments) {
-      total += a.testList?.length || 0;
+      const code = normalizeAccessCodeInput(a.accessCode);
+      const results = resultsByCode[code] || [];
+      for (const t of a.testList || []) {
+        const completed = results.some(
+          (r) => r.status === 'completed' && String(r.testId) === String(t.testId),
+        );
+        if (!completed) unresolved += 1;
+      }
     }
-    return total;
-  }, [assessments]);
+    return unresolved;
+  }, [assessments, resultsByCode]);
 
   const completedResultsCount = React.useMemo(() => {
     let count = 0;

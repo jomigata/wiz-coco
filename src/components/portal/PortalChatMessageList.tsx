@@ -4,7 +4,7 @@ import React from 'react';
 import { formatChatTimestamp, type PortalChatMessage } from '@/lib/portalChatApi';
 import {
   canDeleteUnreadOwnMessage,
-  readReceiptLabel,
+  chatMessageUnreadSymbol,
   sortPortalChatMessagesAsc,
 } from '@/lib/portalChatMessageUi';
 
@@ -30,6 +30,7 @@ const bubbleTheme = {
     scheduledLabel: 'text-cyan-300',
     mineMeta: 'text-cyan-200/70',
     sendNow: 'bg-cyan-700 hover:bg-cyan-600',
+    unread: 'text-amber-300',
   },
   counselor: {
     mine: 'rounded-br-md bg-indigo-900/60 text-indigo-50',
@@ -37,6 +38,7 @@ const bubbleTheme = {
     scheduledLabel: 'text-indigo-300',
     mineMeta: 'text-indigo-200/70',
     sendNow: 'bg-indigo-700 hover:bg-indigo-600',
+    unread: 'text-amber-300',
   },
 } as const;
 
@@ -57,7 +59,7 @@ export default function PortalChatMessageList({
   const sortedMessages = sortPortalChatMessagesAsc(messages);
   const styles = bubbleTheme[theme];
 
-  if (loading) {
+  if (loading && sortedMessages.length === 0) {
     return <p className="text-sm text-slate-500">{loadingMessage}</p>;
   }
 
@@ -71,7 +73,7 @@ export default function PortalChatMessageList({
         const mine =
           viewerRole === 'portal' ? msg.senderRole === 'portal' : msg.senderRole === 'counselor';
         const scheduled = Boolean(msg.isScheduled && msg.scheduledPending);
-        const receipt = readReceiptLabel(msg, viewerRole, mine);
+        const unreadSymbol = chatMessageUnreadSymbol(msg, viewerRole, mine);
         const deletable = canDeleteUnreadOwnMessage(msg, viewerRole);
         const showScheduledActions = scheduled && mine && onSendScheduledNow && onCancelScheduled;
 
@@ -116,7 +118,11 @@ export default function PortalChatMessageList({
                 <p className={`text-[11px] ${mine ? styles.mineMeta : 'text-slate-400'}`}>
                   {mine ? senderLabelForMine : senderLabelForOther} ·{' '}
                   {formatChatTimestamp(scheduled ? msg.scheduledAt : msg.createdAt)}
-                  {receipt ? ` · ${receipt}` : ''}
+                  {unreadSymbol ? (
+                    <span className={`ml-1 font-bold ${styles.unread}`} aria-label="읽지 않음">
+                      {unreadSymbol}
+                    </span>
+                  ) : null}
                 </p>
                 {deletable && onDeleteMessage ? (
                   <button

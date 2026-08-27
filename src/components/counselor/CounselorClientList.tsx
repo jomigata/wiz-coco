@@ -1044,7 +1044,7 @@ export default function CounselorClientList({
     ? '영구삭제 내담자'
     : deletedMode
       ? '삭제된 내담자'
-      : '검사발송 현황';
+      : '검사발송 목록';
   const dateColumnLabel = permanentlyDeletedMode
     ? '영구삭제일'
     : deletedMode
@@ -1076,7 +1076,7 @@ export default function CounselorClientList({
         <span className="inline-flex w-full flex-wrap items-center gap-x-3 gap-y-2">
           {deletedMode && !permanentlyDeletedMode ? (
             <>
-              <CounselorListBackLink href="/counselor/clients" label="검사발송 현황" />
+              <CounselorListBackLink href="/counselor/clients" label="검사발송 목록" />
               <AuthLink
                 href="/counselor/clients"
                 className="inline-flex shrink-0 items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1.5 text-sm text-slate-300 transition-colors hover:bg-white/5"
@@ -1155,11 +1155,6 @@ export default function CounselorClientList({
           </div>
         ) : (
           <>
-            {loading && !deletedMode && !permanentlyDeletedMode ? (
-              <p className="mb-2 shrink-0 text-xs text-sky-300/80" role="status">
-                저장된 목록을 표시 중… 최신 정보를 불러오고 있습니다.
-              </p>
-            ) : null}
             <div className={counselorListTableWrapperClass}>
               <table className="w-max min-w-full table-fixed text-sm">
                 <thead>

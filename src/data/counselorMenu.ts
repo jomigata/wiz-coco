@@ -29,16 +29,16 @@ export const COUNSELOR_DISPATCH_MGMT_SLUG = 'dispatch-mgmt';
 export const counselorMenuCategories: CounselorMainCategory[] = [
   {
     slug: COUNSELOR_DISPATCH_MGMT_SLUG,
-    category: '검사관리',
+    category: '검사발송 관리',
     description: '검사 발송·내담자 현황',
     icon: '📤',
     subcategories: [
       {
-        name: '검사관리',
+        name: '검사 발송',
         icon: '📋',
         items: [
           {
-            name: '검사발송 현황',
+            name: '검사발송 목록',
             href: '/counselor/clients',
             description: '발송 내담자·검사 진행 현황',
             icon: '📤',

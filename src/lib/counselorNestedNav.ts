@@ -34,7 +34,7 @@ export const DELETED_RECIPIENTS_HREF = '/counselor/assessments/deleted-recipient
 export const PERMANENTLY_DELETED_ASSESSMENTS_HREF = '/counselor/assessments/permanently-deleted';
 export const PERMANENTLY_DELETED_RECIPIENTS_HREF =
   '/counselor/assessments/permanently-deleted-recipients';
-const PARENT_SUBCATEGORY = '검사관리';
+const PARENT_SUBCATEGORY = '검사 발송';
 const ASSESSMENTS_PARENT_SUBCATEGORY = '1a. 상담코드';
 
 export const counselorNestedNavItems: CounselorNestedNavItem[] = [];
@@ -201,7 +201,7 @@ export function getClientsListContextNestedItems(
     const assessmentId = resolveAssessmentContextId(pathname, search);
     items.push({
       order: 50,
-      label: '상담진행 현황',
+      label: '검사발송 현황',
       href: buildProgressHref(assessmentId, search),
       isActive: (p) => p.startsWith('/counselor/assessments/progress'),
     });
@@ -271,12 +271,12 @@ export function getAssessmentsParentSubmenuItems(options?: { admin?: boolean }):
   return items;
 }
 
-/** 검사발송 현황 메뉴 선택 시 고정 소분류 */
+/** 검사발송 목록 메뉴 선택 시 고정 소분류 */
 export function getClientsParentSubmenuItems(options?: { admin?: boolean }): CounselorParentSubmenuItem[] {
   const items: CounselorParentSubmenuItem[] = [
     {
       order: 0,
-      label: '검사발송 현황',
+      label: '검사발송 목록',
       href: CLIENTS_LIST_HREF,
       isActive: (p) => p === CLIENTS_LIST_HREF,
     },

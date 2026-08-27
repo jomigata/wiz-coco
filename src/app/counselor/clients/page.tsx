@@ -13,7 +13,7 @@ export default function ClientsPage() {
 
   if (showLoginRequired) {
     return (
-      <AuthRequiredState description="Firebase에 로그인한 상태에서 검사발송 현황을 이용할 수 있습니다." />
+      <AuthRequiredState description="Firebase에 로그인한 상태에서 검사발송 목록을 이용할 수 있습니다." />
     );
   }
 

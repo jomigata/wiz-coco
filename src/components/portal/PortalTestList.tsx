@@ -69,21 +69,36 @@ export default function PortalTestList({
           <li
             key={t.testId}
             className={`rounded-lg border border-slate-600 bg-slate-700/80 px-4 py-3 ${
-              hasCompleted ? 'cursor-pointer transition hover:border-emerald-500/35 hover:bg-slate-700' : ''
+              readOnly
+                ? hasCompleted
+                  ? 'cursor-pointer transition hover:border-emerald-500/35 hover:bg-slate-700'
+                  : ''
+                : 'cursor-pointer transition hover:border-cyan-500/35 hover:bg-slate-700'
             }`}
-            onClick={hasCompleted ? openResult : undefined}
+            onClick={() => {
+              if (readOnly) {
+                if (hasCompleted) openResult();
+                return;
+              }
+              if (hasCompleted) {
+                openResult();
+              } else {
+                onStartTest(String(t.testId));
+              }
+            }}
             onKeyDown={
-              hasCompleted
-                ? (e) => {
+              readOnly && !hasCompleted
+                ? undefined
+                : (e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
-                      openResult();
+                      if (hasCompleted) openResult();
+                      else if (!readOnly) onStartTest(String(t.testId));
                     }
                   }
-                : undefined
             }
-            role={hasCompleted ? 'button' : undefined}
-            tabIndex={hasCompleted ? 0 : undefined}
+            role={readOnly && !hasCompleted ? undefined : 'button'}
+            tabIndex={readOnly && !hasCompleted ? undefined : 0}
           >
             <div className="flex items-start gap-3">
               <span

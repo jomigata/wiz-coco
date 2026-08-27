@@ -15,7 +15,7 @@ import {
   PORTAL_INQUIRY_SECTION_TITLE,
   portalTestManagerChatSenderLabel,
 } from '@/lib/portalCareManagerLabels';
-import { scrollToLatestChatAnchor, removePortalChatMessage, upsertPortalChatMessage, portalInquiryAttentionCount } from '@/lib/portalChatMessageUi';
+import { scrollToLatestChatAnchor, removePortalChatMessage, upsertPortalChatMessage, portalInquiryAttentionCount, readCachedPortalChatMessages, writeCachedPortalChatMessages } from '@/lib/portalChatMessageUi';
 import PortalChatMessageComposer, {
   PortalChatFixedComposerShell,
 } from '@/components/portal/PortalChatMessageComposer';
@@ -32,11 +32,15 @@ export default function PortalCounselorInquiryChat({
   embeddedInTab = false,
   onAttentionCountChange,
 }: PortalCounselorInquiryChatProps) {
-  const [messages, setMessages] = useState<Awaited<ReturnType<typeof fetchPortalChatMessages>>>([]);
+  const portalCacheId = readClientPortalSession()?.portal?.accessCode || 'portal';
+  const initialCached = readCachedPortalChatMessages('portal', portalCacheId);
+  const [messages, setMessages] = useState<Awaited<ReturnType<typeof fetchPortalChatMessages>>>(
+    () => initialCached ?? [],
+  );
   const [draft, setDraft] = useState('');
   const [scheduleEnabled, setScheduleEnabled] = useState(false);
   const [scheduledDate, setScheduledDate] = useState(() => defaultScheduledDate());
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => !(initialCached && initialCached.length > 0));
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
   const latestAnchorRef = useRef<HTMLDivElement>(null);
@@ -71,12 +75,13 @@ export default function PortalCounselorInquiryChat({
     try {
       const items = await fetchPortalChatMessages(session.portalToken);
       setMessages(items);
+      writeCachedPortalChatMessages('portal', portalCacheId, items);
     } catch (err) {
       setError(err instanceof Error ? err.message : '문의 내역을 불러오지 못했습니다.');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [portalCacheId]);
 
   useEffect(() => {
     void loadMessages();

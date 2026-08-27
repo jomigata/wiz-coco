@@ -14,8 +14,12 @@ import type { CounselorClientPortalListItem } from '@/types/clientPortal';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import CounselorListPagination from '@/components/counselor/CounselorListPagination';
 import CounselorListSearchInput from '@/components/counselor/CounselorListSearchInput';
-import CounselorProgressMetricsInline from '@/components/counselor/CounselorProgressMetricsInline';
 import CounselorSlashInfoCell from '@/components/counselor/CounselorSlashInfoCell';
+import {
+  assessmentGroupTitleParts,
+  formatTestIncompleteMetric,
+  resultStatusCounts,
+} from '@/lib/counselorAssessmentResultDisplay';
 import AssessmentAddRecipientModal, {
   buildContextFromAssessment,
 } from '@/components/counselor/AssessmentAddRecipientModal';
@@ -44,10 +48,6 @@ import {
 } from '@/lib/counselorListTableStyles';
 import { useListPagination } from '@/hooks/useListPagination';
 import { useCounselorListPageSize } from '@/hooks/useCounselorListPageSize';
-import {
-  assessmentGroupTitleParts,
-  resultStatusCounts,
-} from '@/lib/counselorAssessmentResultDisplay';
 import {
   buildAssessmentProgressHref,
   clearAssessmentListSearch,
@@ -493,10 +493,7 @@ export default function AssessmentList({
   const cellLinkClass =
     'cursor-pointer text-left focus:outline-none focus-visible:ring-1 focus-visible:ring-sky-500/60 rounded-sm';
 
-  const totalParticipants = listItems.reduce((sum, a) => {
-    const { dispatchTotal } = resultStatusCounts(a);
-    return sum + dispatchTotal;
-  }, 0);
+  const totalParticipants = listItems.length;
 
   const filtered = useMemo(() => {
     const q = searchQuery.trim();
@@ -634,7 +631,7 @@ export default function AssessmentList({
       description={
         <span className="inline-flex w-full flex-wrap items-center gap-x-3 gap-y-2">
           <span className="shrink-0">
-            전체 <span className="font-semibold text-white">{totalParticipants}</span>명
+            전체 <span className="font-semibold text-white">{totalParticipants}</span>건
           </span>
           <CounselorListSearchInput
             value={searchQuery}
@@ -792,7 +789,7 @@ export default function AssessmentList({
               </thead>
               <tbody>
                 {paginatedItems.map((a, idx) => {
-                  const { dispatchTotal, testComplete } = resultStatusCounts(a);
+                  const { testComplete } = resultStatusCounts(a);
                   const expired = isExpired(a.usageEndDate);
                   const { primary: infoPrimary, secondary: infoSecondary } = assessmentGroupTitleParts(a);
                   const isSelected = selected.has(a.id);
@@ -842,12 +839,13 @@ export default function AssessmentList({
                           </span>
                         )}
                       </td>
-                      <td className={`whitespace-nowrap ${counselorListTdCompactClass} text-center cursor-default`}>
-                        <CounselorProgressMetricsInline
-                          totalClients={dispatchTotal}
-                          showTotalClients={false}
-                          items={[{ label: '검사완료', value: testComplete }]}
-                        />
+                      <td
+                        className={`whitespace-nowrap ${counselorListTdCompactClass} text-center cursor-default tabular-nums text-slate-200`}
+                      >
+                        {formatTestIncompleteMetric(a)}
+                        {testComplete > 0 ? (
+                          <span className="ml-1 text-slate-500">· 완료 {testComplete}</span>
+                        ) : null}
                       </td>
                       <td
                         className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer text-center ${expired ? 'text-red-400' : ''}`}

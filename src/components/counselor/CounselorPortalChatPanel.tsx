@@ -19,7 +19,7 @@ import {
 } from '@/lib/portalChatApi';
 import { LoadingMessage } from '@/components/ui/LoadingMessage';
 import { defaultScheduledDate } from '@/components/ui/DateTimeSpinFields';
-import { scrollToLatestChatAnchor, removePortalChatMessage, upsertPortalChatMessage, filterCounselorVisibleChatMessages } from '@/lib/portalChatMessageUi';
+import { scrollToLatestChatAnchor, removePortalChatMessage, upsertPortalChatMessage, filterCounselorVisibleChatMessages, counselorChatAttentionCount, readCachedPortalChatMessages, writeCachedPortalChatMessages } from '@/lib/portalChatMessageUi';
 import PortalChatMessageComposer, {
   PortalChatFixedComposerShell,
 } from '@/components/portal/PortalChatMessageComposer';
@@ -195,14 +195,29 @@ export default function CounselorPortalChatPanel() {
   );
 
   const loadMessages = useCallback(async (portalId: string) => {
-    setLoadingMessages(true);
+    const cached = readCachedPortalChatMessages('counselor', portalId);
+    if (cached?.length) {
+      setMessages(cached);
+    } else {
+      setLoadingMessages(true);
+    }
     setError('');
     try {
       const items = await fetchCounselorChatMessages(portalId);
+      writeCachedPortalChatMessages('counselor', portalId, filterCounselorVisibleChatMessages(items));
       setMessages(items);
+      const attention = counselorChatAttentionCount(items);
+      if (attention > 0) {
+        setStickyUnreadByPortalId((prev) => ({
+          ...prev,
+          [portalId]: Math.max(prev[portalId] || 0, attention),
+        }));
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : '채팅 내역 조회에 실패했습니다.');
-      setMessages([]);
+      if (!cached?.length) {
+        setError(err instanceof Error ? err.message : '채팅 내역 조회에 실패했습니다.');
+        setMessages([]);
+      }
     } finally {
       setLoadingMessages(false);
     }
@@ -216,6 +231,11 @@ export default function CounselorPortalChatPanel() {
     if (!selectedPortalId) {
       setMessages([]);
       return;
+    }
+    const cached = readCachedPortalChatMessages('counselor', selectedPortalId);
+    if (cached?.length) {
+      setMessages(cached);
+      setLoadingMessages(false);
     }
     void loadMessages(selectedPortalId);
   }, [selectedPortalId, loadMessages]);
@@ -485,7 +505,9 @@ export default function CounselorPortalChatPanel() {
       </div>
 
       {selectedThread && composer ? (
-        <PortalChatFixedComposerShell maxWidthClass="max-w-[1920px]">{composer}</PortalChatFixedComposerShell>
+        <PortalChatFixedComposerShell maxWidthClass="max-w-[1920px]" alignWithCounselorChatGrid>
+          {composer}
+        </PortalChatFixedComposerShell>
       ) : null}
     </>
   );

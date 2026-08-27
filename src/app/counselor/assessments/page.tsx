@@ -1,6 +1,6 @@
 'use client';
 
-import React, { Suspense, useState, useEffect } from 'react';
+import React, { Suspense, useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import AssessmentList from '@/components/counselor/AssessmentList';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
@@ -39,6 +39,7 @@ function AssessmentListPageContent() {
   const [moveInfo, setMoveInfo] = useState<PortalMoveBannerInfo | null>(null);
   const [autoLivePollId, setAutoLivePollId] = useState<string | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
+  const silentCacheRestoreRef = useRef(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -95,11 +96,13 @@ function AssessmentListPageContent() {
     if (skipReload === 'assessments' && !searchQ) {
       const cached = readCachedAssessmentsList(counselorUid);
       if (cached?.length) {
+        silentCacheRestoreRef.current = true;
         setAssessments(cached);
         setLoading(false);
         return;
       }
     }
+    silentCacheRestoreRef.current = false;
 
     listAssessmentsPage({ limit: 50, q: searchQ, includeStats: true, ownOnly: adminUser })
       .then(async (firstPage) => {
@@ -177,7 +180,9 @@ function AssessmentListPageContent() {
         </div>
       ) : (
         <>
-          {(authPending || loading || loadingMore) && assessments.length > 0 ? (
+          {(authPending || loading || loadingMore) &&
+          assessments.length > 0 &&
+          !silentCacheRestoreRef.current ? (
             <LoadingMessage
               layout="inline"
               className="mb-2 shrink-0"
