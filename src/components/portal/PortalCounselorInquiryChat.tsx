@@ -24,7 +24,7 @@ import {
   writeCachedPortalChatMessages,
 } from '@/lib/portalChatMessageUi';
 import PortalChatMessageComposer, {
-  PORTAL_CHAT_INNER_SHELL_CLASS,
+  PortalChatColumn,
   PortalChatFixedComposerShell,
 } from '@/components/portal/PortalChatMessageComposer';
 import PortalChatMessageList from '@/components/portal/PortalChatMessageList';
@@ -275,40 +275,41 @@ export default function PortalCounselorInquiryChat({
 
   if (embeddedInTab) {
     return (
-      <>
-        <div className="flex min-h-0 flex-1 flex-col pb-52">
-          <p className="mb-3 shrink-0 text-sm text-slate-400">{PORTAL_INQUIRY_SECTION_DESC}</p>
+      <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col">
+        <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col pb-52">
+          <p className="mx-auto mb-3 w-full min-w-0 max-w-3xl shrink-0 text-sm text-slate-400">
+            {PORTAL_INQUIRY_SECTION_DESC}
+          </p>
           {error ? (
-            <p className="mb-3 shrink-0 rounded-md border border-red-500/30 bg-red-950/40 px-3 py-2 text-sm text-red-300">
+            <p className="mx-auto mb-3 w-full min-w-0 max-w-3xl shrink-0 rounded-md border border-red-500/30 bg-red-950/40 px-3 py-2 text-sm text-red-300">
               {error}
             </p>
           ) : null}
-          <div className={`flex min-h-0 w-full flex-1 flex-col overflow-hidden ${PORTAL_CHAT_INNER_SHELL_CLASS}`}>
+          <PortalChatColumn
+            columnClassName="flex min-h-0 flex-1 flex-col"
+            shellClassName="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
+          >
             {messagePane}
-          </div>
+          </PortalChatColumn>
         </div>
-        <PortalChatFixedComposerShell maxWidthClass="max-w-3xl">{composer}</PortalChatFixedComposerShell>
-      </>
+        <PortalChatFixedComposerShell>{composer}</PortalChatFixedComposerShell>
+      </div>
     );
   }
 
   return (
-    <>
-      <section className="flex flex-col pb-52">
-        <div className="shrink-0 border-b border-slate-700/70 p-5">
-          <h3 className="text-sm font-semibold text-slate-200">{PORTAL_INQUIRY_SECTION_TITLE}</h3>
-          <p className="mt-1 text-sm text-slate-400">{PORTAL_INQUIRY_SECTION_DESC}</p>
-          {error ? (
-            <p className="mt-3 rounded-md border border-red-500/30 bg-red-950/40 px-3 py-2 text-sm text-red-300">
-              {error}
-            </p>
-          ) : null}
-        </div>
-        <div className={`overflow-hidden ${PORTAL_CHAT_INNER_SHELL_CLASS}`}>
-          {messagePane}
-        </div>
-      </section>
-      <PortalChatFixedComposerShell maxWidthClass="max-w-3xl">{composer}</PortalChatFixedComposerShell>
-    </>
+    <div className="flex w-full min-w-0 flex-col pb-52">
+      <div className="shrink-0 border-b border-slate-700/70 p-5">
+        <h3 className="text-sm font-semibold text-slate-200">{PORTAL_INQUIRY_SECTION_TITLE}</h3>
+        <p className="mt-1 text-sm text-slate-400">{PORTAL_INQUIRY_SECTION_DESC}</p>
+        {error ? (
+          <p className="mt-3 rounded-md border border-red-500/30 bg-red-950/40 px-3 py-2 text-sm text-red-300">
+            {error}
+          </p>
+        ) : null}
+      </div>
+      <PortalChatColumn shellClassName="overflow-hidden">{messagePane}</PortalChatColumn>
+      <PortalChatFixedComposerShell>{composer}</PortalChatFixedComposerShell>
+    </div>
   );
 }

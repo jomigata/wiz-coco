@@ -408,33 +408,32 @@ function ClientPortalContent() {
       </header>
 
       <div
-        className={`min-h-0 flex-1 px-4 ${
+        className={`min-h-0 flex-1 ${
           portalTab === 'chat'
-            ? 'flex flex-col overflow-hidden pb-0'
-            : 'overflow-y-auto overscroll-contain pb-12'
+            ? 'flex flex-col overflow-hidden'
+            : 'overflow-y-auto overscroll-contain px-4 pb-12'
         }`}
       >
-        <main
-          className={`mx-auto max-w-3xl ${
-            portalTab === 'chat' ? 'flex min-h-0 flex-1 flex-col pt-4' : 'space-y-6 pt-4'
-          }`}
-        >
-          {portalTab === 'chat' ? (
+        {portalTab === 'chat' ? (
+          <div className="flex min-h-0 flex-1 flex-col px-4 pt-4">
             <PortalCounselorInquiryChat
               counselorName={counselorName}
               embeddedInTab
               onAttentionCountChange={setInquiryBadgeCount}
             />
-          ) : portalTab === 'reports' ? (
-            <PortalReportsPanel
-              assessments={assessments}
-              resultsByCode={resultsByCode}
-              onViewResult={({ accessCode, testName, resultId, roundNumber, resultItem }) =>
-                openResultView(accessCode, testName, resultId, roundNumber, resultItem)
-              }
-            />
-          ) : (
-            <div id="portal-results" className="space-y-6">
+          </div>
+        ) : (
+          <main className="mx-auto max-w-3xl space-y-6 px-4 pt-4 pb-12">
+            {portalTab === 'reports' ? (
+              <PortalReportsPanel
+                assessments={assessments}
+                resultsByCode={resultsByCode}
+                onViewResult={({ accessCode, testName, resultId, roundNumber, resultItem }) =>
+                  openResultView(accessCode, testName, resultId, roundNumber, resultItem)
+                }
+              />
+            ) : (
+              <div id="portal-results" className="space-y-6">
               {assessments.length === 0 ? (
                 <p className="text-slate-400 text-sm">
                   배정된 검사가 없습니다. 담당자에게 상담(코드)·나의코드를 확인해 주세요.
@@ -492,8 +491,9 @@ function ClientPortalContent() {
 
               <PortalCareAssignmentsPanel assignedAssessmentIds={assessments.map((a) => a.assessmentId)} />
             </div>
-          )}
-        </main>
+            )}
+          </main>
+        )}
       </div>
 
       {resultView ? (

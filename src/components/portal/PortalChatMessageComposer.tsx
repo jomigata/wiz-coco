@@ -5,9 +5,31 @@ import DateTimeSpinFields, { defaultScheduledDate } from '@/components/ui/DateTi
 
 export type PortalChatComposerTheme = 'portal' | 'counselor';
 
+/** 내 검사실 상담·문의 — 메시지 목록·입력창 공통 최대 너비 */
+export const PORTAL_CHAT_MAX_WIDTH_CLASS = 'max-w-3xl';
+
 /** 내 검사실 상담·문의 — 메시지 목록·입력창 공통 외곽 (너비·테두리 일치) */
 export const PORTAL_CHAT_INNER_SHELL_CLASS =
   'rounded-2xl border border-slate-600/80 bg-slate-800/95 shadow-2xl ring-1 ring-white/5';
+
+/** 채팅 목록·입력창 — 동일한 가로 폭(max-w-3xl) 컬럼 */
+export function PortalChatColumn({
+  children,
+  columnClassName = '',
+  shellClassName = '',
+}: {
+  children: React.ReactNode;
+  columnClassName?: string;
+  shellClassName?: string;
+}) {
+  return (
+    <div className={`mx-auto w-full min-w-0 ${PORTAL_CHAT_MAX_WIDTH_CLASS} ${columnClassName}`}>
+      <div className={`w-full min-w-0 ${PORTAL_CHAT_INNER_SHELL_CLASS} ${shellClassName}`}>
+        {children}
+      </div>
+    </div>
+  );
+}
 
 type Props = {
   theme?: PortalChatComposerTheme;
@@ -102,7 +124,7 @@ export default function PortalChatMessageComposer({
 
 export function PortalChatFixedComposerShell({
   children,
-  maxWidthClass = 'max-w-3xl',
+  maxWidthClass = PORTAL_CHAT_MAX_WIDTH_CLASS,
   alignWithCounselorChatGrid = false,
 }: {
   children: React.ReactNode;
@@ -113,12 +135,10 @@ export function PortalChatFixedComposerShell({
   if (alignWithCounselorChatGrid) {
     return (
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-700/80 bg-gray-900/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 shadow-[0_-12px_40px_rgba(0,0,0,0.45)] backdrop-blur-md">
-        <div className={`mx-auto ${maxWidthClass}`}>
+        <div className={`mx-auto w-full min-w-0 ${maxWidthClass}`}>
           <div className="grid gap-4 lg:grid-cols-[minmax(260px,340px)_1fr]">
             <div className="hidden lg:block" aria-hidden />
-            <div className={`p-4 ${PORTAL_CHAT_INNER_SHELL_CLASS}`}>
-              {children}
-            </div>
+            <div className={`p-4 ${PORTAL_CHAT_INNER_SHELL_CLASS}`}>{children}</div>
           </div>
         </div>
       </div>
@@ -127,11 +147,7 @@ export function PortalChatFixedComposerShell({
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-700/80 bg-gray-900/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 shadow-[0_-12px_40px_rgba(0,0,0,0.45)] backdrop-blur-md">
-      <div className={`mx-auto ${maxWidthClass}`}>
-        <div className={`p-4 ${PORTAL_CHAT_INNER_SHELL_CLASS}`}>
-          {children}
-        </div>
-      </div>
+      <PortalChatColumn shellClassName="p-4">{children}</PortalChatColumn>
     </div>
   );
 }
