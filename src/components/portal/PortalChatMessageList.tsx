@@ -4,10 +4,12 @@ import React from 'react';
 import { formatChatTimestamp, type PortalChatMessage } from '@/lib/portalChatApi';
 import {
   canDeleteUnreadOwnMessage,
-  chatMessageUnreadSymbol,
+  isMessageUnreadForViewer,
   sortPortalChatMessagesAsc,
 } from '@/lib/portalChatMessageUi';
 import { LoadingSpinner } from '@/components/ui/LoadingMessage';
+
+type UnreadIndicatorStyle = 'dot' | 'pill';
 
 type Props = {
   messages: PortalChatMessage[];
@@ -22,6 +24,8 @@ type Props = {
   onCancelScheduled?: (scheduledId: string) => void;
   onDeleteMessage?: (messageId: string) => void;
   theme?: 'portal' | 'counselor';
+  /** portal: 노란 pill, counselor: 점 표시 */
+  unreadIndicatorStyle?: UnreadIndicatorStyle;
 };
 
 const bubbleTheme = {
@@ -31,7 +35,8 @@ const bubbleTheme = {
     scheduledLabel: 'text-cyan-300',
     mineMeta: 'text-cyan-200/70',
     sendNow: 'bg-cyan-700 hover:bg-cyan-600',
-    unread: 'text-red-500',
+    unreadDot: 'text-amber-300',
+    unreadPill: 'border-amber-400/50 bg-amber-400/15 text-amber-200',
   },
   counselor: {
     mine: 'rounded-br-md bg-indigo-900/60 text-indigo-50',
@@ -39,9 +44,38 @@ const bubbleTheme = {
     scheduledLabel: 'text-indigo-300',
     mineMeta: 'text-indigo-200/70',
     sendNow: 'bg-indigo-700 hover:bg-indigo-600',
-    unread: 'text-amber-300',
+    unreadDot: 'text-amber-300',
+    unreadPill: 'border-amber-400/50 bg-amber-400/15 text-amber-200',
   },
 } as const;
+
+function UnreadIndicator({
+  show,
+  style,
+  theme,
+}: {
+  show: boolean;
+  style: UnreadIndicatorStyle;
+  theme: 'portal' | 'counselor';
+}) {
+  if (!show) return null;
+  const styles = bubbleTheme[theme];
+  if (style === 'pill') {
+    return (
+      <span
+        className={`ml-1.5 inline-flex items-center rounded-full border px-1.5 py-px text-[9px] font-semibold uppercase tracking-wide ${styles.unreadPill}`}
+        aria-label="읽지 않음"
+      >
+        새
+      </span>
+    );
+  }
+  return (
+    <span className={`ml-1 font-bold ${styles.unreadDot}`} aria-label="읽지 않음">
+      ●
+    </span>
+  );
+}
 
 export default function PortalChatMessageList({
   messages,
@@ -56,6 +90,7 @@ export default function PortalChatMessageList({
   onCancelScheduled,
   onDeleteMessage,
   theme = 'portal',
+  unreadIndicatorStyle = theme === 'portal' ? 'pill' : 'dot',
 }: Props) {
   const sortedMessages = sortPortalChatMessagesAsc(messages);
   const styles = bubbleTheme[theme];
@@ -74,18 +109,14 @@ export default function PortalChatMessageList({
 
   return (
     <div className="space-y-3" aria-live="polite">
-      {loading ? (
-        <div className="flex justify-center py-1" role="status" aria-label={loadingMessage}>
-          <LoadingSpinner size="sm" />
-        </div>
-      ) : null}
       {sortedMessages.map((msg) => {
         const mine =
           viewerRole === 'portal' ? msg.senderRole === 'portal' : msg.senderRole === 'counselor';
         const scheduled = Boolean(msg.isScheduled && msg.scheduledPending);
-        const unreadSymbol = chatMessageUnreadSymbol(msg, viewerRole, mine);
+        const unread = isMessageUnreadForViewer(msg, viewerRole, mine);
         const deletable = canDeleteUnreadOwnMessage(msg, viewerRole);
         const showScheduledActions = scheduled && mine && onSendScheduledNow && onCancelScheduled;
+        const showUnreadIndicator = unread && (!mine || unreadIndicatorStyle === 'dot');
 
         return (
           <div key={msg.messageId} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
@@ -95,7 +126,11 @@ export default function PortalChatMessageList({
                   ? styles.scheduled
                   : mine
                     ? styles.mine
-                    : 'rounded-bl-md border border-slate-600 bg-slate-800 text-slate-100'
+                    : `rounded-bl-md border bg-slate-800 text-slate-100 ${
+                        unread && !mine && unreadIndicatorStyle === 'pill'
+                          ? 'border-amber-400/40 ring-1 ring-amber-400/20'
+                          : 'border-slate-600'
+                      }`
               }`}
             >
               {scheduled ? (
@@ -128,11 +163,11 @@ export default function PortalChatMessageList({
                 <p className={`text-[11px] ${mine ? styles.mineMeta : 'text-slate-400'}`}>
                   {mine ? senderLabelForMine : senderLabelForOther} ·{' '}
                   {formatChatTimestamp(scheduled ? msg.scheduledAt : msg.createdAt)}
-                  {unreadSymbol ? (
-                    <span className={`ml-1 font-bold ${styles.unread}`} aria-label="읽지 않음">
-                      {unreadSymbol}
-                    </span>
-                  ) : null}
+                  <UnreadIndicator
+                    show={showUnreadIndicator}
+                    style={unreadIndicatorStyle}
+                    theme={theme}
+                  />
                 </p>
                 {deletable && onDeleteMessage ? (
                   <button

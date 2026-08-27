@@ -19,10 +19,16 @@ import {
 } from '@/lib/portalChatApi';
 import { LoadingMessage } from '@/components/ui/LoadingMessage';
 import { defaultScheduledDate } from '@/components/ui/DateTimeSpinFields';
-import { scrollToLatestChatAnchor, removePortalChatMessage, upsertPortalChatMessage, filterCounselorVisibleChatMessages, counselorChatAttentionCount, readCachedPortalChatMessagesPreview, writeCachedPortalChatMessages } from '@/lib/portalChatMessageUi';
-import PortalChatMessageComposer, {
-  PortalChatFixedComposerShell,
-} from '@/components/portal/PortalChatMessageComposer';
+import {
+  scrollChatContainerToBottom,
+  removePortalChatMessage,
+  upsertPortalChatMessage,
+  filterCounselorVisibleChatMessages,
+  counselorChatAttentionCount,
+  readCachedPortalChatMessages,
+  writeCachedPortalChatMessages,
+} from '@/lib/portalChatMessageUi';
+import PortalChatMessageComposer from '@/components/portal/PortalChatMessageComposer';
 import PortalChatMessageList from '@/components/portal/PortalChatMessageList';
 
 function threadTitle(thread: PortalChatThread): string {
@@ -96,7 +102,7 @@ export default function CounselorPortalChatPanel() {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
-  const latestAnchorRef = useRef<HTMLDivElement>(null);
+  const messageScrollRef = useRef<HTMLDivElement>(null);
   const pendingScrollRef = useRef(false);
 
   const filteredThreads = useMemo(
@@ -120,7 +126,7 @@ export default function CounselorPortalChatPanel() {
     : null;
 
   const scrollToLatest = useCallback((behavior: ScrollBehavior = 'smooth') => {
-    scrollToLatestChatAnchor(latestAnchorRef.current, behavior);
+    scrollChatContainerToBottom(messageScrollRef.current, behavior);
   }, []);
 
   const appendMessage = useCallback((item: PortalChatMessage) => {
@@ -186,7 +192,10 @@ export default function CounselorPortalChatPanel() {
       if (!portalId) return;
       dismissThreadUnread(portalId);
       try {
-        await fetchCounselorChatMessages(portalId);
+        const items = await fetchCounselorChatMessages(portalId);
+        const visible = filterCounselorVisibleChatMessages(items);
+        writeCachedPortalChatMessages('counselor', portalId, visible);
+        setMessages(items);
       } catch {
         // ignore — UI already cleared badge
       }
@@ -195,9 +204,9 @@ export default function CounselorPortalChatPanel() {
   );
 
   const loadMessages = useCallback(async (portalId: string) => {
-    const cachedPreview = readCachedPortalChatMessagesPreview('counselor', portalId);
-    if (cachedPreview?.length) {
-      setMessages(cachedPreview);
+    const cached = readCachedPortalChatMessages('counselor', portalId);
+    if (cached?.length) {
+      setMessages(cached);
       pendingScrollRef.current = true;
     } else {
       setLoadingMessages(true);
@@ -217,7 +226,7 @@ export default function CounselorPortalChatPanel() {
         }));
       }
     } catch (err) {
-      if (!cachedPreview?.length) {
+      if (!cached?.length) {
         setError(err instanceof Error ? err.message : '채팅 내역 조회에 실패했습니다.');
         setMessages([]);
       }
@@ -225,6 +234,15 @@ export default function CounselorPortalChatPanel() {
       setLoadingMessages(false);
     }
   }, []);
+
+  useEffect(() => {
+    if (!selectedPortalId || messages.length === 0) return;
+    writeCachedPortalChatMessages(
+      'counselor',
+      selectedPortalId,
+      filterCounselorVisibleChatMessages(messages),
+    );
+  }, [messages, selectedPortalId]);
 
   useEffect(() => {
     void loadThreads();
@@ -235,9 +253,9 @@ export default function CounselorPortalChatPanel() {
       setMessages([]);
       return;
     }
-    const cachedPreview = readCachedPortalChatMessagesPreview('counselor', selectedPortalId);
-    if (cachedPreview?.length) {
-      setMessages(cachedPreview);
+    const cached = readCachedPortalChatMessages('counselor', selectedPortalId);
+    if (cached?.length) {
+      setMessages(cached);
       setLoadingMessages(false);
       pendingScrollRef.current = true;
     }
@@ -361,25 +379,12 @@ export default function CounselorPortalChatPanel() {
     return <LoadingMessage className="py-12" message="채팅 목록을 불러오는 중…" />;
   }
 
-  const composer = selectedThread ? (
-    <PortalChatMessageComposer
-      theme="counselor"
-      draft={draft}
-      onDraftChange={setDraft}
-      scheduleEnabled={scheduleEnabled}
-      onScheduleEnabledChange={setScheduleEnabled}
-      scheduledDate={scheduledDate}
-      onScheduledDateChange={setScheduledDate}
-      sending={sending}
-      onSend={() => void handleSend()}
-      placeholder="답변을 입력하세요 (Ctrl+Enter 전송, Enter 줄바꿈)"
-    />
-  ) : null;
+  const showInitialMessageLoading = loadingMessages && visibleMessages.length === 0;
 
   return (
-    <>
-      <div className={`flex flex-col gap-3 ${selectedThread ? 'pb-52' : ''}`}>
-        <div>
+    <div className="grid min-h-[min(72vh,720px)] gap-4 lg:grid-cols-[minmax(260px,340px)_1fr] lg:min-h-[calc(100dvh-11rem)]">
+      <aside className="flex min-h-[280px] flex-col overflow-hidden rounded-xl border border-slate-700/80 bg-slate-900/40 lg:min-h-0">
+        <div className="shrink-0 border-b border-slate-800/80 p-3">
           <input
             type="search"
             value={searchQuery}
@@ -388,137 +393,139 @@ export default function CounselorPortalChatPanel() {
             className="w-full rounded-lg border border-slate-600 bg-slate-950/70 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-indigo-500/50 focus:outline-none"
           />
         </div>
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800/80 px-3 py-2">
+          <span className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
+            내담자
+          </span>
+          <div className="flex items-center gap-1">
+            <SortArrowButton
+              label="이름"
+              active={threadSortKey === 'name'}
+              direction={threadSortDir}
+              onClick={() => toggleThreadSort('name')}
+            />
+            <SortArrowButton
+              label="그룹"
+              active={threadSortKey === 'group'}
+              direction={threadSortDir}
+              onClick={() => toggleThreadSort('group')}
+            />
+          </div>
+        </div>
+        <ul className="min-h-0 flex-1 divide-y divide-slate-800/80 overflow-y-auto overscroll-contain">
+          {sortedThreads.length === 0 ? (
+            <li className="px-4 py-6 text-sm text-slate-500">
+              {searchQuery.trim() ? '검색 결과가 없습니다.' : '등록된 내담자가 없습니다.'}
+            </li>
+          ) : (
+            sortedThreads.map((thread) => {
+              const active = thread.portalId === selectedPortalId;
+              return (
+                <li key={thread.portalId}>
+                  <button
+                    type="button"
+                    onClick={() => handleSelectThread(thread.portalId)}
+                    className={`w-full border-l-2 px-3 py-3 text-left transition ${
+                      active
+                        ? 'border-cyan-400 bg-cyan-950/40 ring-1 ring-inset ring-cyan-500/35'
+                        : 'border-transparent hover:bg-white/5'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="truncate text-sm font-medium text-white">
+                        {threadTitle(thread)}
+                        {showUnreadBadge(thread) ? (
+                          <span className="ml-1.5 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-red-600 px-1.5 py-0.5 text-[10px] font-semibold text-white align-middle">
+                            {displayUnreadCount(thread)}
+                          </span>
+                        ) : null}
+                      </p>
+                    </div>
+                    <p className="mt-1 text-xs text-slate-500">
+                      {thread.lastMessageAt ? formatChatTimestamp(thread.lastMessageAt) : '대화 없음'}
+                    </p>
+                  </button>
+                </li>
+              );
+            })
+          )}
+        </ul>
+      </aside>
 
-        {error && !selectedThread ? (
-          <p className="rounded-md border border-red-500/30 bg-red-950/40 px-3 py-2 text-sm text-red-300">
-            {error}
-          </p>
-        ) : null}
+      <section className="flex min-h-[420px] min-w-0 flex-col overflow-hidden rounded-xl border border-slate-700/80 bg-slate-900/40 lg:min-h-0">
+        {selectedThread ? (
+          <>
+            <div className="flex shrink-0 flex-wrap items-start justify-between gap-2 border-b border-slate-700/70 px-4 py-3">
+              <div className="min-w-0">
+                <h3 className="text-sm font-semibold text-white">{threadTitle(selectedThread)}</h3>
+                <p className="text-xs text-slate-500">
+                  나의코드 {formatAccessCodeDisplay(selectedThread.accessCode)}
+                </p>
+              </div>
+              {progressHref ? (
+                <AuthLink
+                  href={progressHref}
+                  className="shrink-0 rounded-lg border border-sky-500/40 bg-sky-950/40 px-3 py-1.5 text-xs font-medium text-sky-200 transition hover:bg-sky-900/50"
+                >
+                  상담진행 현황
+                </AuthLink>
+              ) : null}
+            </div>
 
-        <div className="grid gap-4 lg:grid-cols-[minmax(260px,340px)_1fr]">
-          <aside className="rounded-xl border border-slate-700/80 bg-slate-900/40">
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800/80 px-3 py-2">
-              <span className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-                내담자
-              </span>
-              <div className="flex items-center gap-1">
-                <SortArrowButton
-                  label="이름"
-                  active={threadSortKey === 'name'}
-                  direction={threadSortDir}
-                  onClick={() => toggleThreadSort('name')}
-                />
-                <SortArrowButton
-                  label="그룹"
-                  active={threadSortKey === 'group'}
-                  direction={threadSortDir}
-                  onClick={() => toggleThreadSort('group')}
+            {error ? (
+              <p className="mx-4 mt-3 shrink-0 rounded-md border border-red-500/30 bg-red-950/40 px-3 py-2 text-sm text-red-300">
+                {error}
+              </p>
+            ) : null}
+
+            <div
+              ref={messageScrollRef}
+              data-chat-scroll
+              className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4"
+              onClick={handleMessageAreaReadAck}
+              onTouchStart={handleMessageAreaReadAck}
+              role="presentation"
+            >
+              <PortalChatMessageList
+                messages={visibleMessages}
+                loading={showInitialMessageLoading}
+                sending={sending}
+                viewerRole="counselor"
+                senderLabelForMine="상담사"
+                senderLabelForOther={selectedThread.displayName}
+                emptyMessage="아직 메시지가 없습니다."
+                loadingMessage="대화를 불러오는 중…"
+                onSendScheduledNow={(id) => void handleSendScheduledNow(id)}
+                onCancelScheduled={(id) => void handleCancelScheduled(id)}
+                onDeleteMessage={(id) => void handleDeleteMessage(id)}
+                theme="counselor"
+                unreadIndicatorStyle="dot"
+              />
+            </div>
+
+            <div className="shrink-0 border-t border-slate-700/80 bg-slate-900/95 p-4 shadow-[0_-8px_24px_rgba(0,0,0,0.35)]">
+              <div className="rounded-2xl border border-slate-600/80 bg-slate-800/95 p-4 shadow-2xl ring-1 ring-white/5">
+                <PortalChatMessageComposer
+                  theme="counselor"
+                  draft={draft}
+                  onDraftChange={setDraft}
+                  scheduleEnabled={scheduleEnabled}
+                  onScheduleEnabledChange={setScheduleEnabled}
+                  scheduledDate={scheduledDate}
+                  onScheduledDateChange={setScheduledDate}
+                  sending={sending}
+                  onSend={() => void handleSend()}
+                  placeholder="답변을 입력하세요 (Ctrl+Enter 전송, Enter 줄바꿈)"
                 />
               </div>
             </div>
-            <ul className="divide-y divide-slate-800/80">
-              {sortedThreads.length === 0 ? (
-                <li className="px-4 py-6 text-sm text-slate-500">
-                  {searchQuery.trim() ? '검색 결과가 없습니다.' : '등록된 내담자가 없습니다.'}
-                </li>
-              ) : (
-                sortedThreads.map((thread) => {
-                  const active = thread.portalId === selectedPortalId;
-                  return (
-                    <li key={thread.portalId}>
-                      <button
-                        type="button"
-                        onClick={() => handleSelectThread(thread.portalId)}
-                        className={`w-full border-l-2 px-3 py-3 text-left transition ${
-                          active
-                            ? 'border-cyan-400 bg-cyan-950/40 ring-1 ring-inset ring-cyan-500/35'
-                            : 'border-transparent hover:bg-white/5'
-                        }`}
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <p className="truncate text-sm font-medium text-white">
-                            {threadTitle(thread)}
-                            {showUnreadBadge(thread) ? (
-                              <span className="ml-1.5 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-red-600 px-1.5 py-0.5 text-[10px] font-semibold text-white align-middle">
-                                {displayUnreadCount(thread)}
-                              </span>
-                            ) : null}
-                          </p>
-                        </div>
-                        <p className="mt-1 text-xs text-slate-500">
-                          {thread.lastMessageAt ? formatChatTimestamp(thread.lastMessageAt) : '대화 없음'}
-                        </p>
-                      </button>
-                    </li>
-                  );
-                })
-              )}
-            </ul>
-          </aside>
-
-          <section className="rounded-xl border border-slate-700/80 bg-slate-900/40">
-            {selectedThread ? (
-              <>
-                <div className="flex flex-wrap items-start justify-between gap-2 border-b border-slate-700/70 px-4 py-3">
-                  <div className="min-w-0">
-                    <h3 className="text-sm font-semibold text-white">{threadTitle(selectedThread)}</h3>
-                    <p className="text-xs text-slate-500">
-                      나의코드 {formatAccessCodeDisplay(selectedThread.accessCode)}
-                    </p>
-                  </div>
-                  {progressHref ? (
-                    <AuthLink
-                      href={progressHref}
-                      className="shrink-0 rounded-lg border border-sky-500/40 bg-sky-950/40 px-3 py-1.5 text-xs font-medium text-sky-200 transition hover:bg-sky-900/50"
-                    >
-                      상담진행 현황
-                    </AuthLink>
-                  ) : null}
-                </div>
-
-                {error ? (
-                  <p className="mx-4 mt-3 rounded-md border border-red-500/30 bg-red-950/40 px-3 py-2 text-sm text-red-300">
-                    {error}
-                  </p>
-                ) : null}
-
-                <div
-                  className="max-h-[min(52vh,520px)] space-y-3 overflow-y-auto overscroll-contain p-4"
-                  onClick={handleMessageAreaReadAck}
-                  onTouchStart={handleMessageAreaReadAck}
-                  role="presentation"
-                >
-                  <PortalChatMessageList
-                    messages={visibleMessages}
-                    loading={loadingMessages}
-                    sending={sending}
-                    viewerRole="counselor"
-                    senderLabelForMine="상담사"
-                    senderLabelForOther={selectedThread.displayName}
-                    emptyMessage="아직 메시지가 없습니다."
-                    loadingMessage="대화를 불러오는 중…"
-                    onSendScheduledNow={(id) => void handleSendScheduledNow(id)}
-                    onCancelScheduled={(id) => void handleCancelScheduled(id)}
-                    onDeleteMessage={(id) => void handleDeleteMessage(id)}
-                    theme="counselor"
-                  />
-                  <div ref={latestAnchorRef} aria-hidden className="h-px w-full" />
-                </div>
-              </>
-            ) : (
-              <div className="flex items-center justify-center p-8 text-sm text-slate-500">
-                왼쪽에서 내담자를 선택하세요.
-              </div>
-            )}
-          </section>
-        </div>
-      </div>
-
-      {selectedThread && composer ? (
-        <PortalChatFixedComposerShell maxWidthClass="max-w-[1920px]" alignWithCounselorChatGrid>
-          {composer}
-        </PortalChatFixedComposerShell>
-      ) : null}
-    </>
+          </>
+        ) : (
+          <div className="flex flex-1 items-center justify-center p-8 text-sm text-slate-500">
+            왼쪽에서 내담자를 선택하세요.
+          </div>
+        )}
+      </section>
+    </div>
   );
 }

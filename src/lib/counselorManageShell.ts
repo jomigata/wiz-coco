@@ -158,6 +158,11 @@ export function resolveCounselorCategorySlugForPath(pathname: string, search = '
   ) {
     return COUNSELOR_DATA_SLUG;
   }
+  if (path.startsWith('/counselor/assessments/progress')) {
+    return resolveCounselorProgressFrom(pathname, search) === 'clients'
+      ? COUNSELOR_DISPATCH_MGMT_SLUG
+      : COUNSELOR_PSYCH_TESTS_SLUG;
+  }
   for (const category of counselorMenuCategories) {
     for (const sub of category.subcategories) {
       for (const item of sub.items) {
@@ -173,11 +178,6 @@ export function resolveCounselorCategorySlugForPath(pathname: string, search = '
   }
   if (path.startsWith('/counselor/clients/detail')) {
     return COUNSELOR_DISPATCH_MGMT_SLUG;
-  }
-  if (path.startsWith('/counselor/assessments/progress')) {
-    return resolveCounselorProgressFrom(pathname, search) === 'clients'
-      ? COUNSELOR_DISPATCH_MGMT_SLUG
-      : COUNSELOR_PSYCH_TESTS_SLUG;
   }
   if (path.startsWith('/counselor/assessments/edit')) {
     return COUNSELOR_PSYCH_TESTS_SLUG;

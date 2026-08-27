@@ -29,8 +29,23 @@ export function removePortalChatMessage(
   return messages.filter((m) => m.messageId !== messageId);
 }
 
+export function scrollChatContainerToBottom(
+  container: HTMLElement | null,
+  behavior: ScrollBehavior = 'smooth',
+) {
+  if (!container) return;
+  requestAnimationFrame(() => {
+    container.scrollTo({ top: container.scrollHeight, behavior });
+  });
+}
+
 export function scrollToLatestChatAnchor(anchor: HTMLElement | null, behavior: ScrollBehavior = 'smooth') {
   if (!anchor) return;
+  const container = anchor.closest('[data-chat-scroll]') as HTMLElement | null;
+  if (container) {
+    scrollChatContainerToBottom(container, behavior);
+    return;
+  }
   requestAnimationFrame(() => {
     anchor.scrollIntoView({ behavior, block: 'end' });
   });
@@ -79,12 +94,22 @@ export function isIncomingMessageUnread(
   return msg.senderRole === 'portal' && !msg.readByCounselor;
 }
 
+export function isMessageUnreadForViewer(
+  msg: PortalChatMessage,
+  viewerRole: 'portal' | 'counselor',
+  mine: boolean,
+): boolean {
+  return mine
+    ? isOwnMessageUnreadByRecipient(msg, viewerRole)
+    : isIncomingMessageUnread(msg, viewerRole);
+}
+
 export function chatMessageUnreadSymbol(
   msg: PortalChatMessage,
   viewerRole: 'portal' | 'counselor',
   mine: boolean,
 ): string | null {
-  if (mine ? isOwnMessageUnreadByRecipient(msg, viewerRole) : isIncomingMessageUnread(msg, viewerRole)) {
+  if (isMessageUnreadForViewer(msg, viewerRole, mine)) {
     return '●';
   }
   return null;
