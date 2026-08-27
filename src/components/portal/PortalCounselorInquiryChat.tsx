@@ -16,14 +16,16 @@ import {
   portalTestManagerChatSenderLabel,
 } from '@/lib/portalCareManagerLabels';
 import {
-  scrollChatContainerToBottom,
+  scrollToLatestChatAnchor,
   removePortalChatMessage,
   upsertPortalChatMessage,
   portalInquiryAttentionCount,
   readCachedPortalChatMessages,
   writeCachedPortalChatMessages,
 } from '@/lib/portalChatMessageUi';
-import PortalChatMessageComposer from '@/components/portal/PortalChatMessageComposer';
+import PortalChatMessageComposer, {
+  PortalChatFixedComposerShell,
+} from '@/components/portal/PortalChatMessageComposer';
 import PortalChatMessageList from '@/components/portal/PortalChatMessageList';
 
 export type PortalCounselorInquiryChatProps = {
@@ -48,11 +50,12 @@ export default function PortalCounselorInquiryChat({
   const [loading, setLoading] = useState(() => !(initialCached && initialCached.length > 0));
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
-  const messageScrollRef = useRef<HTMLDivElement>(null);
+  const latestAnchorRef = useRef<HTMLDivElement>(null);
   const pendingScrollRef = useRef(false);
+  const messageLoadSeqRef = useRef(0);
 
   const scrollToLatest = useCallback((behavior: ScrollBehavior = 'smooth') => {
-    scrollChatContainerToBottom(messageScrollRef.current, behavior);
+    scrollToLatestChatAnchor(latestAnchorRef.current, behavior);
   }, []);
 
   const appendMessage = useCallback((item: Awaited<ReturnType<typeof fetchPortalChatMessages>>[number]) => {
@@ -76,45 +79,64 @@ export default function PortalCounselorInquiryChat({
     }
   }, [messages, portalCacheId]);
 
-  const loadMessages = useCallback(async () => {
-    const session = readClientPortalSession();
-    if (!session?.portalToken) {
-      setLoading(false);
-      return;
-    }
-    const cached = readCachedPortalChatMessages('portal', portalCacheId);
-    if (cached?.length) {
-      setMessages(cached);
-      pendingScrollRef.current = true;
-    } else {
-      setLoading(true);
-    }
-    setError('');
-    try {
-      const items = await fetchPortalChatMessages(session.portalToken);
-      setMessages((prev) => {
-        if (items.length !== prev.length) {
-          pendingScrollRef.current = true;
-        }
-        return items;
-      });
-      writeCachedPortalChatMessages('portal', portalCacheId, items);
-    } catch (err) {
-      if (!cached?.length) {
-        setError(err instanceof Error ? err.message : '문의 내역을 불러오지 못했습니다.');
+  const loadMessages = useCallback(
+    async (options?: { silent?: boolean }) => {
+      const session = readClientPortalSession();
+      if (!session?.portalToken) {
+        setLoading(false);
+        return;
       }
-    } finally {
-      setLoading(false);
-    }
-  }, [portalCacheId]);
+
+      const loadSeq = ++messageLoadSeqRef.current;
+      const cached = readCachedPortalChatMessages('portal', portalCacheId);
+      if (cached?.length) {
+        setMessages(cached);
+        pendingScrollRef.current = true;
+      } else if (!options?.silent) {
+        setLoading(true);
+      }
+      setError('');
+
+      try {
+        const items = await fetchPortalChatMessages(session.portalToken);
+        if (loadSeq !== messageLoadSeqRef.current) return;
+        setMessages((prev) => {
+          if (items.length !== prev.length) {
+            pendingScrollRef.current = true;
+          }
+          return items;
+        });
+        writeCachedPortalChatMessages('portal', portalCacheId, items);
+      } catch (err) {
+        if (loadSeq !== messageLoadSeqRef.current) return;
+        if (!cached?.length) {
+          setError(err instanceof Error ? err.message : '문의 내역을 불러오지 못했습니다.');
+        }
+      } finally {
+        if (loadSeq === messageLoadSeqRef.current) {
+          setLoading(false);
+        }
+      }
+    },
+    [portalCacheId],
+  );
 
   useEffect(() => {
     void loadMessages();
     const timer = window.setInterval(() => {
-      void loadMessages();
+      void loadMessages({ silent: true });
     }, 15000);
     return () => window.clearInterval(timer);
   }, [loadMessages]);
+
+  useEffect(() => {
+    pendingScrollRef.current = true;
+    scrollToLatest('auto');
+  }, [scrollToLatest]);
+
+  const handleMessageAreaReadAck = () => {
+    void loadMessages({ silent: true });
+  };
 
   const handleSend = async () => {
     const text = draft.trim();
@@ -205,11 +227,31 @@ export default function PortalCounselorInquiryChat({
   const chatSenderLabel = portalTestManagerChatSenderLabel(counselorName);
   const showInitialLoading = loading && messages.length === 0;
 
+  const composer = (
+    <PortalChatMessageComposer
+      theme="portal"
+      draft={draft}
+      onDraftChange={setDraft}
+      scheduleEnabled={scheduleEnabled}
+      onScheduleEnabledChange={setScheduleEnabled}
+      scheduledDate={scheduledDate}
+      onScheduledDateChange={setScheduledDate}
+      sending={sending}
+      onSend={() => void handleSend()}
+    />
+  );
+
+  const messageScrollClassName = embeddedInTab
+    ? 'min-h-0 flex-1 overflow-y-auto overscroll-contain p-4'
+    : 'max-h-[min(calc(100dvh-280px),520px)] overflow-y-auto overscroll-contain p-4';
+
   const messagePane = (
     <div
-      ref={messageScrollRef}
       data-chat-scroll
-      className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3"
+      className={messageScrollClassName}
+      onClick={handleMessageAreaReadAck}
+      onTouchStart={handleMessageAreaReadAck}
+      role="presentation"
     >
       <PortalChatMessageList
         messages={messages}
@@ -226,57 +268,46 @@ export default function PortalCounselorInquiryChat({
         theme="portal"
         unreadIndicatorStyle="pill"
       />
-    </div>
-  );
-
-  const composerPane = (
-    <div className="shrink-0 border-t border-slate-700/80 bg-slate-900/95 p-3 shadow-[0_-8px_24px_rgba(0,0,0,0.35)]">
-      <div className="rounded-2xl border border-slate-600/80 bg-slate-800/95 p-4 shadow-2xl ring-1 ring-white/5">
-        <PortalChatMessageComposer
-          theme="portal"
-          draft={draft}
-          onDraftChange={setDraft}
-          scheduleEnabled={scheduleEnabled}
-          onScheduleEnabledChange={setScheduleEnabled}
-          scheduledDate={scheduledDate}
-          onScheduledDateChange={setScheduledDate}
-          sending={sending}
-          onSend={() => void handleSend()}
-        />
-      </div>
+      <div ref={latestAnchorRef} aria-hidden className="h-px w-full" />
     </div>
   );
 
   if (embeddedInTab) {
     return (
-      <div className="flex min-h-[min(58vh,560px)] flex-col">
-        <p className="mb-3 shrink-0 text-sm text-slate-400">{PORTAL_INQUIRY_SECTION_DESC}</p>
-        {error ? (
-          <p className="mb-3 shrink-0 rounded-md border border-red-500/30 bg-red-950/40 px-3 py-2 text-sm text-red-300">
-            {error}
-          </p>
-        ) : null}
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-slate-700/70 bg-slate-900/50">
-          {messagePane}
-          {composerPane}
+      <>
+        <div className="flex min-h-0 flex-1 flex-col pb-52">
+          <p className="mb-3 shrink-0 text-sm text-slate-400">{PORTAL_INQUIRY_SECTION_DESC}</p>
+          {error ? (
+            <p className="mb-3 shrink-0 rounded-md border border-red-500/30 bg-red-950/40 px-3 py-2 text-sm text-red-300">
+              {error}
+            </p>
+          ) : null}
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-slate-700/70 bg-slate-900/50">
+            {messagePane}
+          </div>
         </div>
-      </div>
+        <PortalChatFixedComposerShell maxWidthClass="max-w-3xl">{composer}</PortalChatFixedComposerShell>
+      </>
     );
   }
 
   return (
-    <section className="flex min-h-[420px] flex-col overflow-hidden rounded-xl border border-slate-700/80 bg-slate-800/40">
-      <div className="shrink-0 border-b border-slate-700/70 p-5">
-        <h3 className="text-sm font-semibold text-slate-200">{PORTAL_INQUIRY_SECTION_TITLE}</h3>
-        <p className="mt-1 text-sm text-slate-400">{PORTAL_INQUIRY_SECTION_DESC}</p>
-        {error ? (
-          <p className="mt-3 rounded-md border border-red-500/30 bg-red-950/40 px-3 py-2 text-sm text-red-300">
-            {error}
-          </p>
-        ) : null}
-      </div>
-      {messagePane}
-      {composerPane}
-    </section>
+    <>
+      <section className="flex flex-col pb-52">
+        <div className="shrink-0 border-b border-slate-700/70 p-5">
+          <h3 className="text-sm font-semibold text-slate-200">{PORTAL_INQUIRY_SECTION_TITLE}</h3>
+          <p className="mt-1 text-sm text-slate-400">{PORTAL_INQUIRY_SECTION_DESC}</p>
+          {error ? (
+            <p className="mt-3 rounded-md border border-red-500/30 bg-red-950/40 px-3 py-2 text-sm text-red-300">
+              {error}
+            </p>
+          ) : null}
+        </div>
+        <div className="overflow-hidden rounded-b-xl border border-t-0 border-slate-700/80 bg-slate-800/40">
+          {messagePane}
+        </div>
+      </section>
+      <PortalChatFixedComposerShell maxWidthClass="max-w-3xl">{composer}</PortalChatFixedComposerShell>
+    </>
   );
 }

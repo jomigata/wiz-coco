@@ -407,8 +407,18 @@ function ClientPortalContent() {
         </div>
       </header>
 
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-12">
-        <main className="mx-auto max-w-3xl space-y-6 pt-4">
+      <div
+        className={`min-h-0 flex-1 px-4 ${
+          portalTab === 'chat'
+            ? 'flex flex-col overflow-hidden pb-0'
+            : 'overflow-y-auto overscroll-contain pb-12'
+        }`}
+      >
+        <main
+          className={`mx-auto max-w-3xl ${
+            portalTab === 'chat' ? 'flex min-h-0 flex-1 flex-col pt-4' : 'space-y-6 pt-4'
+          }`}
+        >
           {portalTab === 'chat' ? (
             <PortalCounselorInquiryChat
               counselorName={counselorName}
