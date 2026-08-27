@@ -338,8 +338,8 @@ export default function CounselorQuickSendForm({
       dense
       description={
         firstSendTrialEligible
-          ? '첫 1명 보내기는 검사 크레딧을 차감하지 않습니다. 1. 검사 선택 → 2. 이름·연락처 입력 → 3. 보내기.'
-          : '1. 검사 선택 → 2. 이름·연락처 입력 → 3. 보내기.'
+          ? '첫 1명 보내기는 검사 크레딧을 차감하지 않습니다. 1. 검사 선택 → 2. 이름·연락처 입력 → 3. 보내기'
+          : '1. 검사 선택 → 2. 이름·연락처 입력 → 3. 보내기'
       }
       toolbar={fullLink}
     >
@@ -369,10 +369,11 @@ export default function CounselorQuickSendForm({
                     <div className="relative min-h-0 flex-1">
                       {!customCohortName.trim() ? (
                         <span
-                          className="pointer-events-none absolute inset-0 flex items-center justify-center text-sm font-semibold text-slate-600"
+                          className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center leading-snug"
                           aria-hidden
                         >
-                          기관/단체/그룹명
+                          <span className="text-base font-semibold text-slate-400">기관/단체/그룹명</span>
+                          <span className="mt-1 text-sm font-medium text-slate-300">입력하기</span>
                         </span>
                       ) : null}
                       <textarea

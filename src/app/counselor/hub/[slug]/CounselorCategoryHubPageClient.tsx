@@ -38,7 +38,7 @@ export default function CounselorCategoryHubPageClient({ slug }: Props) {
   }
 
   if (slug === COUNSELOR_PSYCH_TESTS_SLUG) {
-    return <AuthLoadingState className="py-8" message="심리검사 관리로 이동 중…" />;
+    return <AuthLoadingState className="py-8" message="상담코드 관리로 이동 중…" />;
   }
 
   if (slug === COUNSELOR_TOOLS_SLUG) {

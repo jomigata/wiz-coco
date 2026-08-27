@@ -92,6 +92,7 @@ export default function CounselorPortalChatPanel() {
   const [threads, setThreads] = useState<PortalChatThread[]>([]);
   const [selectedPortalId, setSelectedPortalId] = useState<string | null>(null);
   const [messages, setMessages] = useState<PortalChatMessage[]>([]);
+  const [messagesForPortalId, setMessagesForPortalId] = useState<string | null>(null);
   const [draft, setDraft] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [threadSortKey, setThreadSortKey] = useState<ThreadSortKey>('name');
@@ -116,10 +117,10 @@ export default function CounselorPortalChatPanel() {
     () => sortThreads(filteredThreads, threadSortKey, threadSortDir),
     [filteredThreads, threadSortKey, threadSortDir],
   );
-  const visibleMessages = useMemo(
-    () => filterCounselorVisibleChatMessages(messages),
-    [messages],
-  );
+  const visibleMessages = useMemo(() => {
+    if (!selectedPortalId || messagesForPortalId !== selectedPortalId) return [];
+    return filterCounselorVisibleChatMessages(messages);
+  }, [messages, messagesForPortalId, selectedPortalId]);
   const selectedThread = threads.find((t) => t.portalId === selectedPortalId) || null;
   const progressHref = selectedThread
     ? counselorChatProgressHref(selectedThread) ||
@@ -200,6 +201,7 @@ export default function CounselorPortalChatPanel() {
         if (loadSeq !== messageLoadSeqRef.current) return;
         const visible = filterCounselorVisibleChatMessages(items);
         writeCachedPortalChatMessages('counselor', portalId, visible);
+        setMessagesForPortalId(portalId);
         setMessages(items);
         pendingScrollRef.current = true;
       } catch {
@@ -225,6 +227,7 @@ export default function CounselorPortalChatPanel() {
   useEffect(() => {
     if (!selectedPortalId) {
       setMessages([]);
+      setMessagesForPortalId(null);
       setLoadingMessages(false);
       return;
     }
@@ -234,6 +237,7 @@ export default function CounselorPortalChatPanel() {
 
     setError('');
     const cached = readCachedPortalChatMessages('counselor', portalId) ?? [];
+    setMessagesForPortalId(portalId);
     setMessages(cached);
     setLoadingMessages(cached.length === 0);
     if (cached.length > 0) {
@@ -246,6 +250,7 @@ export default function CounselorPortalChatPanel() {
         if (loadSeq !== messageLoadSeqRef.current) return;
         const visible = filterCounselorVisibleChatMessages(items);
         writeCachedPortalChatMessages('counselor', portalId, visible);
+        setMessagesForPortalId(portalId);
         setMessages(items);
         pendingScrollRef.current = true;
         const attention = counselorChatAttentionCount(items);
@@ -277,6 +282,14 @@ export default function CounselorPortalChatPanel() {
 
   const handleSelectThread = (portalId: string) => {
     if (portalId === selectedPortalId) return;
+    const cached = readCachedPortalChatMessages('counselor', portalId) ?? [];
+    setError('');
+    setMessagesForPortalId(portalId);
+    setMessages(cached);
+    setLoadingMessages(cached.length === 0);
+    if (cached.length > 0) {
+      pendingScrollRef.current = true;
+    }
     setSelectedPortalId(portalId);
     dismissThreadUnread(portalId);
   };

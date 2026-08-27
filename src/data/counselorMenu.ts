@@ -49,7 +49,7 @@ export const counselorMenuCategories: CounselorMainCategory[] = [
   },
   {
     slug: 'psych-tests',
-    category: '1. 심리검사 관리',
+    category: '1. 상담코드 관리',
     description: '상담코드·검사·상담 운영',
     icon: '📦',
     subcategories: [
