@@ -24,6 +24,7 @@ import {
   writeCachedPortalChatMessages,
 } from '@/lib/portalChatMessageUi';
 import PortalChatMessageComposer, {
+  PORTAL_CHAT_INNER_SHELL_CLASS,
   PortalChatFixedComposerShell,
 } from '@/components/portal/PortalChatMessageComposer';
 import PortalChatMessageList from '@/components/portal/PortalChatMessageList';
@@ -242,8 +243,8 @@ export default function PortalCounselorInquiryChat({
   );
 
   const messageScrollClassName = embeddedInTab
-    ? 'min-h-0 flex-1 overflow-y-auto overscroll-contain p-4'
-    : 'max-h-[min(calc(100dvh-280px),520px)] overflow-y-auto overscroll-contain p-4';
+    ? 'min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-4 pb-5'
+    : 'max-h-[min(calc(100dvh-280px),520px)] overflow-y-auto overscroll-contain px-4 pt-4 pb-5';
 
   const messagePane = (
     <div
@@ -268,7 +269,7 @@ export default function PortalCounselorInquiryChat({
         theme="portal"
         unreadIndicatorStyle="pill"
       />
-      <div ref={latestAnchorRef} aria-hidden className="h-px w-full" />
+      <div ref={latestAnchorRef} aria-hidden className="h-3 w-full shrink-0" />
     </div>
   );
 
@@ -282,7 +283,7 @@ export default function PortalCounselorInquiryChat({
               {error}
             </p>
           ) : null}
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-slate-700/70 bg-slate-900/50">
+          <div className={`flex min-h-0 w-full flex-1 flex-col overflow-hidden ${PORTAL_CHAT_INNER_SHELL_CLASS}`}>
             {messagePane}
           </div>
         </div>
@@ -303,7 +304,7 @@ export default function PortalCounselorInquiryChat({
             </p>
           ) : null}
         </div>
-        <div className="overflow-hidden rounded-b-xl border border-t-0 border-slate-700/80 bg-slate-800/40">
+        <div className={`overflow-hidden ${PORTAL_CHAT_INNER_SHELL_CLASS}`}>
           {messagePane}
         </div>
       </section>
