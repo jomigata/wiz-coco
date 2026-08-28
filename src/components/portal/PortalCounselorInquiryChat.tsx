@@ -3,7 +3,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   cancelPortalScheduledMessage,
-  deletePortalChatMessage,
   fetchPortalChatMessages,
   sendPortalChatMessage,
   sendPortalScheduledMessageNow,
@@ -210,21 +209,6 @@ export default function PortalCounselorInquiryChat({
     }
   };
 
-  const handleDeleteMessage = async (messageId: string) => {
-    const session = readClientPortalSession();
-    if (!session?.portalToken || sending) return;
-    setSending(true);
-    setError('');
-    try {
-      await deletePortalChatMessage(session.portalToken, messageId);
-      setMessages((prev) => removePortalChatMessage(prev, messageId));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '메시지 삭제에 실패했습니다.');
-    } finally {
-      setSending(false);
-    }
-  };
-
   const chatSenderLabel = portalTestManagerChatSenderLabel(counselorName);
   const showInitialLoading = loading && messages.length === 0;
 
@@ -243,8 +227,8 @@ export default function PortalCounselorInquiryChat({
   );
 
   const messageScrollClassName = embeddedInTab
-    ? 'min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-4 pb-5'
-    : 'max-h-[min(calc(100dvh-280px),520px)] overflow-y-auto overscroll-contain px-4 pt-4 pb-5';
+    ? 'min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-b-2xl px-4 pt-4 pb-5'
+    : 'max-h-[min(calc(100dvh-280px),520px)] overflow-y-auto overscroll-contain rounded-b-2xl px-4 pt-4 pb-5';
 
   const messagePane = (
     <div
@@ -265,9 +249,8 @@ export default function PortalCounselorInquiryChat({
         loadingMessage="문의 내역을 불러오는 중…"
         onSendScheduledNow={(id) => void handleSendScheduledNow(id)}
         onCancelScheduled={(id) => void handleCancelScheduled(id)}
-        onDeleteMessage={(id) => void handleDeleteMessage(id)}
+        allowDelete={false}
         theme="portal"
-        unreadIndicatorStyle="pill"
       />
       <div ref={latestAnchorRef} aria-hidden className="h-3 w-full shrink-0" />
     </div>
@@ -286,8 +269,8 @@ export default function PortalCounselorInquiryChat({
             </p>
           ) : null}
           <PortalChatColumn
-            columnClassName="flex min-h-0 flex-1 flex-col"
-            shellClassName="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
+            columnClassName="mb-3 flex min-h-0 flex-1 flex-col"
+            shellClassName="flex min-h-0 min-w-0 flex-1 flex-col"
           >
             {messagePane}
           </PortalChatColumn>

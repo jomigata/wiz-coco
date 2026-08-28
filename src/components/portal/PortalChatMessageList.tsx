@@ -23,8 +23,10 @@ type Props = {
   onSendScheduledNow?: (scheduledId: string) => void;
   onCancelScheduled?: (scheduledId: string) => void;
   onDeleteMessage?: (messageId: string) => void;
+  /** false면 삭제 버튼 숨김 (내 검사실) */
+  allowDelete?: boolean;
   theme?: 'portal' | 'counselor';
-  /** portal: 노란 pill, counselor: 점 표시 */
+  /** @deprecated 발송일시 뒤 빨간 「안읽음」 텍스트로 통일 */
   unreadIndicatorStyle?: UnreadIndicatorStyle;
 };
 
@@ -49,30 +51,11 @@ const bubbleTheme = {
   },
 } as const;
 
-function UnreadIndicator({
-  show,
-  style,
-  theme,
-}: {
-  show: boolean;
-  style: UnreadIndicatorStyle;
-  theme: 'portal' | 'counselor';
-}) {
+function UnreadLabel({ show }: { show: boolean }) {
   if (!show) return null;
-  const styles = bubbleTheme[theme];
-  if (style === 'pill') {
-    return (
-      <span
-        className={`ml-1.5 inline-flex items-center rounded-full border px-1.5 py-px text-[9px] font-semibold uppercase tracking-wide ${styles.unreadPill}`}
-        aria-label="읽지 않음"
-      >
-        새
-      </span>
-    );
-  }
   return (
-    <span className={`ml-1 font-bold ${styles.unreadDot}`} aria-label="읽지 않음">
-      ●
+    <span className="ml-1 font-medium text-red-400" aria-label="읽지 않음">
+      · 안읽음
     </span>
   );
 }
@@ -89,8 +72,8 @@ export default function PortalChatMessageList({
   onSendScheduledNow,
   onCancelScheduled,
   onDeleteMessage,
+  allowDelete = true,
   theme = 'portal',
-  unreadIndicatorStyle = theme === 'portal' ? 'pill' : 'dot',
 }: Props) {
   const sortedMessages = sortPortalChatMessagesAsc(messages);
   const styles = bubbleTheme[theme];
@@ -114,9 +97,8 @@ export default function PortalChatMessageList({
           viewerRole === 'portal' ? msg.senderRole === 'portal' : msg.senderRole === 'counselor';
         const scheduled = Boolean(msg.isScheduled && msg.scheduledPending);
         const unread = isMessageUnreadForViewer(msg, viewerRole, mine);
-        const deletable = canDeleteUnreadOwnMessage(msg, viewerRole);
+        const deletable = allowDelete && canDeleteUnreadOwnMessage(msg, viewerRole);
         const showScheduledActions = scheduled && mine && onSendScheduledNow && onCancelScheduled;
-        const showUnreadIndicator = unread && (!mine || unreadIndicatorStyle === 'dot');
 
         return (
           <div key={msg.messageId} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
@@ -126,11 +108,7 @@ export default function PortalChatMessageList({
                   ? styles.scheduled
                   : mine
                     ? styles.mine
-                    : `rounded-bl-md border bg-slate-800 text-slate-100 ${
-                        unread && !mine && unreadIndicatorStyle === 'pill'
-                          ? 'border-amber-400/40 ring-1 ring-amber-400/20'
-                          : 'border-slate-600'
-                      }`
+                    : 'rounded-bl-md border border-slate-600 bg-slate-800 text-slate-100'
               }`}
             >
               {scheduled ? (
@@ -163,11 +141,7 @@ export default function PortalChatMessageList({
                 <p className={`text-[11px] ${mine ? styles.mineMeta : 'text-slate-400'}`}>
                   {mine ? senderLabelForMine : senderLabelForOther} ·{' '}
                   {formatChatTimestamp(scheduled ? msg.scheduledAt : msg.createdAt)}
-                  <UnreadIndicator
-                    show={showUnreadIndicator}
-                    style={unreadIndicatorStyle}
-                    theme={theme}
-                  />
+                  <UnreadLabel show={unread} />
                 </p>
                 {deletable && onDeleteMessage ? (
                   <button

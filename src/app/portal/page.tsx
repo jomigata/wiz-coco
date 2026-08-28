@@ -161,7 +161,7 @@ function ClientPortalContent() {
     }
   }, [router, loadResults]);
 
-  const testListCount = React.useMemo(() => {
+  const incompleteTestCount = React.useMemo(() => {
     let unresolved = 0;
     for (const a of assessments) {
       const code = normalizeAccessCodeInput(a.accessCode);
@@ -175,6 +175,14 @@ function ClientPortalContent() {
     }
     return unresolved;
   }, [assessments, resultsByCode]);
+
+  const totalTestCount = React.useMemo(() => {
+    let total = 0;
+    for (const a of assessments) {
+      total += a.testList?.length || 0;
+    }
+    return total;
+  }, [assessments]);
 
   const completedResultsCount = React.useMemo(() => {
     let count = 0;
@@ -378,7 +386,11 @@ function ClientPortalContent() {
                   : 'border-transparent text-slate-500 hover:text-slate-300'
               }`}
             >
-              검사목록 ({testListCount})
+              검사목록 (
+              <span className={incompleteTestCount > 0 ? 'text-red-400' : undefined}>
+                {incompleteTestCount}
+              </span>
+              /{totalTestCount})
             </button>
             <button
               type="button"
@@ -389,8 +401,11 @@ function ClientPortalContent() {
                   : 'border-transparent text-slate-500 hover:text-slate-300'
               }`}
             >
-              {PORTAL_INQUIRY_SECTION_TITLE}
-              {inquiryBadgeCount > 0 ? ` (${inquiryBadgeCount})` : ''}
+              {PORTAL_INQUIRY_SECTION_TITLE} (
+              <span className={inquiryBadgeCount > 0 ? 'text-red-400' : undefined}>
+                {inquiryBadgeCount}
+              </span>
+              )
             </button>
             <button
               type="button"

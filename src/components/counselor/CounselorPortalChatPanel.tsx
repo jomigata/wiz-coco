@@ -543,7 +543,6 @@ export default function CounselorPortalChatPanel() {
                     onCancelScheduled={(id) => void handleCancelScheduled(id)}
                     onDeleteMessage={(id) => void handleDeleteMessage(id)}
                     theme="counselor"
-                    unreadIndicatorStyle="dot"
                   />
                   <div ref={latestAnchorRef} aria-hidden className="h-px w-full" />
                 </div>
