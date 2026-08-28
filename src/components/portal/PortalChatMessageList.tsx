@@ -26,7 +26,7 @@ type Props = {
   /** false면 삭제 버튼 숨김 (내 검사실) */
   allowDelete?: boolean;
   theme?: 'portal' | 'counselor';
-  /** @deprecated 발송일시 뒤 빨간 「안읽음」 텍스트로 통일 */
+  /** @deprecated 발송일시 뒤 빨간 「미확인」 텍스트로 통일 */
   unreadIndicatorStyle?: UnreadIndicatorStyle;
 };
 
@@ -54,8 +54,8 @@ const bubbleTheme = {
 function UnreadLabel({ show }: { show: boolean }) {
   if (!show) return null;
   return (
-    <span className="ml-1 font-medium text-red-400" aria-label="읽지 않음">
-      · 안읽음
+    <span className="ml-1 font-medium text-red-400" aria-label="미확인">
+      · 미확인
     </span>
   );
 }

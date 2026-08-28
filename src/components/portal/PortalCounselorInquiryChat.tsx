@@ -23,6 +23,7 @@ import {
   writeCachedPortalChatMessages,
 } from '@/lib/portalChatMessageUi';
 import PortalChatMessageComposer, {
+  PORTAL_CHAT_LIST_BOTTOM_GAP_CLASS,
   PortalChatColumn,
   PortalChatFixedComposerShell,
 } from '@/components/portal/PortalChatMessageComposer';
@@ -227,8 +228,8 @@ export default function PortalCounselorInquiryChat({
   );
 
   const messageScrollClassName = embeddedInTab
-    ? 'min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-b-2xl px-4 pt-4 pb-5'
-    : 'max-h-[min(calc(100dvh-280px),520px)] overflow-y-auto overscroll-contain rounded-b-2xl px-4 pt-4 pb-5';
+    ? 'min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-4 pb-5'
+    : 'max-h-[min(calc(100dvh-280px),520px)] overflow-y-auto overscroll-contain px-4 pt-4 pb-5';
 
   const messagePane = (
     <div
@@ -259,7 +260,7 @@ export default function PortalCounselorInquiryChat({
   if (embeddedInTab) {
     return (
       <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col">
-        <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col pb-52">
+        <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col pb-[calc(13rem+0.75rem)]">
           <p className="mx-auto mb-3 w-full min-w-0 max-w-3xl shrink-0 text-sm text-slate-400">
             {PORTAL_INQUIRY_SECTION_DESC}
           </p>
@@ -269,7 +270,7 @@ export default function PortalCounselorInquiryChat({
             </p>
           ) : null}
           <PortalChatColumn
-            columnClassName="mb-3 flex min-h-0 flex-1 flex-col"
+            columnClassName={`${PORTAL_CHAT_LIST_BOTTOM_GAP_CLASS} flex min-h-0 flex-1 flex-col`}
             shellClassName="flex min-h-0 min-w-0 flex-1 flex-col"
           >
             {messagePane}

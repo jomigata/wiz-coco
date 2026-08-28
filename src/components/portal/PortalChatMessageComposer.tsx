@@ -8,6 +8,10 @@ export type PortalChatComposerTheme = 'portal' | 'counselor';
 /** 내 검사실 상담·문의 — 메시지 목록·입력창 공통 최대 너비 */
 export const PORTAL_CHAT_MAX_WIDTH_CLASS = 'max-w-3xl';
 
+/** 내 검사실 — 채팅 목록 하단·입력창 상단 동일 간격 (Tailwind spacing 3) */
+export const PORTAL_CHAT_LIST_BOTTOM_GAP_CLASS = 'mb-3';
+export const PORTAL_CHAT_COMPOSER_TOP_GAP_CLASS = 'pt-3';
+
 /** 내 검사실 상담·문의 — 메시지 목록·입력창 공통 외곽 (너비·테두리 일치) */
 export const PORTAL_CHAT_INNER_SHELL_CLASS =
   'rounded-2xl border border-slate-600/80 bg-slate-800/95 shadow-2xl ring-1 ring-white/5';
@@ -146,7 +150,9 @@ export function PortalChatFixedComposerShell({
   }
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-700/80 bg-gray-900/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 shadow-[0_-12px_40px_rgba(0,0,0,0.45)] backdrop-blur-md">
+    <div
+      className={`fixed inset-x-0 bottom-0 z-40 bg-gray-900/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] ${PORTAL_CHAT_COMPOSER_TOP_GAP_CLASS} shadow-[0_-12px_40px_rgba(0,0,0,0.45)] backdrop-blur-md`}
+    >
       <PortalChatColumn shellClassName="p-4">{children}</PortalChatColumn>
     </div>
   );
