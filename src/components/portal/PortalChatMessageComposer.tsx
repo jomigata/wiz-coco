@@ -8,9 +8,12 @@ export type PortalChatComposerTheme = 'portal' | 'counselor';
 /** 내 검사실 상담·문의 — 메시지 목록·입력창 공통 최대 너비 */
 export const PORTAL_CHAT_MAX_WIDTH_CLASS = 'max-w-3xl';
 
-/** 내 검사실 — 채팅 목록 하단·입력창 상단 동일 간격 (Tailwind spacing 3) */
-export const PORTAL_CHAT_LIST_BOTTOM_GAP_CLASS = 'mb-3';
-export const PORTAL_CHAT_COMPOSER_TOP_GAP_CLASS = 'pt-3';
+/** 내 검사실 — 채팅 목록 하단·입력창 상단 동일 간격 */
+export const PORTAL_CHAT_LIST_BOTTOM_GAP_CLASS = 'mb-2';
+export const PORTAL_CHAT_COMPOSER_TOP_GAP_CLASS = 'pt-2';
+
+/** 고정 입력창 높이 예약 — 채팅 목록과 입력 블록 사이 여백(mb+pt) 포함 */
+export const PORTAL_CHAT_COMPOSER_RESERVE_CLASS = 'pb-[11rem]';
 
 /** 내 검사실 상담·문의 — 메시지 목록·입력창 공통 외곽 (너비·테두리 일치) */
 export const PORTAL_CHAT_INNER_SHELL_CLASS =
@@ -27,8 +30,8 @@ export function PortalChatColumn({
   shellClassName?: string;
 }) {
   return (
-    <div className={`mx-auto w-full min-w-0 ${PORTAL_CHAT_MAX_WIDTH_CLASS} ${columnClassName}`}>
-      <div className={`w-full min-w-0 ${PORTAL_CHAT_INNER_SHELL_CLASS} ${shellClassName}`}>
+    <div className={`mx-auto flex w-full min-w-0 flex-col ${PORTAL_CHAT_MAX_WIDTH_CLASS} ${columnClassName}`}>
+      <div className={`flex w-full min-w-0 flex-col ${PORTAL_CHAT_INNER_SHELL_CLASS} ${shellClassName}`}>
         {children}
       </div>
     </div>

@@ -23,6 +23,7 @@ import {
   writeCachedPortalChatMessages,
 } from '@/lib/portalChatMessageUi';
 import PortalChatMessageComposer, {
+  PORTAL_CHAT_COMPOSER_RESERVE_CLASS,
   PORTAL_CHAT_LIST_BOTTOM_GAP_CLASS,
   PortalChatColumn,
   PortalChatFixedComposerShell,
@@ -260,7 +261,7 @@ export default function PortalCounselorInquiryChat({
   if (embeddedInTab) {
     return (
       <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col">
-        <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col pb-[calc(13rem+0.75rem)]">
+        <div className={`flex min-h-0 w-full min-w-0 flex-1 flex-col ${PORTAL_CHAT_COMPOSER_RESERVE_CLASS}`}>
           <p className="mx-auto mb-3 w-full min-w-0 max-w-3xl shrink-0 text-sm text-slate-400">
             {PORTAL_INQUIRY_SECTION_DESC}
           </p>
@@ -270,8 +271,8 @@ export default function PortalCounselorInquiryChat({
             </p>
           ) : null}
           <PortalChatColumn
-            columnClassName={`${PORTAL_CHAT_LIST_BOTTOM_GAP_CLASS} flex min-h-0 flex-1 flex-col`}
-            shellClassName="flex min-h-0 min-w-0 flex-1 flex-col"
+            columnClassName={`${PORTAL_CHAT_LIST_BOTTOM_GAP_CLASS} min-h-0 flex-1`}
+            shellClassName="min-h-0 flex-1 overflow-hidden"
           >
             {messagePane}
           </PortalChatColumn>
@@ -282,7 +283,7 @@ export default function PortalCounselorInquiryChat({
   }
 
   return (
-    <div className="flex w-full min-w-0 flex-col pb-52">
+    <div className={`flex w-full min-w-0 flex-col ${PORTAL_CHAT_COMPOSER_RESERVE_CLASS}`}>
       <div className="shrink-0 border-b border-slate-700/70 p-5">
         <h3 className="text-sm font-semibold text-slate-200">{PORTAL_INQUIRY_SECTION_TITLE}</h3>
         <p className="mt-1 text-sm text-slate-400">{PORTAL_INQUIRY_SECTION_DESC}</p>
