@@ -179,29 +179,11 @@ function testStatusLabel(status: DispatchTestResult['status']): { text: string; 
   }
 }
 
-function progressStatusForRow(
-  recipient: DispatchRecipient,
-  hydrating: boolean,
-): { text: string; className: string } {
-  if (hydrating && recipient.testStatus === 'not_started') {
-    return { text: '확인중', className: 'text-amber-300' };
-  }
+function progressStatusForRow(recipient: DispatchRecipient): { text: string; className: string } {
   return testSummary(recipient);
 }
 
-function dispatchStatusForRow(recipient: DispatchRecipient, hydrating: boolean): DispatchStatusView {
-  const status = (recipient.notifyStatus || 'not_sent').trim();
-  if (hydrating && (status === 'sending' || status === 'pending')) {
-    return dispatchStatusDisplay(recipient);
-  }
-  if (hydrating && status === 'not_sent') {
-    return {
-      mainText: '확인중',
-      detailParts: [],
-      text: '확인중',
-      className: 'text-amber-300',
-    };
-  }
+function dispatchStatusForRow(recipient: DispatchRecipient): DispatchStatusView {
   return dispatchStatusDisplay(recipient);
 }
 
@@ -437,7 +419,6 @@ export default function AssessmentDispatchPanel({
   const [loading, setLoading] = useState(
     () => !resolveInitialDispatchStatus(assessmentId, user?.uid),
   );
-  const [hydrating, setHydrating] = useState(() => hasPendingDispatchIssueSeed(assessmentId));
   const [error, setError] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -477,7 +458,6 @@ export default function AssessmentDispatchPanel({
     const initial = resolveInitialDispatchStatus(assessmentId, user?.uid);
     setData(initial);
     setLoading(!initial);
-    setHydrating(hasPendingDispatchIssueSeed(assessmentId));
     setError('');
   }, [assessmentId, user?.uid]);
 
@@ -485,7 +465,6 @@ export default function AssessmentDispatchPanel({
     if (!assessmentId) return;
     const cached = readCachedDispatchStatus(assessmentId, user?.uid);
     if (!opts?.silent && !cached) setLoading(true);
-    else if (!opts?.silent && cached) setHydrating(true);
     setError('');
     try {
       const result = await fetchAssessmentDispatchStatus(assessmentId);
@@ -499,15 +478,15 @@ export default function AssessmentDispatchPanel({
     } finally {
       if (!opts?.silent) {
         setLoading(false);
-        setHydrating(false);
       }
     }
   }, [assessmentId, user?.uid]);
 
   useEffect(() => {
     if (authPending || !isAuthenticated) return;
-    void load();
-  }, [load, authPending, isAuthenticated]);
+    const cached = readCachedDispatchStatus(assessmentId, user?.uid);
+    void load({ silent: Boolean(cached) });
+  }, [load, authPending, isAuthenticated, assessmentId, user?.uid]);
 
   const { data: liveData } = useAssessmentDispatchRealtime(
     assessmentId,
@@ -536,9 +515,13 @@ export default function AssessmentDispatchPanel({
 
   const hasSendingNotify = useMemo(
     () =>
-      (visibleData?.recipients || []).some((r) => r.notifyStatus === 'sending') ||
+      hasPendingDispatchIssueSeed(assessmentId) ||
+      (visibleData?.recipients || []).some((r) => {
+        const status = (r.notifyStatus || 'not_sent').trim();
+        return status === 'sending' || status === 'pending';
+      }) ||
       Object.keys(dispatchOverrides).length > 0,
-    [visibleData?.recipients, dispatchOverrides],
+    [assessmentId, visibleData?.recipients, dispatchOverrides],
   );
 
   useEffect(() => {
@@ -1097,8 +1080,8 @@ export default function AssessmentDispatchPanel({
             </thead>
             <tbody>
               {sortedRecipients.map((r, rowIndex) => {
-                const notify = dispatchStatusForRow(r, hydrating);
-                const summary = progressStatusForRow(r, hydrating);
+                const notify = dispatchStatusForRow(r);
+                const summary = progressStatusForRow(r);
                 const isOpen = expandedId === r.portalId;
                 const contactRevealed = isOpen;
                 const tests = r.tests ?? [];

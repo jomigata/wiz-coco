@@ -134,12 +134,16 @@ export default function IndividualAssessmentCreateForm({
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
   const [jobProgress, setJobProgress] = useState<BulkPortalJobStatus | null>(null);
   const [lastCreatedAssessmentId, setLastCreatedAssessmentId] = useState('');
-  const [issueSuccess, setIssueSuccess] = useState<{ assessmentId: string } | null>(null);
+  const [issueSuccess, setIssueSuccess] = useState<
+    { kind: 'pending'; sentNotify: boolean } | { kind: 'done'; assessmentId: string; sentNotify: boolean } | null
+  >(null);
+  const issuePromiseRef = useRef<Promise<void> | null>(null);
+  const resolvedAssessmentIdRef = useRef('');
   const [testSortKey, setTestSortKey] = useState<TestSortKey>('no');
   const [testSortDir, setTestSortDir] = useState<SortDirection>('asc');
   const [testSearchQuery, setTestSearchQuery] = useState('');
 
-  const loading = loadingIntent !== null;
+  const loading = loadingIntent !== null || Boolean(issueSuccess);
 
   const toggleTestSort = (key: TestSortKey) => {
     if (testSortKey === key) {
@@ -310,7 +314,12 @@ export default function IndividualAssessmentCreateForm({
         );
       }
 
-      setIssueSuccess({ assessmentId: aid });
+      setIssueSuccess({
+        kind: 'done',
+        assessmentId: aid,
+        sentNotify: Boolean(queueNotify),
+      });
+      resolvedAssessmentIdRef.current = aid;
     },
     [
       cohortName,
@@ -323,18 +332,25 @@ export default function IndividualAssessmentCreateForm({
     ],
   );
 
-  const handleIssueConfirm = useCallback(() => {
-    const aid = issueSuccess?.assessmentId?.trim() || '';
-    setIssueSuccess(null);
-    const href = aid
-      ? `/counselor/assessments/progress?assessmentId=${encodeURIComponent(aid)}`
-      : '/counselor/assessments';
-    if (variant === 'modal') {
-      onClose?.();
-      onIssued?.();
+  const handleIssueConfirm = useCallback(async () => {
+    try {
+      if (issuePromiseRef.current) {
+        await issuePromiseRef.current;
+      }
+      const aid = resolvedAssessmentIdRef.current.trim();
+      setIssueSuccess(null);
+      const href = aid
+        ? `/counselor/assessments/progress?assessmentId=${encodeURIComponent(aid)}`
+        : '/counselor/assessments';
+      if (variant === 'modal') {
+        onClose?.();
+        onIssued?.();
+      }
+      pushWithAuthSession(router, href);
+    } catch {
+      // 오류는 issuePromise에서 처리됨
     }
-    pushWithAuthSession(router, href);
-  }, [issueSuccess, onClose, onIssued, router, variant]);
+  }, [router, variant, onClose, onIssued]);
 
   useEffect(() => {
     if (!activeJobId) return undefined;
@@ -515,8 +531,8 @@ export default function IndividualAssessmentCreateForm({
     }
 
     const willNotify = intent === 'send_all';
-    setLoadingIntent(intent);
-    try {
+
+    const executeIssue = async () => {
       const result = await bulkCreateClientPortals({
         cohortName: cohortName.trim().slice(0, 120),
         title: (title.trim() || cohortName.trim() || '검사').slice(0, 200),
@@ -536,6 +552,7 @@ export default function IndividualAssessmentCreateForm({
       const assessmentId = result.assessmentId || '';
 
       if (result.async && result.jobId) {
+        setIssueSuccess(null);
         setActiveJobId(result.jobId);
         setJobProgress({
           jobId: result.jobId,
@@ -553,7 +570,6 @@ export default function IndividualAssessmentCreateForm({
         setSharedJoinCode(result.joinAccessCode || '');
         setNotifyQueued(result.notifyQueued);
         setLastCreatedAssessmentId(assessmentId);
-        setLoadingIntent(null);
         return;
       }
 
@@ -569,6 +585,22 @@ export default function IndividualAssessmentCreateForm({
           phone: normalizeRecipientPhone(row.phone) || undefined,
         })),
       });
+    };
+
+    if (intent === 'send_all') {
+      resolvedAssessmentIdRef.current = '';
+      setIssueSuccess({ kind: 'pending', sentNotify: true });
+      issuePromiseRef.current = executeIssue().catch((err) => {
+        setIssueSuccess(null);
+        setError(err instanceof Error ? err.message : '상담코드 발급에 실패했습니다.');
+        throw err;
+      });
+      return;
+    }
+
+    setLoadingIntent('excel');
+    try {
+      await executeIssue();
     } catch (err) {
       setError(err instanceof Error ? err.message : '상담코드 발급에 실패했습니다.');
     } finally {
@@ -1083,7 +1115,7 @@ export default function IndividualAssessmentCreateForm({
               className="w-full rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 px-4 py-3 text-left shadow-lg shadow-sky-900/30 transition hover:from-sky-500 hover:to-indigo-500 disabled:opacity-50 disabled:shadow-none"
             >
               <span className="block text-base font-bold text-white">
-                {loadingIntent === 'send_all' ? '발급·발송 중…' : `${recipientCountLabel} 즉시 전체 발송`}
+                {`${recipientCountLabel} 즉시 전체 발송`}
               </span>
               <span className="mt-0.5 block text-sm text-sky-100/80">
                 발급 후 모든 내담자에게 이메일·문자 즉시 발송
@@ -1124,21 +1156,22 @@ export default function IndividualAssessmentCreateForm({
       </div>
 
       <CounselorActionProgressOverlay
-        open={Boolean((loadingIntent && !activeJobId) || issueSuccess)}
+        open={Boolean(issueSuccess || (loadingIntent === 'excel' && !activeJobId))}
         phase={issueSuccess ? 'success' : 'loading'}
         zIndexClass="z-[120]"
-        title={issueSuccess ? '발급 완료' : '발급 진행 중…'}
+        title={
+          issueSuccess
+            ? issueSuccess.sentNotify
+              ? '발송 완료'
+              : '발급 완료'
+            : '발급 진행 중…'
+        }
         message={
           issueSuccess
-            ? '상담코드 발급이 완료되었습니다. 확인을 누르면 상담진행 현황으로 이동합니다.'
-            : loadingIntent === 'excel'
-              ? '엑셀 저장을 위해 상담코드를 발급하고 있습니다.'
-              : '내담자에게 발급·발송을 처리하고 있습니다.'
-        }
-        notice={
-          !issueSuccess && loadingIntent === 'send_all'
-            ? '발송량에 따라 발송에 시간이 다소 소요될 수 있습니다.'
-            : undefined
+            ? issueSuccess.sentNotify
+              ? '검사 링크 발송이 완료되었습니다. 확인을 누르면 상담진행 현황으로 이동합니다.'
+              : '상담코드 발급이 완료되었습니다. 확인을 누르면 상담진행 현황으로 이동합니다.'
+            : '엑셀 저장을 위해 상담코드를 발급하고 있습니다.'
         }
         onConfirm={issueSuccess ? handleIssueConfirm : undefined}
       />

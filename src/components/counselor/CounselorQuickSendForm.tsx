@@ -75,9 +75,13 @@ export default function CounselorQuickSendForm({
   const [fileLabel, setFileLabel] = useState('');
   const [samplePreviewKind, setSamplePreviewKind] = useState<'txt' | 'csv' | null>(null);
   const [showFilePreview, setShowFilePreview] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [sendSuccess, setSendSuccess] = useState<{ assessmentId: string } | null>(null);
+  const [sendOverlay, setSendOverlay] = useState<{ kind: 'pending' } | { kind: 'done'; assessmentId: string } | null>(
+    null,
+  );
+  const sendLocked = Boolean(sendOverlay);
   const [error, setError] = useState('');
+  const issuePromiseRef = useRef<Promise<string> | null>(null);
+  const resolvedAssessmentIdRef = useRef('');
   const [firstSendTrialEligible, setFirstSendTrialEligible] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const welcomeTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -150,10 +154,17 @@ export default function CounselorQuickSendForm({
     pushWithAuthSession(router, href);
   };
 
-  const handleSendConfirm = () => {
-    const assessmentId = sendSuccess?.assessmentId || '';
-    setSendSuccess(null);
-    finish(assessmentId);
+  const handleSendConfirm = async () => {
+    try {
+      if (issuePromiseRef.current) {
+        await issuePromiseRef.current;
+      }
+      const assessmentId = resolvedAssessmentIdRef.current;
+      setSendOverlay(null);
+      finish(assessmentId);
+    } catch {
+      // 오류는 issuePromise에서 처리됨
+    }
   };
 
   const updateRow = (index: number, field: keyof RecipientRow, value: string) => {
@@ -195,7 +206,7 @@ export default function CounselorQuickSendForm({
   };
 
   const handleRecipientFieldKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key !== 'Enter' || loading) return;
+    if (e.key !== 'Enter' || sendOverlay) return;
     e.preventDefault();
     addRow(true);
   };
@@ -269,8 +280,11 @@ export default function CounselorQuickSendForm({
         ? templateLabel.slice(0, 200)
         : `${templateLabel} · ${firstName}`.slice(0, 200);
 
-    setLoading(true);
-    try {
+    resolvedAssessmentIdRef.current = '';
+    setSendOverlay({ kind: 'pending' });
+    setError('');
+
+    issuePromiseRef.current = (async () => {
       const result = await bulkCreateClientPortals({
         cohortName,
         title,
@@ -336,12 +350,14 @@ export default function CounselorQuickSendForm({
         },
         user?.uid,
       );
-      setSendSuccess({ assessmentId });
-    } catch (err) {
+      resolvedAssessmentIdRef.current = assessmentId;
+      setSendOverlay({ kind: 'done', assessmentId });
+      return assessmentId;
+    })().catch((err) => {
+      setSendOverlay(null);
       setError(err instanceof Error ? err.message : '보내기에 실패했습니다.');
-    } finally {
-      setLoading(false);
-    }
+      throw err;
+    });
   };
 
   if (authPending) {
@@ -432,7 +448,7 @@ export default function CounselorQuickSendForm({
                         onBlur={() => setCustomCohortFocused(false)}
                         maxLength={120}
                         rows={3}
-                        disabled={loading}
+                        disabled={sendLocked}
                         className={`relative h-full w-full resize-none overflow-hidden break-words bg-transparent text-center text-sm font-bold leading-snug caret-white outline-none ${
                           active ? 'text-white' : 'text-slate-200'
                         }`}
@@ -441,7 +457,7 @@ export default function CounselorQuickSendForm({
                     </div>
                     <button
                       type="button"
-                      disabled={loading}
+                      disabled={sendLocked}
                       onClick={() => {
                         setTemplateId('custom');
                         setTestPickerOpen(true);
@@ -462,7 +478,7 @@ export default function CounselorQuickSendForm({
                           <li>
                             <button
                               type="button"
-                              disabled={loading}
+                              disabled={sendLocked}
                               onClick={() => {
                                 setTemplateId('custom');
                                 setTestPickerOpen(true);
@@ -483,7 +499,7 @@ export default function CounselorQuickSendForm({
                 <button
                   key={item.id}
                   type="button"
-                  disabled={loading}
+                  disabled={sendLocked}
                   onClick={() => setTemplateId(item.id)}
                   className={`flex aspect-square flex-col items-center justify-center rounded-xl border px-3 py-4 text-center transition-colors ${templateCardBorder(active)} ${
                     active ? 'text-white' : 'text-slate-200'
@@ -531,14 +547,14 @@ export default function CounselorQuickSendForm({
                       onKeyDown={handleRecipientFieldKeyDown}
                       placeholder="이름"
                       autoComplete="name"
-                      disabled={loading}
+                      disabled={sendLocked}
                       aria-label="이름"
                     />
                     {manualRows.length > 1 || row.displayName.trim() ? (
                       <button
                         type="button"
                         onClick={() => removeRow(idx)}
-                        disabled={loading}
+                        disabled={sendLocked}
                         className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-slate-400 transition hover:bg-white/10 hover:text-red-300 disabled:opacity-50"
                         aria-label="이름 줄 삭제"
                       >
@@ -557,7 +573,7 @@ export default function CounselorQuickSendForm({
                     placeholder="010-0000-0000"
                     inputMode="tel"
                     autoComplete="tel"
-                    disabled={loading}
+                    disabled={sendLocked}
                   />
                 </label>
                 <label className="block">
@@ -570,7 +586,7 @@ export default function CounselorQuickSendForm({
                     onKeyDown={handleRecipientFieldKeyDown}
                     placeholder="name@example.com"
                     autoComplete="email"
-                    disabled={loading}
+                    disabled={sendLocked}
                   />
                 </label>
               </div>
@@ -591,7 +607,7 @@ export default function CounselorQuickSendForm({
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   className="rounded-lg border border-white/10 bg-[#101f38]/80 px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-slate-800/80"
-                  disabled={loading}
+                  disabled={sendLocked}
                 >
                   텍스트/엑셀 파일 첨부하기
                 </button>
@@ -603,7 +619,7 @@ export default function CounselorQuickSendForm({
                   onFocus={() => setSamplePreviewKind('txt')}
                   onBlur={() => setSamplePreviewKind(null)}
                   className="text-sm text-sky-300 transition hover:text-sky-200"
-                  disabled={loading}
+                  disabled={sendLocked}
                 >
                   (텍스트파일)
                 </button>
@@ -614,7 +630,7 @@ export default function CounselorQuickSendForm({
                   onFocus={() => setSamplePreviewKind('csv')}
                   onBlur={() => setSamplePreviewKind(null)}
                   className="text-sm text-sky-300 transition hover:text-sky-200"
-                  disabled={loading}
+                  disabled={sendLocked}
                 >
                   (엑셀파일)
                 </button>
@@ -699,7 +715,7 @@ export default function CounselorQuickSendForm({
             >
               <button
                 type="button"
-                disabled={loading}
+                disabled={sendLocked}
                 onClick={() => welcomeTextareaRef.current?.focus()}
                 className="text-left text-xs font-medium text-slate-400 underline-offset-2 transition hover:text-slate-200 hover:underline disabled:opacity-50"
               >
@@ -718,7 +734,7 @@ export default function CounselorQuickSendForm({
               ) : null}
             </div>
             <WelcomeMessageSampleHoverPicker
-              disabled={loading}
+              disabled={sendLocked}
               tooltipPlacement="top"
               onPick={(text) => setWelcomeMessage(text)}
             />
@@ -730,7 +746,7 @@ export default function CounselorQuickSendForm({
             value={welcomeMessage}
             onChange={(e) => setWelcomeMessage(e.target.value)}
             placeholder="내담자에게 보여줄 안내 문구"
-            disabled={loading}
+            disabled={sendLocked}
           />
         </div>
 
@@ -742,18 +758,17 @@ export default function CounselorQuickSendForm({
 
         <button
           type="submit"
-          disabled={loading}
+          disabled={sendLocked}
           className="rounded-lg bg-sky-600 px-4 py-3 text-sm font-semibold text-white hover:bg-sky-500 disabled:opacity-50"
         >
-          {loading ? '보내는 중…' : '3. 보내기'}
+          3. 보내기
         </button>
       </form>
       <CounselorActionProgressOverlay
-        open={Boolean(sendSuccess)}
+        open={Boolean(sendOverlay)}
         phase="success"
         title="발송 완료"
         message="검사 링크 발송이 완료되었습니다. 확인을 누르면 상담진행 현황으로 이동합니다."
-        notice="발송량에 따라 발송에 시간이 다소 소요될 수 있습니다."
         onConfirm={handleSendConfirm}
       />
       <CounselorQuickSendTestPickerModal
