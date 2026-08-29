@@ -39,7 +39,7 @@ import PortalChatMessageList from '@/components/portal/PortalChatMessageList';
 function threadTitle(thread: PortalChatThread): string {
   const name = (thread.displayName || '').trim() || '내담자';
   const group = (thread.cohortName || '').trim();
-  return group ? `${name} / ${group}` : name;
+  return group ? `${name} (${group})` : name;
 }
 
 function sortThreads(
@@ -496,8 +496,6 @@ export default function CounselorPortalChatPanel() {
               ) : (
                 sortedThreads.map((thread) => {
                   const active = thread.portalId === selectedPortalId;
-                  const name = (thread.displayName || '').trim() || '내담자';
-                  const group = (thread.cohortName || '').trim();
                   return (
                     <li key={thread.portalId}>
                       <button
@@ -511,16 +509,13 @@ export default function CounselorPortalChatPanel() {
                       >
                         <div className="min-w-0">
                           <p className="truncate text-sm font-medium text-white">
-                            {name}
+                            {threadTitle(thread)}
                             {showUnreadBadge(thread) ? (
                               <span className="ml-1.5 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-red-600 px-1.5 py-0.5 text-[10px] font-semibold text-white align-middle">
                                 {displayUnreadCount(thread)}
                               </span>
                             ) : null}
                           </p>
-                          {group ? (
-                            <p className="truncate text-xs text-slate-400">{group}</p>
-                          ) : null}
                           <p
                             className={`mt-0.5 text-[11px] tabular-nums leading-snug ${
                               thread.lastMessageAt ? 'text-slate-300' : 'text-slate-500'
