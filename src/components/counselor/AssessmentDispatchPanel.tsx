@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import AuthLink from '@/components/auth/AuthLink';
 import { getCounselorResult, type CounselorResultDetail } from '@/lib/assessmentApi';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
@@ -45,6 +46,10 @@ import {
 import {
   clearDispatchIssueSeed,
   hasPendingDispatchIssueSeed,
+  isPendingDispatchAssessmentId,
+  pendingDispatchPlaceholder,
+  readPendingDispatchError,
+  readPendingDispatchResolution,
   resolveInitialDispatchStatus,
 } from '@/lib/counselorDispatchSeed';
 import CounselorListBackLink from '@/components/counselor/CounselorListBackLink';
@@ -53,6 +58,7 @@ import CounselorSlashInfoCell from '@/components/counselor/CounselorSlashInfoCel
 import CounselorListSearchInput from '@/components/counselor/CounselorListSearchInput';
 import CounselorProgressMetricsInline from '@/components/counselor/CounselorProgressMetricsInline';
 import { stripAssessmentTitleDispatchCountSuffix } from '@/lib/counselorAssessmentResultDisplay';
+import { replaceWithAuthSession } from '@/utils/authSessionLifecycle';
 import { buildAssessmentListHref, writeAssessmentListSearch } from '@/lib/counselorAssessmentListSearch';
 import { matchesWildcardFields } from '@/lib/wildcardSearch';
 import {
@@ -411,7 +417,9 @@ export default function AssessmentDispatchPanel({
   initialSearchQuery = '',
   entryFrom = 'assessments',
 }: AssessmentDispatchPanelProps) {
+  const router = useRouter();
   const { user, authPending, isAuthenticated } = useAuthResolved();
+  const pendingIssue = isPendingDispatchAssessmentId(assessmentId);
   const adminUser = isAdmin(user?.role ?? getAppRoleSync());
   const [data, setData] = useState<AssessmentDispatchStatus | null>(() =>
     resolveInitialDispatchStatus(assessmentId, user?.uid),
@@ -450,9 +458,35 @@ export default function AssessmentDispatchPanel({
   const [detail, setDetail] = useState<CounselorResultDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState('');
+  const [pendingError, setPendingError] = useState('');
 
   useRedirectOnLoginRequiredError(error);
   useRedirectOnLoginRequiredError(detailError);
+
+  useEffect(() => {
+    if (!pendingIssue) {
+      setPendingError('');
+      return undefined;
+    }
+    const syncPendingState = () => {
+      const error = readPendingDispatchError(assessmentId);
+      if (error) {
+        setPendingError(error);
+        return;
+      }
+      setPendingError('');
+      const resolved = readPendingDispatchResolution(assessmentId);
+      if (resolved) {
+        replaceWithAuthSession(
+          router,
+          `/counselor/assessments/progress?assessmentId=${encodeURIComponent(resolved)}`,
+        );
+      }
+    };
+    syncPendingState();
+    const timer = window.setInterval(syncPendingState, 400);
+    return () => window.clearInterval(timer);
+  }, [assessmentId, pendingIssue, router]);
 
   useEffect(() => {
     const initial = resolveInitialDispatchStatus(assessmentId, user?.uid);
@@ -462,7 +496,7 @@ export default function AssessmentDispatchPanel({
   }, [assessmentId, user?.uid]);
 
   const load = useCallback(async (opts?: { silent?: boolean }) => {
-    if (!assessmentId) return;
+    if (!assessmentId || isPendingDispatchAssessmentId(assessmentId)) return;
     const cached = readCachedDispatchStatus(assessmentId, user?.uid);
     if (!opts?.silent && !cached) setLoading(true);
     setError('');
@@ -484,6 +518,7 @@ export default function AssessmentDispatchPanel({
 
   useEffect(() => {
     if (authPending || !isAuthenticated) return;
+    if (isPendingDispatchAssessmentId(assessmentId)) return;
     const cached = readCachedDispatchStatus(assessmentId, user?.uid);
     void load({ silent: Boolean(cached) });
   }, [load, authPending, isAuthenticated, assessmentId, user?.uid]);
@@ -907,7 +942,10 @@ export default function AssessmentDispatchPanel({
           <span className="inline-flex items-center gap-1.5 rounded-md border border-cyan-500/25 bg-cyan-950/30 px-2 py-1">
             <span className="text-[10px] font-semibold uppercase tracking-wide text-cyan-500/80">상담코드</span>
             <span className="font-mono text-sm font-semibold tracking-wide text-cyan-300">
-              {formatAccessCodeDisplay(displayData.joinAccessCode)}
+              {pendingDispatchPlaceholder(
+                formatAccessCodeDisplay(displayData.joinAccessCode),
+                pendingIssue,
+              )}
             </span>
           </span>
         </span>
@@ -919,6 +957,11 @@ export default function AssessmentDispatchPanel({
       dense
       description={
         <span className="inline-flex w-full flex-wrap items-center gap-2">
+          {pendingError ? (
+            <span className="rounded-md border border-red-500/30 bg-red-950/40 px-2 py-1 text-sm text-red-300">
+              {pendingError}
+            </span>
+          ) : null}
           <CounselorListBackLink href={backHref} label={backButtonLabel} />
           <AuthLink
             href={backHref}
@@ -1085,7 +1128,7 @@ export default function AssessmentDispatchPanel({
                 const isOpen = expandedId === r.portalId;
                 const contactRevealed = isOpen;
                 const tests = r.tests ?? [];
-                const myCodeLabel = formatAccessCodeDisplay(r.myCode);
+                const myCodeLabel = pendingDispatchPlaceholder(formatAccessCodeDisplay(r.myCode), pendingIssue);
 
                 return (
                   <React.Fragment key={r.portalId}>
@@ -1117,7 +1160,7 @@ export default function AssessmentDispatchPanel({
                       <td className={`max-w-[9rem] ${counselorListTdClass} align-top w-36`}>
                         <CounselorSlashInfoCell
                           primary={r.displayName || '—'}
-                          secondary={myCodeLabel !== '—' ? myCodeLabel : '—'}
+                          secondary={myCodeLabel}
                           hoverTypeLabel="나의코드"
                           normalSecondary
                           showTooltip={false}

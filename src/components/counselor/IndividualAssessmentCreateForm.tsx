@@ -37,7 +37,13 @@ import {
 } from '@/lib/recipientImport';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
-import { seedDispatchStatusAfterIssue } from '@/lib/counselorDispatchSeed';
+import {
+  createPendingDispatchAssessmentId,
+  finalizePendingDispatchIssue,
+  registerPendingDispatchError,
+  seedDispatchStatusAfterIssue,
+  seedDispatchStatusBeforeIssue,
+} from '@/lib/counselorDispatchSeed';
 import WelcomeMessageSamplePicker from '@/components/counselor/WelcomeMessageSamplePicker';
 import AuthLink from '@/components/auth/AuthLink';
 import { COUNSELING_CODE_TYPES, type CounselingCodeType } from '@/data/counselingCodeTypes';
@@ -138,6 +144,7 @@ export default function IndividualAssessmentCreateForm({
     { kind: 'pending'; sentNotify: boolean } | { kind: 'done'; assessmentId: string; sentNotify: boolean } | null
   >(null);
   const issuePromiseRef = useRef<Promise<void> | null>(null);
+  const pendingAssessmentIdRef = useRef('');
   const resolvedAssessmentIdRef = useRef('');
   const [testSortKey, setTestSortKey] = useState<TestSortKey>('no');
   const [testSortDir, setTestSortDir] = useState<SortDirection>('asc');
@@ -300,23 +307,26 @@ export default function IndividualAssessmentCreateForm({
             }));
 
       if (aid) {
-        seedDispatchStatusAfterIssue(
-          {
-            assessmentId: aid,
-            title: (title.trim() || cohortName.trim() || '검사').slice(0, 200),
-            cohortName: cohortName.trim(),
-            joinAccessCode: code,
-            testList,
-            recipients: seedRecipients,
-            queueNotify,
-          },
-          user?.uid,
-        );
+        const seedInput = {
+          assessmentId: aid,
+          title: (title.trim() || cohortName.trim() || '검사').slice(0, 200),
+          cohortName: cohortName.trim(),
+          joinAccessCode: code,
+          testList,
+          recipients: seedRecipients,
+          queueNotify,
+        };
+        const pendingId = pendingAssessmentIdRef.current.trim();
+        if (pendingId) {
+          finalizePendingDispatchIssue(pendingId, seedInput, user?.uid);
+        } else {
+          seedDispatchStatusAfterIssue(seedInput, user?.uid);
+        }
       }
 
       setIssueSuccess({
         kind: 'done',
-        assessmentId: aid,
+        assessmentId: pendingAssessmentIdRef.current.trim() || aid,
         sentNotify: Boolean(queueNotify),
       });
       resolvedAssessmentIdRef.current = aid;
@@ -332,21 +342,14 @@ export default function IndividualAssessmentCreateForm({
     ],
   );
 
-  const handleIssueConfirm = useCallback(async () => {
-    try {
-      if (issuePromiseRef.current) {
-        await issuePromiseRef.current;
-      }
-      const aid = resolvedAssessmentIdRef.current.trim();
-      const href = aid
-        ? `/counselor/assessments/progress?assessmentId=${encodeURIComponent(aid)}`
-        : '/counselor/assessments';
-      replaceWithAuthSession(router, href);
-      if (variant === 'modal') {
-        onIssued?.();
-      }
-    } catch {
-      // 오류는 issuePromise에서 처리됨
+  const handleIssueConfirm = useCallback(() => {
+    const navId = pendingAssessmentIdRef.current.trim() || resolvedAssessmentIdRef.current.trim();
+    const href = navId
+      ? `/counselor/assessments/progress?assessmentId=${encodeURIComponent(navId)}`
+      : '/counselor/assessments';
+    replaceWithAuthSession(router, href);
+    if (variant === 'modal') {
+      onIssued?.();
     }
   }, [router, variant, onIssued]);
 
@@ -551,6 +554,7 @@ export default function IndividualAssessmentCreateForm({
 
       if (result.async && result.jobId) {
         setIssueSuccess(null);
+        pendingAssessmentIdRef.current = '';
         setActiveJobId(result.jobId);
         setJobProgress({
           jobId: result.jobId,
@@ -586,11 +590,30 @@ export default function IndividualAssessmentCreateForm({
     };
 
     if (intent === 'send_all') {
+      const pendingId = createPendingDispatchAssessmentId();
+      pendingAssessmentIdRef.current = pendingId;
       resolvedAssessmentIdRef.current = '';
+      seedDispatchStatusBeforeIssue(
+        pendingId,
+        {
+          title: (title.trim() || cohortName.trim() || '검사').slice(0, 200),
+          cohortName: cohortName.trim(),
+          testList,
+          recipients: recipients.map((row) => ({
+            displayName: row.displayName.trim(),
+            email: row.email.trim() || undefined,
+            phone: normalizeRecipientPhone(row.phone) || undefined,
+          })),
+          queueNotify: true,
+        },
+        user?.uid,
+      );
       setIssueSuccess({ kind: 'pending', sentNotify: true });
       issuePromiseRef.current = executeIssue().catch((err) => {
+        const message = err instanceof Error ? err.message : '상담코드 발급에 실패했습니다.';
+        registerPendingDispatchError(pendingId, message);
         setIssueSuccess(null);
-        setError(err instanceof Error ? err.message : '상담코드 발급에 실패했습니다.');
+        setError(message);
         throw err;
       });
       return;

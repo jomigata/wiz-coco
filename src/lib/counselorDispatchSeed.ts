@@ -4,6 +4,9 @@ import { getCounselorUidSync } from '@/lib/counselorAuth';
 import { readCachedDispatchStatus, writeCachedDispatchStatus } from '@/lib/counselorSessionCache';
 
 const DISPATCH_SEED_PREFIX = 'wizcoco:dispatch-seed:';
+const PENDING_RESOLVE_PREFIX = 'wizcoco:dispatch-pending-resolve:';
+const PENDING_ERROR_PREFIX = 'wizcoco:dispatch-pending-error:';
+export const PENDING_DISPATCH_ID_PREFIX = 'pending:';
 
 export type DispatchIssueSeedInput = {
   assessmentId: string;
@@ -80,6 +83,18 @@ export function buildDispatchStatusFromIssueSeed(input: DispatchIssueSeedInput):
   };
 }
 
+export function createPendingDispatchAssessmentId(): string {
+  const uuid =
+    typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+  return `${PENDING_DISPATCH_ID_PREFIX}${uuid}`;
+}
+
+export function isPendingDispatchAssessmentId(assessmentId: string): boolean {
+  return assessmentId.trim().startsWith(PENDING_DISPATCH_ID_PREFIX);
+}
+
 export function seedDispatchStatusAfterIssue(
   input: DispatchIssueSeedInput,
   counselorUid?: string | null,
@@ -95,6 +110,67 @@ export function seedDispatchStatusAfterIssue(
     );
   } catch {
     // ignore
+  }
+}
+
+/** API 완료 전 — 이름·연락처만 즉시 표시할 optimistic 시드 */
+export function seedDispatchStatusBeforeIssue(
+  pendingId: string,
+  input: Omit<DispatchIssueSeedInput, 'assessmentId' | 'joinAccessCode'>,
+  counselorUid?: string | null,
+): void {
+  seedDispatchStatusAfterIssue(
+    {
+      ...input,
+      assessmentId: pendingId.trim(),
+      joinAccessCode: '',
+    },
+    counselorUid,
+  );
+}
+
+export function finalizePendingDispatchIssue(
+  pendingId: string,
+  input: DispatchIssueSeedInput,
+  counselorUid?: string | null,
+): string {
+  const realId = input.assessmentId.trim();
+  if (typeof window === 'undefined' || !pendingId.trim() || !realId) return realId;
+  seedDispatchStatusAfterIssue(input, counselorUid);
+  try {
+    sessionStorage.setItem(`${PENDING_RESOLVE_PREFIX}${pendingId.trim()}`, realId);
+    sessionStorage.removeItem(`${PENDING_ERROR_PREFIX}${pendingId.trim()}`);
+  } catch {
+    // ignore
+  }
+  clearDispatchIssueSeed(pendingId);
+  return realId;
+}
+
+export function readPendingDispatchResolution(pendingId: string): string | null {
+  if (typeof window === 'undefined' || !pendingId.trim()) return null;
+  try {
+    return sessionStorage.getItem(`${PENDING_RESOLVE_PREFIX}${pendingId.trim()}`)?.trim() || null;
+  } catch {
+    return null;
+  }
+}
+
+export function registerPendingDispatchError(pendingId: string, message: string): void {
+  if (typeof window === 'undefined' || !pendingId.trim()) return;
+  try {
+    sessionStorage.setItem(`${PENDING_ERROR_PREFIX}${pendingId.trim()}`, message.trim());
+  } catch {
+    // ignore
+  }
+}
+
+export function readPendingDispatchError(pendingId: string): string | null {
+  if (typeof window === 'undefined' || !pendingId.trim()) return null;
+  try {
+    return sessionStorage.getItem(`${PENDING_ERROR_PREFIX}${pendingId.trim()}`)?.trim() || null;
+  } catch {
+    return null;
   }
 }
 
@@ -140,9 +216,16 @@ export function resolveInitialDispatchStatus(
 
 export function hasPendingDispatchIssueSeed(assessmentId: string): boolean {
   if (typeof window === 'undefined' || !assessmentId.trim()) return false;
+  if (isPendingDispatchAssessmentId(assessmentId)) return true;
   try {
     return Boolean(sessionStorage.getItem(`${DISPATCH_SEED_PREFIX}${assessmentId.trim()}`));
   } catch {
     return false;
   }
+}
+
+export function pendingDispatchPlaceholder(value: string, pending: boolean, placeholder = '발급 중'): string {
+  const trimmed = value.trim();
+  if (trimmed && trimmed !== '—') return trimmed;
+  return pending ? placeholder : trimmed || '—';
 }

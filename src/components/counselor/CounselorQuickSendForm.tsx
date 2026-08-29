@@ -7,7 +7,12 @@ import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
 import { bulkCreateClientPortals } from '@/lib/clientPortalApi';
 import { prependCounselorAssessmentToListCache, type CounselorAssessment } from '@/lib/assessmentApi';
-import { seedDispatchStatusAfterIssue } from '@/lib/counselorDispatchSeed';
+import {
+  createPendingDispatchAssessmentId,
+  finalizePendingDispatchIssue,
+  registerPendingDispatchError,
+  seedDispatchStatusBeforeIssue,
+} from '@/lib/counselorDispatchSeed';
 import { formatPhoneDisplay, normalizeRecipientPhone } from '@/lib/phoneFormat';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
@@ -81,6 +86,7 @@ export default function CounselorQuickSendForm({
   const sendLocked = Boolean(sendOverlay);
   const [error, setError] = useState('');
   const issuePromiseRef = useRef<Promise<string> | null>(null);
+  const pendingAssessmentIdRef = useRef('');
   const resolvedAssessmentIdRef = useRef('');
   const [firstSendTrialEligible, setFirstSendTrialEligible] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -153,15 +159,9 @@ export default function CounselorQuickSendForm({
     }
   };
 
-  const handleSendConfirm = async () => {
-    try {
-      if (issuePromiseRef.current) {
-        await issuePromiseRef.current;
-      }
-      finish(resolvedAssessmentIdRef.current);
-    } catch {
-      // 오류는 issuePromise에서 처리됨
-    }
+  const handleSendConfirm = () => {
+    const navId = pendingAssessmentIdRef.current.trim();
+    if (navId) finish(navId);
   };
 
   const updateRow = (index: number, field: keyof RecipientRow, value: string) => {
@@ -277,7 +277,24 @@ export default function CounselorQuickSendForm({
         ? templateLabel.slice(0, 200)
         : `${templateLabel} · ${firstName}`.slice(0, 200);
 
+    const pendingId = createPendingDispatchAssessmentId();
+    pendingAssessmentIdRef.current = pendingId;
     resolvedAssessmentIdRef.current = '';
+    seedDispatchStatusBeforeIssue(
+      pendingId,
+      {
+        title,
+        cohortName,
+        testList,
+        recipients: recipients.map((row) => ({
+          displayName: row.displayName.trim(),
+          email: row.email.trim() || undefined,
+          phone: normalizeRecipientPhone(row.phone) || undefined,
+        })),
+        queueNotify: true,
+      },
+      user?.uid,
+    );
     setSendOverlay({ kind: 'pending' });
     setError('');
 
@@ -323,7 +340,8 @@ export default function CounselorQuickSendForm({
       if (result.credits?.trial) {
         setFirstSendTrialEligible(false);
       }
-      seedDispatchStatusAfterIssue(
+      finalizePendingDispatchIssue(
+        pendingId,
         {
           assessmentId,
           title,
@@ -348,11 +366,13 @@ export default function CounselorQuickSendForm({
         user?.uid,
       );
       resolvedAssessmentIdRef.current = assessmentId;
-      setSendOverlay({ kind: 'done', assessmentId });
+      setSendOverlay({ kind: 'done', assessmentId: pendingId });
       return assessmentId;
     })().catch((err) => {
+      const message = err instanceof Error ? err.message : '보내기에 실패했습니다.';
+      registerPendingDispatchError(pendingId, message);
       setSendOverlay(null);
-      setError(err instanceof Error ? err.message : '보내기에 실패했습니다.');
+      setError(message);
       throw err;
     });
   };
