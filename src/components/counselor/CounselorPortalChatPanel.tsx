@@ -496,6 +496,8 @@ export default function CounselorPortalChatPanel() {
               ) : (
                 sortedThreads.map((thread) => {
                   const active = thread.portalId === selectedPortalId;
+                  const name = (thread.displayName || '').trim() || '내담자';
+                  const group = (thread.cohortName || '').trim();
                   return (
                     <li key={thread.portalId}>
                       <button
@@ -507,21 +509,24 @@ export default function CounselorPortalChatPanel() {
                             : 'border-transparent hover:bg-white/5'
                         }`}
                       >
-                        <div className="grid grid-cols-[4.75rem_minmax(0,1fr)] items-start gap-2">
-                          <span
-                            className={`shrink-0 pt-0.5 text-[11px] tabular-nums leading-snug ${
-                              thread.lastMessageAt ? 'text-slate-300' : 'text-slate-500'
-                            }`}
-                          >
-                            {thread.lastMessageAt ? formatChatTimestamp(thread.lastMessageAt) : '대화 없음'}
-                          </span>
-                          <p className="min-w-0 truncate text-sm font-medium text-white">
-                            {threadTitle(thread)}
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium text-white">
+                            {name}
                             {showUnreadBadge(thread) ? (
                               <span className="ml-1.5 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-red-600 px-1.5 py-0.5 text-[10px] font-semibold text-white align-middle">
                                 {displayUnreadCount(thread)}
                               </span>
                             ) : null}
+                          </p>
+                          {group ? (
+                            <p className="truncate text-xs text-slate-400">{group}</p>
+                          ) : null}
+                          <p
+                            className={`mt-0.5 text-[11px] tabular-nums leading-snug ${
+                              thread.lastMessageAt ? 'text-slate-300' : 'text-slate-500'
+                            }`}
+                          >
+                            {thread.lastMessageAt ? formatChatTimestamp(thread.lastMessageAt) : '대화 없음'}
                           </p>
                         </div>
                       </button>
