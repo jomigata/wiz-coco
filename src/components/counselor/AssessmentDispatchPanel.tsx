@@ -43,9 +43,9 @@ import {
   readAnyCachedDispatchStatus,
   writeCachedDispatchStatus,
 } from '@/lib/counselorSessionCache';
+import DispatchIssuingNoticeBanner from '@/components/counselor/DispatchIssuingNoticeBanner';
 import {
   clearDispatchIssueSeed,
-  DISPATCH_ISSUING_NOTICE,
   hasPendingDispatchIssueSeed,
   isDispatchIssuingPhase,
   isPendingDispatchAssessmentId,
@@ -604,14 +604,14 @@ export default function AssessmentDispatchPanel({
     }
     if (authPending || !isAuthenticated) return;
     if (sendingStartedAtRef.current === null) sendingStartedAtRef.current = Date.now();
-    const elapsed = Date.now() - sendingStartedAtRef.current;
-    if (elapsed >= 60_000) return;
+    const pollMs = issuingPhase ? 800 : 1500;
+    void load({ silent: true });
     const timer = window.setInterval(() => {
-      if (Date.now() - (sendingStartedAtRef.current ?? Date.now()) >= 60_000) return;
+      if (Date.now() - (sendingStartedAtRef.current ?? Date.now()) >= 120_000) return;
       void load({ silent: true });
-    }, 1500);
+    }, pollMs);
     return () => window.clearInterval(timer);
-  }, [hasSendingNotify, load, authPending, isAuthenticated]);
+  }, [hasSendingNotify, issuingPhase, load, authPending, isAuthenticated]);
 
   const allIds = useMemo(
     () => (visibleData?.recipients || []).map((r) => r.portalId),
@@ -966,11 +966,7 @@ export default function AssessmentDispatchPanel({
       dense
       description={
         <span className="inline-flex w-full flex-wrap items-center gap-2">
-          {issuingPhase ? (
-            <span className="rounded-md border border-amber-500/30 bg-amber-950/40 px-2 py-1 text-sm text-amber-200">
-              {DISPATCH_ISSUING_NOTICE}
-            </span>
-          ) : null}
+          <DispatchIssuingNoticeBanner active={issuingPhase} />
           <CounselorListBackLink href={backHref} label={backButtonLabel} />
           <AuthLink
             href={backHref}

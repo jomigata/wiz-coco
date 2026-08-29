@@ -81,13 +81,13 @@ export function useAssessmentDispatchRealtime(
       unsub?.();
       setIsLive(false);
     };
-  }, [assessmentId, baseData, enabled]);
+  }, [assessmentId, enabled, baseData?.assessmentId, baseData?.recipients?.length]);
 
   const data = useMemo(() => {
     if (!baseData) return null;
-    if (!isLive && liveResults.length === 0) return baseData;
+    if (liveResults.length === 0) return baseData;
     return applyRealtimeTestResults(baseData, liveResults);
-  }, [baseData, isLive, liveResults]);
+  }, [baseData, liveResults]);
 
   return { data, isLive, liveError, lastUpdatedAt };
 }

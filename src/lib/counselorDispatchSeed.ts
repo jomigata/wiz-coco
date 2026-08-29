@@ -11,8 +11,8 @@ const PENDING_RESOLVE_PREFIX = 'wizcoco:dispatch-pending-resolve:';
 const PENDING_ERROR_PREFIX = 'wizcoco:dispatch-pending-error:';
 export const PENDING_DISPATCH_ID_PREFIX = 'pending:';
 
-export const DISPATCH_ISSUING_NOTICE =
-  '개인코드 (나의코드)의 발송량에 따라 시간이 길어질 수 있습니다.';
+export const DISPATCH_ISSUING_NOTICE_BASE =
+  '개인코드 (나의코드)의 발송량에 따라 시간이 길어질 수 있습니다';
 
 export type DispatchIssueSeedInput = {
   assessmentId: string;
@@ -235,16 +235,13 @@ export function mergeDispatchStatusWithCache(
     if (!prior) return row;
 
     return {
+      ...prior,
       ...row,
       displayName: row.displayName?.trim() || prior.displayName,
       email: row.email?.trim() || prior.email,
       phone: row.phone?.trim() || prior.phone,
       myCode: row.myCode?.trim() || prior.myCode,
       joinAccessCode: row.joinAccessCode?.trim() || prior.joinAccessCode,
-      notifyStatus: row.notifyStatus || prior.notifyStatus,
-      notifyEmailChannel: row.notifyEmailChannel ?? prior.notifyEmailChannel,
-      notifyPhoneChannel: row.notifyPhoneChannel ?? prior.notifyPhoneChannel,
-      testStatus: row.testStatus || prior.testStatus,
       tests: row.tests?.length ? row.tests : prior.tests,
     };
   });
