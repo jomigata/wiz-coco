@@ -37,6 +37,7 @@ import {
 } from '@/lib/recipientImport';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
+import { seedDispatchStatusAfterIssue } from '@/lib/counselorDispatchSeed';
 import WelcomeMessageSamplePicker from '@/components/counselor/WelcomeMessageSamplePicker';
 import AuthLink from '@/components/auth/AuthLink';
 import { COUNSELING_CODE_TYPES, type CounselingCodeType } from '@/data/counselingCodeTypes';
@@ -226,10 +227,23 @@ export default function IndividualAssessmentCreateForm({
       assessmentId,
       accessCode,
       createdCount,
+      createdRows,
+      queueNotify = true,
+      fallbackRecipients,
     }: {
       assessmentId: string;
       accessCode: string;
       createdCount: number;
+      createdRows?: Array<{
+        portalId?: string;
+        displayName: string;
+        email?: string;
+        phone?: string;
+        myCode?: string;
+        accessCode?: string;
+      }>;
+      queueNotify?: boolean;
+      fallbackRecipients?: Array<{ displayName: string; email?: string; phone?: string }>;
     }) => {
       const aid = assessmentId.trim();
       const code = accessCode.trim();
@@ -270,6 +284,30 @@ export default function IndividualAssessmentCreateForm({
         } catch {
           // ignore
         }
+      }
+
+      const seedRecipients =
+        createdRows && createdRows.length > 0
+          ? createdRows
+          : (fallbackRecipients || []).map((row) => ({
+              displayName: row.displayName.trim(),
+              email: row.email?.trim() || undefined,
+              phone: row.phone?.trim() || undefined,
+            }));
+
+      if (aid) {
+        seedDispatchStatusAfterIssue(
+          {
+            assessmentId: aid,
+            title: (title.trim() || cohortName.trim() || '검사').slice(0, 200),
+            cohortName: cohortName.trim(),
+            joinAccessCode: code,
+            testList,
+            recipients: seedRecipients,
+            queueNotify,
+          },
+          user?.uid,
+        );
       }
 
       setIssueSuccess({ assessmentId: aid });
@@ -318,6 +356,9 @@ export default function IndividualAssessmentCreateForm({
             assessmentId,
             accessCode: full.joinAccessCode || status.joinAccessCode || '',
             createdCount: full.created?.length || status.totalRows || 0,
+            createdRows: full.created,
+            queueNotify: Boolean(status.notifyQueued),
+            fallbackRecipients: [],
           });
           setActiveJobId(null);
           setJobProgress(null);
@@ -520,6 +561,13 @@ export default function IndividualAssessmentCreateForm({
         assessmentId,
         accessCode: result.joinAccessCode || result.created?.[0]?.joinAccessCode || '',
         createdCount: (result.created || []).length || recipients.length,
+        createdRows: result.created,
+        queueNotify: willNotify,
+        fallbackRecipients: recipients.map((row) => ({
+          displayName: row.displayName.trim(),
+          email: row.email.trim() || undefined,
+          phone: normalizeRecipientPhone(row.phone) || undefined,
+        })),
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : '상담코드 발급에 실패했습니다.');

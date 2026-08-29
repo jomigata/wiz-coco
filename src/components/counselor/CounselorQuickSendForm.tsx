@@ -7,6 +7,7 @@ import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
 import { bulkCreateClientPortals } from '@/lib/clientPortalApi';
 import { prependCounselorAssessmentToListCache, type CounselorAssessment } from '@/lib/assessmentApi';
+import { seedDispatchStatusAfterIssue } from '@/lib/counselorDispatchSeed';
 import { formatPhoneDisplay, normalizeRecipientPhone } from '@/lib/phoneFormat';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
@@ -311,6 +312,30 @@ export default function CounselorQuickSendForm({
       if (result.credits?.trial) {
         setFirstSendTrialEligible(false);
       }
+      seedDispatchStatusAfterIssue(
+        {
+          assessmentId,
+          title,
+          cohortName,
+          joinAccessCode: accessCode,
+          testList,
+          recipients: (result.created || []).length
+            ? (result.created || []).map((row) => ({
+                portalId: row.portalId,
+                displayName: row.displayName,
+                email: row.email,
+                phone: row.phone,
+                myCode: row.myCode || row.accessCode,
+              }))
+            : recipients.map((row) => ({
+                displayName: row.displayName.trim(),
+                email: row.email.trim() || undefined,
+                phone: normalizeRecipientPhone(row.phone) || undefined,
+              })),
+          queueNotify: true,
+        },
+        user?.uid,
+      );
       setSendSuccess({ assessmentId });
     } catch (err) {
       setError(err instanceof Error ? err.message : '보내기에 실패했습니다.');

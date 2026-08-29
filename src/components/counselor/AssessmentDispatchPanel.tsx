@@ -15,6 +15,7 @@ import {
   dispatchStatusDisplay,
   formatNotifyDate,
   testSummary,
+  type DispatchStatusView,
 } from '@/lib/dispatchRecipientDisplay';
 import {
   downloadDispatchRecipientsExcel,
@@ -41,6 +42,11 @@ import {
   readCachedDispatchStatus,
   writeCachedDispatchStatus,
 } from '@/lib/counselorSessionCache';
+import {
+  clearDispatchIssueSeed,
+  hasPendingDispatchIssueSeed,
+  resolveInitialDispatchStatus,
+} from '@/lib/counselorDispatchSeed';
 import CounselorListBackLink from '@/components/counselor/CounselorListBackLink';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import CounselorSlashInfoCell from '@/components/counselor/CounselorSlashInfoCell';
@@ -171,6 +177,32 @@ function testStatusLabel(status: DispatchTestResult['status']): { text: string; 
     default:
       return { text: '미실시', className: 'text-slate-500' };
   }
+}
+
+function progressStatusForRow(
+  recipient: DispatchRecipient,
+  hydrating: boolean,
+): { text: string; className: string } {
+  if (hydrating && recipient.testStatus === 'not_started') {
+    return { text: '확인중', className: 'text-amber-300' };
+  }
+  return testSummary(recipient);
+}
+
+function dispatchStatusForRow(recipient: DispatchRecipient, hydrating: boolean): DispatchStatusView {
+  const status = (recipient.notifyStatus || 'not_sent').trim();
+  if (hydrating && (status === 'sending' || status === 'pending')) {
+    return dispatchStatusDisplay(recipient);
+  }
+  if (hydrating && status === 'not_sent') {
+    return {
+      mainText: '확인중',
+      detailParts: [],
+      text: '확인중',
+      className: 'text-amber-300',
+    };
+  }
+  return dispatchStatusDisplay(recipient);
 }
 
 function canSendReminder(r: DispatchRecipient): boolean {
@@ -399,10 +431,13 @@ export default function AssessmentDispatchPanel({
 }: AssessmentDispatchPanelProps) {
   const { user, authPending, isAuthenticated } = useAuthResolved();
   const adminUser = isAdmin(user?.role ?? getAppRoleSync());
-  const [data, setData] = useState<AssessmentDispatchStatus | null>(
-    () => readCachedDispatchStatus(assessmentId),
+  const [data, setData] = useState<AssessmentDispatchStatus | null>(() =>
+    resolveInitialDispatchStatus(assessmentId, user?.uid),
   );
-  const [loading, setLoading] = useState(() => !readCachedDispatchStatus(assessmentId));
+  const [loading, setLoading] = useState(
+    () => !resolveInitialDispatchStatus(assessmentId, user?.uid),
+  );
+  const [hydrating, setHydrating] = useState(() => hasPendingDispatchIssueSeed(assessmentId));
   const [error, setError] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -438,23 +473,36 @@ export default function AssessmentDispatchPanel({
   useRedirectOnLoginRequiredError(error);
   useRedirectOnLoginRequiredError(detailError);
 
+  useEffect(() => {
+    const initial = resolveInitialDispatchStatus(assessmentId, user?.uid);
+    setData(initial);
+    setLoading(!initial);
+    setHydrating(hasPendingDispatchIssueSeed(assessmentId));
+    setError('');
+  }, [assessmentId, user?.uid]);
+
   const load = useCallback(async (opts?: { silent?: boolean }) => {
     if (!assessmentId) return;
-    const cached = readCachedDispatchStatus(assessmentId);
+    const cached = readCachedDispatchStatus(assessmentId, user?.uid);
     if (!opts?.silent && !cached) setLoading(true);
+    else if (!opts?.silent && cached) setHydrating(true);
     setError('');
     try {
       const result = await fetchAssessmentDispatchStatus(assessmentId);
-      writeCachedDispatchStatus(assessmentId, result);
+      writeCachedDispatchStatus(assessmentId, result, user?.uid);
       setData(result);
       setSelected(new Set());
+      clearDispatchIssueSeed(assessmentId);
     } catch (err) {
       if (!opts?.silent && !cached) setData(null);
       setError(err instanceof Error ? err.message : '불러오기 실패');
     } finally {
-      if (!opts?.silent) setLoading(false);
+      if (!opts?.silent) {
+        setLoading(false);
+        setHydrating(false);
+      }
     }
-  }, [assessmentId]);
+  }, [assessmentId, user?.uid]);
 
   useEffect(() => {
     if (authPending || !isAuthenticated) return;
@@ -822,15 +870,15 @@ export default function AssessmentDispatchPanel({
 
   const progressPageTitle = entryFrom === 'clients' ? '검사발송 현황' : '상담진행 현황';
 
-  if (loading) {
+  if (!displayData && loading) {
     return (
       <CounselorPageSection title={progressPageTitle} titleAccent="progress" dense className="flex min-h-0 flex-1">
-        <LoadingMessage className="py-4" textClassName="text-sm text-slate-400" />
+        <LoadingMessage className="py-2" textClassName="text-sm text-slate-400" message="불러오는 중…" />
       </CounselorPageSection>
     );
   }
 
-  if (error) {
+  if (error && !displayData) {
     return (
       <CounselorPageSection title={progressPageTitle} titleAccent="progress" dense className="flex min-h-0 flex-1">
         <p className="text-red-400 text-sm py-4">{error}</p>
@@ -1049,8 +1097,8 @@ export default function AssessmentDispatchPanel({
             </thead>
             <tbody>
               {sortedRecipients.map((r, rowIndex) => {
-                const notify = dispatchStatusDisplay(r);
-                const summary = testSummary(r);
+                const notify = dispatchStatusForRow(r, hydrating);
+                const summary = progressStatusForRow(r, hydrating);
                 const isOpen = expandedId === r.portalId;
                 const contactRevealed = isOpen;
                 const tests = r.tests ?? [];

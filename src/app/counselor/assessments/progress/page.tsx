@@ -12,8 +12,10 @@ function ProgressPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { authPending, showLoginRequired } = useAuthResolved();
-  const [assessmentId, setAssessmentId] = useState('');
-  const [portalId, setPortalId] = useState('');
+  const [assessmentId, setAssessmentId] = useState(
+    () => (searchParams.get('assessmentId') || '').trim(),
+  );
+  const [portalId, setPortalId] = useState(() => (searchParams.get('portalId') || '').trim());
 
   useEffect(() => {
     const id = (searchParams.get('assessmentId') || '').trim();
@@ -37,7 +39,7 @@ function ProgressPageContent() {
   }
 
   if (!assessmentId) {
-    return <AuthLoadingState className="py-8" message="이동 중…" />;
+    return null;
   }
 
   const entryFrom = resolveCounselorProgressFrom(
