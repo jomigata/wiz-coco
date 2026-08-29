@@ -29,6 +29,9 @@ import {
   writeCachedPortalChatMessages,
 } from '@/lib/portalChatMessageUi';
 import PortalChatMessageComposer, {
+  PORTAL_CHAT_COMPOSER_RESERVE_CLASS,
+  PORTAL_CHAT_INNER_SHELL_CLASS,
+  PORTAL_CHAT_LIST_BOTTOM_GAP_CLASS,
   PortalChatFixedComposerShell,
 } from '@/components/portal/PortalChatMessageComposer';
 import PortalChatMessageList from '@/components/portal/PortalChatMessageList';
@@ -419,8 +422,8 @@ export default function CounselorPortalChatPanel() {
 
   return (
     <>
-      <div className={`flex flex-col gap-3 ${selectedThread ? 'pb-52' : ''}`}>
-        <div>
+      <div className={`flex min-h-0 flex-1 flex-col ${selectedThread ? PORTAL_CHAT_COMPOSER_RESERVE_CLASS : ''}`}>
+        <div className="mb-3 shrink-0">
           <input
             type="search"
             value={searchQuery}
@@ -431,14 +434,20 @@ export default function CounselorPortalChatPanel() {
         </div>
 
         {error && !selectedThread ? (
-          <p className="rounded-md border border-red-500/30 bg-red-950/40 px-3 py-2 text-sm text-red-300">
+          <p className="mb-3 shrink-0 rounded-md border border-red-500/30 bg-red-950/40 px-3 py-2 text-sm text-red-300">
             {error}
           </p>
         ) : null}
 
-        <div className="grid gap-4 lg:grid-cols-[minmax(260px,340px)_1fr]">
-          <aside className="rounded-xl border border-slate-700/80 bg-slate-900/40">
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800/80 px-3 py-2">
+        <div
+          className={`grid min-h-0 flex-1 gap-4 lg:grid-cols-[minmax(260px,340px)_1fr] ${
+            selectedThread ? PORTAL_CHAT_LIST_BOTTOM_GAP_CLASS : ''
+          }`}
+        >
+          <aside
+            className={`flex min-h-0 flex-col overflow-hidden ${PORTAL_CHAT_INNER_SHELL_CLASS}`}
+          >
+            <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-slate-800/80 px-3 py-2">
               <span className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
                 내담자
               </span>
@@ -457,7 +466,7 @@ export default function CounselorPortalChatPanel() {
                 />
               </div>
             </div>
-            <ul className="divide-y divide-slate-800/80">
+            <ul className="min-h-0 flex-1 divide-y divide-slate-800/80 overflow-y-auto overscroll-contain">
               {sortedThreads.length === 0 ? (
                 <li className="px-4 py-6 text-sm text-slate-500">
                   {searchQuery.trim() ? '검색 결과가 없습니다.' : '등록된 내담자가 없습니다.'}
@@ -497,10 +506,10 @@ export default function CounselorPortalChatPanel() {
             </ul>
           </aside>
 
-          <section className="rounded-xl border border-slate-700/80 bg-slate-900/40">
+          <section className={`flex min-h-0 flex-col overflow-hidden ${PORTAL_CHAT_INNER_SHELL_CLASS}`}>
             {selectedThread ? (
               <>
-                <div className="flex flex-wrap items-start justify-between gap-2 border-b border-slate-700/70 px-4 py-3">
+                <div className="flex shrink-0 flex-wrap items-start justify-between gap-2 border-b border-slate-700/70 px-4 py-3">
                   <div className="min-w-0">
                     <h3 className="text-sm font-semibold text-white">{threadTitle(selectedThread)}</h3>
                     <p className="text-xs text-slate-500">
@@ -518,14 +527,14 @@ export default function CounselorPortalChatPanel() {
                 </div>
 
                 {error ? (
-                  <p className="mx-4 mt-3 rounded-md border border-red-500/30 bg-red-950/40 px-3 py-2 text-sm text-red-300">
+                  <p className="mx-4 mt-3 shrink-0 rounded-md border border-red-500/30 bg-red-950/40 px-3 py-2 text-sm text-red-300">
                     {error}
                   </p>
                 ) : null}
 
                 <div
                   data-chat-scroll
-                  className="max-h-[min(52vh,520px)] space-y-3 overflow-y-auto overscroll-contain p-4"
+                  className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain p-4 pb-5"
                   onClick={handleMessageAreaReadAck}
                   onTouchStart={handleMessageAreaReadAck}
                   role="presentation"
@@ -544,11 +553,11 @@ export default function CounselorPortalChatPanel() {
                     onDeleteMessage={(id) => void handleDeleteMessage(id)}
                     theme="counselor"
                   />
-                  <div ref={latestAnchorRef} aria-hidden className="h-px w-full" />
+                  <div ref={latestAnchorRef} aria-hidden className="h-3 w-full shrink-0" />
                 </div>
               </>
             ) : (
-              <div className="flex items-center justify-center p-8 text-sm text-slate-500">
+              <div className="flex min-h-[12rem] flex-1 items-center justify-center p-8 text-sm text-slate-500">
                 왼쪽에서 내담자를 선택하세요.
               </div>
             )}

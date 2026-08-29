@@ -718,6 +718,7 @@ export default function CounselorQuickSendForm({
         open={loading}
         title="보내는 중…"
         message={`${Math.max(recipients.length, 1)}명의 내담자에게 검사진행 링크를 보내고 있습니다.`}
+        notice="발송량에 따라 발송에 시간이 다소 소요될 수 있습니다."
       />
       <CounselorQuickSendTestPickerModal
         open={testPickerOpen}

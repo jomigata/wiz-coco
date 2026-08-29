@@ -52,6 +52,7 @@ export default function CounselorManageShell({ children }: Props) {
   };
 
   const sidebarCategories = useMemo(() => counselorMenuCategories, []);
+  const isChatPage = pathname.startsWith('/counselor/chat');
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-2 lg:flex-row lg:items-stretch lg:gap-3 lg:overflow-hidden">
@@ -288,7 +289,15 @@ export default function CounselorManageShell({ children }: Props) {
         </nav>
       </aside>
 
-      <div className="min-w-0 flex-1 overflow-y-auto lg:max-h-[calc(100dvh-4.5rem)]">{children}</div>
+      <div
+        className={`min-w-0 flex-1 lg:max-h-[calc(100dvh-4.5rem)] ${
+          isChatPage
+            ? 'flex min-h-0 flex-col overflow-hidden'
+            : 'overflow-y-auto overscroll-contain'
+        }`}
+      >
+        {children}
+      </div>
     </div>
   );
 }

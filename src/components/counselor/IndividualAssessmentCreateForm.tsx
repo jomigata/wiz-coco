@@ -1082,7 +1082,7 @@ export default function IndividualAssessmentCreateForm({
         }
         notice={
           loadingIntent === 'send_all'
-            ? '코드 발송량에 따라 발송에 1~2분 이상 걸릴 수 있습니다.'
+            ? '발송량에 따라 발송에 시간이 다소 소요될 수 있습니다.'
             : undefined
         }
       />

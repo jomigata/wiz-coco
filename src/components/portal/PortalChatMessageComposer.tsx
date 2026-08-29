@@ -141,7 +141,7 @@ export function PortalChatFixedComposerShell({
 }) {
   if (alignWithCounselorChatGrid) {
     return (
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-700/80 bg-gray-900/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 shadow-[0_-12px_40px_rgba(0,0,0,0.45)] backdrop-blur-md">
+      <div className={`fixed inset-x-0 bottom-0 z-40 border-t border-slate-700/80 bg-gray-900/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] ${PORTAL_CHAT_COMPOSER_TOP_GAP_CLASS} shadow-[0_-12px_40px_rgba(0,0,0,0.45)] backdrop-blur-md`}>
         <div className={`mx-auto w-full min-w-0 ${maxWidthClass}`}>
           <div className="grid gap-4 lg:grid-cols-[minmax(260px,340px)_1fr]">
             <div className="hidden lg:block" aria-hidden />
