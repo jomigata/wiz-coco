@@ -18,6 +18,7 @@ export default function AssessmentCreateForm() {
   const [usageEndDate, setUsageEndDate] = useState('');
   const [selectedTestIds, setSelectedTestIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
+  const [createSuccess, setCreateSuccess] = useState<{ assessmentId: string } | null>(null);
   const [error, setError] = useState('');
 
   const canSubmit = Boolean(user) && !authPending && !loading;
@@ -64,7 +65,7 @@ export default function AssessmentCreateForm() {
       } catch {
         // ignore
       }
-      pushWithAuthSession(router, `/counselor/assessments?created=${result.assessmentId}`);
+      setCreateSuccess({ assessmentId: result.assessmentId });
     } catch (err) {
       setError(err instanceof Error ? err.message : '상담코드생성에 실패했습니다.');
     } finally {
@@ -177,9 +178,26 @@ export default function AssessmentCreateForm() {
         </button>
       </div>
       <CounselorActionProgressOverlay
-        open={loading}
-        title="상담코드 생성 중…"
-        message="새 상담코드를 발급하고 있습니다."
+        open={loading || Boolean(createSuccess)}
+        phase={createSuccess ? 'success' : 'loading'}
+        title={createSuccess ? '생성 완료' : '상담코드 생성 중…'}
+        message={
+          createSuccess
+            ? '상담코드 생성이 완료되었습니다. 확인을 누르면 상담진행 현황으로 이동합니다.'
+            : '새 상담코드를 발급하고 있습니다.'
+        }
+        onConfirm={
+          createSuccess
+            ? () => {
+                const aid = createSuccess.assessmentId;
+                setCreateSuccess(null);
+                const href = aid
+                  ? `/counselor/assessments/progress?assessmentId=${encodeURIComponent(aid)}`
+                  : '/counselor/assessments';
+                pushWithAuthSession(router, href);
+              }
+            : undefined
+        }
       />
     </form>
   );

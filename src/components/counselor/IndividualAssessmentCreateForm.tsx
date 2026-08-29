@@ -133,6 +133,7 @@ export default function IndividualAssessmentCreateForm({
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
   const [jobProgress, setJobProgress] = useState<BulkPortalJobStatus | null>(null);
   const [lastCreatedAssessmentId, setLastCreatedAssessmentId] = useState('');
+  const [issueSuccess, setIssueSuccess] = useState<{ assessmentId: string } | null>(null);
   const [testSortKey, setTestSortKey] = useState<TestSortKey>('no');
   const [testSortDir, setTestSortDir] = useState<SortDirection>('asc');
   const [testSearchQuery, setTestSearchQuery] = useState('');
@@ -271,28 +272,31 @@ export default function IndividualAssessmentCreateForm({
         }
       }
 
-      const href = aid
-        ? `/counselor/assessments?created=${encodeURIComponent(aid)}`
-        : '/counselor/assessments';
-      if (variant === 'modal') {
-        onIssued?.();
-        return;
-      }
-      pushWithAuthSession(router, href);
+      setIssueSuccess({ assessmentId: aid });
     },
     [
       cohortName,
       codeCategory,
-      onIssued,
-      router,
       selectedTestIds,
       title,
       usageEndDate,
       user?.uid,
-      variant,
       welcomeMessage,
     ],
   );
+
+  const handleIssueConfirm = useCallback(() => {
+    const aid = issueSuccess?.assessmentId?.trim() || '';
+    setIssueSuccess(null);
+    const href = aid
+      ? `/counselor/assessments/progress?assessmentId=${encodeURIComponent(aid)}`
+      : '/counselor/assessments';
+    if (variant === 'modal') {
+      onClose?.();
+      onIssued?.();
+    }
+    pushWithAuthSession(router, href);
+  }, [issueSuccess, onClose, onIssued, router, variant]);
 
   useEffect(() => {
     if (!activeJobId) return undefined;
@@ -1072,19 +1076,23 @@ export default function IndividualAssessmentCreateForm({
       </div>
 
       <CounselorActionProgressOverlay
-        open={Boolean(loadingIntent && !activeJobId)}
+        open={Boolean((loadingIntent && !activeJobId) || issueSuccess)}
+        phase={issueSuccess ? 'success' : 'loading'}
         zIndexClass="z-[120]"
-        title="발급 진행 중…"
+        title={issueSuccess ? '발급 완료' : '발급 진행 중…'}
         message={
-          loadingIntent === 'excel'
-            ? '엑셀 저장을 위해 상담코드를 발급하고 있습니다.'
-            : '내담자에게 발급·발송을 처리하고 있습니다.'
+          issueSuccess
+            ? '상담코드 발급이 완료되었습니다. 확인을 누르면 상담진행 현황으로 이동합니다.'
+            : loadingIntent === 'excel'
+              ? '엑셀 저장을 위해 상담코드를 발급하고 있습니다.'
+              : '내담자에게 발급·발송을 처리하고 있습니다.'
         }
         notice={
-          loadingIntent === 'send_all'
+          !issueSuccess && loadingIntent === 'send_all'
             ? '발송량에 따라 발송에 시간이 다소 소요될 수 있습니다.'
             : undefined
         }
+        onConfirm={issueSuccess ? handleIssueConfirm : undefined}
       />
     </form>
   );

@@ -55,6 +55,7 @@ type Props = {
 
 export default function CounselorQuickSendForm({
   variant = 'page',
+  onClose,
   onIssued,
   fullFormHref = '/counselor/assessments/new?full=1',
   onShowFullForm,
@@ -74,6 +75,7 @@ export default function CounselorQuickSendForm({
   const [samplePreviewKind, setSamplePreviewKind] = useState<'txt' | 'csv' | null>(null);
   const [showFilePreview, setShowFilePreview] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [sendSuccess, setSendSuccess] = useState<{ assessmentId: string } | null>(null);
   const [error, setError] = useState('');
   const [firstSendTrialEligible, setFirstSendTrialEligible] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -137,14 +139,20 @@ export default function CounselorQuickSendForm({
   }, [samplePreviewText]);
 
   const finish = (assessmentId: string) => {
-    if (variant === 'modal') {
-      onIssued?.();
-      return;
-    }
     const href = assessmentId
       ? `/counselor/assessments/progress?assessmentId=${encodeURIComponent(assessmentId)}`
       : '/counselor/assessments';
+    if (variant === 'modal') {
+      onClose?.();
+      onIssued?.();
+    }
     pushWithAuthSession(router, href);
+  };
+
+  const handleSendConfirm = () => {
+    const assessmentId = sendSuccess?.assessmentId || '';
+    setSendSuccess(null);
+    finish(assessmentId);
   };
 
   const updateRow = (index: number, field: keyof RecipientRow, value: string) => {
@@ -303,7 +311,7 @@ export default function CounselorQuickSendForm({
       if (result.credits?.trial) {
         setFirstSendTrialEligible(false);
       }
-      finish(assessmentId);
+      setSendSuccess({ assessmentId });
     } catch (err) {
       setError(err instanceof Error ? err.message : '보내기에 실패했습니다.');
     } finally {
@@ -715,10 +723,18 @@ export default function CounselorQuickSendForm({
         </button>
       </form>
       <CounselorActionProgressOverlay
-        open={loading}
-        title="보내는 중…"
-        message={`${Math.max(recipients.length, 1)}명의 내담자에게 검사진행 링크를 보내고 있습니다.`}
-        notice="발송량에 따라 발송에 시간이 다소 소요될 수 있습니다."
+        open={loading || Boolean(sendSuccess)}
+        phase={sendSuccess ? 'success' : 'loading'}
+        title={sendSuccess ? '발송 완료' : '보내는 중…'}
+        message={
+          sendSuccess
+            ? '검사 링크 발송이 완료되었습니다. 확인을 누르면 상담진행 현황으로 이동합니다.'
+            : `${Math.max(recipients.length, 1)}명의 내담자에게 검사진행 링크를 보내고 있습니다.`
+        }
+        notice={
+          !sendSuccess ? '발송량에 따라 발송에 시간이 다소 소요될 수 있습니다.' : undefined
+        }
+        onConfirm={sendSuccess ? handleSendConfirm : undefined}
       />
       <CounselorQuickSendTestPickerModal
         open={testPickerOpen}
