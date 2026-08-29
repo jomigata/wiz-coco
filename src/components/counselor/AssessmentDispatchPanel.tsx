@@ -40,17 +40,20 @@ import {
 } from '@/lib/clientPortalApi';
 import { useAssessmentDispatchRealtime } from '@/hooks/useAssessmentDispatchRealtime';
 import {
-  readCachedDispatchStatus,
+  readAnyCachedDispatchStatus,
   writeCachedDispatchStatus,
 } from '@/lib/counselorSessionCache';
 import {
   clearDispatchIssueSeed,
+  DISPATCH_ISSUING_NOTICE,
   hasPendingDispatchIssueSeed,
+  isDispatchIssuingPhase,
   isPendingDispatchAssessmentId,
+  mergeDispatchStatusWithCache,
   pendingDispatchPlaceholder,
-  readPendingDispatchError,
   readPendingDispatchResolution,
   resolveInitialDispatchStatus,
+  shouldClearDispatchIssueSeed,
 } from '@/lib/counselorDispatchSeed';
 import CounselorListBackLink from '@/components/counselor/CounselorListBackLink';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
@@ -424,9 +427,10 @@ export default function AssessmentDispatchPanel({
   const [data, setData] = useState<AssessmentDispatchStatus | null>(() =>
     resolveInitialDispatchStatus(assessmentId, user?.uid),
   );
-  const [loading, setLoading] = useState(
-    () => !resolveInitialDispatchStatus(assessmentId, user?.uid),
-  );
+  const [loading, setLoading] = useState(() => {
+    const initial = resolveInitialDispatchStatus(assessmentId, user?.uid);
+    return !initial?.recipients?.length && !initial;
+  });
   const [error, setError] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -458,23 +462,13 @@ export default function AssessmentDispatchPanel({
   const [detail, setDetail] = useState<CounselorResultDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState('');
-  const [pendingError, setPendingError] = useState('');
 
   useRedirectOnLoginRequiredError(error);
   useRedirectOnLoginRequiredError(detailError);
 
   useEffect(() => {
-    if (!pendingIssue) {
-      setPendingError('');
-      return undefined;
-    }
-    const syncPendingState = () => {
-      const error = readPendingDispatchError(assessmentId);
-      if (error) {
-        setPendingError(error);
-        return;
-      }
-      setPendingError('');
+    if (!pendingIssue) return undefined;
+    const syncPendingResolution = () => {
       const resolved = readPendingDispatchResolution(assessmentId);
       if (resolved) {
         replaceWithAuthSession(
@@ -483,32 +477,40 @@ export default function AssessmentDispatchPanel({
         );
       }
     };
-    syncPendingState();
-    const timer = window.setInterval(syncPendingState, 400);
+    syncPendingResolution();
+    const timer = window.setInterval(syncPendingResolution, 400);
     return () => window.clearInterval(timer);
   }, [assessmentId, pendingIssue, router]);
 
   useEffect(() => {
     const initial = resolveInitialDispatchStatus(assessmentId, user?.uid);
     setData(initial);
-    setLoading(!initial);
+    setLoading(!initial?.recipients?.length && !initial);
     setError('');
   }, [assessmentId, user?.uid]);
 
   const load = useCallback(async (opts?: { silent?: boolean }) => {
     if (!assessmentId || isPendingDispatchAssessmentId(assessmentId)) return;
-    const cached = readCachedDispatchStatus(assessmentId, user?.uid);
-    if (!opts?.silent && !cached) setLoading(true);
+    const cached = readAnyCachedDispatchStatus(assessmentId, user?.uid);
+    if (!opts?.silent && !cached?.recipients?.length) setLoading(true);
     setError('');
     try {
       const result = await fetchAssessmentDispatchStatus(assessmentId);
-      writeCachedDispatchStatus(assessmentId, result, user?.uid);
-      setData(result);
+      const merged = mergeDispatchStatusWithCache(cached, result);
+      writeCachedDispatchStatus(assessmentId, merged, user?.uid);
+      setData(merged);
       setSelected(new Set());
-      clearDispatchIssueSeed(assessmentId);
+      if (shouldClearDispatchIssueSeed(merged)) {
+        clearDispatchIssueSeed(assessmentId);
+      }
     } catch (err) {
-      if (!opts?.silent && !cached) setData(null);
-      setError(err instanceof Error ? err.message : '불러오기 실패');
+      if (cached?.recipients?.length) {
+        setData(cached);
+        setError('');
+      } else if (!opts?.silent) {
+        setData(null);
+        setError(err instanceof Error ? err.message : '불러오기 실패');
+      }
     } finally {
       if (!opts?.silent) {
         setLoading(false);
@@ -519,17 +521,18 @@ export default function AssessmentDispatchPanel({
   useEffect(() => {
     if (authPending || !isAuthenticated) return;
     if (isPendingDispatchAssessmentId(assessmentId)) return;
-    const cached = readCachedDispatchStatus(assessmentId, user?.uid);
-    void load({ silent: Boolean(cached) });
+    const cached = readAnyCachedDispatchStatus(assessmentId, user?.uid);
+    void load({ silent: Boolean(cached?.recipients?.length) });
   }, [load, authPending, isAuthenticated, assessmentId, user?.uid]);
 
   const { data: liveData } = useAssessmentDispatchRealtime(
     assessmentId,
     data,
-    isAuthenticated && !authPending,
+    isAuthenticated && !authPending && !isPendingDispatchAssessmentId(assessmentId),
   );
 
   const displayData = liveData ?? data;
+  const issuingPhase = isDispatchIssuingPhase(assessmentId, displayData);
 
   const visibleData = useMemo(() => {
     if (!displayData) return null;
@@ -550,13 +553,14 @@ export default function AssessmentDispatchPanel({
 
   const hasSendingNotify = useMemo(
     () =>
+      issuingPhase ||
       hasPendingDispatchIssueSeed(assessmentId) ||
       (visibleData?.recipients || []).some((r) => {
         const status = (r.notifyStatus || 'not_sent').trim();
         return status === 'sending' || status === 'pending';
       }) ||
       Object.keys(dispatchOverrides).length > 0,
-    [assessmentId, visibleData?.recipients, dispatchOverrides],
+    [issuingPhase, assessmentId, visibleData?.recipients, dispatchOverrides],
   );
 
   useEffect(() => {
@@ -939,12 +943,17 @@ export default function AssessmentDispatchPanel({
               {stripAssessmentTitleDispatchCountSuffix(displayData.title || '') || '—'}
             </span>
           </span>
+          {issuingPhase ? (
+            <span className="inline-flex items-center rounded-md border border-sky-500/30 bg-sky-950/40 px-2 py-1 text-xs font-medium text-sky-200">
+              상담코드 발급 중…
+            </span>
+          ) : null}
           <span className="inline-flex items-center gap-1.5 rounded-md border border-cyan-500/25 bg-cyan-950/30 px-2 py-1">
             <span className="text-[10px] font-semibold uppercase tracking-wide text-cyan-500/80">상담코드</span>
             <span className="font-mono text-sm font-semibold tracking-wide text-cyan-300">
               {pendingDispatchPlaceholder(
                 formatAccessCodeDisplay(displayData.joinAccessCode),
-                pendingIssue,
+                issuingPhase,
               )}
             </span>
           </span>
@@ -957,9 +966,9 @@ export default function AssessmentDispatchPanel({
       dense
       description={
         <span className="inline-flex w-full flex-wrap items-center gap-2">
-          {pendingError ? (
-            <span className="rounded-md border border-red-500/30 bg-red-950/40 px-2 py-1 text-sm text-red-300">
-              {pendingError}
+          {issuingPhase ? (
+            <span className="rounded-md border border-amber-500/30 bg-amber-950/40 px-2 py-1 text-sm text-amber-200">
+              {DISPATCH_ISSUING_NOTICE}
             </span>
           ) : null}
           <CounselorListBackLink href={backHref} label={backButtonLabel} />
@@ -1128,7 +1137,7 @@ export default function AssessmentDispatchPanel({
                 const isOpen = expandedId === r.portalId;
                 const contactRevealed = isOpen;
                 const tests = r.tests ?? [];
-                const myCodeLabel = pendingDispatchPlaceholder(formatAccessCodeDisplay(r.myCode), pendingIssue);
+                const myCodeLabel = pendingDispatchPlaceholder(formatAccessCodeDisplay(r.myCode), issuingPhase);
 
                 return (
                   <React.Fragment key={r.portalId}>

@@ -1,12 +1,18 @@
 import type { AssessmentDispatchStatus, DispatchRecipient } from '@/lib/clientPortalApi';
 import { readCachedAssessmentsList, type CounselorAssessment } from '@/lib/assessmentApi';
 import { getCounselorUidSync } from '@/lib/counselorAuth';
-import { readCachedDispatchStatus, writeCachedDispatchStatus } from '@/lib/counselorSessionCache';
+import {
+  readAnyCachedDispatchStatus,
+  writeCachedDispatchStatus,
+} from '@/lib/counselorSessionCache';
 
 const DISPATCH_SEED_PREFIX = 'wizcoco:dispatch-seed:';
 const PENDING_RESOLVE_PREFIX = 'wizcoco:dispatch-pending-resolve:';
 const PENDING_ERROR_PREFIX = 'wizcoco:dispatch-pending-error:';
 export const PENDING_DISPATCH_ID_PREFIX = 'pending:';
+
+export const DISPATCH_ISSUING_NOTICE =
+  '개인코드 (나의코드)의 발송량에 따라 시간이 길어질 수 있습니다.';
 
 export type DispatchIssueSeedInput = {
   assessmentId: string;
@@ -143,7 +149,6 @@ export function finalizePendingDispatchIssue(
   } catch {
     // ignore
   }
-  clearDispatchIssueSeed(pendingId);
   return realId;
 }
 
@@ -183,6 +188,91 @@ export function clearDispatchIssueSeed(assessmentId: string): void {
   }
 }
 
+function recipientIdentityKey(recipient: DispatchRecipient, index: number): string {
+  const portalId = recipient.portalId?.trim() || '';
+  if (portalId && !portalId.startsWith('optimistic-')) return portalId;
+  return [
+    recipient.displayName?.trim() || '',
+    recipient.email?.trim() || '',
+    recipient.phone?.trim() || '',
+    String(index),
+  ].join('|');
+}
+
+function hasOptimisticPortalIds(recipients: DispatchRecipient[] | undefined): boolean {
+  return (recipients || []).some((row) => (row.portalId || '').startsWith('optimistic-'));
+}
+
+export function isOptimisticDispatchStatus(status: AssessmentDispatchStatus | null | undefined): boolean {
+  if (!status) return false;
+  if (isPendingDispatchAssessmentId(status.assessmentId)) return true;
+  if (!status.joinAccessCode?.trim() && (status.recipients?.length ?? 0) > 0) return true;
+  return hasOptimisticPortalIds(status.recipients);
+}
+
+export function mergeDispatchStatusWithCache(
+  cached: AssessmentDispatchStatus | null,
+  fetched: AssessmentDispatchStatus,
+): AssessmentDispatchStatus {
+  if (!cached?.recipients?.length) return fetched;
+  if (!fetched.recipients?.length) return cached;
+
+  const cachedByKey = new Map(
+    cached.recipients.map((row, index) => [recipientIdentityKey(row, index), row]),
+  );
+
+  const recipients = fetched.recipients.map((row, index) => {
+    const key = recipientIdentityKey(row, index);
+    const prior =
+      cachedByKey.get(key) ||
+      cached.recipients.find(
+        (candidate) =>
+          candidate.displayName?.trim() === row.displayName?.trim() &&
+          (candidate.email?.trim() || '') === (row.email?.trim() || '') &&
+          (candidate.phone?.trim() || '') === (row.phone?.trim() || ''),
+      );
+
+    if (!prior) return row;
+
+    return {
+      ...row,
+      displayName: row.displayName?.trim() || prior.displayName,
+      email: row.email?.trim() || prior.email,
+      phone: row.phone?.trim() || prior.phone,
+      myCode: row.myCode?.trim() || prior.myCode,
+      joinAccessCode: row.joinAccessCode?.trim() || prior.joinAccessCode,
+      notifyStatus: row.notifyStatus || prior.notifyStatus,
+      notifyEmailChannel: row.notifyEmailChannel ?? prior.notifyEmailChannel,
+      notifyPhoneChannel: row.notifyPhoneChannel ?? prior.notifyPhoneChannel,
+      testStatus: row.testStatus || prior.testStatus,
+      tests: row.tests?.length ? row.tests : prior.tests,
+    };
+  });
+
+  return {
+    ...fetched,
+    title: fetched.title?.trim() || cached.title,
+    cohortName: fetched.cohortName?.trim() || cached.cohortName,
+    joinAccessCode: fetched.joinAccessCode?.trim() || cached.joinAccessCode,
+    recipients,
+  };
+}
+
+export function isDispatchIssuingPhase(
+  assessmentId: string,
+  status: AssessmentDispatchStatus | null | undefined,
+): boolean {
+  if (isPendingDispatchAssessmentId(assessmentId)) return true;
+  if (hasPendingDispatchIssueSeed(assessmentId)) return true;
+  return isOptimisticDispatchStatus(status);
+}
+
+export function shouldClearDispatchIssueSeed(status: AssessmentDispatchStatus | null | undefined): boolean {
+  if (!status?.recipients?.length) return false;
+  if (isOptimisticDispatchStatus(status)) return false;
+  return true;
+}
+
 function buildShellFromAssessment(assessment: CounselorAssessment): AssessmentDispatchStatus {
   return {
     assessmentId: assessment.id,
@@ -203,7 +293,7 @@ export function resolveInitialDispatchStatus(
   if (!id) return null;
 
   const uid = (counselorUid ?? getCounselorUidSync())?.trim() || undefined;
-  const cached = readCachedDispatchStatus(id, uid);
+  const cached = readAnyCachedDispatchStatus(id, uid);
   if (cached?.recipients?.length) return cached;
   if (cached) return cached;
 

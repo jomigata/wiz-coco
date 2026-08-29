@@ -10,7 +10,6 @@ import { prependCounselorAssessmentToListCache, type CounselorAssessment } from 
 import {
   createPendingDispatchAssessmentId,
   finalizePendingDispatchIssue,
-  registerPendingDispatchError,
   seedDispatchStatusBeforeIssue,
 } from '@/lib/counselorDispatchSeed';
 import { formatPhoneDisplay, normalizeRecipientPhone } from '@/lib/phoneFormat';
@@ -370,7 +369,6 @@ export default function CounselorQuickSendForm({
       return assessmentId;
     })().catch((err) => {
       const message = err instanceof Error ? err.message : '보내기에 실패했습니다.';
-      registerPendingDispatchError(pendingId, message);
       setSendOverlay(null);
       setError(message);
       throw err;

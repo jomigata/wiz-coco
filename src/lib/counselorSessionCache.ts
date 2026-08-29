@@ -117,6 +117,18 @@ export function readCachedDispatchStatus(
   return readFreshCounselorCache<AssessmentDispatchStatus>(`${key}:${assessmentId}`);
 }
 
+/** fresh 여부와 관계없이 마지막 캐시 반환 (발급 직후 재진입 시 즉시 표시) */
+export function readAnyCachedDispatchStatus(
+  assessmentId: string,
+  counselorUid?: string | null,
+): AssessmentDispatchStatus | null {
+  if (!assessmentId || typeof window === 'undefined') return null;
+  const key = scopedKey(DISPATCH_PREFIX, counselorUid);
+  if (!key) return null;
+  const cached = readSWRCache<AssessmentDispatchStatus>(`${key}:${assessmentId}`, cacheOpts());
+  return cached.data ?? null;
+}
+
 export function writeCachedDispatchStatus(
   assessmentId: string,
   data: AssessmentDispatchStatus,
