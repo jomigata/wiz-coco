@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { pushWithAuthSession } from '@/utils/authSessionLifecycle';
+import { pushWithAuthSession, replaceWithAuthSession } from '@/utils/authSessionLifecycle';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
 import { createAssessment } from '@/lib/assessmentApi';
@@ -190,11 +190,10 @@ export default function AssessmentCreateForm() {
           createSuccess
             ? () => {
                 const aid = createSuccess.assessmentId;
-                setCreateSuccess(null);
                 const href = aid
                   ? `/counselor/assessments/progress?assessmentId=${encodeURIComponent(aid)}`
                   : '/counselor/assessments';
-                pushWithAuthSession(router, href);
+                replaceWithAuthSession(router, href);
               }
             : undefined
         }

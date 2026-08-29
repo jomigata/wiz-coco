@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { pushWithAuthSession } from '@/utils/authSessionLifecycle';
+import { replaceWithAuthSession } from '@/utils/authSessionLifecycle';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
 import { bulkCreateClientPortals } from '@/lib/clientPortalApi';
@@ -147,11 +147,10 @@ export default function CounselorQuickSendForm({
     const href = assessmentId
       ? `/counselor/assessments/progress?assessmentId=${encodeURIComponent(assessmentId)}`
       : '/counselor/assessments';
+    replaceWithAuthSession(router, href);
     if (variant === 'modal') {
-      onClose?.();
       onIssued?.();
     }
-    pushWithAuthSession(router, href);
   };
 
   const handleSendConfirm = async () => {
@@ -159,9 +158,7 @@ export default function CounselorQuickSendForm({
       if (issuePromiseRef.current) {
         await issuePromiseRef.current;
       }
-      const assessmentId = resolvedAssessmentIdRef.current;
-      setSendOverlay(null);
-      finish(assessmentId);
+      finish(resolvedAssessmentIdRef.current);
     } catch {
       // 오류는 issuePromise에서 처리됨
     }

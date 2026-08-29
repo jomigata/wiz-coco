@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { pushWithAuthSession } from '@/utils/authSessionLifecycle';
+import { pushWithAuthSession, replaceWithAuthSession } from '@/utils/authSessionLifecycle';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
 import {
@@ -338,19 +338,17 @@ export default function IndividualAssessmentCreateForm({
         await issuePromiseRef.current;
       }
       const aid = resolvedAssessmentIdRef.current.trim();
-      setIssueSuccess(null);
       const href = aid
         ? `/counselor/assessments/progress?assessmentId=${encodeURIComponent(aid)}`
         : '/counselor/assessments';
+      replaceWithAuthSession(router, href);
       if (variant === 'modal') {
-        onClose?.();
         onIssued?.();
       }
-      pushWithAuthSession(router, href);
     } catch {
       // 오류는 issuePromise에서 처리됨
     }
-  }, [router, variant, onClose, onIssued]);
+  }, [router, variant, onIssued]);
 
   useEffect(() => {
     if (!activeJobId) return undefined;

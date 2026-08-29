@@ -58,7 +58,6 @@ export default function AssessmentCreateModal({ open, onClose, onCreated }: Prop
               onClose={onClose}
               onIssued={() => {
                 onCreated?.();
-                onClose();
               }}
             />
           ) : (
@@ -68,7 +67,6 @@ export default function AssessmentCreateModal({ open, onClose, onCreated }: Prop
               onShowFullForm={() => setFullForm(true)}
               onIssued={() => {
                 onCreated?.();
-                onClose();
               }}
             />
           )}
