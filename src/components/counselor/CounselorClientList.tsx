@@ -27,6 +27,7 @@ import {
   counselorListTableWrapperClass,
   counselorListTdClass,
   counselorListThClass,
+  counselorListTheadClass,
 } from '@/lib/counselorListTableStyles';
 import { matchesWildcardFields } from '@/lib/wildcardSearch';
 import { useListPagination } from '@/hooks/useListPagination';
@@ -1158,7 +1159,7 @@ export default function CounselorClientList({
           <>
             <div className={counselorListTableWrapperClass}>
               <table className="w-max min-w-full table-fixed text-sm">
-                <thead>
+                <thead className={counselorListTheadClass}>
                   <tr className={counselorListHeaderRowClass}>
                     <th className={`${counselorListNoThClass} w-12 tabular-nums`}>No.</th>
                     <th className={`${counselorListThClass} w-10 text-center`}>

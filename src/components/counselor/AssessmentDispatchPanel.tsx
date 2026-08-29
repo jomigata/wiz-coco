@@ -59,6 +59,7 @@ import {
   counselorListTableWrapperClass,
   counselorListTdClass,
   counselorListThGrayClass,
+  counselorListTheadClass,
 } from '@/lib/counselorListTableStyles';
 import CounselorNextTestRecommendCard from '@/components/counselor/CounselorNextTestRecommendCard';
 import CounselorQuickCareRecommendCard from '@/components/counselor/CounselorQuickCareRecommendCard';
@@ -978,7 +979,7 @@ export default function AssessmentDispatchPanel({
                   <col className="w-28" />
                   <col className="w-36" />
                 </colgroup>
-                <thead>
+                <thead className={counselorListTheadClass}>
               <tr className={counselorListHeaderRowGrayClass}>
                 <th className={counselorListNoThGrayClass}>No.</th>
                 {!adminClientProgressView ? (
@@ -1144,7 +1145,7 @@ export default function AssessmentDispatchPanel({
                                   <col className="w-[10.5rem]" />
                                   <col className="w-[5.5rem]" />
                                 </colgroup>
-                                <thead>
+                                <thead className={counselorListTheadClass}>
                                   <tr className="text-slate-400 text-xs border-b border-slate-700/70 bg-slate-900/40">
                                     <th className="px-3 py-2" aria-hidden="true" />
                                     <th className="px-3 py-2 text-left font-medium">검사명</th>

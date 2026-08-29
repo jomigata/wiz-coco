@@ -1,11 +1,14 @@
 /** 신입생 목록(test-management)과 통일된 테이블 스타일 */
 
-export const counselorListTableWrapperClass = 'overflow-x-auto';
+export const counselorListTableWrapperClass = 'min-h-0 overflow-x-auto';
 
-export const counselorListHeaderRowClass = 'border-b border-white/20';
+export const counselorListHeaderRowClass = 'border-b border-white/20 bg-[#121f38]';
 
 /** 상담진행 현황 — 컬럼 헤더만 회색 계통 */
 export const counselorListHeaderRowGrayClass = 'border-b border-gray-400/70 bg-gray-300';
+
+/** 목록 thead — 본문 스크롤 시 컬럼 헤더 상단 고정 */
+export const counselorListTheadClass = 'sticky top-0 z-10';
 
 export const counselorListThClass = 'text-left text-gray-300 py-3 px-4 text-sm font-medium';
 
@@ -25,9 +28,6 @@ export const counselorListSelectThGrayClass =
   'w-10 whitespace-nowrap text-center text-gray-700 py-3 px-2 text-sm font-medium';
 
 export const counselorListSelectTdClass = 'py-3 px-2 text-center align-top text-sm';
-
-/** thead 요소용 — tr에 counselorListHeaderRowClass 사용 */
-export const counselorListTheadClass = '';
 
 export const counselorListTdClass = 'py-3 px-4 text-left text-sm text-gray-300 align-top';
 

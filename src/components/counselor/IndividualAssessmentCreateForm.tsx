@@ -575,7 +575,7 @@ export default function IndividualAssessmentCreateForm({
 
   return (
     <form onSubmit={(e) => e.preventDefault()} className="flex min-h-0 flex-1 flex-col gap-4">
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)_minmax(18rem,22rem)] xl:items-stretch">
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)_minmax(18rem,22rem)] xl:items-stretch">
         <CounselorPageSection
           title="검사 정보"
           titleAccent="create"

@@ -59,46 +59,48 @@ export default function CounselorPageSection({
             : '';
 
   return (
-    <>
+    <div className={`flex min-h-0 flex-1 flex-col overflow-hidden ${className}`}>
       {showHierarchyBreadcrumb ? (
         <CounselorHierarchyBreadcrumb className="mb-2 shrink-0" />
       ) : null}
       <section
-      className={`flex min-h-0 flex-col overflow-hidden rounded-xl border border-sky-400/20 ${counselorHubClasses.subsection} !p-0 ${className}`}
-    >
-      {hasHeader ? (
-        <div
-          className={`flex w-full flex-col gap-2 border-b border-sky-400/25 bg-gradient-to-r from-sky-600/25 via-sky-500/15 to-transparent sm:flex-row sm:items-center sm:justify-between ${headerPad} ${titleAccentClass}`}
-        >
-          {title ? (
-            <h2 className={`min-w-0 flex-1 font-bold tracking-tight text-white ${relaxed ? 'text-base' : dense ? 'text-sm' : 'text-sm sm:text-base'}`}>
-              {title}
-            </h2>
-          ) : (
-            <span className="flex-1" />
-          )}
-          <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 sm:ml-auto">
-            {headerAction}
-            {toolbar ? (
-              <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
-                {toolbar}
-              </div>
-            ) : null}
-          </div>
-        </div>
-      ) : null}
-      {description ? (
-        <div className="shrink-0 border-b border-white/[0.06] bg-[#0f1d33]/40 px-4 py-2 text-xs leading-relaxed text-slate-400 sm:text-sm">
-          {description}
-        </div>
-      ) : null}
-      <div
-        className={`min-h-0 flex-1 bg-[#0f1d33]/60 ${bodyPad} ${bodyClassName}`}
+        className={`flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-sky-400/20 ${counselorHubClasses.subsection} !p-0`}
       >
-        {children}
-      </div>
-    </section>
-    </>
+        {hasHeader ? (
+          <div
+            className={`flex w-full shrink-0 flex-col gap-2 border-b border-sky-400/25 bg-gradient-to-r from-sky-600/25 via-sky-500/15 to-transparent sm:flex-row sm:items-center sm:justify-between ${headerPad} ${titleAccentClass}`}
+          >
+            {title ? (
+              <h2
+                className={`min-w-0 flex-1 font-bold tracking-tight text-white ${relaxed ? 'text-base' : dense ? 'text-sm' : 'text-sm sm:text-base'}`}
+              >
+                {title}
+              </h2>
+            ) : (
+              <span className="flex-1" />
+            )}
+            <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 sm:ml-auto">
+              {headerAction}
+              {toolbar ? (
+                <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
+                  {toolbar}
+                </div>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
+        {description ? (
+          <div className="shrink-0 border-b border-white/[0.06] bg-[#0f1d33]/40 px-4 py-2 text-xs leading-relaxed text-slate-400 sm:text-sm">
+            {description}
+          </div>
+        ) : null}
+        <div
+          className={`min-h-0 flex-1 overflow-y-auto overscroll-contain bg-[#0f1d33]/60 ${bodyPad} ${bodyClassName}`}
+        >
+          {children}
+        </div>
+      </section>
+    </div>
   );
 }
 
@@ -109,5 +111,9 @@ export function CounselorPageBody({
   children: React.ReactNode;
   className?: string;
 }) {
-  return <div className={`flex min-h-0 flex-1 flex-col gap-2 ${className}`}>{children}</div>;
+  return (
+    <div className={`flex min-h-0 flex-1 flex-col gap-2 overflow-hidden ${className}`}>
+      {children}
+    </div>
+  );
 }

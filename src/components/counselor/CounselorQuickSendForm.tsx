@@ -346,6 +346,7 @@ export default function CounselorQuickSendForm({
     <CounselorPageSection
       title="검사 보내기"
       dense
+      className="flex min-h-0 flex-1"
       description={
         firstSendTrialEligible
           ? '첫 1명 보내기는 검사 크레딧을 차감하지 않습니다. 1. 검사 선택 → 2. 이름·연락처 입력 → 3. 보내기'

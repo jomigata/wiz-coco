@@ -44,6 +44,7 @@ import {
   counselorListTableWrapperClass,
   counselorListTdCompactClass,
   counselorListThClass,
+  counselorListTheadClass,
   formatCounselorIssueDate,
 } from '@/lib/counselorListTableStyles';
 import { useListPagination } from '@/hooks/useListPagination';
@@ -726,7 +727,7 @@ export default function AssessmentList({
         <>
           <div className={`min-h-0 flex-1 ${counselorListTableWrapperClass}`}>
             <table className="w-max min-w-full table-fixed text-sm">
-              <thead>
+              <thead className={counselorListTheadClass}>
                 <tr className={counselorListHeaderRowClass}>
                   <th className={counselorListNoThClass}>No.</th>
                   <th className={counselorListSelectThClass}>
