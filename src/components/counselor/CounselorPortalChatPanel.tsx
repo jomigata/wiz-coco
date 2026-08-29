@@ -400,7 +400,12 @@ export default function CounselorPortalChatPanel() {
   };
 
   if (loadingThreads) {
-    return <LoadingMessage className="py-12" message="채팅 목록을 불러오는 중…" />;
+    return (
+      <div className="flex h-full min-h-0 flex-1 flex-col">
+        <h1 className="mb-3 shrink-0 text-lg font-semibold text-white">1:1 채팅</h1>
+        <LoadingMessage className="flex-1 py-12" message="채팅 목록을 불러오는 중…" />
+      </div>
+    );
   }
 
   const showInitialMessageLoading = loadingMessages && visibleMessages.length === 0;
@@ -422,8 +427,13 @@ export default function CounselorPortalChatPanel() {
 
   return (
     <>
-      <div className={`flex min-h-0 flex-1 flex-col ${selectedThread ? PORTAL_CHAT_COMPOSER_RESERVE_CLASS : ''}`}>
-        <div className="mb-3 shrink-0">
+      <div
+        className={`flex h-full min-h-0 flex-1 flex-col ${
+          selectedThread ? PORTAL_CHAT_COMPOSER_RESERVE_CLASS : ''
+        }`}
+      >
+        <div className="mb-3 shrink-0 space-y-3">
+          <h1 className="text-lg font-semibold text-white">1:1 채팅</h1>
           <input
             type="search"
             value={searchQuery}
@@ -431,21 +441,20 @@ export default function CounselorPortalChatPanel() {
             placeholder="내담자 이름·이메일·전화번호·그룹명·나의코드 검색"
             className="w-full rounded-lg border border-slate-600 bg-slate-950/70 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-indigo-500/50 focus:outline-none"
           />
+          {error && !selectedThread ? (
+            <p className="rounded-md border border-red-500/30 bg-red-950/40 px-3 py-2 text-sm text-red-300">
+              {error}
+            </p>
+          ) : null}
         </div>
 
-        {error && !selectedThread ? (
-          <p className="mb-3 shrink-0 rounded-md border border-red-500/30 bg-red-950/40 px-3 py-2 text-sm text-red-300">
-            {error}
-          </p>
-        ) : null}
-
         <div
-          className={`grid min-h-0 flex-1 gap-4 lg:grid-cols-[minmax(260px,340px)_1fr] ${
+          className={`grid h-full min-h-0 flex-1 gap-4 lg:grid-cols-[minmax(260px,340px)_1fr] ${
             selectedThread ? PORTAL_CHAT_LIST_BOTTOM_GAP_CLASS : ''
           }`}
         >
           <aside
-            className={`flex min-h-0 flex-col overflow-hidden ${PORTAL_CHAT_INNER_SHELL_CLASS}`}
+            className={`flex h-full min-h-0 flex-col overflow-hidden ${PORTAL_CHAT_INNER_SHELL_CLASS}`}
           >
             <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-slate-800/80 px-3 py-2">
               <span className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
@@ -506,7 +515,7 @@ export default function CounselorPortalChatPanel() {
             </ul>
           </aside>
 
-          <section className={`flex min-h-0 flex-col overflow-hidden ${PORTAL_CHAT_INNER_SHELL_CLASS}`}>
+          <section className={`flex h-full min-h-0 flex-col overflow-hidden ${PORTAL_CHAT_INNER_SHELL_CLASS}`}>
             {selectedThread ? (
               <>
                 <div className="flex shrink-0 flex-wrap items-start justify-between gap-2 border-b border-slate-700/70 px-4 py-3">
@@ -557,9 +566,14 @@ export default function CounselorPortalChatPanel() {
                 </div>
               </>
             ) : (
-              <div className="flex min-h-[12rem] flex-1 items-center justify-center p-8 text-sm text-slate-500">
-                왼쪽에서 내담자를 선택하세요.
-              </div>
+              <>
+                <div className="shrink-0 border-b border-slate-700/70 px-4 py-3">
+                  <p className="text-sm text-slate-500">대화 상대를 선택하세요</p>
+                </div>
+                <div className="flex min-h-0 flex-1 items-center justify-center p-8 text-sm text-slate-500">
+                  왼쪽에서 내담자를 선택하세요.
+                </div>
+              </>
             )}
           </section>
         </div>
