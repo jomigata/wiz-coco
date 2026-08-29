@@ -44,7 +44,7 @@ const bubbleTheme = {
     mine: 'rounded-br-md bg-indigo-900/60 text-indigo-50',
     scheduled: 'rounded-br-md border border-dashed border-indigo-400/50 bg-indigo-950/30 text-indigo-100',
     scheduledLabel: 'text-indigo-300',
-    mineMeta: 'text-indigo-200/70',
+    mineMeta: 'text-indigo-100/90',
     sendNow: 'bg-indigo-700 hover:bg-indigo-600',
     unreadDot: 'text-amber-300',
     unreadPill: 'border-amber-400/50 bg-amber-400/15 text-amber-200',
@@ -138,7 +138,7 @@ export default function PortalChatMessageList({
                 </div>
               ) : null}
               <div className="mt-1 flex flex-wrap items-center gap-2">
-                <p className={`text-[11px] ${mine ? styles.mineMeta : 'text-slate-400'}`}>
+                <p className={`text-[11px] ${mine ? styles.mineMeta : 'text-slate-300'}`}>
                   {mine ? senderLabelForMine : senderLabelForOther} ·{' '}
                   {formatChatTimestamp(scheduled ? msg.scheduledAt : msg.createdAt)}
                   <UnreadLabel show={unread} />

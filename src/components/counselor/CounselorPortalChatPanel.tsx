@@ -44,7 +44,7 @@ function threadTitle(thread: PortalChatThread): string {
 
 function sortThreads(
   threads: PortalChatThread[],
-  sortKey: 'name' | 'group',
+  sortKey: 'name' | 'group' | 'time',
   sortDir: 'asc' | 'desc',
 ): PortalChatThread[] {
   return [...threads].sort((a, b) => {
@@ -52,15 +52,22 @@ function sortThreads(
     const bName = (b.displayName || '').trim();
     const aGroup = (a.cohortName || '').trim();
     const bGroup = (b.cohortName || '').trim();
-    const primary =
-      sortKey === 'name'
-        ? aName.localeCompare(bName, 'ko')
-        : aGroup.localeCompare(bGroup, 'ko') || aName.localeCompare(bName, 'ko');
+    let primary = 0;
+    if (sortKey === 'time') {
+      const aTime = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0;
+      const bTime = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0;
+      primary = aTime - bTime;
+      if (primary === 0) primary = aName.localeCompare(bName, 'ko');
+    } else if (sortKey === 'name') {
+      primary = aName.localeCompare(bName, 'ko');
+    } else {
+      primary = aGroup.localeCompare(bGroup, 'ko') || aName.localeCompare(bName, 'ko');
+    }
     return sortDir === 'asc' ? primary : -primary;
   });
 }
 
-type ThreadSortKey = 'name' | 'group';
+type ThreadSortKey = 'name' | 'group' | 'time';
 type ThreadSortDir = 'asc' | 'desc';
 
 function SortArrowButton({
@@ -98,8 +105,8 @@ export default function CounselorPortalChatPanel() {
   const [messagesForPortalId, setMessagesForPortalId] = useState<string | null>(null);
   const [draft, setDraft] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [threadSortKey, setThreadSortKey] = useState<ThreadSortKey>('name');
-  const [threadSortDir, setThreadSortDir] = useState<ThreadSortDir>('asc');
+  const [threadSortKey, setThreadSortKey] = useState<ThreadSortKey>('time');
+  const [threadSortDir, setThreadSortDir] = useState<ThreadSortDir>('desc');
   const [dismissedUnreadPortalIds, setDismissedUnreadPortalIds] = useState<Set<string>>(() => new Set());
   const [stickyUnreadByPortalId, setStickyUnreadByPortalId] = useState<Record<string, number>>({});
   const [scheduleEnabled, setScheduleEnabled] = useState(false);
@@ -308,7 +315,7 @@ export default function CounselorPortalChatPanel() {
       return;
     }
     setThreadSortKey(key);
-    setThreadSortDir('asc');
+    setThreadSortDir(key === 'time' ? 'desc' : 'asc');
   };
 
   const displayUnreadCount = (thread: PortalChatThread) => {
@@ -462,6 +469,12 @@ export default function CounselorPortalChatPanel() {
               </span>
               <div className="flex items-center gap-1">
                 <SortArrowButton
+                  label="일시"
+                  active={threadSortKey === 'time'}
+                  direction={threadSortDir}
+                  onClick={() => toggleThreadSort('time')}
+                />
+                <SortArrowButton
                   label="이름"
                   active={threadSortKey === 'name'}
                   direction={threadSortDir}
@@ -494,8 +507,15 @@ export default function CounselorPortalChatPanel() {
                             : 'border-transparent hover:bg-white/5'
                         }`}
                       >
-                        <div className="flex items-start justify-between gap-2">
-                          <p className="truncate text-sm font-medium text-white">
+                        <div className="grid grid-cols-[4.75rem_minmax(0,1fr)] items-start gap-2">
+                          <span
+                            className={`shrink-0 pt-0.5 text-[11px] tabular-nums leading-snug ${
+                              thread.lastMessageAt ? 'text-slate-300' : 'text-slate-500'
+                            }`}
+                          >
+                            {thread.lastMessageAt ? formatChatTimestamp(thread.lastMessageAt) : '대화 없음'}
+                          </span>
+                          <p className="min-w-0 truncate text-sm font-medium text-white">
                             {threadTitle(thread)}
                             {showUnreadBadge(thread) ? (
                               <span className="ml-1.5 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-red-600 px-1.5 py-0.5 text-[10px] font-semibold text-white align-middle">
@@ -504,9 +524,6 @@ export default function CounselorPortalChatPanel() {
                             ) : null}
                           </p>
                         </div>
-                        <p className="mt-1 text-xs text-slate-500">
-                          {thread.lastMessageAt ? formatChatTimestamp(thread.lastMessageAt) : '대화 없음'}
-                        </p>
                       </button>
                     </li>
                   );
