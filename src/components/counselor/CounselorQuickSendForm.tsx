@@ -724,18 +724,12 @@ export default function CounselorQuickSendForm({
         </button>
       </form>
       <CounselorActionProgressOverlay
-        open={loading || Boolean(sendSuccess)}
-        phase={sendSuccess ? 'success' : 'loading'}
-        title={sendSuccess ? '발송 완료' : '보내는 중…'}
-        message={
-          sendSuccess
-            ? '검사 링크 발송이 완료되었습니다. 확인을 누르면 상담진행 현황으로 이동합니다.'
-            : `${Math.max(recipients.length, 1)}명의 내담자에게 검사진행 링크를 보내고 있습니다.`
-        }
-        notice={
-          !sendSuccess ? '발송량에 따라 발송에 시간이 다소 소요될 수 있습니다.' : undefined
-        }
-        onConfirm={sendSuccess ? handleSendConfirm : undefined}
+        open={Boolean(sendSuccess)}
+        phase="success"
+        title="발송 완료"
+        message="검사 링크 발송이 완료되었습니다. 확인을 누르면 상담진행 현황으로 이동합니다."
+        notice="발송량에 따라 발송에 시간이 다소 소요될 수 있습니다."
+        onConfirm={handleSendConfirm}
       />
       <CounselorQuickSendTestPickerModal
         open={testPickerOpen}
