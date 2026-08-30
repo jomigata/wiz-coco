@@ -27,6 +27,11 @@ export const WELCOME_MESSAGE_SAMPLES: WelcomeMessageSample[] = [
   },
 ];
 
+export const DEFAULT_WELCOME_MESSAGE =
+  WELCOME_MESSAGE_SAMPLES.find((sample) => sample.label === '샘플 2')?.text ??
+  WELCOME_MESSAGE_SAMPLES[1]?.text ??
+  '';
+
 /** 내 검사실 진행 현황에서 표시하지 않을 안내 문구(구 샘플·기본 문구) */
 const PORTAL_WELCOME_BOILERPLATE =
   '본 검사는 안내된 기한 내에 완료해 주시기 바랍니다. 검사 결과는 상담·코칭 목적으로만 활용되며, 개인정보는 관련 법령에 따라 보호됩니다.';

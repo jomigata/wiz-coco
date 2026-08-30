@@ -22,10 +22,10 @@ import AuthLink from '@/components/auth/AuthLink';
 import { counselorAssessmentTestOptions } from '@/data/counselorAssessmentTests';
 import {
   COUNSELOR_SEND_TEMPLATES,
-  QUICK_SEND_MESSAGE,
   resolveTemplateTestList,
   type CounselorSendTemplateId,
 } from '@/data/counselorSendTemplates';
+import { DEFAULT_WELCOME_MESSAGE } from '@/lib/welcomeMessageSamples';
 import { fetchMyCredits } from '@/lib/commerceApi';
 import { GROUP_RECIPIENT_MAX } from '@/lib/groupRecipientLimits';
 import {
@@ -71,7 +71,7 @@ export default function CounselorQuickSendForm({
   const [templateId, setTemplateId] = useState<CounselorSendTemplateId | null>(null);
   const [customCohortName, setCustomCohortName] = useState('');
   const [customCohortFocused, setCustomCohortFocused] = useState(false);
-  const [welcomeMessage, setWelcomeMessage] = useState(QUICK_SEND_MESSAGE);
+  const [welcomeMessage, setWelcomeMessage] = useState(DEFAULT_WELCOME_MESSAGE);
   const [customTestIds, setCustomTestIds] = useState<Set<string>>(() => new Set(['generic']));
   const [testPickerOpen, setTestPickerOpen] = useState(false);
   const [manualRows, setManualRows] = useState<RecipientRow[]>([{ ...EMPTY_ROW }]);
@@ -260,7 +260,7 @@ export default function CounselorQuickSendForm({
       return;
     }
 
-    const message = welcomeMessage.trim() || QUICK_SEND_MESSAGE;
+    const message = welcomeMessage.trim() || DEFAULT_WELCOME_MESSAGE;
     const firstName = recipients[0].displayName.trim();
     const cohortName =
       templateId === 'custom'
@@ -736,9 +736,10 @@ export default function CounselorQuickSendForm({
           title="보내기"
           subtitle="안내 문구를 확인한 뒤 검사 링크를 발송합니다"
           compact
+          allowOverflow
         >
-          <div>
-            <div className="mb-1.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+          <div className="overflow-visible">
+            <div className="mb-1.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 overflow-visible">
               <label htmlFor="quick-send-welcome" className="text-xs font-medium text-slate-400">
                 안내 문구
               </label>

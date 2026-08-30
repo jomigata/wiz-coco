@@ -39,6 +39,8 @@ type Props = {
   className?: string;
   bodyClassName?: string;
   compact?: boolean;
+  /** true면 툴팁 등이 블록 밖으로 나가도 잘리지 않음 */
+  allowOverflow?: boolean;
 };
 
 export default function CounselorSendStepBlock({
@@ -49,14 +51,16 @@ export default function CounselorSendStepBlock({
   className = '',
   bodyClassName = '',
   compact = false,
+  allowOverflow = false,
 }: Props) {
   const theme = STEP_THEMES[step];
   const pad = compact ? 'px-3 py-2 sm:px-3.5' : 'px-3.5 py-3 sm:px-4 sm:py-3';
   const headerPad = compact ? 'px-3 py-2 sm:px-3.5' : 'px-3.5 py-2.5 sm:px-4';
+  const overflowClass = allowOverflow ? 'overflow-visible' : 'overflow-hidden';
 
   return (
     <div
-      className={`relative overflow-hidden rounded-2xl border shadow-lg shadow-black/25 ring-1 ${theme.border} ${theme.shell} ${theme.ring} ${className}`}
+      className={`relative ${overflowClass} rounded-2xl border shadow-lg shadow-black/25 ring-1 ${theme.border} ${theme.shell} ${theme.ring} ${className}`}
     >
       <div className={`pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r ${theme.glow}`} />
       <div className={`border-b border-white/[0.07] ${headerPad} ${theme.header}`}>
@@ -75,7 +79,7 @@ export default function CounselorSendStepBlock({
           </div>
         </div>
       </div>
-      <div className={`${pad} ${bodyClassName}`}>{children}</div>
+      <div className={`${pad} ${allowOverflow ? 'overflow-visible' : ''} ${bodyClassName}`}>{children}</div>
     </div>
   );
 }

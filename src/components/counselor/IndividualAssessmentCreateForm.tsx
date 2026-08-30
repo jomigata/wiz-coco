@@ -44,6 +44,7 @@ import {
   seedDispatchStatusBeforeIssue,
 } from '@/lib/counselorDispatchSeed';
 import WelcomeMessageSamplePicker from '@/components/counselor/WelcomeMessageSamplePicker';
+import { DEFAULT_WELCOME_MESSAGE } from '@/lib/welcomeMessageSamples';
 import AuthLink from '@/components/auth/AuthLink';
 import { COUNSELING_CODE_TYPES, type CounselingCodeType } from '@/data/counselingCodeTypes';
 
