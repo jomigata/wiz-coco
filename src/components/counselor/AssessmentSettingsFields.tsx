@@ -9,6 +9,7 @@ import {
   TEST_PICKER_SCROLL,
 } from '@/lib/assessmentFormUi';
 import UsageEndDateField from '@/components/counselor/UsageEndDateField';
+import WelcomeMessageSamplePicker from '@/components/counselor/WelcomeMessageSamplePicker';
 
 export interface AssessmentSettingsFieldsProps {
   title: string;
@@ -162,9 +163,16 @@ export default function AssessmentSettingsFields({
           </div>
 
           <div>
-            <label htmlFor="welcome-message" className={labelClass}>
-              안내 메시지 (선택)
-            </label>
+            <div className={`flex flex-wrap items-center justify-between gap-2 ${compact ? 'mb-1.5' : 'mb-2'}`}>
+              <label htmlFor="welcome-message" className={labelClass}>
+                안내 메시지 (선택)
+              </label>
+              <WelcomeMessageSamplePicker
+                inline
+                disabled={disabled}
+                onPick={onWelcomeMessageChange}
+              />
+            </div>
             <textarea
               id="welcome-message"
               rows={compact ? 3 : 4}

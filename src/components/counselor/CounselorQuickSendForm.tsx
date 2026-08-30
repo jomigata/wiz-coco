@@ -16,6 +16,7 @@ import { formatPhoneDisplay, normalizeRecipientPhone } from '@/lib/phoneFormat';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import CounselorSendStepBlock from '@/components/counselor/CounselorSendStepBlock';
 import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
+import WelcomeMessageSampleHoverPicker from '@/components/counselor/WelcomeMessageSampleHoverPicker';
 import CounselorQuickSendTestPickerModal from '@/components/counselor/CounselorQuickSendTestPickerModal';
 import AuthLink from '@/components/auth/AuthLink';
 import { counselorAssessmentTestOptions } from '@/data/counselorAssessmentTests';
@@ -27,6 +28,11 @@ import {
 } from '@/data/counselorSendTemplates';
 import { fetchMyCredits } from '@/lib/commerceApi';
 import { GROUP_RECIPIENT_MAX } from '@/lib/groupRecipientLimits';
+import {
+  downloadGroupRecipientSampleCsv,
+  downloadGroupRecipientSampleTxt,
+  getGroupRecipientSamplePreviewText,
+} from '@/lib/groupRecipientSampleDownload';
 import {
   formatRecipientRowsPreview,
   mergeRecipients,
@@ -71,6 +77,7 @@ export default function CounselorQuickSendForm({
   const [manualRows, setManualRows] = useState<RecipientRow[]>([{ ...EMPTY_ROW }]);
   const [fileRows, setFileRows] = useState<RecipientRow[]>([]);
   const [fileLabel, setFileLabel] = useState('');
+  const [samplePreviewKind, setSamplePreviewKind] = useState<'txt' | 'csv' | null>(null);
   const [showFilePreview, setShowFilePreview] = useState(false);
   const [sendOverlay, setSendOverlay] = useState<{ kind: 'pending' } | { kind: 'done'; assessmentId: string } | null>(
     null,
@@ -126,6 +133,19 @@ export default function CounselorQuickSendForm({
     const widthCh = Math.min(Math.max(longestLine + 2, 28), 120);
     return { widthCh, lineCount };
   }, [filePreviewText]);
+
+  const samplePreviewText = useMemo(
+    () => (samplePreviewKind ? getGroupRecipientSamplePreviewText() : ''),
+    [samplePreviewKind],
+  );
+
+  const samplePreviewLayout = useMemo(() => {
+    if (!samplePreviewText) return null;
+    const lines = samplePreviewText.split('\n');
+    const longestLine = lines.reduce((max, line) => Math.max(max, line.length), 0);
+    const widthCh = Math.min(Math.max(longestLine + 2, 32), 120);
+    return { widthCh };
+  }, [samplePreviewText]);
 
   const finish = (assessmentId: string) => {
     const href = assessmentId
@@ -394,11 +414,12 @@ export default function CounselorQuickSendForm({
           첫 검사 보내기는 무료입니다. 「스트레스」는 3분 마음 체크(6문항)로 부담 없이 시작할 수 있습니다.
         </p>
       ) : null}
-      <form onSubmit={handleSend} className="mx-auto flex max-w-2xl flex-col gap-4 p-1">
+      <form onSubmit={handleSend} className="mx-auto flex max-w-2xl flex-col gap-3 p-1">
         <CounselorSendStepBlock
           step={1}
           title="어떤 검사인가요?"
           subtitle="보낼 검사 유형을 선택하세요"
+          compact
         >
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             {COUNSELOR_SEND_TEMPLATES.map((item, templateIndex) => {
@@ -524,6 +545,7 @@ export default function CounselorQuickSendForm({
           step={2}
           title="누구에게 보낼까요?"
           subtitle="이름·연락처를 입력하거나 파일로 여러 명을 추가하세요"
+          compact
         >
           <div className="mb-1.5 hidden gap-3 text-xs text-slate-400 sm:grid sm:grid-cols-3">
             <span>이름</span>
@@ -593,7 +615,7 @@ export default function CounselorQuickSendForm({
             ))}
           </div>
 
-          <div className="relative z-20 mt-4 flex flex-col gap-2 overflow-visible border-t border-white/10 pt-3">
+          <div className="relative z-20 mt-3 flex flex-col gap-1.5 overflow-visible border-t border-white/10 pt-2.5">
             <input
               ref={fileInputRef}
               type="file"
@@ -601,14 +623,60 @@ export default function CounselorQuickSendForm({
               className="hidden"
               onChange={handleFileChange}
             />
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="w-fit rounded-lg border border-white/10 bg-[#101f38]/80 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-violet-400/30 hover:bg-violet-950/30"
-              disabled={sendLocked}
-            >
-              텍스트/엑셀 파일 첨부하기
-            </button>
+            <div className="relative flex flex-wrap items-center justify-between gap-2">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="rounded-lg border border-white/10 bg-[#101f38]/80 px-3.5 py-1.5 text-sm font-medium text-slate-200 transition hover:border-violet-400/30 hover:bg-violet-950/30"
+                disabled={sendLocked}
+              >
+                텍스트/엑셀 파일 첨부하기
+              </button>
+              <div
+                className="relative ml-auto flex flex-wrap items-center justify-end gap-2"
+                onMouseLeave={() => setSamplePreviewKind(null)}
+              >
+                <span className="text-sm text-slate-400">샘플받기</span>
+                <button
+                  type="button"
+                  onClick={downloadGroupRecipientSampleTxt}
+                  onMouseEnter={() => setSamplePreviewKind('txt')}
+                  onFocus={() => setSamplePreviewKind('txt')}
+                  onBlur={() => setSamplePreviewKind(null)}
+                  className="text-sm text-sky-300 transition hover:text-sky-200"
+                  disabled={sendLocked}
+                >
+                  (텍스트파일)
+                </button>
+                <button
+                  type="button"
+                  onClick={downloadGroupRecipientSampleCsv}
+                  onMouseEnter={() => setSamplePreviewKind('csv')}
+                  onFocus={() => setSamplePreviewKind('csv')}
+                  onBlur={() => setSamplePreviewKind(null)}
+                  className="text-sm text-sky-300 transition hover:text-sky-200"
+                  disabled={sendLocked}
+                >
+                  (엑셀파일)
+                </button>
+                {samplePreviewKind && samplePreviewText && samplePreviewLayout ? (
+                  <div
+                    className="pointer-events-none absolute bottom-full right-0 z-[120] mb-1.5 w-full min-w-[16rem] rounded-lg border border-sky-500/40 bg-slate-950 p-3 text-left shadow-2xl sm:w-max"
+                    role="tooltip"
+                    style={{
+                      width: `min(100%, ${samplePreviewLayout.widthCh}ch)`,
+                    }}
+                  >
+                    <p className="mb-2 text-xs font-semibold text-sky-300">
+                      {samplePreviewKind === 'txt' ? '샘플 텍스트 미리보기' : '샘플 엑셀(CSV) 미리보기'}
+                    </p>
+                    <pre className="max-h-48 overflow-y-auto whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-slate-200">
+                      {samplePreviewText}
+                    </pre>
+                  </div>
+                ) : null}
+              </div>
+            </div>
             <p className="text-xs leading-relaxed text-slate-500">
               첨부파일은 1개만 가능합니다. 최대 {GROUP_RECIPIENT_MAX.toLocaleString('ko-KR')}명
             </p>
@@ -667,16 +735,24 @@ export default function CounselorQuickSendForm({
           step={3}
           title="보내기"
           subtitle="안내 문구를 확인한 뒤 검사 링크를 발송합니다"
+          compact
         >
           <div>
-            <label htmlFor="quick-send-welcome" className="mb-1.5 block text-xs font-medium text-slate-400">
-              안내 문구
-            </label>
+            <div className="mb-1.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+              <label htmlFor="quick-send-welcome" className="text-xs font-medium text-slate-400">
+                안내 문구
+              </label>
+              <WelcomeMessageSampleHoverPicker
+                disabled={sendLocked}
+                tooltipPlacement="top"
+                onPick={(text) => setWelcomeMessage(text)}
+              />
+            </div>
             <textarea
               id="quick-send-welcome"
               ref={welcomeTextareaRef}
-              rows={3}
-              className={`${INPUT} min-h-[4.5rem] resize-y text-sm leading-relaxed`}
+              rows={2}
+              className={`${INPUT} min-h-[3.75rem] resize-y text-sm leading-relaxed`}
               value={welcomeMessage}
               onChange={(e) => setWelcomeMessage(e.target.value)}
               placeholder="내담자에게 보여줄 안내 문구"
@@ -685,7 +761,7 @@ export default function CounselorQuickSendForm({
           </div>
 
           {error ? (
-            <p className="mt-3 text-sm text-red-300" role="alert">
+            <p className="mt-2 text-sm text-red-300" role="alert">
               {error}
             </p>
           ) : null}
@@ -693,7 +769,7 @@ export default function CounselorQuickSendForm({
           <button
             type="submit"
             disabled={sendLocked}
-            className="mt-4 w-full rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-emerald-950/40 transition hover:from-emerald-500 hover:via-teal-500 hover:to-cyan-500 disabled:opacity-50"
+            className="mt-3 w-full rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-950/40 transition hover:from-emerald-500 hover:via-teal-500 hover:to-cyan-500 disabled:opacity-50"
           >
             검사 보내기
           </button>

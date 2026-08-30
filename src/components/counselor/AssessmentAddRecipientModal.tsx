@@ -9,6 +9,11 @@ import { getAssessmentOrgLabel } from '@/lib/assessmentSortOptions';
 import { formatCounselorIssueDate } from '@/lib/counselorListTableStyles';
 import type { CounselorAssessment } from '@/lib/assessmentApi';
 import {
+  downloadGroupRecipientSampleCsv,
+  downloadGroupRecipientSampleTxt,
+  getGroupRecipientSamplePreviewText,
+} from '@/lib/groupRecipientSampleDownload';
+import {
   mergeRecipients,
   parseRecipientFile,
   type RecipientRow,
@@ -86,6 +91,14 @@ export default function AssessmentAddRecipientModal({
   const [addFileRows, setAddFileRows] = useState<RecipientRow[]>([]);
   const [addFileLabel, setAddFileLabel] = useState('');
   const [showAddFilePreview, setShowAddFilePreview] = useState(false);
+  const [samplePreviewKind, setSamplePreviewKind] = useState<'txt' | 'csv' | null>(null);
+
+  const samplePreviewText = useMemo(() => getGroupRecipientSamplePreviewText(), []);
+  const samplePreviewLayout = useMemo(() => {
+    const lines = samplePreviewText.split('\n');
+    const widthCh = Math.min(72, Math.max(24, ...lines.map((l) => l.length)));
+    return { widthCh };
+  }, [samplePreviewText]);
 
   const combinedRows = useMemo(
     () => mergeRecipients(pendingRows, addFileRows),
@@ -102,6 +115,7 @@ export default function AssessmentAddRecipientModal({
     setAddFileRows([]);
     setAddFileLabel('');
     setShowAddFilePreview(false);
+    setSamplePreviewKind(null);
   };
 
   const handleClose = () => {
@@ -330,6 +344,48 @@ export default function AssessmentAddRecipientModal({
                   }}
                   className="block min-w-0 flex-1 text-sm text-slate-300 file:mr-2 file:rounded-md file:border-0 file:bg-sky-700/90 file:px-2.5 file:py-1.5 file:text-sm file:font-medium file:text-white hover:file:bg-sky-600"
                 />
+              </div>
+              <div
+                className="relative z-20 mt-2 overflow-visible"
+                onMouseLeave={() => setSamplePreviewKind(null)}
+              >
+                <div className="flex flex-wrap items-center justify-end gap-2 text-sm">
+                  <span className="text-slate-400">샘플받기</span>
+                  <button
+                    type="button"
+                    onClick={downloadGroupRecipientSampleTxt}
+                    onMouseEnter={() => setSamplePreviewKind('txt')}
+                    onFocus={() => setSamplePreviewKind('txt')}
+                    onBlur={() => setSamplePreviewKind(null)}
+                    className="text-sky-300 transition hover:text-sky-200"
+                  >
+                    (텍스트파일)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={downloadGroupRecipientSampleCsv}
+                    onMouseEnter={() => setSamplePreviewKind('csv')}
+                    onFocus={() => setSamplePreviewKind('csv')}
+                    onBlur={() => setSamplePreviewKind(null)}
+                    className="text-sky-300 transition hover:text-sky-200"
+                  >
+                    (엑셀파일)
+                  </button>
+                </div>
+                {samplePreviewKind && samplePreviewText && samplePreviewLayout ? (
+                  <div
+                    className="pointer-events-none absolute bottom-full right-0 z-[200] mb-1.5 w-full rounded-lg border border-sky-500/40 bg-slate-950 p-2.5 text-left shadow-2xl sm:w-max"
+                    role="tooltip"
+                    style={{ width: `min(100%, ${samplePreviewLayout.widthCh}ch)` }}
+                  >
+                    <p className="mb-1 text-xs font-semibold text-sky-300">
+                      {samplePreviewKind === 'txt' ? '샘플 텍스트 미리보기' : '샘플 엑셀(CSV) 미리보기'}
+                    </p>
+                    <pre className="max-h-32 overflow-y-auto whitespace-pre-wrap break-words font-mono text-xs leading-snug text-slate-200">
+                      {samplePreviewText}
+                    </pre>
+                  </div>
+                ) : null}
               </div>
               {addFileLabel ? (
                 <div className="relative z-20 mt-2 overflow-visible" onMouseLeave={() => setShowAddFilePreview(false)}>

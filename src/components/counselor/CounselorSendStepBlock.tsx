@@ -51,8 +51,8 @@ export default function CounselorSendStepBlock({
   compact = false,
 }: Props) {
   const theme = STEP_THEMES[step];
-  const pad = compact ? 'px-3 py-3 sm:px-4' : 'px-4 py-4 sm:px-5 sm:py-4';
-  const headerPad = compact ? 'px-3 py-2.5 sm:px-4' : 'px-4 py-3 sm:px-5';
+  const pad = compact ? 'px-3 py-2 sm:px-3.5' : 'px-3.5 py-3 sm:px-4 sm:py-3';
+  const headerPad = compact ? 'px-3 py-2 sm:px-3.5' : 'px-3.5 py-2.5 sm:px-4';
 
   return (
     <div
@@ -62,7 +62,7 @@ export default function CounselorSendStepBlock({
       <div className={`border-b border-white/[0.07] ${headerPad} ${theme.header}`}>
         <div className="flex items-start gap-3">
           <span
-            className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold tabular-nums ${theme.badge}`}
+            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold tabular-nums ${theme.badge}`}
             aria-hidden
           >
             {step}
