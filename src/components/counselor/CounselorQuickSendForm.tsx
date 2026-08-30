@@ -14,8 +14,8 @@ import {
 } from '@/lib/counselorDispatchSeed';
 import { formatPhoneDisplay, normalizeRecipientPhone } from '@/lib/phoneFormat';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
+import CounselorSendStepBlock from '@/components/counselor/CounselorSendStepBlock';
 import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
-import WelcomeMessageSampleHoverPicker from '@/components/counselor/WelcomeMessageSampleHoverPicker';
 import CounselorQuickSendTestPickerModal from '@/components/counselor/CounselorQuickSendTestPickerModal';
 import AuthLink from '@/components/auth/AuthLink';
 import { counselorAssessmentTestOptions } from '@/data/counselorAssessmentTests';
@@ -27,11 +27,6 @@ import {
 } from '@/data/counselorSendTemplates';
 import { fetchMyCredits } from '@/lib/commerceApi';
 import { GROUP_RECIPIENT_MAX } from '@/lib/groupRecipientLimits';
-import {
-  downloadGroupRecipientSampleCsv,
-  downloadGroupRecipientSampleTxt,
-  getGroupRecipientSamplePreviewText,
-} from '@/lib/groupRecipientSampleDownload';
 import {
   formatRecipientRowsPreview,
   mergeRecipients,
@@ -46,8 +41,8 @@ const EMPTY_ROW: RecipientRow = { displayName: '', email: '', phone: '' };
 
 function templateCardBorder(active: boolean): string {
   return active
-    ? 'border-white bg-sky-500/15'
-    : 'border-white/10 bg-[#121f38]/80 hover:border-white';
+    ? 'border-sky-300/50 bg-gradient-to-br from-sky-500/25 via-sky-600/15 to-indigo-600/20 shadow-md shadow-sky-950/30 ring-1 ring-sky-400/30'
+    : 'border-white/10 bg-[#121f38]/80 hover:border-sky-400/25 hover:bg-gradient-to-br hover:from-sky-950/20 hover:to-indigo-950/10';
 }
 
 type Props = {
@@ -71,13 +66,11 @@ export default function CounselorQuickSendForm({
   const [customCohortName, setCustomCohortName] = useState('');
   const [customCohortFocused, setCustomCohortFocused] = useState(false);
   const [welcomeMessage, setWelcomeMessage] = useState(QUICK_SEND_MESSAGE);
-  const [showWelcomeHint, setShowWelcomeHint] = useState(false);
   const [customTestIds, setCustomTestIds] = useState<Set<string>>(() => new Set(['generic']));
   const [testPickerOpen, setTestPickerOpen] = useState(false);
   const [manualRows, setManualRows] = useState<RecipientRow[]>([{ ...EMPTY_ROW }]);
   const [fileRows, setFileRows] = useState<RecipientRow[]>([]);
   const [fileLabel, setFileLabel] = useState('');
-  const [samplePreviewKind, setSamplePreviewKind] = useState<'txt' | 'csv' | null>(null);
   const [showFilePreview, setShowFilePreview] = useState(false);
   const [sendOverlay, setSendOverlay] = useState<{ kind: 'pending' } | { kind: 'done'; assessmentId: string } | null>(
     null,
@@ -133,20 +126,6 @@ export default function CounselorQuickSendForm({
     const widthCh = Math.min(Math.max(longestLine + 2, 28), 120);
     return { widthCh, lineCount };
   }, [filePreviewText]);
-
-  const samplePreviewText = useMemo(
-    () => (samplePreviewKind ? getGroupRecipientSamplePreviewText() : ''),
-    [samplePreviewKind],
-  );
-
-  const samplePreviewLayout = useMemo(() => {
-    if (!samplePreviewText) return null;
-    const lines = samplePreviewText.split('\n');
-    const lineCount = lines.length;
-    const longestLine = lines.reduce((max, line) => Math.max(max, line.length), 0);
-    const widthCh = Math.min(Math.max(longestLine + 2, 32), 120);
-    return { widthCh, lineCount };
-  }, [samplePreviewText]);
 
   const finish = (assessmentId: string) => {
     const href = assessmentId
@@ -415,9 +394,12 @@ export default function CounselorQuickSendForm({
           첫 검사 보내기는 무료입니다. 「스트레스」는 3분 마음 체크(6문항)로 부담 없이 시작할 수 있습니다.
         </p>
       ) : null}
-      <form onSubmit={handleSend} className="mx-auto flex max-w-2xl flex-col gap-5 p-1">
-        <div>
-          <p className="mb-2 text-sm font-semibold text-slate-200">1. 어떤 검사인가요?</p>
+      <form onSubmit={handleSend} className="mx-auto flex max-w-2xl flex-col gap-4 p-1">
+        <CounselorSendStepBlock
+          step={1}
+          title="어떤 검사인가요?"
+          subtitle="보낼 검사 유형을 선택하세요"
+        >
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             {COUNSELOR_SEND_TEMPLATES.map((item, templateIndex) => {
               const active = templateId === item.id;
@@ -536,10 +518,13 @@ export default function CounselorQuickSendForm({
               );
             })}
           </div>
-        </div>
+        </CounselorSendStepBlock>
 
-        <div>
-          <p className="mb-2 text-sm font-semibold text-slate-200">2. 누구에게 보낼까요?</p>
+        <CounselorSendStepBlock
+          step={2}
+          title="누구에게 보낼까요?"
+          subtitle="이름·연락처를 입력하거나 파일로 여러 명을 추가하세요"
+        >
           <div className="mb-1.5 hidden gap-3 text-xs text-slate-400 sm:grid sm:grid-cols-3">
             <span>이름</span>
             <span>휴대폰</span>
@@ -616,70 +601,27 @@ export default function CounselorQuickSendForm({
               className="hidden"
               onChange={handleFileChange}
             />
-            <div className="relative" onMouseLeave={() => setSamplePreviewKind(null)}>
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="rounded-lg border border-white/10 bg-[#101f38]/80 px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-slate-800/80"
-                  disabled={sendLocked}
-                >
-                  텍스트/엑셀 파일 첨부하기
-                </button>
-                <span className="text-sm text-slate-400">샘플받기</span>
-                <button
-                  type="button"
-                  onClick={downloadGroupRecipientSampleTxt}
-                  onMouseEnter={() => setSamplePreviewKind('txt')}
-                  onFocus={() => setSamplePreviewKind('txt')}
-                  onBlur={() => setSamplePreviewKind(null)}
-                  className="text-sm text-sky-300 transition hover:text-sky-200"
-                  disabled={sendLocked}
-                >
-                  (텍스트파일)
-                </button>
-                <button
-                  type="button"
-                  onClick={downloadGroupRecipientSampleCsv}
-                  onMouseEnter={() => setSamplePreviewKind('csv')}
-                  onFocus={() => setSamplePreviewKind('csv')}
-                  onBlur={() => setSamplePreviewKind(null)}
-                  className="text-sm text-sky-300 transition hover:text-sky-200"
-                  disabled={sendLocked}
-                >
-                  (엑셀파일)
-                </button>
-              </div>
-              {samplePreviewKind && samplePreviewText && samplePreviewLayout ? (
-                <div
-                  className="pointer-events-none absolute bottom-full left-0 z-[120] mb-1.5 w-full rounded-lg border border-sky-500/40 bg-slate-950 p-3 text-left shadow-2xl"
-                  role="tooltip"
-                  style={{
-                    width: `min(100%, ${samplePreviewLayout.widthCh}ch)`,
-                  }}
-                >
-                  <p className="mb-2 text-xs font-semibold text-sky-300">
-                    {samplePreviewKind === 'txt' ? '샘플 텍스트 미리보기' : '샘플 엑셀(CSV) 미리보기'}
-                  </p>
-                  <pre className="max-h-56 overflow-y-auto whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-slate-200">
-                    {samplePreviewText}
-                  </pre>
-                </div>
-              ) : null}
-            </div>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="w-fit rounded-lg border border-white/10 bg-[#101f38]/80 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-violet-400/30 hover:bg-violet-950/30"
+              disabled={sendLocked}
+            >
+              텍스트/엑셀 파일 첨부하기
+            </button>
             <p className="text-xs leading-relaxed text-slate-500">
               첨부파일은 1개만 가능합니다. 최대 {GROUP_RECIPIENT_MAX.toLocaleString('ko-KR')}명
             </p>
             {fileLabel ? (
               <div
-                className="rounded-lg border border-sky-500/25 bg-sky-950/25 px-3 py-2.5"
+                className="rounded-lg border border-violet-500/25 bg-violet-950/20 px-3 py-2.5"
                 role="status"
                 aria-live="polite"
               >
-                <p className="text-xs font-medium text-sky-300/90">첨부된 파일</p>
+                <p className="text-xs font-medium text-violet-300/90">첨부된 파일</p>
                 <div className="relative mt-1 max-w-full">
                   <p
-                    className="inline cursor-help break-all text-sm font-medium leading-snug text-white underline decoration-dotted decoration-sky-400/60 underline-offset-4"
+                    className="inline cursor-help break-all text-sm font-medium leading-snug text-white underline decoration-dotted decoration-violet-400/60 underline-offset-4"
                     onMouseEnter={() => setShowFilePreview(true)}
                     onMouseLeave={() => setShowFilePreview(false)}
                     onFocus={() => setShowFilePreview(true)}
@@ -692,13 +634,13 @@ export default function CounselorQuickSendForm({
                   </p>
                   {showFilePreview && filePreviewText && filePreviewLayout ? (
                     <div
-                      className="pointer-events-none absolute bottom-full left-0 z-[120] mb-2 w-max max-w-full rounded-lg border border-sky-500/40 bg-slate-950 p-3 text-left shadow-2xl"
+                      className="pointer-events-none absolute bottom-full left-0 z-[120] mb-2 w-max max-w-full rounded-lg border border-violet-500/40 bg-slate-950 p-3 text-left shadow-2xl"
                       role="tooltip"
                       style={{
                         width: `min(100%, ${filePreviewLayout.widthCh}ch)`,
                       }}
                     >
-                      <p className="mb-2 text-xs font-semibold text-sky-300">파일 내용 미리보기</p>
+                      <p className="mb-2 text-xs font-semibold text-violet-300">파일 내용 미리보기</p>
                       <pre className="max-h-56 overflow-y-auto whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-slate-200">
                         {filePreviewText}
                         {filePreviewText.length >= 4000 ? '\n… (일부만 표시)' : ''}
@@ -719,65 +661,43 @@ export default function CounselorQuickSendForm({
               </div>
             ) : null}
           </div>
-        </div>
+        </CounselorSendStepBlock>
 
-        <div className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2.5">
-          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-            <div
-              className="relative"
-              onMouseEnter={() => setShowWelcomeHint(true)}
-              onMouseLeave={() => setShowWelcomeHint(false)}
-            >
-              <button
-                type="button"
-                disabled={sendLocked}
-                onClick={() => welcomeTextareaRef.current?.focus()}
-                className="text-left text-xs font-medium text-slate-400 underline-offset-2 transition hover:text-slate-200 hover:underline disabled:opacity-50"
-              >
-                안내 문구
-              </button>
-              {showWelcomeHint ? (
-                <div
-                  className="pointer-events-none absolute left-0 bottom-full z-30 mb-1.5 w-[min(100vw-2rem,20rem)] rounded-lg border border-sky-500/40 bg-slate-950 p-3 text-left shadow-2xl"
-                  role="tooltip"
-                >
-                  <p className="text-xs leading-relaxed text-slate-200">
-                    내담자에게 보내는 안내 문구입니다. 아래 입력란에서 직접 수정하거나, 샘플을
-                    클릭해 적용할 수 있습니다.
-                  </p>
-                </div>
-              ) : null}
-            </div>
-            <WelcomeMessageSampleHoverPicker
+        <CounselorSendStepBlock
+          step={3}
+          title="보내기"
+          subtitle="안내 문구를 확인한 뒤 검사 링크를 발송합니다"
+        >
+          <div>
+            <label htmlFor="quick-send-welcome" className="mb-1.5 block text-xs font-medium text-slate-400">
+              안내 문구
+            </label>
+            <textarea
+              id="quick-send-welcome"
+              ref={welcomeTextareaRef}
+              rows={3}
+              className={`${INPUT} min-h-[4.5rem] resize-y text-sm leading-relaxed`}
+              value={welcomeMessage}
+              onChange={(e) => setWelcomeMessage(e.target.value)}
+              placeholder="내담자에게 보여줄 안내 문구"
               disabled={sendLocked}
-              tooltipPlacement="top"
-              onPick={(text) => setWelcomeMessage(text)}
             />
           </div>
-          <textarea
-            ref={welcomeTextareaRef}
-            rows={3}
-            className={`${INPUT} mt-2 min-h-[4.5rem] resize-y text-sm leading-relaxed`}
-            value={welcomeMessage}
-            onChange={(e) => setWelcomeMessage(e.target.value)}
-            placeholder="내담자에게 보여줄 안내 문구"
+
+          {error ? (
+            <p className="mt-3 text-sm text-red-300" role="alert">
+              {error}
+            </p>
+          ) : null}
+
+          <button
+            type="submit"
             disabled={sendLocked}
-          />
-        </div>
-
-        {error ? (
-          <p className="text-sm text-red-300" role="alert">
-            {error}
-          </p>
-        ) : null}
-
-        <button
-          type="submit"
-          disabled={sendLocked}
-          className="rounded-lg bg-sky-600 px-4 py-3 text-sm font-semibold text-white hover:bg-sky-500 disabled:opacity-50"
-        >
-          3. 보내기
-        </button>
+            className="mt-4 w-full rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-emerald-950/40 transition hover:from-emerald-500 hover:via-teal-500 hover:to-cyan-500 disabled:opacity-50"
+          >
+            검사 보내기
+          </button>
+        </CounselorSendStepBlock>
       </form>
       <CounselorActionProgressOverlay
         open={Boolean(sendOverlay)}

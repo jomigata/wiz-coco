@@ -3,6 +3,7 @@
 import React from 'react';
 import { counselorHubClasses } from '@/components/layout/appChromeTheme';
 import CounselorHierarchyBreadcrumb from '@/components/counselor/CounselorHierarchyBreadcrumb';
+import { getSendStepSectionClasses } from '@/components/counselor/CounselorSendStepBlock';
 
 type CounselorPageSectionProps = {
   title?: React.ReactNode;
@@ -21,6 +22,8 @@ type CounselorPageSectionProps = {
   dense?: boolean;
   /** 블록 여백 확대 (수정 화면 가독성) */
   relaxed?: boolean;
+  /** 검사 보내기·상담코드 생성 단계별 그라데이션 (1·2·3) */
+  sendStep?: 1 | 2 | 3;
 };
 
 export default function CounselorPageSection({
@@ -36,6 +39,7 @@ export default function CounselorPageSection({
   showHierarchyBreadcrumb = false,
   dense = false,
   relaxed = false,
+  sendStep,
 }: CounselorPageSectionProps) {
   const hasHeader = Boolean(title || headerAction || toolbar);
   const headerPad = relaxed ? 'px-4 py-3.5' : dense ? 'px-3 py-2.5' : 'px-4 py-3 sm:gap-2.5';
@@ -47,8 +51,11 @@ export default function CounselorPageSection({
         ? 'p-2.5'
         : 'p-2.5 sm:p-3';
 
-  const titleAccentClass =
-    titleAccent === 'deleted'
+  const sendStepTheme = sendStep ? getSendStepSectionClasses(sendStep) : null;
+
+  const titleAccentClass = sendStepTheme
+    ? sendStepTheme.accent
+    : titleAccent === 'deleted'
       ? 'border-t-4 border-t-orange-500'
       : titleAccent === 'list'
         ? 'border-t-4 border-t-yellow-400'
@@ -64,11 +71,17 @@ export default function CounselorPageSection({
         <CounselorHierarchyBreadcrumb className="mb-2 shrink-0" />
       ) : null}
       <section
-        className={`flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-sky-400/20 ${counselorHubClasses.subsection} !p-0`}
+        className={`flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border ${
+          sendStepTheme
+            ? sendStepTheme.section
+            : `border-sky-400/20 ${counselorHubClasses.subsection}`
+        } !p-0`}
       >
         {hasHeader ? (
           <div
-            className={`flex w-full shrink-0 flex-col gap-2 border-b border-sky-400/25 bg-gradient-to-r from-sky-600/25 via-sky-500/15 to-transparent sm:flex-row sm:items-center sm:justify-between ${headerPad} ${titleAccentClass}`}
+            className={`flex w-full shrink-0 flex-col gap-2 border-b border-white/[0.07] sm:flex-row sm:items-center sm:justify-between ${headerPad} ${titleAccentClass} ${
+              sendStepTheme ? sendStepTheme.header : 'border-sky-400/25 bg-gradient-to-r from-sky-600/25 via-sky-500/15 to-transparent'
+            }`}
           >
             {title ? (
               <h2
@@ -95,7 +108,9 @@ export default function CounselorPageSection({
           </div>
         ) : null}
         <div
-          className={`min-h-0 flex-1 overflow-y-auto overscroll-contain bg-[#0f1d33]/60 ${bodyPad} ${bodyClassName}`}
+          className={`min-h-0 flex-1 overflow-y-auto overscroll-contain ${
+            sendStepTheme ? 'bg-transparent' : 'bg-[#0f1d33]/60'
+          } ${bodyPad} ${bodyClassName}`}
         >
           {children}
         </div>

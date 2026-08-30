@@ -23,11 +23,6 @@ import {
   GROUP_NOTIFY_WARN_THRESHOLD,
 } from '@/lib/groupRecipientLimits';
 import UsageEndDateField from '@/components/counselor/UsageEndDateField';
-import {
-  downloadGroupRecipientSampleCsv,
-  downloadGroupRecipientSampleTxt,
-  getGroupRecipientSamplePreviewText,
-} from '@/lib/groupRecipientSampleDownload';
 import { formatPhoneDisplay, normalizeRecipientPhone } from '@/lib/phoneFormat';
 import {
   formatRecipientRowsPreview,
@@ -43,7 +38,6 @@ import {
   seedDispatchStatusAfterIssue,
   seedDispatchStatusBeforeIssue,
 } from '@/lib/counselorDispatchSeed';
-import WelcomeMessageSamplePicker from '@/components/counselor/WelcomeMessageSamplePicker';
 import AuthLink from '@/components/auth/AuthLink';
 import { COUNSELING_CODE_TYPES, type CounselingCodeType } from '@/data/counselingCodeTypes';
 
@@ -128,7 +122,6 @@ export default function IndividualAssessmentCreateForm({
   const [fileLabel, setFileLabel] = useState('');
   const [filePreviewText, setFilePreviewText] = useState('');
   const [showFilePreview, setShowFilePreview] = useState(false);
-  const [samplePreviewKind, setSamplePreviewKind] = useState<'txt' | 'csv' | null>(null);
   const [loadingIntent, setLoadingIntent] = useState<IssueIntent | null>(null);
   const [error, setError] = useState('');
   const [validationField, setValidationField] = useState<
@@ -216,21 +209,6 @@ export default function IndividualAssessmentCreateForm({
     const widthCh = Math.min(Math.max(longestLine + 2, 28), 120);
     return { widthCh, lineCount };
   }, [filePreviewText]);
-
-  const samplePreviewText = useMemo(
-    () => (samplePreviewKind ? getGroupRecipientSamplePreviewText() : ''),
-    [samplePreviewKind],
-  );
-
-  const samplePreviewLayout = useMemo(() => {
-    if (!samplePreviewText) return null;
-    const lines = samplePreviewText.split('\n');
-    const lineCount = lines.length;
-    const longestLine = lines.reduce((max, line) => Math.max(max, line.length), 0);
-    const widthCh = Math.min(Math.max(longestLine + 2, 32), 120);
-    const heightRem = Math.max(lineCount * 1.35 + 2.5, 8);
-    return { widthCh, lineCount, heightRem };
-  }, [samplePreviewText]);
 
   const goToAssessmentListAfterIssue = useCallback(
     ({
@@ -676,8 +654,8 @@ export default function IndividualAssessmentCreateForm({
     <form onSubmit={(e) => e.preventDefault()} className="flex min-h-0 flex-1 flex-col gap-4">
       <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)_minmax(18rem,22rem)] xl:items-stretch">
         <CounselorPageSection
-          title="검사 정보"
-          titleAccent="create"
+          title="1. 검사 정보"
+          sendStep={1}
           className="!overflow-visible flex h-full min-h-0 flex-col"
           bodyClassName="flex min-h-0 flex-1 flex-col overflow-visible"
           toolbar={
@@ -763,13 +741,9 @@ export default function IndividualAssessmentCreateForm({
             <div className="space-y-4 border-t border-white/10 pt-4">
               <div>
                 <label className={`${FORM_LABEL} mb-2 block`}>안내 메시지 (선택)</label>
-                <WelcomeMessageSamplePicker
-                  disabled={loading}
-                  onPick={(text) => setWelcomeMessage(text)}
-                />
                 <textarea
                   rows={4}
-                  className={`${FORM_INPUT} mt-2 min-h-[5.5rem] max-h-[5.5rem] resize-none overflow-y-auto text-sm leading-relaxed`}
+                  className={`${FORM_INPUT} min-h-[5.5rem] max-h-[5.5rem] resize-none overflow-y-auto text-sm leading-relaxed`}
                   placeholder="내담자에게 보여줄 안내 문구"
                   value={welcomeMessage}
                   onChange={(e) => setWelcomeMessage(e.target.value)}
@@ -892,8 +866,8 @@ export default function IndividualAssessmentCreateForm({
         </CounselorPageSection>
 
         <CounselorPageSection
-          title="내담자 목록"
-          titleAccent="create"
+          title="2. 내담자 목록"
+          sendStep={2}
           className="!overflow-visible flex h-full min-h-0 flex-col xl:col-start-2 xl:row-start-1"
           bodyClassName="flex min-h-0 flex-1 flex-col overflow-visible"
           toolbar={
@@ -990,71 +964,27 @@ export default function IndividualAssessmentCreateForm({
                 className="hidden"
                 onChange={handleFileChange}
               />
-              <div
-                className="relative"
-                onMouseLeave={() => setSamplePreviewKind(null)}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-fit rounded-lg border border-white/10 bg-[#101f38]/80 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-violet-400/30 hover:bg-violet-950/30"
+                disabled={loading}
               >
-                <div className="flex flex-wrap items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="rounded-lg border border-white/10 bg-[#101f38]/80 px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-slate-800/80"
-                    disabled={loading}
-                  >
-                    텍스트/엑셀 파일 첨부하기
-                  </button>
-                  <span className="text-sm text-slate-400">샘플받기</span>
-                  <button
-                    type="button"
-                    onClick={downloadGroupRecipientSampleTxt}
-                    onMouseEnter={() => setSamplePreviewKind('txt')}
-                    onFocus={() => setSamplePreviewKind('txt')}
-                    onBlur={() => setSamplePreviewKind(null)}
-                    className="text-sm text-sky-300 transition hover:text-sky-200"
-                  >
-                    (텍스트파일)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={downloadGroupRecipientSampleCsv}
-                    onMouseEnter={() => setSamplePreviewKind('csv')}
-                    onFocus={() => setSamplePreviewKind('csv')}
-                    onBlur={() => setSamplePreviewKind(null)}
-                    className="text-sm text-sky-300 transition hover:text-sky-200"
-                  >
-                    (엑셀파일)
-                  </button>
-                </div>
-                {samplePreviewKind && samplePreviewText && samplePreviewLayout ? (
-                  <div
-                    className="pointer-events-none absolute bottom-full left-0 z-[120] mb-1.5 w-full rounded-lg border border-sky-500/40 bg-slate-950 p-3 text-left shadow-2xl"
-                    role="tooltip"
-                    style={{
-                      width: `min(100%, ${samplePreviewLayout.widthCh}ch)`,
-                    }}
-                  >
-                    <p className="mb-2 text-xs font-semibold text-sky-300">
-                      {samplePreviewKind === 'txt' ? '샘플 텍스트 미리보기' : '샘플 엑셀(CSV) 미리보기'}
-                    </p>
-                    <pre className="max-h-56 overflow-y-auto whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-slate-200">
-                      {samplePreviewText}
-                    </pre>
-                  </div>
-                ) : null}
-              </div>
+                텍스트/엑셀 파일 첨부하기
+              </button>
               <p className="text-xs leading-relaxed text-slate-500">
                 첨부파일은 1개만 가능합니다. 최대 {GROUP_RECIPIENT_MAX.toLocaleString('ko-KR')}명
               </p>
               {fileLabel ? (
                 <div
-                  className="rounded-lg border border-sky-500/25 bg-sky-950/25 px-3 py-2.5"
+                  className="rounded-lg border border-violet-500/25 bg-violet-950/20 px-3 py-2.5"
                   role="status"
                   aria-live="polite"
                 >
-                  <p className="text-xs font-medium text-sky-300/90">첨부된 파일</p>
+                  <p className="text-xs font-medium text-violet-300/90">첨부된 파일</p>
                   <div className="relative mt-1 max-w-full">
                     <p
-                      className="inline cursor-help break-all text-sm font-medium leading-snug text-white underline decoration-dotted decoration-sky-400/60 underline-offset-4"
+                      className="inline cursor-help break-all text-sm font-medium leading-snug text-white underline decoration-dotted decoration-violet-400/60 underline-offset-4"
                       onMouseEnter={() => setShowFilePreview(true)}
                       onMouseLeave={() => setShowFilePreview(false)}
                       onFocus={() => setShowFilePreview(true)}
@@ -1103,8 +1033,8 @@ export default function IndividualAssessmentCreateForm({
         </CounselorPageSection>
 
         <CounselorPageSection
-          title="발급 · 발송"
-          titleAccent="create"
+          title="3. 발급 · 발송"
+          sendStep={3}
           className="!overflow-visible flex h-full min-h-0 flex-col xl:col-start-3 xl:row-start-1"
           bodyClassName="flex min-h-0 flex-1 flex-col overflow-visible"
         >
@@ -1131,7 +1061,7 @@ export default function IndividualAssessmentCreateForm({
               type="button"
               onClick={() => void handleIssue('send_all')}
               disabled={!canIssue}
-              className="w-full rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 px-4 py-3 text-left shadow-lg shadow-sky-900/30 transition hover:from-sky-500 hover:to-indigo-500 disabled:opacity-50 disabled:shadow-none"
+              className="w-full rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 px-4 py-3 text-left shadow-lg shadow-emerald-950/35 transition hover:from-emerald-500 hover:via-teal-500 hover:to-cyan-500 disabled:opacity-50 disabled:shadow-none"
             >
               <span className="block text-base font-bold text-white">
                 {`${recipientCountLabel} 즉시 전체 발송`}
