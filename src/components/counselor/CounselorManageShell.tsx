@@ -17,7 +17,7 @@ import {
 import { clearAssessmentListSearch } from '@/lib/counselorAssessmentListSearch';
 import { getAppRoleSync, isAdmin } from '@/utils/roleUtils';
 import {
-  COUNSELOR_PSYCH_TESTS_SLUG,
+  COUNSELOR_ASSESSMENT_CODE_SLUG,
   getCounselorCategoryDefaultHref,
   isMenuItemActive,
   resolveCounselorCategorySlugForPath,
@@ -37,7 +37,7 @@ export default function CounselorManageShell({ children }: Props) {
   const adminUser = isAdmin(getAppRoleSync());
 
   const [expandedSlug, setExpandedSlug] = useState<string>(() =>
-    activeCategorySlug || COUNSELOR_PSYCH_TESTS_SLUG,
+    activeCategorySlug || COUNSELOR_ASSESSMENT_CODE_SLUG,
   );
   const [hoveredMenuHref, setHoveredMenuHref] = useState<string | null>(null);
 
@@ -106,12 +106,15 @@ export default function CounselorManageShell({ children }: Props) {
                       if (sub.adminOnly && !adminUser) return null;
                       const visibleItems = sub.items.filter((item) => !item.adminOnly || adminUser);
                       if (visibleItems.length === 0) return null;
+                      const flatMiddleTier = Boolean(sub.flatItems);
                       return (
-                        <div key={sub.name}>
-                          <p className="px-1.5 py-0.5 text-[10px] font-normal uppercase tracking-wide text-slate-500">
-                            {sub.name.replace(/^\d+[a-z]\.\s*/i, '')}
-                          </p>
-                          <ul className="space-y-0.5 pb-1">
+                        <div key={sub.name || visibleItems[0]?.href}>
+                          {!flatMiddleTier ? (
+                            <p className="px-1.5 py-0.5 text-[10px] font-normal uppercase tracking-wide text-slate-500">
+                              {sub.name.replace(/^\d+[a-z]\.\s*/i, '')}
+                            </p>
+                          ) : null}
+                          <ul className={`space-y-0.5 ${flatMiddleTier ? 'pb-1' : 'pb-1'}`}>
                             {visibleItems.flatMap((item) => {
                               const normalizedItemHref = item.href.replace(/\/+$/, '');
                               const pathNorm = (pathname || '').split('?')[0].replace(/\/+$/, '') || '';
@@ -210,47 +213,43 @@ export default function CounselorManageShell({ children }: Props) {
                                     </AuthLink>
                                   </li>,
                                 );
-
-                                if (
-                                  contextAnchorHref &&
-                                  nested.href.replace(/\/+$/, '') === contextAnchorHref
-                                ) {
-                                  for (const ctx of contextNested.sort((a, b) => a.order - b.order)) {
-                                    const ctxActive = ctx.isActive(pathNorm);
-                                    rows.push(
-                                      <li
-                                        key={`${item.href}-${nested.href}-${ctx.label}`}
-                                        onMouseEnter={() => setHoveredMenuHref(item.href)}
-                                        onMouseLeave={() =>
-                                          setHoveredMenuHref((prev) =>
-                                            prev === item.href ? null : prev,
-                                          )
-                                        }
+                              }
+                              if (contextAnchorHref && contextNested.length > 0) {
+                                for (const ctx of contextNested.sort((a, b) => a.order - b.order)) {
+                                  const ctxActive = ctx.isActive(pathNorm);
+                                  rows.push(
+                                    <li
+                                      key={`${item.href}-ctx-${ctx.label}`}
+                                      onMouseEnter={() => setHoveredMenuHref(item.href)}
+                                      onMouseLeave={() =>
+                                        setHoveredMenuHref((prev) =>
+                                          prev === item.href ? null : prev,
+                                        )
+                                      }
+                                    >
+                                      <AuthLink
+                                        href={ctx.href}
+                                        onClick={() => {
+                                          const idMatch =
+                                            ctx.href.match(/assessmentId=([^&]+)/) ||
+                                            ctx.href.match(/[?&]id=([^&]+)/);
+                                          if (idMatch?.[1]) {
+                                            rememberCounselorAssessmentContext(
+                                              decodeURIComponent(idMatch[1]),
+                                            );
+                                          }
+                                        }}
+                                        className={`block truncate rounded-md py-1 pl-3 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${
+                                          ctxActive
+                                            ? 'bg-sky-600/30 font-semibold text-sky-100'
+                                            : 'text-slate-400 hover:bg-white/[0.06] hover:text-white'
+                                        }`}
                                       >
-                                        <AuthLink
-                                          href={ctx.href}
-                                          onClick={() => {
-                                            const idMatch =
-                                              ctx.href.match(/assessmentId=([^&]+)/) ||
-                                              ctx.href.match(/[?&]id=([^&]+)/);
-                                            if (idMatch?.[1]) {
-                                              rememberCounselorAssessmentContext(
-                                                decodeURIComponent(idMatch[1]),
-                                              );
-                                            }
-                                          }}
-                                          className={`block truncate rounded-md py-1 pl-6 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${
-                                            ctxActive
-                                              ? 'bg-sky-600/30 font-semibold text-sky-100'
-                                              : 'text-slate-400 hover:bg-white/[0.06] hover:text-white'
-                                          }`}
-                                        >
-                                          {'\u00A0- '}
-                                          {ctx.label}
-                                        </AuthLink>
-                                      </li>,
-                                    );
-                                  }
+                                        {'\u00A0- '}
+                                        {ctx.label}
+                                      </AuthLink>
+                                    </li>,
+                                  );
                                 }
                               }
                               for (const nested of nestedAfter) {

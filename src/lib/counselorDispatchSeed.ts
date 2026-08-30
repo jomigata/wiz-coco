@@ -12,7 +12,7 @@ const PENDING_ERROR_PREFIX = 'wizcoco:dispatch-pending-error:';
 export const PENDING_DISPATCH_ID_PREFIX = 'pending:';
 
 export const DISPATCH_ISSUING_NOTICE_BASE =
-  '개인코드 (나의코드)의 발송량에 따라 시간이 길어질 수 있습니다';
+  '개인코드 (나의코드) 의 발송량에 따라 시간이 길어질 수 있습니다.';
 
 export type DispatchIssueSeedInput = {
   assessmentId: string;
@@ -242,9 +242,34 @@ export function mergeDispatchStatusWithCache(
       phone: row.phone?.trim() || prior.phone,
       myCode: row.myCode?.trim() || prior.myCode,
       joinAccessCode: row.joinAccessCode?.trim() || prior.joinAccessCode,
+      notifyStatus: row.notifyStatus?.trim() ? row.notifyStatus : prior.notifyStatus,
       tests: row.tests?.length ? row.tests : prior.tests,
     };
   });
+
+  const mergedPortalIds = new Set(recipients.map((row) => row.portalId).filter(Boolean));
+  for (let index = 0; index < cached.recipients.length; index += 1) {
+    const cachedRow = cached.recipients[index];
+    if (mergedPortalIds.has(cachedRow.portalId)) continue;
+    const matchedInFetch = fetched.recipients.some(
+      (row, fetchIndex) =>
+        recipientIdentityKey(row, fetchIndex) === recipientIdentityKey(cachedRow, index) ||
+        (row.displayName?.trim() === cachedRow.displayName?.trim() &&
+          (row.email?.trim() || '') === (cachedRow.email?.trim() || '') &&
+          (row.phone?.trim() || '') === (cachedRow.phone?.trim() || '')),
+    );
+    if (matchedInFetch) continue;
+    const portalId = cachedRow.portalId || '';
+    const stillOptimistic =
+      portalId.startsWith('optimistic-') ||
+      portalId.startsWith(PENDING_DISPATCH_ID_PREFIX) ||
+      cachedRow.notifyStatus === 'sending' ||
+      cachedRow.notifyStatus === 'pending';
+    if (stillOptimistic) {
+      recipients.push(cachedRow);
+      mergedPortalIds.add(portalId);
+    }
+  }
 
   return {
     ...fetched,

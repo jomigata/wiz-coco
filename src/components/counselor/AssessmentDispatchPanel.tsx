@@ -497,10 +497,14 @@ export default function AssessmentDispatchPanel({
     try {
       const result = await fetchAssessmentDispatchStatus(assessmentId);
       const merged = mergeDispatchStatusWithCache(cached, result);
-      writeCachedDispatchStatus(assessmentId, merged, user?.uid);
-      setData(merged);
+      const nextData: AssessmentDispatchStatus = {
+        ...merged,
+        recipients: (merged.recipients || []).map((row) => ({ ...row, tests: row.tests?.map((t) => ({ ...t })) })),
+      };
+      writeCachedDispatchStatus(assessmentId, nextData, user?.uid);
+      setData(nextData);
       setSelected(new Set());
-      if (shouldClearDispatchIssueSeed(merged)) {
+      if (shouldClearDispatchIssueSeed(nextData)) {
         clearDispatchIssueSeed(assessmentId);
       }
     } catch (err) {
@@ -604,14 +608,23 @@ export default function AssessmentDispatchPanel({
     }
     if (authPending || !isAuthenticated) return;
     if (sendingStartedAtRef.current === null) sendingStartedAtRef.current = Date.now();
-    const pollMs = issuingPhase ? 800 : 1500;
+    const pollMs = issuingPhase ? 600 : 1500;
     void load({ silent: true });
     const timer = window.setInterval(() => {
-      if (Date.now() - (sendingStartedAtRef.current ?? Date.now()) >= 120_000) return;
       void load({ silent: true });
     }, pollMs);
     return () => window.clearInterval(timer);
   }, [hasSendingNotify, issuingPhase, load, authPending, isAuthenticated]);
+
+  useEffect(() => {
+    if (authPending || !isAuthenticated) return;
+    if (!issuingPhase || isPendingDispatchAssessmentId(assessmentId)) return;
+    void load({ silent: true });
+    const timer = window.setInterval(() => {
+      void load({ silent: true });
+    }, 600);
+    return () => window.clearInterval(timer);
+  }, [issuingPhase, assessmentId, load, authPending, isAuthenticated]);
 
   const allIds = useMemo(
     () => (visibleData?.recipients || []).map((r) => r.portalId),

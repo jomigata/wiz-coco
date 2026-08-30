@@ -35,7 +35,7 @@ export const PERMANENTLY_DELETED_ASSESSMENTS_HREF = '/counselor/assessments/perm
 export const PERMANENTLY_DELETED_RECIPIENTS_HREF =
   '/counselor/assessments/permanently-deleted-recipients';
 const PARENT_SUBCATEGORY = '검사발송';
-const ASSESSMENTS_PARENT_SUBCATEGORY = '1a. 상담코드';
+const ASSESSMENTS_PARENT_SUBCATEGORY = '상담코드';
 
 export const counselorNestedNavItems: CounselorNestedNavItem[] = [];
 
@@ -248,12 +248,6 @@ export function isAssessmentsMenuSelected(pathname: string, search: string): boo
 export function getAssessmentsParentSubmenuItems(options?: { admin?: boolean }): CounselorParentSubmenuItem[] {
   const items: CounselorParentSubmenuItem[] = [
     {
-      order: 0,
-      label: '상담코드 목록',
-      href: ASSESSMENT_LIST_HREF,
-      isActive: (p) => p === ASSESSMENT_LIST_HREF,
-    },
-    {
       order: 1,
       label: '상담코드 생성',
       href: ASSESSMENTS_NEW_HREF,
@@ -273,14 +267,7 @@ export function getAssessmentsParentSubmenuItems(options?: { admin?: boolean }):
 
 /** 검사발송 목록 메뉴 선택 시 고정 소분류 */
 export function getClientsParentSubmenuItems(options?: { admin?: boolean }): CounselorParentSubmenuItem[] {
-  const items: CounselorParentSubmenuItem[] = [
-    {
-      order: 0,
-      label: '검사발송 목록',
-      href: CLIENTS_LIST_HREF,
-      isActive: (p) => p === CLIENTS_LIST_HREF,
-    },
-  ];
+  const items: CounselorParentSubmenuItem[] = [];
   if (options?.admin) {
     items.push({
       order: 55,

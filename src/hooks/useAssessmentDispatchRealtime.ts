@@ -81,13 +81,22 @@ export function useAssessmentDispatchRealtime(
       unsub?.();
       setIsLive(false);
     };
-  }, [assessmentId, enabled, baseData?.assessmentId, baseData?.recipients?.length]);
+  }, [assessmentId, enabled, baseData?.assessmentId]);
 
   const data = useMemo(() => {
-    if (!baseData) return null;
-    if (liveResults.length === 0) return baseData;
-    return applyRealtimeTestResults(baseData, liveResults);
-  }, [baseData, liveResults]);
+    const base = baseData;
+    if (!base) return null;
+    if (liveResults.length === 0) {
+      return {
+        ...base,
+        recipients: (base.recipients || []).map((row) => ({
+          ...row,
+          tests: row.tests?.map((t) => ({ ...t })),
+        })),
+      };
+    }
+    return applyRealtimeTestResults(base, liveResults);
+  }, [baseData, liveResults, lastUpdatedAt]);
 
   return { data, isLive, liveError, lastUpdatedAt };
 }

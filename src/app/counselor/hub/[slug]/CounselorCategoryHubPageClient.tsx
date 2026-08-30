@@ -6,10 +6,11 @@ import { useRouter } from 'next/navigation';
 import CounselorCategoryHub from '@/components/counselor/CounselorCategoryHub';
 import { getCounselorCategoryBySlug, COUNSELOR_SALES_HUB_SLUG } from '@/data/counselorMenu';
 import {
-  COUNSELOR_PSYCH_TESTS_SLUG,
+  COUNSELOR_ASSESSMENT_CODE_SLUG,
+  COUNSELOR_PSYCH_TESTS_MENU_SLUG,
   COUNSELOR_TOOLS_SLUG,
+  getAssessmentCodeDefaultHref,
   getCounselorCategoryDefaultHref,
-  getPsychTestsDefaultHref,
 } from '@/lib/counselorManageShell';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
@@ -24,8 +25,8 @@ export default function CounselorCategoryHubPageClient({ slug }: Props) {
   const category = getCounselorCategoryBySlug(slug);
 
   useEffect(() => {
-    if (slug === COUNSELOR_PSYCH_TESTS_SLUG) {
-      router.replace(getPsychTestsDefaultHref());
+    if (slug === COUNSELOR_ASSESSMENT_CODE_SLUG || slug === COUNSELOR_PSYCH_TESTS_MENU_SLUG) {
+      router.replace(getAssessmentCodeDefaultHref());
     } else if (slug === COUNSELOR_TOOLS_SLUG) {
       router.replace(getCounselorCategoryDefaultHref(COUNSELOR_TOOLS_SLUG));
     } else if (slug === COUNSELOR_SALES_HUB_SLUG) {
@@ -37,8 +38,8 @@ export default function CounselorCategoryHubPageClient({ slug }: Props) {
     notFound();
   }
 
-  if (slug === COUNSELOR_PSYCH_TESTS_SLUG) {
-    return <AuthLoadingState className="py-8" message="상담코드 관리로 이동 중…" />;
+  if (slug === COUNSELOR_ASSESSMENT_CODE_SLUG || slug === COUNSELOR_PSYCH_TESTS_MENU_SLUG) {
+    return <AuthLoadingState className="py-8" message="상담코드 목록으로 이동 중…" />;
   }
 
   if (slug === COUNSELOR_TOOLS_SLUG) {
