@@ -81,6 +81,53 @@ export default function CounselorPageSection({
       {showHierarchyBreadcrumb ? (
         <CounselorHierarchyBreadcrumb className="mb-2 shrink-0" />
       ) : null}
+      {sendStepTheme?.useGradientBorder && sendStepTheme.borderWrapper ? (
+        <div className={`flex min-h-0 flex-1 flex-col rounded-xl p-px ${sendStepTheme.borderWrapper}`}>
+          <section
+            className={`flex min-h-0 flex-1 flex-col overflow-hidden rounded-[calc(0.75rem-1px)] ${sendStepTheme.section} !p-0`}
+          >
+            {hasHeader ? (
+              <div
+                className={`relative flex w-full shrink-0 flex-col gap-2 border-b border-white/[0.07] sm:flex-row sm:items-center sm:justify-between ${headerPad} ${sendStepTheme.header}`}
+              >
+                {sendStepTheme.accentBar ? (
+                  <div
+                    className={`pointer-events-none absolute inset-x-0 top-0 h-1 ${sendStepTheme.accentBar}`}
+                    aria-hidden
+                  />
+                ) : null}
+                {title ? (
+                  <h2
+                    className={`min-w-0 flex-1 font-bold tracking-tight text-white ${relaxed ? 'text-base' : dense ? 'text-sm' : 'text-sm sm:text-base'}`}
+                  >
+                    {title}
+                  </h2>
+                ) : (
+                  <span className="flex-1" />
+                )}
+                <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 sm:ml-auto">
+                  {headerAction}
+                  {toolbar ? (
+                    <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
+                      {toolbar}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
+            {description ? (
+              <div className="shrink-0 border-b border-white/[0.06] bg-[#0f1d33]/40 px-4 py-2 text-xs leading-relaxed text-slate-400 sm:text-sm">
+                {description}
+              </div>
+            ) : null}
+            <div
+              className={`min-h-0 flex-1 overflow-y-auto overscroll-contain bg-transparent ${bodyPad} ${bodyClassName}`}
+            >
+              {children}
+            </div>
+          </section>
+        </div>
+      ) : (
       <section
         className={`flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border ${
           sendStepTheme
@@ -126,6 +173,7 @@ export default function CounselorPageSection({
           {children}
         </div>
       </section>
+      )}
     </div>
   );
 }
