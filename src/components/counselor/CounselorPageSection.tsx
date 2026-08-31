@@ -90,12 +90,6 @@ export default function CounselorPageSection({
               <div
                 className={`relative flex w-full shrink-0 flex-col gap-2 border-b border-white/[0.07] sm:flex-row sm:items-center sm:justify-between ${headerPad} ${sendStepTheme.header}`}
               >
-                {sendStepTheme.accentBar ? (
-                  <div
-                    className={`pointer-events-none absolute inset-x-0 top-0 h-1 ${sendStepTheme.accentBar}`}
-                    aria-hidden
-                  />
-                ) : null}
                 {title ? (
                   <h2
                     className={`min-w-0 flex-1 font-bold tracking-tight text-white ${relaxed ? 'text-base' : dense ? 'text-sm' : 'text-sm sm:text-base'}`}
