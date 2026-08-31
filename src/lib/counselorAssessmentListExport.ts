@@ -52,7 +52,7 @@ export function exportCounselorAssessments(
 
   if (mode === 'download') {
     const ws: XLSX.WorkSheet = {};
-    const headers = ['발급일', '상담코드', '그룹명', '제목', '검사완료/전체', '사용 종료일'];
+    const headers = ['발급일', '상담코드', '그룹명', '소속', '검사완료/전체', '사용 종료일'];
     headers.forEach((h, c) => {
       ws[XLSX.utils.encode_cell({ r: 0, c })] = textCell(h);
     });
@@ -117,7 +117,7 @@ export function exportCounselorAssessments(
         <th>발급일</th>
         <th>상담코드</th>
         <th>그룹명</th>
-        <th>제목</th>
+        <th>소속</th>
         <th>검사완료/전체</th>
         <th>사용 종료일</th>
       </tr>
@@ -198,7 +198,7 @@ export function exportDeletedAssessments(
       options.dateColumnLabel,
       '상담코드',
       '그룹명',
-      '제목',
+      '소속',
       '검사완료/전체',
       '사용 종료일',
     ];
@@ -266,7 +266,7 @@ export function exportDeletedAssessments(
         <th>${escapeHtml(options.dateColumnLabel)}</th>
         <th>상담코드</th>
         <th>그룹명</th>
-        <th>제목</th>
+        <th>소속</th>
         <th>검사완료/전체</th>
         <th>사용 종료일</th>
       </tr>

@@ -536,7 +536,7 @@ export default function DeletedAssessmentsPage() {
                     />
                     <DualFieldSortHeader
                       leftLabel="그룹명"
-                      rightLabel="제목"
+                      rightLabel="소속"
                       activeKey={sortKey}
                       sortKey="counselInfo"
                       phase={counselSortPhase}

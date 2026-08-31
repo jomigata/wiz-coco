@@ -1195,7 +1195,7 @@ export default function CounselorClientList({
                     <TripleFieldSortHeader
                       leftLabel="그룹명"
                       midLabel="상담코드"
-                      rightLabel="제목"
+                      rightLabel="소속"
                       activeKey={sortKey}
                       sortKey="counselInfo"
                       phase={counselSortPhase}

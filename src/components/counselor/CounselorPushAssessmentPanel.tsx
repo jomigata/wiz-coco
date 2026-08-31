@@ -5,6 +5,7 @@ import { LoadingMessage } from '@/components/ui/LoadingMessage';
 import { listAssessments, type CounselorAssessment } from '@/lib/assessmentApi';
 import { pushAssessmentsToPortals } from '@/lib/clientPortalApi';
 import { counselorAssessmentTestOptions } from '@/data/counselorAssessmentTests';
+import { ASSESSMENT_AFFILIATION_LABEL } from '@/lib/counselorOrgInput';
 
 type PushMode = 'existing' | 'new';
 
@@ -101,7 +102,7 @@ export default function CounselorPushAssessmentPanel({
       }
       if (mode === 'new') {
         if (!title.trim()) {
-          setError('상담코드 제목을 입력해 주세요.');
+          setError(`${ASSESSMENT_AFFILIATION_LABEL}을 입력해 주세요.`);
           return;
         }
         if (selectedTestIds.size === 0) {
@@ -199,7 +200,7 @@ export default function CounselorPushAssessmentPanel({
           ) : (
             <div className="space-y-3">
               <div>
-                <label className="mb-1.5 block text-xs text-slate-400">상담코드 제목</label>
+                <label className="mb-1.5 block text-xs text-slate-400">소속</label>
                 <input
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}

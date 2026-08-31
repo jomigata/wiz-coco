@@ -230,7 +230,7 @@ export default function OrgDispatchPage() {
             />
           </div>
           <div>
-            <label className="block text-sm text-slate-400 mb-1">검사 제목 (선택)</label>
+            <label className="block text-sm text-slate-400 mb-1">소속 (선택)</label>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}

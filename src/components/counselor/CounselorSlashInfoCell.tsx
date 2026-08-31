@@ -23,7 +23,7 @@ type Props = {
   onClick?: () => void;
 };
 
-/** 값1/값2 표시 — hover 시 2줄 풍선 (1: 상담유형·코드, 2: 그룹명/제목) */
+/** 값1/값2 표시 — hover 시 2줄 풍선 (1: 상담유형·코드, 2: 그룹명/소속) */
 export default function CounselorSlashInfoCell({
   primary,
   secondary,

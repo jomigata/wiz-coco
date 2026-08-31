@@ -7,7 +7,11 @@ export type CounselorSendTemplate = {
   name: string;
   description: string;
   testIds: string[];
-  /** 기관/단체/그룹명 직접 입력 카드 */
+  /** 발송 시 cohortName (그룹명) */
+  presetGroupName?: string;
+  /** 발송 시 title (소속) */
+  presetAffiliation?: string;
+  /** 맞춤 — 그룹명·소속 직접 입력 카드 */
   customOrgInput?: boolean;
 };
 
@@ -15,32 +19,38 @@ export type CounselorSendTemplate = {
 export const COUNSELOR_SEND_TEMPLATES: CounselorSendTemplate[] = [
   {
     id: 'basic',
-    name: '이고-오케이그램',
-    description: '성격 유형을 짧게 봅니다',
+    name: '성격유형 검사',
+    description: '개인의 종합적인 성격과 속마음을 알아봅니다.',
+    presetGroupName: '성격유형 검사',
+    presetAffiliation: '개인의 종합적인 성격과 속마음을 알아봅니다.',
     testIds: ['mbti'],
   },
   {
     id: 'relation',
-    name: '커플·가족·관계',
-    description: '관계·궁합을 봅니다',
+    name: '관계.궁합 검사',
+    description: '커플이나 가족간의 관계와 궁합을 알아봅니다.',
+    presetGroupName: '관계.궁합 검사',
+    presetAffiliation: '커플이나 가족간의 관계와 궁합을 알아봅니다.',
     testIds: ['inside-mbti'],
   },
   {
     id: 'stress',
-    name: '스트레스',
-    description: '3분 마음 체크 (6문항)',
+    name: '마음상태 검사',
+    description: '개인의 마음상태와 스트레스를 알아봅니다.',
+    presetGroupName: '마음상태 검사',
+    presetAffiliation: '개인의 마음상태와 스트레스를 알아봅니다.',
     testIds: ['generic'],
   },
   {
     id: 'custom',
     name: '맞춤',
-    description: '검사 선택',
+    description: '그룹명 · 소속 직접 입력',
     testIds: ['generic'],
     customOrgInput: true,
   },
 ];
 
-/** 카톡·안내 기본 문구. 상담사가 검사 보내기 화면에서 수정할 수 있다. */
+/** @deprecated use DEFAULT_WELCOME_MESSAGE from welcomeMessageSamples */
 export const QUICK_SEND_MESSAGE = '아래 링크로 진행하여 주세요.';
 
 export function resolveTemplateTestList(
@@ -49,4 +59,13 @@ export function resolveTemplateTestList(
   return template.testIds
     .map((id) => counselorAssessmentTestOptions.find((t) => t.testId === id))
     .filter((t): t is { testId: string; name: string } => Boolean(t));
+}
+
+export function resolveTemplateOrgFields(
+  template: CounselorSendTemplate,
+): { cohortName: string; title: string } {
+  return {
+    cohortName: (template.presetGroupName || template.name).slice(0, 120),
+    title: (template.presetAffiliation || template.description).slice(0, 200),
+  };
 }

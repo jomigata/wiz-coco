@@ -30,7 +30,7 @@ export interface Assessment {
   joinPin?: string;
   /** 상담사 Firebase UID */
   counselorId: string;
-  /** 상담(코드) 세트 안내 제목 */
+  /** 상담(코드) 세트 소속 */
   title: string;
   /** 대상: 개인 | 그룹 */
   targetAudience: TargetAudience;

@@ -23,9 +23,17 @@ import { counselorAssessmentTestOptions } from '@/data/counselorAssessmentTests'
 import {
   COUNSELOR_SEND_TEMPLATES,
   resolveTemplateTestList,
+  resolveTemplateOrgFields,
   type CounselorSendTemplateId,
 } from '@/data/counselorSendTemplates';
 import { DEFAULT_WELCOME_MESSAGE } from '@/lib/welcomeMessageSamples';
+import {
+  CUSTOM_ORG_INPUT_DRAFT,
+  focusCustomOrgTextarea,
+  formatCustomOrgDisplay,
+  isCustomOrgDraft,
+  parseCustomOrgInput,
+} from '@/lib/counselorOrgInput';
 import { fetchMyCredits } from '@/lib/commerceApi';
 import { GROUP_RECIPIENT_MAX } from '@/lib/groupRecipientLimits';
 import {
@@ -228,9 +236,16 @@ export default function CounselorQuickSendForm({
       setError('검사 세트를 하나 골라 주세요.');
       return;
     }
-    if (templateId === 'custom' && !customCohortName.trim()) {
-      setError('기관/단체/그룹명을 입력해 주세요.');
-      return;
+    if (templateId === 'custom') {
+      const parsed = parseCustomOrgInput(customCohortName);
+      if (!parsed.groupName) {
+        setError('1.그룹명을 입력해 주세요.');
+        return;
+      }
+      if (!parsed.affiliation) {
+        setError('2.소속을 입력해 주세요.');
+        return;
+      }
     }
     if (templateId === 'custom' && customTestIds.size === 0) {
       setError('포함할 검사를 하나 이상 선택해 주세요.');
@@ -261,19 +276,18 @@ export default function CounselorQuickSendForm({
     }
 
     const message = welcomeMessage.trim() || DEFAULT_WELCOME_MESSAGE;
-    const firstName = recipients[0].displayName.trim();
-    const cohortName =
-      templateId === 'custom'
-        ? customCohortName.trim().slice(0, 120)
-        : firstName.slice(0, 120);
-    const templateLabel =
-      templateId === 'custom'
-        ? customCohortName.trim() || '맞춤'
-        : template.name;
-    const title =
-      recipients.length > 1
-        ? templateLabel.slice(0, 200)
-        : `${templateLabel} · ${firstName}`.slice(0, 200);
+
+    let cohortName = '';
+    let title = '';
+    if (templateId === 'custom') {
+      const parsed = parseCustomOrgInput(customCohortName);
+      cohortName = parsed.groupName.slice(0, 120);
+      title = parsed.affiliation.slice(0, 200);
+    } else {
+      const org = resolveTemplateOrgFields(template);
+      cohortName = org.cohortName;
+      title = org.title;
+    }
 
     const pendingId = createPendingDispatchAssessmentId();
     pendingAssessmentIdRef.current = pendingId;
@@ -411,7 +425,7 @@ export default function CounselorQuickSendForm({
     >
       {firstSendTrialEligible ? (
         <p className="mx-auto mb-3 max-w-2xl rounded-lg border border-emerald-500/25 bg-emerald-950/30 px-3 py-2 text-sm text-emerald-200">
-          첫 검사 보내기는 무료입니다. 「스트레스」는 3분 마음 체크(6문항)로 부담 없이 시작할 수 있습니다.
+          첫 검사 보내기는 무료입니다. 「마음상태 검사」는 3분 마음 체크(6문항)로 부담 없이 시작할 수 있습니다.
         </p>
       ) : null}
       <form onSubmit={handleSend} className="mx-auto flex max-w-2xl flex-col gap-3 p-1">
@@ -428,6 +442,13 @@ export default function CounselorQuickSendForm({
               const templateOrder = templateIndex + 1;
 
               if (item.customOrgInput) {
+                const parsedCustom = parseCustomOrgInput(customCohortName);
+                const customDisplay = formatCustomOrgDisplay(parsedCustom);
+                const isDraft = isCustomOrgDraft(customCohortName);
+                const showCustomPlaceholder = isDraft && !customCohortFocused;
+                const showCustomSummary = !customCohortFocused && !isDraft && Boolean(customDisplay);
+                const hideCustomText = showCustomPlaceholder || showCustomSummary;
+
                 return (
                   <div
                     key={item.id}
@@ -437,19 +458,32 @@ export default function CounselorQuickSendForm({
                       {templateOrder}
                     </span>
                     <div
-                      className="relative min-h-0 flex-1 cursor-text"
+                      className="relative min-h-0 flex-1 cursor-text text-left"
                       onClick={() => {
                         setTemplateId('custom');
-                        customCohortTextareaRef.current?.focus();
+                        focusCustomOrgTextarea(
+                          customCohortTextareaRef.current,
+                          customCohortName,
+                          setCustomCohortName,
+                        );
                       }}
                     >
-                      {!customCohortName.trim() && !customCohortFocused ? (
+                      {showCustomPlaceholder ? (
                         <span
-                          className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center leading-snug"
+                          className="pointer-events-none absolute inset-0 flex flex-col justify-center px-1 text-sm leading-snug text-slate-400"
                           aria-hidden
                         >
-                          <span className="text-base font-semibold text-slate-400">기관/단체/그룹명</span>
-                          <span className="mt-1 text-sm font-medium text-slate-300">입력하기</span>
+                          <span>{CUSTOM_ORG_INPUT_DRAFT.split('\n')[0]}</span>
+                          <span className="mt-1">{CUSTOM_ORG_INPUT_DRAFT.split('\n')[1]}</span>
+                        </span>
+                      ) : showCustomSummary && customDisplay ? (
+                        <span
+                          className={`pointer-events-none absolute inset-0 flex items-center justify-center px-1 text-center text-sm font-bold leading-snug ${
+                            active ? 'text-white' : 'text-slate-200'
+                          }`}
+                          aria-hidden
+                        >
+                          {customDisplay}
                         </span>
                       ) : null}
                       <textarea
@@ -462,15 +496,24 @@ export default function CounselorQuickSendForm({
                         onFocus={() => {
                           setCustomCohortFocused(true);
                           setTemplateId('custom');
+                          focusCustomOrgTextarea(
+                            customCohortTextareaRef.current,
+                            customCohortName,
+                            setCustomCohortName,
+                          );
                         }}
                         onBlur={() => setCustomCohortFocused(false)}
-                        maxLength={120}
-                        rows={3}
+                        maxLength={320}
+                        rows={4}
                         disabled={sendLocked}
-                        className={`relative h-full w-full resize-none overflow-hidden break-words bg-transparent text-center text-sm font-bold leading-snug caret-white outline-none ${
-                          active ? 'text-white' : 'text-slate-200'
+                        className={`relative h-full w-full resize-none overflow-hidden break-words bg-transparent text-left text-sm leading-snug caret-white outline-none ${
+                          hideCustomText
+                            ? 'text-transparent'
+                            : active
+                              ? 'text-white'
+                              : 'text-slate-200'
                         }`}
-                        aria-label="기관/단체/그룹명"
+                        aria-label="그룹명 및 소속"
                       />
                     </div>
                     <button

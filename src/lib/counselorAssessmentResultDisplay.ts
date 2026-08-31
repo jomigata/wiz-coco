@@ -50,6 +50,6 @@ export function assessmentGroupTitleParts(
 export function formatPortalMoveAssessmentLabel(a: CounselorAssessment): string {
   const group = getAssessmentOrgLabel(a);
   const code = formatAccessCodeDisplay(a.accessCode || '');
-  const title = (a.title || '제목 없음').trim();
+  const title = (a.title || '소속 없음').trim();
   return `${group} (${code}) - ${title}`;
 }

@@ -10,6 +10,7 @@ import {
 } from '@/lib/assessmentFormUi';
 import UsageEndDateField from '@/components/counselor/UsageEndDateField';
 import WelcomeMessageSamplePicker from '@/components/counselor/WelcomeMessageSamplePicker';
+import { ASSESSMENT_AFFILIATION_LABEL } from '@/lib/counselorOrgInput';
 
 export interface AssessmentSettingsFieldsProps {
   title: string;
@@ -24,7 +25,7 @@ export interface AssessmentSettingsFieldsProps {
   titleRequired?: boolean;
   /** 수정 화면 등 — 여백·입력 높이 축소 */
   compact?: boolean;
-  /** meta: 제목·종료일·메시지 / tests: 검사 선택만 / all: 전체(기본) */
+  /** meta: 소속·종료일·메시지 / tests: 검사 선택만 / all: 전체(기본) */
   sections?: 'all' | 'meta' | 'tests';
   /** 입력 필드 커스텀 클래스 (수정 화면 강조 등) */
   inputClassName?: string;
@@ -131,7 +132,7 @@ export default function AssessmentSettingsFields({
         <>
           <div>
             <label htmlFor="assessment-title" className={labelClass}>
-              안내 제목 {titleRequired ? <span className="text-red-400">*</span> : null}
+              {ASSESSMENT_AFFILIATION_LABEL} {titleRequired ? <span className="text-red-400">*</span> : null}
             </label>
             <input
               id="assessment-title"

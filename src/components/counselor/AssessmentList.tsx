@@ -637,7 +637,7 @@ export default function AssessmentList({
           <CounselorListSearchInput
             value={searchQuery}
             onChange={setSearchQuery}
-            placeholder="그룹명 · 제목 · 코드 · 내담자 이름 · 이메일 · 휴대폰 검색"
+            placeholder="그룹명 · 소속 · 코드 · 내담자 이름 · 이메일 · 휴대폰 검색"
           />
         </span>
       }
@@ -759,7 +759,7 @@ export default function AssessmentList({
                   />
                     <DualFieldSortHeader
                       leftLabel="그룹명"
-                      rightLabel="제목"
+                      rightLabel="소속"
                       activeKey={sortKey}
                       sortKey="counselInfo"
                       phase={counselSortPhase}

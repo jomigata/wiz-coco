@@ -11,6 +11,7 @@ import {
   writeCachedAssessmentDetail,
 } from '@/lib/counselorSessionCache';
 import { rememberCounselorAssessmentContext } from '@/lib/counselorNestedNav';
+import { ASSESSMENT_AFFILIATION_LABEL } from '@/lib/counselorOrgInput';
 import { counselorAssessmentTestOptions } from '@/data/counselorAssessmentTests';
 import { COUNSELING_CODE_TYPES, type CounselingCodeType } from '@/data/counselingCodeTypes';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
@@ -135,7 +136,7 @@ export default function AssessmentEditForm({
     if (!initial) return;
     const trimmedTitle = title.trim();
     if (!trimmedTitle) {
-      setError('안내 제목을 입력해 주세요.');
+      setError(`${ASSESSMENT_AFFILIATION_LABEL}을 입력해 주세요.`);
       return;
     }
     if (!codeCategory) {

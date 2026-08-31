@@ -45,6 +45,10 @@ import {
 } from '@/lib/counselorDispatchSeed';
 import WelcomeMessageSamplePicker from '@/components/counselor/WelcomeMessageSamplePicker';
 import { DEFAULT_WELCOME_MESSAGE } from '@/lib/welcomeMessageSamples';
+import {
+  ASSESSMENT_AFFILIATION_LABEL,
+  ASSESSMENT_GROUP_NAME_LABEL,
+} from '@/lib/counselorOrgInput';
 import AuthLink from '@/components/auth/AuthLink';
 import { COUNSELING_CODE_TYPES, type CounselingCodeType } from '@/data/counselingCodeTypes';
 
@@ -121,7 +125,7 @@ export default function IndividualAssessmentCreateForm({
   const [cohortName, setCohortName] = useState('');
   const [codeCategory, setCodeCategory] = useState<CounselingCodeType>('group');
   const [title, setTitle] = useState('');
-  const [welcomeMessage, setWelcomeMessage] = useState('');
+  const [welcomeMessage, setWelcomeMessage] = useState(DEFAULT_WELCOME_MESSAGE);
   const [usageEndDate, setUsageEndDate] = useState('');
   const [selectedTestIds, setSelectedTestIds] = useState<Set<string>>(new Set());
   const [manualRows, setManualRows] = useState<RecipientRow[]>([{ ...EMPTY_ROW }]);
@@ -494,7 +498,7 @@ export default function IndividualAssessmentCreateForm({
     setSharedJoinCode('');
 
     if (!cohortName.trim()) {
-      showValidationError('기관/단체/그룹명을 입력해 주세요.', 'cohortName');
+      showValidationError(`${ASSESSMENT_GROUP_NAME_LABEL}을 입력해 주세요.`, 'cohortName');
       return;
     }
     if (!codeCategory) {
@@ -502,7 +506,7 @@ export default function IndividualAssessmentCreateForm({
       return;
     }
     if (!title.trim()) {
-      showValidationError('안내 제목을 입력해 주세요.', 'title');
+      showValidationError(`${ASSESSMENT_AFFILIATION_LABEL}을 입력해 주세요.`, 'title');
       return;
     }
     if (recipients.length === 0) {
@@ -695,7 +699,7 @@ export default function IndividualAssessmentCreateForm({
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <div>
                 <label className={FORM_LABEL}>
-                  기관/단체/그룹명 <span className="text-red-400">*</span>
+                  {ASSESSMENT_GROUP_NAME_LABEL} <span className="text-red-400">*</span>
                 </label>
                 <input
                   ref={cohortNameRef}
@@ -714,7 +718,7 @@ export default function IndividualAssessmentCreateForm({
               </div>
               <div>
                 <label className={FORM_LABEL}>
-                  안내 제목 <span className="text-red-400">*</span>
+                  {ASSESSMENT_AFFILIATION_LABEL} <span className="text-red-400">*</span>
                 </label>
                 <input
                   ref={titleRef}

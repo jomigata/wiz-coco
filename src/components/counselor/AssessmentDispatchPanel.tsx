@@ -951,7 +951,7 @@ export default function AssessmentDispatchPanel({
             </span>
           ) : null}
           <span className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-slate-900/50 px-2 py-1">
-            <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">제목</span>
+            <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">소속</span>
             <span className="text-sm text-slate-300">
               {stripAssessmentTitleDispatchCountSuffix(displayData.title || '') || '—'}
             </span>
