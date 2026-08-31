@@ -1197,6 +1197,11 @@ export default function IndividualAssessmentCreateForm({
             : '발급 중…'
         }
         message={issueSuccess ? '완료되었습니다.' : '잠시만 기다려 주세요.'}
+        hint={
+          !issueSuccess && loadingIntent === 'excel' && !activeJobId
+            ? '발송 인원이 많을수록 시간이 더 걸릴 수 있습니다.'
+            : undefined
+        }
         onConfirm={issueSuccess ? handleIssueConfirm : undefined}
       />
     </form>

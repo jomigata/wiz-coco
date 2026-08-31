@@ -23,7 +23,7 @@ def _credits_ref(db, counselor_uid: str):
 
 
 _PORTAL_CHARGE_REASONS = frozenset(
-    {"bulk_portal_sync", "bulk_portal_async", "portal_assessment_push"}
+    {"bulk_portal_sync", "bulk_portal_async", "portal_assessment_push", "public_portal_claim"}
 )
 
 

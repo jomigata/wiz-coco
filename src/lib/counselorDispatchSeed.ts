@@ -391,6 +391,7 @@ export function hasPendingDispatchIssueSeed(assessmentId: string): boolean {
 }
 
 export const DISPATCH_CHECKING_LABEL = '확인중...';
+export const DISPATCH_SENDING_LABEL = '발송중...';
 
 export function getDispatchRecipientFieldPending(
   recipient: Pick<DispatchRecipient, 'portalId' | 'myCode' | 'notifyStatus' | 'notifyAt'>,

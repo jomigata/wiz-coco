@@ -51,6 +51,7 @@ import {
   isPendingDispatchAssessmentId,
   mergeDispatchStatusWithCache,
   DISPATCH_CHECKING_LABEL,
+  DISPATCH_SENDING_LABEL,
   getDispatchRecipientFieldPending,
   pendingDispatchPlaceholder,
   readPendingDispatchError,
@@ -1259,7 +1260,7 @@ export default function AssessmentDispatchPanel({
                         title={fieldPending.notifyStatus ? undefined : notify.title}
                       >
                         {fieldPending.notifyStatus ? (
-                          <span className="text-slate-400">{DISPATCH_CHECKING_LABEL}</span>
+                          <span className="text-amber-300">{DISPATCH_SENDING_LABEL}</span>
                         ) : (
                           <DispatchStatusText value={notify} />
                         )}

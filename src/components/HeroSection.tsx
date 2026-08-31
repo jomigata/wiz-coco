@@ -89,6 +89,15 @@ export default function HeroSection() {
             </Link>
           </div>
 
+          <p className="mt-5 text-center">
+            <Link
+              href="/portal/claim-my-code/"
+              className="inline-flex items-center justify-center rounded-full border border-violet-400/25 bg-violet-500/[0.08] px-4 py-2 text-sm font-medium text-violet-200/90 transition hover:border-violet-300/35 hover:bg-violet-500/[0.12] hover:text-violet-100"
+            >
+              무료 검사코드 (나의코드) 받기
+            </Link>
+          </p>
+
           <p className="mt-8 text-center">
             <Link
               href="/portal/guide/"

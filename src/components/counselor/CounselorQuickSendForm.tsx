@@ -877,6 +877,11 @@ export default function CounselorQuickSendForm({
         message={
           sendOverlay?.kind === 'done' ? '완료되었습니다.' : '잠시만 기다려 주세요.'
         }
+        hint={
+          sendOverlay?.kind !== 'done'
+            ? '발송 인원이 많을수록 시간이 더 걸릴 수 있습니다.'
+            : undefined
+        }
         onConfirm={sendOverlay?.kind === 'done' ? handleSendConfirm : undefined}
       />
       <CounselorQuickSendTestPickerModal

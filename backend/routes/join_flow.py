@@ -19,6 +19,7 @@ from utils.access_code import (
 from utils.guest_auth import get_guest_session_from_request, issue_guest_token
 from utils.participant_auth import issue_participant_token
 from utils.join_portal_issue import try_issue_portal_for_participant
+from utils.public_portal_claim import claim_my_code_public
 
 bp = Blueprint("join_flow", __name__, url_prefix="/api/join")
 
@@ -262,3 +263,36 @@ def finalize_participant():
             "message": result.get("message", ""),
         }
     )
+
+
+@bp.route("/claim-my-code", methods=["POST"])
+@limit_access_code
+def claim_my_code():
+    """상담(코드) + 가명 + 전화번호로 나의코드·비밀번호 즉시 발급."""
+    body = request.get_json() or {}
+    code = normalize_access_code(body.get("accessCode") or body.get("joinAccessCode") or "")
+    display_name = (body.get("displayName") or body.get("name") or "").strip()
+    phone = _normalize_phone(body.get("phone") or "")
+
+    db = get_firestore()
+    result = claim_my_code_public(
+        db,
+        join_access_code=code,
+        display_name=display_name,
+        phone=phone,
+    )
+    if not result.get("ok"):
+        err = (result.get("error") or "").strip()
+        if err in ("not_found", "invalid_assessment"):
+            status = 404
+        elif err == "expired":
+            status = 410
+        elif err == "credits_exhausted":
+            status = 402
+        elif err in ("duplicate_phone",):
+            status = 409
+        else:
+            status = 400
+        return jsonify({"error": "Bad Request", "message": result.get("message", "")}), status
+
+    return jsonify(result), 201

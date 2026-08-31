@@ -65,6 +65,35 @@ export async function registerJoinParticipant(body: RegisterParticipantBody): Pr
   return data;
 }
 
+export async function claimJoinMyCode(body: {
+  accessCode: string;
+  displayName: string;
+  phone: string;
+}): Promise<{
+  accessCode: string;
+  myCode: string;
+  pin: string;
+  displayName: string;
+  assessmentId: string;
+  joinAccessCode: string;
+  message?: string;
+}> {
+  const res = await fetch(`${getBaseUrl()}/api/join/claim-my-code`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      accessCode: normalizeAccessCodeInput(body.accessCode),
+      displayName: body.displayName.trim(),
+      phone: body.phone.trim(),
+    }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(typeof data?.message === 'string' ? data.message : '나의코드 발급에 실패했습니다.');
+  }
+  return data;
+}
+
 export async function finalizeJoinParticipant(): Promise<{
   allCompleted: boolean;
   credentialsSent?: boolean;
