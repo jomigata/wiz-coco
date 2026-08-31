@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "prebuild": "node scripts/write-build-version.js",
     "dev": "echo '🚫 개발 서버는 비활성화되었습니다. 로컬 테스트는 dev:build를 사용하세요.'",
     "dev:build": "cross-env SKIP_DB_INIT=true next build",
     "dev:test": "npm run test",
