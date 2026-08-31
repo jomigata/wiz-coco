@@ -52,6 +52,7 @@ import {
   isPendingDispatchAssessmentId,
   mergeDispatchStatusWithCache,
   pendingDispatchPlaceholder,
+  readPendingDispatchError,
   readPendingDispatchResolution,
   resolveDispatchFetchId,
   resolveInitialDispatchStatus,
@@ -434,6 +435,7 @@ export default function AssessmentDispatchPanel({
     return !initial?.recipients?.length && !initial;
   });
   const [error, setError] = useState('');
+  const [pendingIssueError, setPendingIssueError] = useState('');
   const [lastCheckedAt, setLastCheckedAt] = useState<number | null>(null);
   const [lastCheckFailed, setLastCheckFailed] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -471,7 +473,10 @@ export default function AssessmentDispatchPanel({
   useRedirectOnLoginRequiredError(detailError);
 
   useEffect(() => {
-    if (!pendingIssue) return undefined;
+    if (!pendingIssue) {
+      setPendingIssueError('');
+      return undefined;
+    }
     const syncPendingResolution = () => {
       const resolved = readPendingDispatchResolution(assessmentId);
       if (resolved) {
@@ -479,7 +484,10 @@ export default function AssessmentDispatchPanel({
           router,
           `/counselor/assessments/progress?assessmentId=${encodeURIComponent(resolved)}`,
         );
+        return;
       }
+      const issueError = readPendingDispatchError(assessmentId);
+      if (issueError) setPendingIssueError(issueError);
     };
     syncPendingResolution();
     const timer = window.setInterval(syncPendingResolution, 400);
@@ -1032,7 +1040,12 @@ export default function AssessmentDispatchPanel({
       dense
       description={
         <span className="inline-flex w-full flex-wrap items-center gap-2">
-          <DispatchIssuingNoticeBanner active={issuingPhase} />
+          <DispatchIssuingNoticeBanner active={issuingPhase && !pendingIssueError} />
+          {pendingIssueError ? (
+            <span className="inline-flex items-center gap-2 rounded-md border border-red-500/30 bg-red-950/40 px-2 py-1 text-sm text-red-200">
+              발급/발송 처리 중 오류가 발생했습니다: {pendingIssueError} — 상담코드 목록에서 실제 발송 여부를 확인해 주세요.
+            </span>
+          ) : null}
           {needsLiveRefresh && lastCheckedSecondsAgo !== null ? (
             <span
               className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs ${

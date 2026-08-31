@@ -40,6 +40,7 @@ import CounselorActionProgressOverlay from '@/components/counselor/CounselorActi
 import {
   createPendingDispatchAssessmentId,
   finalizePendingDispatchIssue,
+  registerPendingDispatchError,
   seedDispatchStatusAfterIssue,
   seedDispatchStatusBeforeIssue,
 } from '@/lib/counselorDispatchSeed';
@@ -613,6 +614,7 @@ export default function IndividualAssessmentCreateForm({
       setIssueSuccess({ kind: 'pending', sentNotify: true });
       issuePromiseRef.current = executeIssue().catch((err) => {
         const message = err instanceof Error ? err.message : '상담코드 발급에 실패했습니다.';
+        registerPendingDispatchError(pendingId, message);
         setIssueSuccess(null);
         setError(message);
         throw err;
