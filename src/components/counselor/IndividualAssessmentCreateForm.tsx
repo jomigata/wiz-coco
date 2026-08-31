@@ -345,7 +345,7 @@ export default function IndividualAssessmentCreateForm({
   );
 
   const handleIssueConfirm = useCallback(() => {
-    const navId = pendingAssessmentIdRef.current.trim() || resolvedAssessmentIdRef.current.trim();
+    const navId = resolvedAssessmentIdRef.current.trim() || pendingAssessmentIdRef.current.trim();
     const href = navId
       ? `/counselor/assessments/progress?assessmentId=${encodeURIComponent(navId)}`
       : '/counselor/assessments';

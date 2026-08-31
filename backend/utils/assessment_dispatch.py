@@ -1,6 +1,8 @@
 """상담(코드)별 내담자 발송·검사 진행 현황."""
 from __future__ import annotations
 
+import logging
+
 from firebase_admin.firestore import SERVER_TIMESTAMP
 
 from config import (
@@ -13,6 +15,8 @@ from config import (
 from utils.notification_worker import deliver_portal_credentials, deliver_test_reminder, confirm_solapi_sending_for_portals
 from utils.password import generate_four_digit_password, hash_password
 from utils.portal_magic import create_portal_magic_link_token
+
+logger = logging.getLogger(__name__)
 
 
 def _empty_channel_summary() -> dict:
@@ -662,7 +666,16 @@ def get_assessment_dispatch_status(db, assessment_id: str, counselor_uid: str | 
         if (pdata.get("lastNotifyStatus") or "").strip() == "sending"
     ]
     if sending_portal_ids:
-        confirm_solapi_sending_for_portals(db, sending_portal_ids, counselor_uid=counselor_uid)
+        try:
+            confirm_solapi_sending_for_portals(db, sending_portal_ids, counselor_uid=counselor_uid)
+        except Exception:
+            # Solapi 조회·Firestore 갱신 중 오류가 나더라도 발송현황 조회 자체는 계속 반환한다.
+            # (다음 polling에서 재시도되므로 여기서 전체 응답을 500으로 만들지 않는다.)
+            logger.exception(
+                "confirm_solapi_sending_for_portals failed for assessment=%s portals=%s",
+                assessment_id,
+                sending_portal_ids,
+            )
         refreshed: list[tuple[str, dict]] = []
         for pid, pdata in rows:
             if pid in sending_portal_ids:

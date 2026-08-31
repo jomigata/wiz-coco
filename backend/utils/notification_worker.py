@@ -1,4 +1,5 @@
 """notificationQueue pending 항목 처리 — 이메일/SMS 발송."""
+import logging
 from datetime import datetime, timezone
 
 from firebase_admin.firestore import SERVER_TIMESTAMP
@@ -25,6 +26,7 @@ from utils.kakao_alimtalk import (
 from utils.portal_magic import create_portal_magic_link_token
 from utils.solapi_client import check_solapi_group_delivery
 
+logger = logging.getLogger(__name__)
 
 CHANNEL_IDLE = "idle"
 CHANNEL_SENDING = "sending"
@@ -318,105 +320,116 @@ def confirm_solapi_sending_for_portals(
         portal_id = (pid or "").strip()
         if not portal_id:
             continue
-        portal_ref = db.collection(CLIENT_PORTALS_COLLECTION).document(portal_id)
-        snap = portal_ref.get()
-        if not snap.exists:
-            continue
-        pdata = snap.to_dict() or {}
-        if counselor_uid and pdata.get("counselorId") != counselor_uid:
-            continue
-        if (pdata.get("lastNotifyStatus") or "").strip() != "sending":
-            continue
-
-        checked += 1
-        email = (pdata.get("email") or "").strip().lower()
-        phone = (pdata.get("phone") or "").strip()
-        email_ch = (pdata.get("lastNotifyEmailChannel") or CHANNEL_IDLE).strip()
-        phone_ch = (pdata.get("lastNotifyPhoneChannel") or CHANNEL_SENDING).strip()
-        errors = [e for e in (pdata.get("lastNotifyError") or "").split("; ") if e]
-        notify_kind = (pdata.get("lastNotifyKind") or "initial").strip()
-        sent_via = (pdata.get("lastNotifySentVia") or "").strip()
-
-        group_id = (pdata.get("solapiGroupId") or "").strip()
-        if not group_id:
-            queue_match = (
-                db.collection(NOTIFICATION_QUEUE_COLLECTION)
-                .where("portalId", "==", portal_id)
-                .where("status", "==", "sending")
-                .limit(3)
-                .stream()
-            )
-            for qdoc in queue_match:
-                qdata = qdoc.to_dict() or {}
-                q_gid = (qdata.get("solapiGroupId") or "").strip()
-                if q_gid:
-                    group_id = q_gid
-                    break
-
-        age = _portal_notify_age_seconds(pdata)
-
-        if not group_id:
-            if age is not None and age >= SENDING_STALE_SECONDS:
-                status = _finalize_stale_sending_portal(
-                    portal_ref=portal_ref,
-                    queue_ref=None,
-                    email=email,
-                    phone=phone,
-                    email_ch=email_ch,
-                    phone_ch=phone_ch,
-                    errors=errors,
-                    notify_kind=notify_kind,
-                    sent_via=sent_via,
-                )
-                if status == "sent":
-                    confirmed += 1
-                else:
-                    failed += 1
-            else:
-                still_pending += 1
-            continue
-
-        if age is not None and age >= SENDING_STALE_SECONDS:
-            outcome, _err = check_solapi_group_delivery(group_id)
-            if outcome == "pending":
-                status = _finalize_stale_sending_portal(
-                    portal_ref=portal_ref,
-                    queue_ref=None,
-                    email=email,
-                    phone=phone,
-                    email_ch=email_ch,
-                    phone_ch=phone_ch,
-                    errors=errors,
-                    notify_kind=notify_kind,
-                    sent_via=sent_via,
-                )
-                if status == "sent":
-                    confirmed += 1
-                else:
-                    failed += 1
+        try:
+            portal_ref = db.collection(CLIENT_PORTALS_COLLECTION).document(portal_id)
+            snap = portal_ref.get()
+            if not snap.exists:
+                continue
+            pdata = snap.to_dict() or {}
+            if counselor_uid and pdata.get("counselorId") != counselor_uid:
+                continue
+            if (pdata.get("lastNotifyStatus") or "").strip() != "sending":
                 continue
 
-        status, outcome = _confirm_one_solapi_sending(
-            portal_id=portal_id,
-            portal_ref=portal_ref,
-            queue_ref=None,
-            email=email,
-            phone=phone,
-            email_ch=email_ch,
-            phone_ch=phone_ch,
-            errors=errors,
-            notify_kind=notify_kind,
-            sent_via=sent_via,
-            group_id=group_id,
-        )
-        if outcome == "pending":
-            still_pending += 1
-        elif status == "sent":
-            confirmed += 1
-        elif status == "sending":
-            still_pending += 1
-        else:
-            failed += 1
+            checked += 1
+            email = (pdata.get("email") or "").strip().lower()
+            phone = (pdata.get("phone") or "").strip()
+            email_ch = (pdata.get("lastNotifyEmailChannel") or CHANNEL_IDLE).strip()
+            phone_ch = (pdata.get("lastNotifyPhoneChannel") or CHANNEL_SENDING).strip()
+            errors = [e for e in (pdata.get("lastNotifyError") or "").split("; ") if e]
+            notify_kind = (pdata.get("lastNotifyKind") or "initial").strip()
+            sent_via = (pdata.get("lastNotifySentVia") or "").strip()
+
+            group_id = (pdata.get("solapiGroupId") or "").strip()
+            if not group_id:
+                try:
+                    queue_match = (
+                        db.collection(NOTIFICATION_QUEUE_COLLECTION)
+                        .where("portalId", "==", portal_id)
+                        .where("status", "==", "sending")
+                        .limit(3)
+                        .stream()
+                    )
+                    for qdoc in queue_match:
+                        qdata = qdoc.to_dict() or {}
+                        q_gid = (qdata.get("solapiGroupId") or "").strip()
+                        if q_gid:
+                            group_id = q_gid
+                            break
+                except Exception:
+                    logger.exception(
+                        "notificationQueue lookup failed for portal=%s", portal_id
+                    )
+
+            age = _portal_notify_age_seconds(pdata)
+
+            if not group_id:
+                if age is not None and age >= SENDING_STALE_SECONDS:
+                    status = _finalize_stale_sending_portal(
+                        portal_ref=portal_ref,
+                        queue_ref=None,
+                        email=email,
+                        phone=phone,
+                        email_ch=email_ch,
+                        phone_ch=phone_ch,
+                        errors=errors,
+                        notify_kind=notify_kind,
+                        sent_via=sent_via,
+                    )
+                    if status == "sent":
+                        confirmed += 1
+                    else:
+                        failed += 1
+                else:
+                    still_pending += 1
+                continue
+
+            if age is not None and age >= SENDING_STALE_SECONDS:
+                outcome, _err = check_solapi_group_delivery(group_id)
+                if outcome == "pending":
+                    status = _finalize_stale_sending_portal(
+                        portal_ref=portal_ref,
+                        queue_ref=None,
+                        email=email,
+                        phone=phone,
+                        email_ch=email_ch,
+                        phone_ch=phone_ch,
+                        errors=errors,
+                        notify_kind=notify_kind,
+                        sent_via=sent_via,
+                    )
+                    if status == "sent":
+                        confirmed += 1
+                    else:
+                        failed += 1
+                    continue
+
+            status, outcome = _confirm_one_solapi_sending(
+                portal_id=portal_id,
+                portal_ref=portal_ref,
+                queue_ref=None,
+                email=email,
+                phone=phone,
+                email_ch=email_ch,
+                phone_ch=phone_ch,
+                errors=errors,
+                notify_kind=notify_kind,
+                sent_via=sent_via,
+                group_id=group_id,
+            )
+            if outcome == "pending":
+                still_pending += 1
+            elif status == "sent":
+                confirmed += 1
+            elif status == "sending":
+                still_pending += 1
+            else:
+                failed += 1
+        except Exception:
+            logger.exception(
+                "confirm_solapi_sending_for_portals failed for portal=%s", portal_id
+            )
+            continue
 
     return {
         "checked": checked,
