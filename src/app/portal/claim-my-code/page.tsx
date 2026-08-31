@@ -4,12 +4,19 @@ import React, { useCallback, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
-  formatAccessCodeDisplay,
   formatAccessCodeWhileTyping,
   isValidAccessCodeInput,
   normalizeAccessCodeInput,
 } from '@/lib/accessCodeFormat';
 import { normalizeRecipientPhone } from '@/lib/phoneFormat';
+import { claimJoinMyCode } from '@/lib/joinFlowApi';
+import { portalLoginHref } from '@/lib/portalLoginIntent';
+import { navigateToClientPortalLogin } from '@/lib/portalLoginNavigation';
+import {
+  PortalAuthCard,
+  PortalAuthScreenLayout,
+  usePortalAuthTheme,
+} from '@/components/portal/PortalAuthScreenLayout';
 
 function parseClaimContact(raw: string): { email: string; phone: string } {
   const trimmed = raw.trim();
@@ -24,19 +31,11 @@ function isValidClaimContact(raw: string): boolean {
   if (email) return email.includes('@') && email.length >= 5;
   return phone.length >= 10;
 }
-import { claimJoinMyCode } from '@/lib/joinFlowApi';
-import { portalLoginHref } from '@/lib/portalLoginIntent';
-import { navigateToClientPortalLogin } from '@/lib/portalLoginNavigation';
-import {
-  PortalAuthCard,
-  PortalAuthScreenLayout,
-  usePortalAuthTheme,
-} from '@/components/portal/PortalAuthScreenLayout';
 
 type ClaimResult = {
-  myCode: string;
-  pin: string;
   displayName: string;
+  contactKind: 'email' | 'phone';
+  message: string;
 };
 
 export default function ClaimMyCodePage() {
@@ -70,9 +69,9 @@ export default function ClaimMyCodePage() {
           contact: contact.trim(),
         });
         setResult({
-          myCode: data.myCode || data.accessCode,
-          pin: data.pin,
           displayName: data.displayName || displayName.trim(),
+          contactKind: data.contactKind === 'email' ? 'email' : 'phone',
+          message: data.message || '나의코드와 비밀번호를 발송했습니다.',
         });
       } catch (err) {
         setError(err instanceof Error ? err.message : '나의코드 발급에 실패했습니다.');
@@ -86,12 +85,7 @@ export default function ClaimMyCodePage() {
   const startHref = portalLoginHref('start');
 
   const goToExamStart = () => {
-    if (!result) return;
-    const params = new URLSearchParams({
-      accessCode: result.myCode,
-      pin: result.pin,
-    });
-    navigateToClientPortalLogin(router, `${startHref}?${params.toString()}`);
+    navigateToClientPortalLogin(router, startHref);
   };
 
   return (
@@ -108,32 +102,29 @@ export default function ClaimMyCodePage() {
             무료 검사코드 (나의코드) 받기
           </h1>
           <p className="mt-2 text-sm leading-relaxed text-slate-400">
-            상담사에게 안내받은 상담코드와 가명, 휴대폰 번호 또는 이메일을 입력하면 나의코드와 비밀번호를 받을 수 있습니다.
+            상담사에게 안내받은 상담코드와 가명, 휴대폰 번호 또는 이메일을 입력하면 나의코드와 비밀번호를
+            받을 수 있습니다.
           </p>
         </div>
 
         {result ? (
           <div className="space-y-4">
-            <div className={`rounded-xl px-4 py-4 text-left ${t.infoBox}`}>
-              <p className="text-sm text-slate-300">
-                <span className="font-medium text-white">{result.displayName}</span>님, 나의코드가 발급되었습니다.
+            <div className={`rounded-xl px-4 py-5 text-center ${t.infoBox}`}>
+              <div
+                className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400"
+                aria-hidden
+              >
+                <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <p className="text-sm font-medium leading-relaxed text-slate-100">{result.message}</p>
+              <p className="mt-2 text-xs leading-relaxed text-slate-400">
+                {result.contactKind === 'email'
+                  ? '입력하신 이메일을 확인해 주세요.'
+                  : '입력하신 휴대폰 문자(알림톡)를 확인해 주세요.'}
               </p>
-              <dl className="mt-4 space-y-3 text-sm">
-                <div>
-                  <dt className="text-slate-500">나의코드</dt>
-                  <dd className="mt-1 font-mono text-lg font-semibold tracking-wide text-sky-200">
-                    {formatAccessCodeDisplay(result.myCode)}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-slate-500">비밀번호 (4자리)</dt>
-                  <dd className="mt-1 font-mono text-2xl tracking-[0.35em] text-white">{result.pin}</dd>
-                </div>
-              </dl>
             </div>
-            <p className="text-xs leading-relaxed text-slate-500">
-              나의코드와 비밀번호를 메모해 두세요. 분실 시 담당 상담사에게 문의해 주세요.
-            </p>
             <button
               type="button"
               onClick={goToExamStart}
@@ -214,7 +205,7 @@ export default function ClaimMyCodePage() {
               disabled={!canSubmit}
               className={`w-full rounded-xl px-4 py-3.5 text-sm font-semibold disabled:opacity-50 ${t.button}`}
             >
-              {loading ? '발급 중…' : '나의코드 받기'}
+              {loading ? '발송 중…' : '나의코드 받기'}
             </button>
           </form>
         )}

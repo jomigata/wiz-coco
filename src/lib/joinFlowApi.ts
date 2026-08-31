@@ -70,12 +70,11 @@ export async function claimJoinMyCode(body: {
   displayName: string;
   contact: string;
 }): Promise<{
-  accessCode: string;
-  myCode: string;
-  pin: string;
   displayName: string;
   assessmentId: string;
   joinAccessCode: string;
+  contactKind: 'email' | 'phone';
+  notifyStatus?: string;
   message?: string;
 }> {
   const res = await fetch(`${getBaseUrl()}/api/join/claim-my-code`, {

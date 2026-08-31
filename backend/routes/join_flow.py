@@ -296,6 +296,8 @@ def claim_my_code():
             status = 410
         elif err == "credits_exhausted":
             status = 402
+        elif err == "notify_failed":
+            status = 502
         elif err in ("duplicate_contact", "duplicate_phone"):
             status = 409
         else:

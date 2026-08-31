@@ -46,6 +46,12 @@ def _parse_contact(raw: str) -> tuple[str, str]:
     return "", normalize_recipient_phone(s)
 
 
+def _delivery_success_message(display_name: str, contact_kind: str) -> str:
+    if contact_kind == "email":
+        return f"{display_name}님, 나의코드와 비밀번호를 이메일로 발송했습니다."
+    return f"{display_name}님, 나의코드와 비밀번호를 문자(알림톡)로 발송했습니다."
+
+
 def claim_my_code_public(
     db,
     *,
@@ -106,8 +112,10 @@ def claim_my_code_public(
     cohort_name = (ass_data.get("cohortName") or ass_data.get("title") or "내담자").strip()
     title = (ass_data.get("title") or cohort_name).strip()
     welcome_message = (ass_data.get("welcomeMessage") or "").strip()
+    has_contact = bool(email_norm or phone_norm)
+    contact_kind = "email" if email_norm else "phone"
 
-    created_row, _, _, _ = create_portal_for_row(
+    created_row, notify_queued, notify_sent, notify_failed = create_portal_for_row(
         db,
         row={"displayName": name, "email": email_norm, "phone": phone_norm},
         counselor_uid=counselor_uid,
@@ -115,14 +123,21 @@ def claim_my_code_public(
         cohort_name=cohort_name,
         assessment_ref_id=ass_doc.id,
         join_access_code=code,
-        queue_notify=False,
+        queue_notify=has_contact,
         scheduled_at_iso="",
         bulk_job_id="",
         create_magic_link=create_portal_magic_link_token,
-        immediate_notify=False,
+        immediate_notify=has_contact,
         assessment_title=title,
         welcome_message=welcome_message,
     )
+
+    if has_contact and notify_failed and notify_sent == 0 and not notify_queued:
+        return {
+            "ok": False,
+            "error": "notify_failed",
+            "message": "접속 정보 발송에 실패했습니다. 잠시 후 다시 시도하거나 담당 상담사에게 문의해 주세요.",
+        }
 
     try:
         consume_credits(
@@ -136,15 +151,12 @@ def claim_my_code_public(
     except InsufficientCreditsError:
         pass
 
-    my_code = created_row.get("accessCode") or created_row.get("myCode") or ""
-    pin = created_row.get("pin") or ""
     return {
         "ok": True,
-        "accessCode": my_code,
-        "myCode": my_code,
-        "pin": pin,
         "displayName": name,
         "assessmentId": ass_doc.id,
         "joinAccessCode": code,
-        "message": "나의코드가 발급되었습니다. 아래 정보를 저장한 뒤 검사 시작에 사용해 주세요.",
+        "contactKind": contact_kind,
+        "notifyStatus": "sent" if notify_sent else ("queued" if notify_queued else "skipped"),
+        "message": _delivery_success_message(name, contact_kind),
     }
