@@ -15,6 +15,21 @@ export type ParsedCustomOrgInput = {
   affiliation: string;
 };
 
+export type CounselorAffiliationSource = {
+  organizationName?: string;
+  name?: string;
+  reportDisplayName?: string;
+  displayName?: string;
+};
+
+/** 소속(title): 1순위 기관 상호명, 2순위 상담사·대표 이름 */
+export function resolveCounselorAffiliationTitle(source: CounselorAffiliationSource): string {
+  const org = (source.organizationName || '').trim();
+  if (org) return org.slice(0, 200);
+  const person = (source.reportDisplayName || source.name || source.displayName || '').trim();
+  return person.slice(0, 200);
+}
+
 export function isCustomOrgDraft(value: string): boolean {
   const trimmed = value.trim();
   return !trimmed || trimmed === CUSTOM_ORG_INPUT_DRAFT.trim();

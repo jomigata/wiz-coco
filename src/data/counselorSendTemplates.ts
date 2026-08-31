@@ -9,7 +9,7 @@ export type CounselorSendTemplate = {
   testIds: string[];
   /** 발송 시 cohortName (그룹명) */
   presetGroupName?: string;
-  /** 발송 시 title (소속) */
+  /** @deprecated resolveTemplateOrgFields에서 counselorAffiliation 인자 사용 */
   presetAffiliation?: string;
   /** 맞춤 — 그룹명·소속 직접 입력 카드 */
   customOrgInput?: boolean;
@@ -22,7 +22,6 @@ export const COUNSELOR_SEND_TEMPLATES: CounselorSendTemplate[] = [
     name: '성격유형 검사',
     description: '개인의 종합적인 성격과 속마음을 알아봅니다.',
     presetGroupName: '성격유형 검사',
-    presetAffiliation: '개인의 종합적인 성격과 속마음을 알아봅니다.',
     testIds: ['mbti'],
   },
   {
@@ -30,7 +29,6 @@ export const COUNSELOR_SEND_TEMPLATES: CounselorSendTemplate[] = [
     name: '관계.궁합 검사',
     description: '커플이나 가족간의 관계와 궁합을 알아봅니다.',
     presetGroupName: '관계.궁합 검사',
-    presetAffiliation: '커플이나 가족간의 관계와 궁합을 알아봅니다.',
     testIds: ['inside-mbti'],
   },
   {
@@ -38,7 +36,6 @@ export const COUNSELOR_SEND_TEMPLATES: CounselorSendTemplate[] = [
     name: '마음상태 검사',
     description: '개인의 마음상태와 스트레스를 알아봅니다.',
     presetGroupName: '마음상태 검사',
-    presetAffiliation: '개인의 마음상태와 스트레스를 알아봅니다.',
     testIds: ['generic'],
   },
   {
@@ -63,9 +60,11 @@ export function resolveTemplateTestList(
 
 export function resolveTemplateOrgFields(
   template: CounselorSendTemplate,
+  counselorAffiliation?: string,
 ): { cohortName: string; title: string } {
+  const affiliation = (counselorAffiliation || template.presetAffiliation || '').trim();
   return {
     cohortName: (template.presetGroupName || template.name).slice(0, 120),
-    title: (template.presetAffiliation || template.description).slice(0, 200),
+    title: affiliation.slice(0, 200),
   };
 }

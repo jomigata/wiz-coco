@@ -33,7 +33,9 @@ import {
   formatCustomOrgDisplay,
   isCustomOrgDraft,
   parseCustomOrgInput,
+  resolveCounselorAffiliationTitle,
 } from '@/lib/counselorOrgInput';
+import { loadCounselorProfile } from '@/lib/firestore/counselorRegistration';
 import { fetchMyCredits } from '@/lib/commerceApi';
 import { GROUP_RECIPIENT_MAX } from '@/lib/groupRecipientLimits';
 import {
@@ -96,6 +98,7 @@ export default function CounselorQuickSendForm({
   const pendingAssessmentIdRef = useRef('');
   const resolvedAssessmentIdRef = useRef('');
   const [firstSendTrialEligible, setFirstSendTrialEligible] = useState(false);
+  const [counselorAffiliation, setCounselorAffiliation] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const welcomeTextareaRef = useRef<HTMLTextAreaElement>(null);
   const customCohortTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -111,6 +114,36 @@ export default function CounselorQuickSendForm({
       })
       .catch(() => setFirstSendTrialEligible(false));
   }, [user]);
+
+  useEffect(() => {
+    if (!user?.uid) {
+      setCounselorAffiliation('');
+      return;
+    }
+    let cancelled = false;
+    loadCounselorProfile(user.uid)
+      .then(({ profile }) => {
+        if (cancelled) return;
+        setCounselorAffiliation(
+          resolveCounselorAffiliationTitle({
+            organizationName: profile?.organizationName,
+            name: profile?.name,
+            reportDisplayName: profile?.reportDisplayName,
+            displayName: user.displayName || undefined,
+          }),
+        );
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setCounselorAffiliation(
+            resolveCounselorAffiliationTitle({ displayName: user.displayName || undefined }),
+          );
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.uid, user?.displayName]);
 
   const template = COUNSELOR_SEND_TEMPLATES.find((t) => t.id === templateId) ?? null;
   const customSelectedTests = useMemo(
@@ -253,6 +286,13 @@ export default function CounselorQuickSendForm({
       setError('포함할 검사를 하나 이상 선택해 주세요.');
       return;
     }
+    if (templateId !== 'custom') {
+      const orgPreview = resolveTemplateOrgFields(template, counselorAffiliation);
+      if (!orgPreview.title.trim()) {
+        setError('소속(기관 상호명 또는 상담사 이름)을 프로필에 등록해 주세요.');
+        return;
+      }
+    }
     if (recipients.length === 0) {
       setError('내담자 1명 이상(이름·이메일 또는 휴대폰)을 입력하거나 명단을 첨부해 주세요.');
       return;
@@ -286,7 +326,7 @@ export default function CounselorQuickSendForm({
       cohortName = parsed.groupName.slice(0, 120);
       title = parsed.affiliation.slice(0, 200);
     } else {
-      const org = resolveTemplateOrgFields(template);
+      const org = resolveTemplateOrgFields(template, counselorAffiliation);
       cohortName = org.cohortName;
       title = org.title;
     }

@@ -223,8 +223,13 @@ function recipientIdentityKey(recipient: DispatchRecipient, index: number): stri
   ].join('|');
 }
 
+export function isOptimisticPortalId(portalId: string | undefined): boolean {
+  const id = (portalId || '').trim();
+  return !id || id.startsWith('optimistic-') || id.startsWith(PENDING_DISPATCH_ID_PREFIX);
+}
+
 function hasOptimisticPortalIds(recipients: DispatchRecipient[] | undefined): boolean {
-  return (recipients || []).some((row) => (row.portalId || '').startsWith('optimistic-'));
+  return (recipients || []).some((row) => isOptimisticPortalId(row.portalId));
 }
 
 export function isOptimisticDispatchStatus(status: AssessmentDispatchStatus | null | undefined): boolean {
@@ -239,7 +244,17 @@ export function mergeDispatchStatusWithCache(
   fetched: AssessmentDispatchStatus,
 ): AssessmentDispatchStatus {
   if (!cached?.recipients?.length) return fetched;
-  if (!fetched.recipients?.length) return cached;
+  if (!fetched.recipients?.length) {
+    return {
+      ...cached,
+      assessmentId: fetched.assessmentId || cached.assessmentId,
+      title: fetched.title?.trim() || cached.title,
+      cohortName: fetched.cohortName?.trim() || cached.cohortName,
+      joinAccessCode: fetched.joinAccessCode?.trim() || cached.joinAccessCode,
+      testList: fetched.testList?.length ? fetched.testList : cached.testList,
+      recipients: cached.recipients,
+    };
+  }
 
   const cachedByKey = new Map(
     cached.recipients.map((row, index) => [recipientIdentityKey(row, index), row]),
@@ -258,6 +273,15 @@ export function mergeDispatchStatusWithCache(
 
     if (!prior) return row;
 
+    if (isOptimisticPortalId(prior.portalId) && !isOptimisticPortalId(row.portalId)) {
+      return {
+        ...row,
+        displayName: row.displayName?.trim() || prior.displayName,
+        email: row.email?.trim() || prior.email,
+        phone: row.phone?.trim() || prior.phone,
+      };
+    }
+
     return {
       ...prior,
       ...row,
@@ -266,7 +290,11 @@ export function mergeDispatchStatusWithCache(
       phone: row.phone?.trim() || prior.phone,
       myCode: row.myCode?.trim() || prior.myCode,
       joinAccessCode: row.joinAccessCode?.trim() || prior.joinAccessCode,
-      notifyStatus: resolveMergedNotifyStatus(row.notifyStatus, prior.notifyStatus) || row.notifyStatus || prior.notifyStatus || 'not_sent',
+      notifyStatus:
+        resolveMergedNotifyStatus(row.notifyStatus, prior.notifyStatus) ||
+        row.notifyStatus ||
+        prior.notifyStatus ||
+        'not_sent',
       notifyAt: row.notifyAt || prior.notifyAt,
       notifySentVia: row.notifySentVia || prior.notifySentVia,
       notifyEmailChannel: row.notifyEmailChannel || prior.notifyEmailChannel,
@@ -287,15 +315,13 @@ export function mergeDispatchStatusWithCache(
           (row.phone?.trim() || '') === (cachedRow.phone?.trim() || '')),
     );
     if (matchedInFetch) continue;
-    const portalId = cachedRow.portalId || '';
     const stillOptimistic =
-      portalId.startsWith('optimistic-') ||
-      portalId.startsWith(PENDING_DISPATCH_ID_PREFIX) ||
+      isOptimisticPortalId(cachedRow.portalId) ||
       cachedRow.notifyStatus === 'sending' ||
       cachedRow.notifyStatus === 'pending';
     if (stillOptimistic) {
       recipients.push(cachedRow);
-      mergedPortalIds.add(portalId);
+      mergedPortalIds.add(cachedRow.portalId);
     }
   }
 

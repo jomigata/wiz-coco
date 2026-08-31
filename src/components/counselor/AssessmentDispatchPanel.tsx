@@ -48,6 +48,7 @@ import {
   clearDispatchIssueSeed,
   hasPendingDispatchIssueSeed,
   isDispatchIssuingPhase,
+  isOptimisticPortalId,
   isPendingDispatchAssessmentId,
   mergeDispatchStatusWithCache,
   pendingDispatchPlaceholder,
@@ -500,7 +501,10 @@ export default function AssessmentDispatchPanel({
     setError('');
     try {
       const result = await fetchAssessmentDispatchStatus(fetchId);
-      const merged = mergeDispatchStatusWithCache(cached, result);
+      const fetchedIsAuthoritative =
+        (result.recipients?.length ?? 0) > 0 &&
+        result.recipients.every((row) => !isOptimisticPortalId(row.portalId));
+      const merged = fetchedIsAuthoritative ? result : mergeDispatchStatusWithCache(cached, result);
       const nextData: AssessmentDispatchStatus = {
         ...merged,
         assessmentId: fetchId,
@@ -537,24 +541,6 @@ export default function AssessmentDispatchPanel({
       readAnyCachedDispatchStatus(assessmentId, user?.uid);
     void load({ silent: Boolean(cached?.recipients?.length) });
   }, [load, authPending, isAuthenticated, assessmentId, user?.uid]);
-
-  useEffect(() => {
-    if (authPending || !isAuthenticated) return;
-    if (!pendingIssue && !hasPendingDispatchIssueSeed(assessmentId)) return;
-
-    const syncFromCache = () => {
-      const fetchId = resolveDispatchFetchId(assessmentId) || assessmentId;
-      const cached =
-        readAnyCachedDispatchStatus(fetchId, user?.uid) ||
-        readAnyCachedDispatchStatus(assessmentId, user?.uid);
-      if (!cached) return;
-      setData((prev) => (prev ? mergeDispatchStatusWithCache(prev, cached) : cached));
-    };
-
-    syncFromCache();
-    const timer = window.setInterval(syncFromCache, 500);
-    return () => window.clearInterval(timer);
-  }, [authPending, isAuthenticated, pendingIssue, assessmentId, user?.uid]);
 
   const realtimeAssessmentId = resolveDispatchFetchId(assessmentId) || assessmentId;
   const { data: liveData } = useAssessmentDispatchRealtime(
@@ -599,6 +585,33 @@ export default function AssessmentDispatchPanel({
     [pendingIssue, issuingPhase, assessmentId, visibleData?.recipients, dispatchOverrides],
   );
 
+  const needsLiveRefresh = useMemo(() => {
+    if (pendingIssue || issuingPhase || hasPendingDispatchIssueSeed(assessmentId)) return true;
+    return (visibleData?.recipients || []).some((r) => {
+      const status = (r.notifyStatus || 'not_sent').trim();
+      if (status === 'sending' || status === 'pending') return true;
+      if (issuingPhase && !(r.myCode || '').trim()) return true;
+      return false;
+    });
+  }, [pendingIssue, issuingPhase, assessmentId, visibleData?.recipients]);
+
+  useEffect(() => {
+    if (authPending || !isAuthenticated || !needsLiveRefresh) return;
+
+    const syncFromCache = () => {
+      const fetchId = resolveDispatchFetchId(assessmentId) || assessmentId;
+      const cached =
+        readAnyCachedDispatchStatus(fetchId, user?.uid) ||
+        readAnyCachedDispatchStatus(assessmentId, user?.uid);
+      if (!cached) return;
+      setData((prev) => (prev ? mergeDispatchStatusWithCache(prev, cached) : cached));
+    };
+
+    syncFromCache();
+    const cacheTimer = window.setInterval(syncFromCache, 500);
+    return () => window.clearInterval(cacheTimer);
+  }, [authPending, isAuthenticated, needsLiveRefresh, assessmentId, user?.uid]);
+
   useEffect(() => {
     if (!data?.recipients?.length) return;
     setDispatchOverrides((prev) => {
@@ -634,19 +647,19 @@ export default function AssessmentDispatchPanel({
 
   const sendingStartedAtRef = useRef<number | null>(null);
   useEffect(() => {
-    if (!hasSendingNotify) {
+    if (!needsLiveRefresh && !hasSendingNotify) {
       sendingStartedAtRef.current = null;
       return;
     }
     if (authPending || !isAuthenticated) return;
     if (sendingStartedAtRef.current === null) sendingStartedAtRef.current = Date.now();
-    const pollMs = pendingIssue || issuingPhase ? 600 : 1500;
+    const pollMs = pendingIssue || issuingPhase ? 800 : 1500;
     void load({ silent: true });
     const timer = window.setInterval(() => {
       void load({ silent: true });
     }, pollMs);
     return () => window.clearInterval(timer);
-  }, [hasSendingNotify, pendingIssue, issuingPhase, load, authPending, isAuthenticated]);
+  }, [needsLiveRefresh, hasSendingNotify, pendingIssue, issuingPhase, load, authPending, isAuthenticated]);
 
   const allIds = useMemo(
     () => (visibleData?.recipients || []).map((r) => r.portalId),
