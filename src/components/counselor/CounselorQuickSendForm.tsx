@@ -127,6 +127,7 @@ export default function CounselorQuickSendForm({
         setCounselorAffiliation(
           resolveCounselorAffiliationTitle({
             organizationName: profile?.organizationName,
+            organizationManager: profile?.organizationManager,
             name: profile?.name,
             reportDisplayName: profile?.reportDisplayName,
             displayName: user.displayName || undefined,

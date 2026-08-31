@@ -16,6 +16,8 @@ export interface CounselorProfileData {
   practiceType: CounselorPracticeType;
   /** 기관명/회사명 */
   organizationName: string;
+  /** 상담/운영 정보 — 담당자(대표자) 이름 */
+  organizationManager: string;
   reportDisplayName: string;
 }
 
@@ -69,5 +71,6 @@ export const EMPTY_COUNSELOR_PROFILE: CounselorProfileData = {
   license: '',
   practiceType: 'solo',
   organizationName: '',
+  organizationManager: '',
   reportDisplayName: '',
 };

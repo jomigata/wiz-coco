@@ -27,6 +27,7 @@ function normalizeProfile(input: CounselorProfileData, email: string): Counselor
     license: '',
     practiceType: input.practiceType === 'organization' ? 'organization' : 'solo',
     organizationName,
+    organizationManager: (input.organizationManager || '').trim(),
     reportDisplayName: (input.reportDisplayName || input.name).trim(),
   };
 }
@@ -76,7 +77,13 @@ export async function loadCounselorProfile(uid: string): Promise<{
         bio: String(stored.bio || ''),
         license: String(stored.license || ''),
         practiceType: stored.practiceType === 'organization' ? 'organization' : 'solo',
-        organizationName: String(stored.organizationName || data.organizationName || stored.license || ''),
+        organizationName: String(stored.organizationName || data.organizationName || data.companyName || stored.license || ''),
+        organizationManager: String(
+          (stored as Partial<CounselorProfileData> & { organizationManager?: string }).organizationManager ||
+            data.organizationManager ||
+            data.managerName ||
+            '',
+        ),
         reportDisplayName: String(stored.reportDisplayName || data.reportDisplayName || stored.name || ''),
       },
     };
@@ -98,7 +105,8 @@ export async function loadCounselorProfile(uid: string): Promise<{
       bio: '',
       license: '',
       practiceType: data.practiceType === 'organization' ? 'organization' : 'solo',
-      organizationName: String(data.organizationName || ''),
+      organizationName: String(data.organizationName || data.companyName || ''),
+      organizationManager: String(data.organizationManager || data.managerName || ''),
       reportDisplayName: String(data.reportDisplayName || data.name || ''),
     },
   };
@@ -175,6 +183,7 @@ export async function finalizeCounselorApproval(
       license: String(rawPersonalInfo.license || ''),
       practiceType: rawPersonalInfo.practiceType === 'organization' ? 'organization' : 'solo',
       organizationName: String(rawPersonalInfo.organizationName || rawPersonalInfo.license || ''),
+      organizationManager: String((rawPersonalInfo as { organizationManager?: string }).organizationManager || ''),
       reportDisplayName: String(
         rawPersonalInfo.reportDisplayName || rawPersonalInfo.name || '',
       ),

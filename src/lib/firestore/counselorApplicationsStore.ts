@@ -130,6 +130,7 @@ function mapPersonalInfo(raw: Partial<CounselorProfileData>): CounselorProfileDa
     license: String(raw.license || ''),
     practiceType: raw.practiceType === 'organization' ? 'organization' : 'solo',
     organizationName: String(raw.organizationName || raw.license || ''),
+    organizationManager: String(raw.organizationManager || ''),
     reportDisplayName: String(raw.reportDisplayName || raw.name || ''),
   };
 }
