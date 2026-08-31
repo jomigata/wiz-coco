@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from config import ASSESSMENTS_COLLECTION, COMMERCE_CREDITS_ENFORCE
 from utils.access_code import is_valid_access_code, normalize_access_code
-from utils.assessment_dispatch import _collect_portals_for_assessment
 from utils.bulk_portal_worker import create_portal_for_row
 from utils.counselor_credits import InsufficientCreditsError, consume_credits, get_balance
 from utils.phone_format import normalize_recipient_phone
@@ -45,31 +44,6 @@ def _parse_contact(raw: str) -> tuple[str, str]:
         email = s.lower()
         return email, ""
     return "", normalize_recipient_phone(s)
-
-
-def _contact_registered_on_assessment(
-    db, assessment_id: str, counselor_uid: str, email: str, phone: str
-) -> tuple[bool, str]:
-    rows = _collect_portals_for_assessment(
-        db,
-        counselor_uid=counselor_uid,
-        assessment_id=assessment_id,
-        owner_uid=counselor_uid,
-    )
-    target_email = email.strip().lower()
-    target_phone = normalize_recipient_phone(phone)
-    for _, pdata in rows:
-        if (pdata.get("status") or "active") != "active":
-            continue
-        if target_email:
-            existing_email = (pdata.get("email") or "").strip().lower()
-            if existing_email and existing_email == target_email:
-                return True, "email"
-        if target_phone:
-            existing_phone = normalize_recipient_phone((pdata.get("phone") or "").strip())
-            if existing_phone and existing_phone == target_phone:
-                return True, "phone"
-    return False, ""
 
 
 def claim_my_code_public(
@@ -120,16 +94,6 @@ def claim_my_code_public(
     counselor_uid = (ass_data.get("counselorId") or "").strip()
     if not counselor_uid:
         return {"ok": False, "error": "invalid_assessment", "message": MSG_NOT_FOUND}
-
-    registered, kind = _contact_registered_on_assessment(
-        db, ass_doc.id, counselor_uid, email_norm, phone_norm
-    )
-    if registered:
-        if kind == "email":
-            message = "이미 등록된 이메일입니다. 발급받은 나의코드로 검사 시작해 주세요."
-        else:
-            message = "이미 등록된 휴대폰 번호입니다. 발급받은 나의코드로 검사 시작해 주세요."
-        return {"ok": False, "error": "duplicate_contact", "message": message}
 
     if COMMERCE_CREDITS_ENFORCE and get_balance(db, counselor_uid) < 1:
         return {
