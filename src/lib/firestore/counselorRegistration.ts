@@ -5,6 +5,7 @@ import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { updateProfile } from 'firebase/auth';
 import { initializeFirebase } from '@/lib/firebase';
 import type { CounselorProfileData } from '@/types/counselorProfile';
+import { resolveCounselorAffiliationTitle } from '@/lib/counselorOrgInput';
 
 function getDb() {
   const { db } = initializeFirebase();
@@ -14,7 +15,7 @@ function getDb() {
 
 function normalizeProfile(input: CounselorProfileData, email: string): CounselorProfileData {
   const region = (input.region || input.education || '').trim();
-  const organizationName = (input.organizationName || input.license || '').trim();
+  const organizationName = (input.organizationName || '').trim();
   return {
     name: input.name.trim(),
     email: (input.email || email).trim(),
@@ -78,7 +79,7 @@ export async function loadCounselorProfile(uid: string): Promise<{
         license: String(stored.license || ''),
         practiceType: stored.practiceType === 'organization' ? 'organization' : 'solo',
         organizationName: String(
-          data.organizationName || data.companyName || stored.organizationName || stored.license || '',
+          data.organizationName || data.companyName || stored.organizationName || '',
         ),
         organizationManager: String(
           (stored as Partial<CounselorProfileData> & { organizationManager?: string }).organizationManager ||
@@ -112,6 +113,32 @@ export async function loadCounselorProfile(uid: string): Promise<{
       reportDisplayName: String(data.reportDisplayName || data.name || ''),
     },
   };
+}
+
+/** 상담/운영 정보(회사/기관명) 기준 소속 — 발송 직전 최신 users 문서에서 조회 */
+export async function loadCounselorOperationAffiliation(
+  uid: string,
+  authDisplayName?: string,
+): Promise<string> {
+  const db = getDb();
+  const snap = await getDoc(doc(db, 'users', uid));
+  if (!snap.exists()) {
+    return resolveCounselorAffiliationTitle({ displayName: authDisplayName });
+  }
+
+  const data = snap.data() as Record<string, unknown>;
+  const stored = data.counselorProfile as Partial<CounselorProfileData> | undefined;
+
+  return resolveCounselorAffiliationTitle({
+    organizationName: String(
+      data.organizationName || data.companyName || stored?.organizationName || '',
+    ),
+    name: String(stored?.name || data.name || ''),
+    reportDisplayName: String(
+      data.reportDisplayName || stored?.reportDisplayName || stored?.name || data.name || '',
+    ),
+    displayName: authDisplayName,
+  });
 }
 
 async function writeCounselorProfileFields(

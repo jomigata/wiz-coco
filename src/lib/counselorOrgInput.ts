@@ -23,15 +23,37 @@ export type CounselorAffiliationSource = {
   displayName?: string;
 };
 
+/** 플랫폼·브랜드명 등 소속으로 쓰이면 안 되는 값 */
+function isBlockedAffiliationName(value: string): boolean {
+  const normalized = value.trim().toLowerCase().replace(/[\s._-]+/g, '');
+  return (
+    normalized === 'wizcoco' ||
+    normalized === 'wizcocoai' ||
+    normalized === '위즈코코' ||
+    normalized === 'psychcare' ||
+    normalized === '심리케어'
+  );
+}
+
+function pickAffiliationOrganizationName(...candidates: Array<string | undefined>): string {
+  for (const candidate of candidates) {
+    const trimmed = (candidate || '').trim();
+    if (!trimmed || isBlockedAffiliationName(trimmed)) continue;
+    return trimmed;
+  }
+  return '';
+}
+
 /**
  * 소속(title) 결정 순서:
  * 1순위 상담/운영 정보의 회사(기관)명
  * 2순위 상담사 이름
  */
 export function resolveCounselorAffiliationTitle(source: CounselorAffiliationSource): string {
-  const org = (source.organizationName || '').trim();
+  const org = pickAffiliationOrganizationName(source.organizationName);
   if (org) return org.slice(0, 200);
   const person = (source.reportDisplayName || source.name || source.displayName || '').trim();
+  if (person && !isBlockedAffiliationName(person)) return person.slice(0, 200);
   return person.slice(0, 200);
 }
 

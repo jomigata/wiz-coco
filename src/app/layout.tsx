@@ -9,7 +9,6 @@ import ClientLayoutHandler from '@/components/ClientLayoutHandler'
 import AuthNavigationGuard from '@/components/AuthNavigationGuard'
 import RouteTransitionShell from '@/components/RouteTransitionShell'
 import AppChrome from '@/components/AppChrome'
-import BuildVersionWatcher from '@/components/BuildVersionWatcher'
 
 const notoSansKr = Noto_Sans_KR({
   subsets: ['latin'],
@@ -43,7 +42,6 @@ export default function RootLayout({
           </Suspense>
         </AppChrome>
         <ScrollToTop />
-        <BuildVersionWatcher />
       </body>
     </html>
   )

@@ -36,7 +36,7 @@ import {
   parseCustomOrgInput,
   resolveCounselorAffiliationTitle,
 } from '@/lib/counselorOrgInput';
-import { loadCounselorProfile } from '@/lib/firestore/counselorRegistration';
+import { loadCounselorOperationAffiliation } from '@/lib/firestore/counselorRegistration';
 import { fetchMyCredits } from '@/lib/commerceApi';
 import { GROUP_RECIPIENT_MAX } from '@/lib/groupRecipientLimits';
 import {
@@ -122,17 +122,10 @@ export default function CounselorQuickSendForm({
       return;
     }
     let cancelled = false;
-    loadCounselorProfile(user.uid)
-      .then(({ profile }) => {
+    loadCounselorOperationAffiliation(user.uid, user.displayName || undefined)
+      .then((affiliation) => {
         if (cancelled) return;
-        setCounselorAffiliation(
-          resolveCounselorAffiliationTitle({
-            organizationName: profile?.organizationName,
-            name: profile?.name,
-            reportDisplayName: profile?.reportDisplayName,
-            displayName: user.displayName || undefined,
-          }),
-        );
+        setCounselorAffiliation(affiliation);
       })
       .catch(() => {
         if (!cancelled) {
@@ -272,6 +265,20 @@ export default function CounselorQuickSendForm({
       setError('검사 세트를 하나 골라 주세요.');
       return;
     }
+
+    let affiliationForSend = counselorAffiliation;
+    if (user?.uid && templateId !== 'custom') {
+      try {
+        affiliationForSend = await loadCounselorOperationAffiliation(
+          user.uid,
+          user.displayName || undefined,
+        );
+        setCounselorAffiliation(affiliationForSend);
+      } catch {
+        // 초기 로드 값으로 계속 진행
+      }
+    }
+
     if (templateId === 'custom') {
       const parsed = parseCustomOrgInput(customCohortName);
       if (!parsed.groupName) {
@@ -288,7 +295,7 @@ export default function CounselorQuickSendForm({
       return;
     }
     if (templateId !== 'custom') {
-      const orgPreview = resolveTemplateOrgFields(template, counselorAffiliation);
+      const orgPreview = resolveTemplateOrgFields(template, affiliationForSend);
       if (!orgPreview.title.trim()) {
         setError('소속(기관 상호명 또는 상담사 이름)을 프로필에 등록해 주세요.');
         return;
@@ -327,7 +334,7 @@ export default function CounselorQuickSendForm({
       cohortName = parsed.groupName.slice(0, 120);
       title = parsed.affiliation.slice(0, 200);
     } else {
-      const org = resolveTemplateOrgFields(template, counselorAffiliation);
+      const org = resolveTemplateOrgFields(template, affiliationForSend);
       cohortName = org.cohortName;
       title = org.title;
     }
