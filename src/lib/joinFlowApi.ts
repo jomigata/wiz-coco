@@ -68,7 +68,7 @@ export async function registerJoinParticipant(body: RegisterParticipantBody): Pr
 export async function claimJoinMyCode(body: {
   accessCode: string;
   displayName: string;
-  phone: string;
+  contact: string;
 }): Promise<{
   accessCode: string;
   myCode: string;
@@ -84,7 +84,7 @@ export async function claimJoinMyCode(body: {
     body: JSON.stringify({
       accessCode: normalizeAccessCodeInput(body.accessCode),
       displayName: body.displayName.trim(),
-      phone: body.phone.trim(),
+      contact: body.contact.trim(),
     }),
   });
   const data = await res.json().catch(() => ({}));

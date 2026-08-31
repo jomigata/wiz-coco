@@ -39,23 +39,37 @@ def _find_active_assessment(db, code: str):
     return refs[0] if refs else None
 
 
-def _phone_registered_on_assessment(db, assessment_id: str, counselor_uid: str, phone: str) -> bool:
-    target = normalize_recipient_phone(phone)
-    if not target:
-        return False
+def _parse_contact(raw: str) -> tuple[str, str]:
+    s = (raw or "").strip()
+    if "@" in s:
+        email = s.lower()
+        return email, ""
+    return "", normalize_recipient_phone(s)
+
+
+def _contact_registered_on_assessment(
+    db, assessment_id: str, counselor_uid: str, email: str, phone: str
+) -> tuple[bool, str]:
     rows = _collect_portals_for_assessment(
         db,
         counselor_uid=counselor_uid,
         assessment_id=assessment_id,
         owner_uid=counselor_uid,
     )
+    target_email = email.strip().lower()
+    target_phone = normalize_recipient_phone(phone)
     for _, pdata in rows:
         if (pdata.get("status") or "active") != "active":
             continue
-        existing = normalize_recipient_phone((pdata.get("phone") or "").strip())
-        if existing and existing == target:
-            return True
-    return False
+        if target_email:
+            existing_email = (pdata.get("email") or "").strip().lower()
+            if existing_email and existing_email == target_email:
+                return True, "email"
+        if target_phone:
+            existing_phone = normalize_recipient_phone((pdata.get("phone") or "").strip())
+            if existing_phone and existing_phone == target_phone:
+                return True, "phone"
+    return False, ""
 
 
 def claim_my_code_public(
@@ -63,18 +77,32 @@ def claim_my_code_public(
     *,
     join_access_code: str,
     display_name: str,
-    phone: str,
+    contact: str = "",
+    phone: str = "",
+    email: str = "",
 ) -> dict:
     code = normalize_access_code(join_access_code)
     name = (display_name or "").strip()
-    phone_norm = normalize_recipient_phone(phone)
+    raw_contact = (contact or phone or email or "").strip()
+    email_norm, phone_norm = _parse_contact(raw_contact)
 
     if not is_valid_access_code(code):
         return {"ok": False, "error": "invalid_code", "message": MSG_NOT_FOUND}
     if not name or len(name) > 80:
         return {"ok": False, "error": "invalid_name", "message": "가명을 입력해 주세요."}
-    if len(phone_norm) < 10:
-        return {"ok": False, "error": "invalid_phone", "message": "휴대폰 번호를 입력해 주세요."}
+    if email_norm:
+        if "@" not in email_norm or len(email_norm) < 5:
+            return {
+                "ok": False,
+                "error": "invalid_contact",
+                "message": "휴대폰 번호 또는 이메일을 입력해 주세요.",
+            }
+    elif len(phone_norm) < 10:
+        return {
+            "ok": False,
+            "error": "invalid_contact",
+            "message": "휴대폰 번호 또는 이메일을 입력해 주세요.",
+        }
 
     ass_doc = _find_active_assessment(db, code)
     if not ass_doc:
@@ -93,12 +121,15 @@ def claim_my_code_public(
     if not counselor_uid:
         return {"ok": False, "error": "invalid_assessment", "message": MSG_NOT_FOUND}
 
-    if _phone_registered_on_assessment(db, ass_doc.id, counselor_uid, phone_norm):
-        return {
-            "ok": False,
-            "error": "duplicate_phone",
-            "message": "이미 등록된 휴대폰 번호입니다. 발급받은 나의코드로 검사 시작해 주세요.",
-        }
+    registered, kind = _contact_registered_on_assessment(
+        db, ass_doc.id, counselor_uid, email_norm, phone_norm
+    )
+    if registered:
+        if kind == "email":
+            message = "이미 등록된 이메일입니다. 발급받은 나의코드로 검사 시작해 주세요."
+        else:
+            message = "이미 등록된 휴대폰 번호입니다. 발급받은 나의코드로 검사 시작해 주세요."
+        return {"ok": False, "error": "duplicate_contact", "message": message}
 
     if COMMERCE_CREDITS_ENFORCE and get_balance(db, counselor_uid) < 1:
         return {
@@ -114,7 +145,7 @@ def claim_my_code_public(
 
     created_row, _, _, _ = create_portal_for_row(
         db,
-        row={"displayName": name, "email": "", "phone": phone_norm},
+        row={"displayName": name, "email": email_norm, "phone": phone_norm},
         counselor_uid=counselor_uid,
         cohort_id=cohort_id,
         cohort_name=cohort_name,

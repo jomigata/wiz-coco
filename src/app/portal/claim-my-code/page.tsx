@@ -10,6 +10,20 @@ import {
   normalizeAccessCodeInput,
 } from '@/lib/accessCodeFormat';
 import { normalizeRecipientPhone } from '@/lib/phoneFormat';
+
+function parseClaimContact(raw: string): { email: string; phone: string } {
+  const trimmed = raw.trim();
+  if (trimmed.includes('@')) {
+    return { email: trimmed.toLowerCase(), phone: '' };
+  }
+  return { email: '', phone: normalizeRecipientPhone(trimmed) };
+}
+
+function isValidClaimContact(raw: string): boolean {
+  const { email, phone } = parseClaimContact(raw);
+  if (email) return email.includes('@') && email.length >= 5;
+  return phone.length >= 10;
+}
 import { claimJoinMyCode } from '@/lib/joinFlowApi';
 import { portalLoginHref } from '@/lib/portalLoginIntent';
 import { navigateToClientPortalLogin } from '@/lib/portalLoginNavigation';
@@ -30,17 +44,16 @@ export default function ClaimMyCodePage() {
   const t = usePortalAuthTheme('start');
   const [joinCode, setJoinCode] = useState('');
   const [displayName, setDisplayName] = useState('');
-  const [phone, setPhone] = useState('');
+  const [contact, setContact] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ClaimResult | null>(null);
 
   const normalizedJoinCode = normalizeAccessCodeInput(joinCode);
-  const phoneNorm = normalizeRecipientPhone(phone);
   const canSubmit =
     isValidAccessCodeInput(normalizedJoinCode) &&
     displayName.trim().length > 0 &&
-    phoneNorm.length >= 10 &&
+    isValidClaimContact(contact) &&
     !loading &&
     !result;
 
@@ -54,7 +67,7 @@ export default function ClaimMyCodePage() {
         const data = await claimJoinMyCode({
           accessCode: normalizedJoinCode,
           displayName: displayName.trim(),
-          phone: phoneNorm,
+          contact: contact.trim(),
         });
         setResult({
           myCode: data.myCode || data.accessCode,
@@ -67,7 +80,7 @@ export default function ClaimMyCodePage() {
         setLoading(false);
       }
     },
-    [canSubmit, displayName, normalizedJoinCode, phoneNorm],
+    [canSubmit, contact, displayName, normalizedJoinCode],
   );
 
   const startHref = portalLoginHref('start');
@@ -95,7 +108,7 @@ export default function ClaimMyCodePage() {
             무료 검사코드 (나의코드) 받기
           </h1>
           <p className="mt-2 text-sm leading-relaxed text-slate-400">
-            상담사에게 안내받은 상담코드와 가명, 휴대폰 번호를 입력하면 나의코드와 비밀번호를 받을 수 있습니다.
+            상담사에게 안내받은 상담코드와 가명, 휴대폰 번호 또는 이메일을 입력하면 나의코드와 비밀번호를 받을 수 있습니다.
           </p>
         </div>
 
@@ -134,7 +147,7 @@ export default function ClaimMyCodePage() {
                 setResult(null);
                 setJoinCode('');
                 setDisplayName('');
-                setPhone('');
+                setContact('');
               }}
               className="w-full rounded-xl border border-white/10 bg-transparent px-4 py-2.5 text-sm text-slate-400 transition hover:bg-white/[0.04]"
             >
@@ -179,19 +192,19 @@ export default function ClaimMyCodePage() {
               />
             </div>
             <div>
-              <label htmlFor="claim-phone" className={`mb-2 block text-sm font-medium ${t.label}`}>
-                휴대폰 번호
+              <label htmlFor="claim-contact" className={`mb-2 block text-sm font-medium ${t.label}`}>
+                휴대폰번호 / 이메일
               </label>
               <input
-                id="claim-phone"
-                name="claim_phone"
-                type="tel"
-                inputMode="tel"
-                autoComplete="tel"
-                placeholder="나의코드를 받을 핸드폰 번호를 입력하세요."
+                id="claim-contact"
+                name="claim_contact"
+                type="text"
+                inputMode="text"
+                autoComplete="email tel"
+                placeholder="나의코드 받을 핸드폰 번호나 이메일 1가지를 입력하세요."
                 className={`w-full rounded-xl px-4 py-3 focus:outline-none focus:ring-2 ${t.input}`}
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                value={contact}
+                onChange={(e) => setContact(e.target.value)}
                 disabled={loading}
               />
             </div>

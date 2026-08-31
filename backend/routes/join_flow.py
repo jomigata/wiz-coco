@@ -268,18 +268,25 @@ def finalize_participant():
 @bp.route("/claim-my-code", methods=["POST"])
 @limit_access_code
 def claim_my_code():
-    """상담(코드) + 가명 + 전화번호로 나의코드·비밀번호 즉시 발급."""
+    """상담(코드) + 가명 + 연락처(휴대폰 또는 이메일)로 나의코드·비밀번호 즉시 발급."""
     body = request.get_json() or {}
     code = normalize_access_code(body.get("accessCode") or body.get("joinAccessCode") or "")
     display_name = (body.get("displayName") or body.get("name") or "").strip()
-    phone = _normalize_phone(body.get("phone") or "")
+    contact = (
+        body.get("contact")
+        or body.get("phone")
+        or body.get("email")
+        or ""
+    ).strip()
+    if not contact and body.get("phone"):
+        contact = _normalize_phone(body.get("phone") or "")
 
     db = get_firestore()
     result = claim_my_code_public(
         db,
         join_access_code=code,
         display_name=display_name,
-        phone=phone,
+        contact=contact,
     )
     if not result.get("ok"):
         err = (result.get("error") or "").strip()
@@ -289,7 +296,7 @@ def claim_my_code():
             status = 410
         elif err == "credits_exhausted":
             status = 402
-        elif err in ("duplicate_phone",):
+        elif err in ("duplicate_contact", "duplicate_phone"):
             status = 409
         else:
             status = 400
