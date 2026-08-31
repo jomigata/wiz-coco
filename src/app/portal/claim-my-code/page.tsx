@@ -159,7 +159,7 @@ export default function ClaimMyCodePage() {
                 autoComplete="off"
                 autoCapitalize="characters"
                 spellCheck={false}
-                placeholder="상담사에게 받은 상담코드"
+                placeholder="상담코드 입력"
                 className={`w-full rounded-xl px-4 py-3 text-center text-lg tracking-wider focus:outline-none focus:ring-2 ${t.input}`}
                 value={joinCode}
                 onChange={(e) => setJoinCode(formatAccessCodeWhileTyping(e.target.value))}
@@ -168,15 +168,15 @@ export default function ClaimMyCodePage() {
             </div>
             <div>
               <label htmlFor="claim-display-name" className={`mb-2 block text-sm font-medium ${t.label}`}>
-                가명
+                이름(가명)
               </label>
               <input
                 id="claim-display-name"
                 name="claim_display_name"
                 type="text"
                 autoComplete="off"
-                placeholder="검사에 사용할 이름(가명)"
-                className={`w-full rounded-xl px-4 py-3 focus:outline-none focus:ring-2 ${t.input}`}
+                placeholder="사용자 이름(가명) 입력"
+                className={`w-full rounded-xl px-4 py-3 text-center focus:outline-none focus:ring-2 ${t.input}`}
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 disabled={loading}
@@ -192,8 +192,8 @@ export default function ClaimMyCodePage() {
                 type="text"
                 inputMode="text"
                 autoComplete="email tel"
-                placeholder="나의코드 받을 핸드폰 번호나 이메일 1가지를 입력하세요."
-                className={`w-full rounded-xl px-4 py-3 focus:outline-none focus:ring-2 ${t.input}`}
+                placeholder="코드 받을 휴대폰 또는 이메일 1가지 입력"
+                className={`w-full rounded-xl px-4 py-3 text-center focus:outline-none focus:ring-2 ${t.input}`}
                 value={contact}
                 onChange={(e) => setContact(e.target.value)}
                 disabled={loading}
