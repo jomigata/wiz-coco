@@ -188,6 +188,30 @@ export function clearDispatchIssueSeed(assessmentId: string): void {
   }
 }
 
+export function resolveDispatchFetchId(assessmentId: string): string | null {
+  const id = assessmentId.trim();
+  if (!id) return null;
+  if (isPendingDispatchAssessmentId(id)) {
+    return readPendingDispatchResolution(id);
+  }
+  return id;
+}
+
+const TERMINAL_NOTIFY_STATUSES = new Set(['sent', 'partial', 'failed', 'skipped']);
+
+function resolveMergedNotifyStatus(
+  fetched: string | undefined,
+  prior: string | undefined,
+): string | undefined {
+  const next = fetched?.trim();
+  const prev = prior?.trim();
+  if (!next) return prev;
+  if (!prev) return next;
+  if (TERMINAL_NOTIFY_STATUSES.has(next)) return next;
+  if (TERMINAL_NOTIFY_STATUSES.has(prev) && !TERMINAL_NOTIFY_STATUSES.has(next)) return prev;
+  return next;
+}
+
 function recipientIdentityKey(recipient: DispatchRecipient, index: number): string {
   const portalId = recipient.portalId?.trim() || '';
   if (portalId && !portalId.startsWith('optimistic-')) return portalId;
@@ -242,7 +266,11 @@ export function mergeDispatchStatusWithCache(
       phone: row.phone?.trim() || prior.phone,
       myCode: row.myCode?.trim() || prior.myCode,
       joinAccessCode: row.joinAccessCode?.trim() || prior.joinAccessCode,
-      notifyStatus: row.notifyStatus?.trim() ? row.notifyStatus : prior.notifyStatus,
+      notifyStatus: resolveMergedNotifyStatus(row.notifyStatus, prior.notifyStatus) || row.notifyStatus || prior.notifyStatus || 'not_sent',
+      notifyAt: row.notifyAt || prior.notifyAt,
+      notifySentVia: row.notifySentVia || prior.notifySentVia,
+      notifyEmailChannel: row.notifyEmailChannel || prior.notifyEmailChannel,
+      notifyPhoneChannel: row.notifyPhoneChannel || prior.notifyPhoneChannel,
       tests: row.tests?.length ? row.tests : prior.tests,
     };
   });

@@ -166,7 +166,9 @@ export default function CounselorQuickSendForm({
   };
 
   const handleSendConfirm = () => {
-    const navId = pendingAssessmentIdRef.current.trim();
+    const navId =
+      resolvedAssessmentIdRef.current.trim() ||
+      pendingAssessmentIdRef.current.trim();
     if (navId) finish(navId);
   };
 

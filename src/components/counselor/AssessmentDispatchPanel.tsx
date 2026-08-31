@@ -52,6 +52,7 @@ import {
   mergeDispatchStatusWithCache,
   pendingDispatchPlaceholder,
   readPendingDispatchResolution,
+  resolveDispatchFetchId,
   resolveInitialDispatchStatus,
   shouldClearDispatchIssueSeed,
 } from '@/lib/counselorDispatchSeed';
@@ -490,22 +491,29 @@ export default function AssessmentDispatchPanel({
   }, [assessmentId, user?.uid]);
 
   const load = useCallback(async (opts?: { silent?: boolean }) => {
-    if (!assessmentId || isPendingDispatchAssessmentId(assessmentId)) return;
-    const cached = readAnyCachedDispatchStatus(assessmentId, user?.uid);
+    const fetchId = resolveDispatchFetchId(assessmentId);
+    if (!fetchId) return;
+    const cached =
+      readAnyCachedDispatchStatus(fetchId, user?.uid) ||
+      readAnyCachedDispatchStatus(assessmentId, user?.uid);
     if (!opts?.silent && !cached?.recipients?.length) setLoading(true);
     setError('');
     try {
-      const result = await fetchAssessmentDispatchStatus(assessmentId);
+      const result = await fetchAssessmentDispatchStatus(fetchId);
       const merged = mergeDispatchStatusWithCache(cached, result);
       const nextData: AssessmentDispatchStatus = {
         ...merged,
+        assessmentId: fetchId,
         recipients: (merged.recipients || []).map((row) => ({ ...row, tests: row.tests?.map((t) => ({ ...t })) })),
       };
-      writeCachedDispatchStatus(assessmentId, nextData, user?.uid);
+      writeCachedDispatchStatus(fetchId, nextData, user?.uid);
       setData(nextData);
       setSelected(new Set());
       if (shouldClearDispatchIssueSeed(nextData)) {
-        clearDispatchIssueSeed(assessmentId);
+        clearDispatchIssueSeed(fetchId);
+        if (fetchId !== assessmentId.trim()) {
+          clearDispatchIssueSeed(assessmentId);
+        }
       }
     } catch (err) {
       if (cached?.recipients?.length) {
@@ -524,15 +532,38 @@ export default function AssessmentDispatchPanel({
 
   useEffect(() => {
     if (authPending || !isAuthenticated) return;
-    if (isPendingDispatchAssessmentId(assessmentId)) return;
-    const cached = readAnyCachedDispatchStatus(assessmentId, user?.uid);
+    const cached =
+      readAnyCachedDispatchStatus(resolveDispatchFetchId(assessmentId) || assessmentId, user?.uid) ||
+      readAnyCachedDispatchStatus(assessmentId, user?.uid);
     void load({ silent: Boolean(cached?.recipients?.length) });
   }, [load, authPending, isAuthenticated, assessmentId, user?.uid]);
 
+  useEffect(() => {
+    if (authPending || !isAuthenticated) return;
+    if (!pendingIssue && !hasPendingDispatchIssueSeed(assessmentId)) return;
+
+    const syncFromCache = () => {
+      const fetchId = resolveDispatchFetchId(assessmentId) || assessmentId;
+      const cached =
+        readAnyCachedDispatchStatus(fetchId, user?.uid) ||
+        readAnyCachedDispatchStatus(assessmentId, user?.uid);
+      if (!cached) return;
+      setData((prev) => (prev ? mergeDispatchStatusWithCache(prev, cached) : cached));
+    };
+
+    syncFromCache();
+    const timer = window.setInterval(syncFromCache, 500);
+    return () => window.clearInterval(timer);
+  }, [authPending, isAuthenticated, pendingIssue, assessmentId, user?.uid]);
+
+  const realtimeAssessmentId = resolveDispatchFetchId(assessmentId) || assessmentId;
   const { data: liveData } = useAssessmentDispatchRealtime(
-    assessmentId,
+    realtimeAssessmentId,
     data,
-    isAuthenticated && !authPending && !isPendingDispatchAssessmentId(assessmentId),
+    isAuthenticated &&
+      !authPending &&
+      Boolean(realtimeAssessmentId) &&
+      !isPendingDispatchAssessmentId(realtimeAssessmentId),
   );
 
   const displayData = liveData ?? data;
@@ -557,6 +588,7 @@ export default function AssessmentDispatchPanel({
 
   const hasSendingNotify = useMemo(
     () =>
+      pendingIssue ||
       issuingPhase ||
       hasPendingDispatchIssueSeed(assessmentId) ||
       (visibleData?.recipients || []).some((r) => {
@@ -564,7 +596,7 @@ export default function AssessmentDispatchPanel({
         return status === 'sending' || status === 'pending';
       }) ||
       Object.keys(dispatchOverrides).length > 0,
-    [issuingPhase, assessmentId, visibleData?.recipients, dispatchOverrides],
+    [pendingIssue, issuingPhase, assessmentId, visibleData?.recipients, dispatchOverrides],
   );
 
   useEffect(() => {
@@ -608,23 +640,13 @@ export default function AssessmentDispatchPanel({
     }
     if (authPending || !isAuthenticated) return;
     if (sendingStartedAtRef.current === null) sendingStartedAtRef.current = Date.now();
-    const pollMs = issuingPhase ? 600 : 1500;
+    const pollMs = pendingIssue || issuingPhase ? 600 : 1500;
     void load({ silent: true });
     const timer = window.setInterval(() => {
       void load({ silent: true });
     }, pollMs);
     return () => window.clearInterval(timer);
-  }, [hasSendingNotify, issuingPhase, load, authPending, isAuthenticated]);
-
-  useEffect(() => {
-    if (authPending || !isAuthenticated) return;
-    if (!issuingPhase || isPendingDispatchAssessmentId(assessmentId)) return;
-    void load({ silent: true });
-    const timer = window.setInterval(() => {
-      void load({ silent: true });
-    }, 600);
-    return () => window.clearInterval(timer);
-  }, [issuingPhase, assessmentId, load, authPending, isAuthenticated]);
+  }, [hasSendingNotify, pendingIssue, issuingPhase, load, authPending, isAuthenticated]);
 
   const allIds = useMemo(
     () => (visibleData?.recipients || []).map((r) => r.portalId),
