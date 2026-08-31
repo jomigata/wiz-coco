@@ -77,7 +77,9 @@ export async function loadCounselorProfile(uid: string): Promise<{
         bio: String(stored.bio || ''),
         license: String(stored.license || ''),
         practiceType: stored.practiceType === 'organization' ? 'organization' : 'solo',
-        organizationName: String(stored.organizationName || data.organizationName || data.companyName || stored.license || ''),
+        organizationName: String(
+          data.organizationName || data.companyName || stored.organizationName || stored.license || '',
+        ),
         organizationManager: String(
           (stored as Partial<CounselorProfileData> & { organizationManager?: string }).organizationManager ||
             data.organizationManager ||

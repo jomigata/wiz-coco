@@ -43,7 +43,6 @@ import {
   readAnyCachedDispatchStatus,
   writeCachedDispatchStatus,
 } from '@/lib/counselorSessionCache';
-import DispatchIssuingNoticeBanner from '@/components/counselor/DispatchIssuingNoticeBanner';
 import {
   clearDispatchIssueSeed,
   hasPendingDispatchIssueSeed,
@@ -436,8 +435,6 @@ export default function AssessmentDispatchPanel({
   });
   const [error, setError] = useState('');
   const [pendingIssueError, setPendingIssueError] = useState('');
-  const [lastCheckedAt, setLastCheckedAt] = useState<number | null>(null);
-  const [lastCheckFailed, setLastCheckFailed] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [resendLoading, setResendLoading] = useState(false);
@@ -523,8 +520,6 @@ export default function AssessmentDispatchPanel({
       writeCachedDispatchStatus(fetchId, nextData, user?.uid);
       setData(nextData);
       setSelected(new Set());
-      setLastCheckedAt(Date.now());
-      setLastCheckFailed(false);
       if (shouldClearDispatchIssueSeed(nextData)) {
         clearDispatchIssueSeed(fetchId);
         if (fetchId !== assessmentId.trim()) {
@@ -532,8 +527,6 @@ export default function AssessmentDispatchPanel({
         }
       }
     } catch (err) {
-      setLastCheckedAt(Date.now());
-      setLastCheckFailed(true);
       if (cached?.recipients?.length) {
         setData(cached);
         setError('');
@@ -625,18 +618,6 @@ export default function AssessmentDispatchPanel({
     const cacheTimer = window.setInterval(syncFromCache, 500);
     return () => window.clearInterval(cacheTimer);
   }, [authPending, isAuthenticated, needsLiveRefresh, assessmentId, user?.uid]);
-
-  const [nowTick, setNowTick] = useState(() => Date.now());
-  useEffect(() => {
-    if (!needsLiveRefresh) return undefined;
-    const tickTimer = window.setInterval(() => setNowTick(Date.now()), 1000);
-    return () => window.clearInterval(tickTimer);
-  }, [needsLiveRefresh]);
-
-  const lastCheckedSecondsAgo = useMemo(() => {
-    if (!lastCheckedAt) return null;
-    return Math.max(0, Math.round((nowTick - lastCheckedAt) / 1000));
-  }, [lastCheckedAt, nowTick]);
 
   useEffect(() => {
     if (!data?.recipients?.length) return;
@@ -1040,29 +1021,9 @@ export default function AssessmentDispatchPanel({
       dense
       description={
         <span className="inline-flex w-full flex-wrap items-center gap-2">
-          <DispatchIssuingNoticeBanner active={issuingPhase && !pendingIssueError} />
           {pendingIssueError ? (
             <span className="inline-flex items-center gap-2 rounded-md border border-red-500/30 bg-red-950/40 px-2 py-1 text-sm text-red-200">
               발급/발송 처리 중 오류가 발생했습니다: {pendingIssueError} — 상담코드 목록에서 실제 발송 여부를 확인해 주세요.
-            </span>
-          ) : null}
-          {needsLiveRefresh && lastCheckedSecondsAgo !== null ? (
-            <span
-              className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs ${
-                lastCheckFailed
-                  ? 'border-amber-500/30 bg-amber-950/30 text-amber-300'
-                  : 'border-white/10 bg-slate-900/50 text-slate-400'
-              }`}
-              title="발송현황은 자동으로 갱신됩니다"
-            >
-              {lastCheckFailed ? '업데이트 재시도 중' : `${lastCheckedSecondsAgo}초 전 확인`}
-              <button
-                type="button"
-                onClick={() => void load({ silent: true })}
-                className="ml-1 rounded border border-white/15 px-1.5 py-0.5 text-[11px] text-slate-300 transition-colors hover:bg-white/10"
-              >
-                새로고침
-              </button>
             </span>
           ) : null}
           <CounselorListBackLink href={backHref} label={backButtonLabel} />

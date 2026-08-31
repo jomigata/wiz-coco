@@ -16,9 +16,8 @@ export type ParsedCustomOrgInput = {
 };
 
 export type CounselorAffiliationSource = {
+  /** 상담/운영 정보 — 회사/기관명 */
   organizationName?: string;
-  /** 상담/운영 정보 — 담당자(대표자) 이름 */
-  organizationManager?: string;
   name?: string;
   reportDisplayName?: string;
   displayName?: string;
@@ -26,15 +25,12 @@ export type CounselorAffiliationSource = {
 
 /**
  * 소속(title) 결정 순서:
- * 1순위 프로필·상담/운영 정보의 회사(기관) 상호명
- * 2순위 대표자(담당자) 이름
- * 3순위 상담사 본인 이름
+ * 1순위 상담/운영 정보의 회사(기관)명
+ * 2순위 상담사 이름
  */
 export function resolveCounselorAffiliationTitle(source: CounselorAffiliationSource): string {
   const org = (source.organizationName || '').trim();
   if (org) return org.slice(0, 200);
-  const manager = (source.organizationManager || '').trim();
-  if (manager) return manager.slice(0, 200);
   const person = (source.reportDisplayName || source.name || source.displayName || '').trim();
   return person.slice(0, 200);
 }
