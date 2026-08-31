@@ -873,16 +873,9 @@ export default function CounselorQuickSendForm({
       <CounselorActionProgressOverlay
         open={Boolean(sendOverlay)}
         phase={sendOverlay?.kind === 'done' ? 'success' : 'loading'}
-        title={sendOverlay?.kind === 'done' ? '발송 완료' : '발송 처리 중…'}
+        title={sendOverlay?.kind === 'done' ? '발송 완료' : '발송 중…'}
         message={
-          sendOverlay?.kind === 'done'
-            ? '검사 링크 발송이 완료되었습니다. 확인을 누르면 상담진행 현황으로 이동합니다.'
-            : '상담코드 발급과 검사 링크 발송을 진행하고 있습니다.'
-        }
-        hint={
-          sendOverlay?.kind !== 'done'
-            ? '창을 닫지 말고 잠시만 기다려 주세요. 인원이 많을 경우 시간이 더 걸릴 수 있습니다.'
-            : undefined
+          sendOverlay?.kind === 'done' ? '완료되었습니다.' : '잠시만 기다려 주세요.'
         }
         onConfirm={sendOverlay?.kind === 'done' ? handleSendConfirm : undefined}
       />

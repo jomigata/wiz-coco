@@ -50,6 +50,8 @@ import {
   isOptimisticPortalId,
   isPendingDispatchAssessmentId,
   mergeDispatchStatusWithCache,
+  DISPATCH_CHECKING_LABEL,
+  getDispatchRecipientFieldPending,
   pendingDispatchPlaceholder,
   readPendingDispatchError,
   readPendingDispatchResolution,
@@ -1192,7 +1194,11 @@ export default function AssessmentDispatchPanel({
                 const isOpen = expandedId === r.portalId;
                 const contactRevealed = isOpen;
                 const tests = r.tests ?? [];
-                const myCodeLabel = pendingDispatchPlaceholder(formatAccessCodeDisplay(r.myCode), issuingPhase);
+                const fieldPending = getDispatchRecipientFieldPending(r, issuingPhase);
+                const myCodeLabel = pendingDispatchPlaceholder(
+                  formatAccessCodeDisplay(r.myCode),
+                  fieldPending.myCode,
+                );
 
                 return (
                   <React.Fragment key={r.portalId}>
@@ -1250,12 +1256,16 @@ export default function AssessmentDispatchPanel({
                       </td>
                       <td
                         className="px-3 py-2.5 align-top whitespace-nowrap text-sm"
-                        title={notify.title}
+                        title={fieldPending.notifyStatus ? undefined : notify.title}
                       >
-                        <DispatchStatusText value={notify} />
+                        {fieldPending.notifyStatus ? (
+                          <span className="text-slate-400">{DISPATCH_CHECKING_LABEL}</span>
+                        ) : (
+                          <DispatchStatusText value={notify} />
+                        )}
                       </td>
                       <td className="px-3 py-2.5 align-top whitespace-nowrap text-sm tabular-nums text-slate-400">
-                        {formatNotifyDate(r.notifyAt)}
+                        {fieldPending.notifyAt ? DISPATCH_CHECKING_LABEL : formatNotifyDate(r.notifyAt)}
                       </td>
                     </tr>
                     {isOpen ? (

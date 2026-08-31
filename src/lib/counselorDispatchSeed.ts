@@ -390,7 +390,32 @@ export function hasPendingDispatchIssueSeed(assessmentId: string): boolean {
   }
 }
 
-export function pendingDispatchPlaceholder(value: string, pending: boolean, placeholder = '발급 중'): string {
+export const DISPATCH_CHECKING_LABEL = '확인중...';
+
+export function getDispatchRecipientFieldPending(
+  recipient: Pick<DispatchRecipient, 'portalId' | 'myCode' | 'notifyStatus' | 'notifyAt'>,
+  issuingPhase: boolean,
+): { myCode: boolean; notifyStatus: boolean; notifyAt: boolean } {
+  const status = (recipient.notifyStatus || 'not_sent').trim();
+  const terminal = status === 'sent' || status === 'partial' || status === 'failed';
+  const inFlight =
+    status === 'sending' ||
+    status === 'pending' ||
+    isOptimisticPortalId(recipient.portalId);
+  const unconfirmed = inFlight || (issuingPhase && !terminal);
+
+  return {
+    myCode: unconfirmed && !(recipient.myCode || '').trim(),
+    notifyStatus: unconfirmed && !terminal,
+    notifyAt: unconfirmed && !(recipient.notifyAt || '').trim(),
+  };
+}
+
+export function pendingDispatchPlaceholder(
+  value: string,
+  pending: boolean,
+  placeholder = DISPATCH_CHECKING_LABEL,
+): string {
   const trimmed = value.trim();
   if (trimmed && trimmed !== '—') return trimmed;
   return pending ? placeholder : trimmed || '—';

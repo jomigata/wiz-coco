@@ -90,8 +90,6 @@ type NameSortPhase = 'name-asc' | 'name-desc' | 'code-asc' | 'code-desc';
 type CounselSortPhase =
   | 'org-asc'
   | 'org-desc'
-  | 'joinCode-asc'
-  | 'joinCode-desc'
   | 'title-asc'
   | 'title-desc';
 
@@ -250,9 +248,6 @@ function compareRows(
     case 'counselInfo': {
       const phaseMult = (p: CounselSortPhase) => (p.endsWith('-asc') ? 1 : -1);
       const m = phaseMult(counselSortPhase);
-      if (counselSortPhase.startsWith('joinCode')) {
-        return m * counselJoinCodeLabel(a).localeCompare(counselJoinCodeLabel(b), 'ko');
-      }
       if (counselSortPhase.startsWith('title')) {
         return m * counselTitleLabel(a).localeCompare(counselTitleLabel(b), 'ko');
       }
@@ -385,32 +380,27 @@ function DualFieldSortHeader({
   );
 }
 
-function TripleFieldSortHeader({
+function CounselDualFieldSortHeader({
   leftLabel,
-  midLabel,
   rightLabel,
   activeKey,
   sortKey,
   phase,
   onSortLeft,
-  onSortMid,
   onSortRight,
   className = '',
 }: {
   leftLabel: string;
-  midLabel: string;
   rightLabel: string;
   activeKey: ListSortKey;
   sortKey: ListSortKey;
   phase: CounselSortPhase;
   onSortLeft: () => void;
-  onSortMid: () => void;
   onSortRight: () => void;
   className?: string;
 }) {
   const active = activeKey === sortKey;
   const orgActive = active && phase.startsWith('org');
-  const codeActive = active && phase.startsWith('joinCode');
   const titleActive = active && phase.startsWith('title');
   return (
     <th scope="col" className={`${counselorListThClass} ${className}`}>
@@ -426,20 +416,6 @@ function TripleFieldSortHeader({
           {leftLabel}
           <span className="text-[10px] opacity-80" aria-hidden>
             {sortPhaseIcon(orgActive, phase)}
-          </span>
-        </button>
-        <span className="text-slate-500">/</span>
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onSortMid();
-          }}
-          className={`inline-flex items-center gap-1 transition-colors hover:text-slate-200 ${codeActive ? counselorListSortActiveClass : 'text-slate-300'}`}
-        >
-          {midLabel}
-          <span className="text-[10px] opacity-80" aria-hidden>
-            {sortPhaseIcon(codeActive, phase)}
           </span>
         </button>
         <span className="text-slate-500">/</span>
@@ -862,16 +838,12 @@ export default function CounselorClientList({
     });
   };
 
-  const toggleCounselFieldSort = (field: 'org' | 'joinCode' | 'title') => {
+  const toggleCounselFieldSort = (field: 'org' | 'title') => {
     setSortKey('counselInfo');
     setCounselSortPhase((prev) => {
       if (field === 'org') {
         if (prev.startsWith('org')) return prev === 'org-asc' ? 'org-desc' : 'org-asc';
         return 'org-asc';
-      }
-      if (field === 'joinCode') {
-        if (prev.startsWith('joinCode')) return prev === 'joinCode-asc' ? 'joinCode-desc' : 'joinCode-asc';
-        return 'joinCode-asc';
       }
       if (prev.startsWith('title')) return prev === 'title-asc' ? 'title-desc' : 'title-asc';
       return 'title-asc';
@@ -1053,8 +1025,8 @@ export default function CounselorClientList({
       ? '삭제일'
       : '발송일';
   const searchPlaceholder = adminUser
-    ? '이름 · 이메일 · 연락처 · 상담유형 · 상담코드 · 상담정보 · 태그 · 상담사 이메일'
-    : '이름 · 이메일 · 연락처 · 상담유형 · 상담코드 · 상담정보 · 태그';
+    ? '이름 · 이메일 · 연락처 · 상담유형 · 상담정보 · 태그 · 상담사 이메일'
+    : '이름 · 이메일 · 연락처 · 상담유형 · 상담정보 · 태그';
 
   return (
     <CounselorPageSection
@@ -1192,15 +1164,13 @@ export default function CounselorClientList({
                       onSortLeft={() => toggleNameFieldSort('name')}
                       onSortRight={() => toggleNameFieldSort('code')}
                     />
-                    <TripleFieldSortHeader
+                    <CounselDualFieldSortHeader
                       leftLabel="그룹명"
-                      midLabel="상담코드"
                       rightLabel="소속"
                       activeKey={sortKey}
                       sortKey="counselInfo"
                       phase={counselSortPhase}
                       onSortLeft={() => toggleCounselFieldSort('org')}
-                      onSortMid={() => toggleCounselFieldSort('joinCode')}
                       onSortRight={() => toggleCounselFieldSort('title')}
                     />
                     <SortableColumnHeader
@@ -1256,9 +1226,6 @@ export default function CounselorClientList({
                     const infoOrg = primaryAssessment
                       ? primaryAssessment.orgName || item.cohortName || '—'
                       : item.cohortName || '—';
-                    const infoCode = primaryAssessment
-                      ? formatAccessCodeDisplay(primaryAssessment.joinAccessCode || '')
-                      : '—';
                     const infoSecondary = stripAssessmentTitleDispatchCountSuffix(
                       primaryAssessment?.title || '—',
                     );
@@ -1354,13 +1321,8 @@ export default function CounselorClientList({
                           {primaryAssessment ? (
                             <CounselorSlashInfoCell
                               primary={infoOrg}
-                              mid={infoCode}
-                              midClassName="font-normal text-slate-400"
                               secondary={infoSecondary}
                               hoverTypeLabel={counselingCodeTypeLabel(primaryAssessment.codeCategory)}
-                              hoverAccessCode={formatAccessCodeDisplay(
-                                primaryAssessment.joinAccessCode || '',
-                              )}
                               normalWeight
                               showTooltip={false}
                               className={cellInteractionClass}

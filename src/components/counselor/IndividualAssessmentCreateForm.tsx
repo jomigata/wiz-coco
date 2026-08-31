@@ -1194,15 +1194,9 @@ export default function IndividualAssessmentCreateForm({
             ? issueSuccess.sentNotify
               ? '발송 완료'
               : '발급 완료'
-            : '발급 진행 중…'
+            : '발급 중…'
         }
-        message={
-          issueSuccess
-            ? issueSuccess.sentNotify
-              ? '검사 링크 발송이 완료되었습니다. 확인을 누르면 상담진행 현황으로 이동합니다.'
-              : '상담코드 발급이 완료되었습니다. 확인을 누르면 상담진행 현황으로 이동합니다.'
-            : '엑셀 저장을 위해 상담코드를 발급하고 있습니다.'
-        }
+        message={issueSuccess ? '완료되었습니다.' : '잠시만 기다려 주세요.'}
         onConfirm={issueSuccess ? handleIssueConfirm : undefined}
       />
     </form>
