@@ -1,6 +1,28 @@
-name: 🚀 WizCoCo CI/CD Pipeline - GitHub Actions 전용
+# Firebase Hosting / Functions 배포 (기본: 수동만 — push 시 GCP 과금 없음)
+# push 자동 배포: GitHub repo Variable `AUTO_DEPLOY_ON_PUSH` = `true` 일 때만
+name: 🚀 WizCoCo Deploy (Firebase)
 
 on:
+  workflow_dispatch:
+    inputs:
+      deploy_mode:
+        description: '배포 범위'
+        required: true
+        default: 'auto'
+        type: choice
+        options:
+          - auto
+          - hosting-only
+          - hosting-functions
+          - full
+      environment:
+        description: '배포 환경'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
   push:
     branches: [ main ]
     paths:
@@ -18,229 +40,249 @@ on:
       - 'tsconfig.json'
       - 'jsconfig.json'
       - '.github/workflows/deploy.yml'
-  workflow_dispatch:
-    inputs:
-      environment:
-        description: '배포 환경 선택'
-        required: true
-        default: 'production'
-        type: choice
-        options:
-        - production
-        - staging
 
 env:
   NODE_VERSION: '20.x'
   FIREBASE_PROJECT_ID: 'wiz-coco'
 
-# 같은 브랜치에 연속 push 시 이전 실행 취소 → Cloud Build/GitHub Actions 낭비 방지
 concurrency:
-  group: deploy-${{ github.ref }}
+  group: deploy-firebase-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  # push 이벤트 + AUTO_DEPLOY_ON_PUSH≠true → GCP 배포 스킵 (ci.yml만 검증)
+  gate:
+    name: 🚦 Deploy gate
+    runs-on: ubuntu-latest
+    outputs:
+      should_deploy: ${{ steps.decide.outputs.should_deploy }}
+    steps:
+      - id: decide
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
+            echo "✅ Manual deploy — proceeding"
+          elif [ "${{ vars.AUTO_DEPLOY_ON_PUSH }}" = "true" ]; then
+            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
+            echo "✅ AUTO_DEPLOY_ON_PUSH=true — auto deploy on push"
+          else
+            echo "should_deploy=false" >> "$GITHUB_OUTPUT"
+            echo "⏭️ Push deploy skipped (AUTO_DEPLOY_ON_PUSH is not true). Run this workflow manually when needed."
+          fi
+
   build-and-deploy:
-    name: 🏗️ 검사·빌드·배포
+    name: 🏗️ Build & Deploy
+    needs: gate
+    if: needs.gate.outputs.should_deploy == 'true'
     runs-on: ubuntu-latest
 
     steps:
-    - name: 📥 코드 체크아웃
-      uses: actions/checkout@v5
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 2
 
-    - name: 🟢 Node.js 설정
-      uses: actions/setup-node@v5
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-        cache: 'npm'
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
 
-    - name: 📦 의존성 설치
-      run: |
-        echo "📦 의존성 설치 시작..."
-        npm config set registry https://registry.npmjs.org/
-        npm config set fetch-retry-mintimeout 20000
-        npm config set fetch-retry-maxtimeout 120000
-        npm config set fetch-retries 5
-        for i in {1..3}; do
-          echo "🔄 시도 $i/3..."
-          if npm ci --legacy-peer-deps --no-audit --no-fund; then
-            echo "✅ 의존성 설치 성공!"
-            break
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            hosting:
+              - 'src/**'
+              - 'public/**'
+              - 'package.json'
+              - 'package-lock.json'
+              - 'next.config.js'
+              - 'tailwind.config.js'
+              - 'tsconfig.json'
+              - 'jsconfig.json'
+            functions:
+              - 'functions/**'
+            firestore:
+              - 'firestore.rules'
+              - 'firestore.indexes.json'
+            storage:
+              - 'storage.rules'
+            firebase_json:
+              - 'firebase.json'
+
+      - name: 📦 Install dependencies
+        run: |
+          npm config set registry https://registry.npmjs.org/
+          npm ci --legacy-peer-deps --no-audit --no-fund
+
+      - name: 🎯 TypeScript check
+        run: npx tsc --noEmit --project tsconfig.json
+
+      - name: 🎯 Resolve deploy targets
+        id: targets
+        env:
+          DEPLOY_MODE: ${{ github.event.inputs.deploy_mode || 'auto' }}
+          CH_HOSTING: ${{ steps.changes.outputs.hosting }}
+          CH_FUNCTIONS: ${{ steps.changes.outputs.functions }}
+          CH_FIRESTORE: ${{ steps.changes.outputs.firestore }}
+          CH_STORAGE: ${{ steps.changes.outputs.storage }}
+        run: |
+          TARGETS=""
+          DEPLOY_FUNCTIONS="false"
+
+          add_target() {
+            if [ -z "$TARGETS" ]; then TARGETS="$1"; else TARGETS="${TARGETS},$1"; fi
+          }
+
+          case "$DEPLOY_MODE" in
+            hosting-only)
+              add_target hosting
+              ;;
+            hosting-functions)
+              add_target hosting
+              add_target functions
+              DEPLOY_FUNCTIONS="true"
+              ;;
+            full)
+              add_target hosting
+              add_target functions
+              add_target firestore
+              add_target storage
+              DEPLOY_FUNCTIONS="true"
+              ;;
+            auto|*)
+              if [ "$CH_HOSTING" = "true" ] || [ "$CH_FUNCTIONS" != "true" ]; then
+                add_target hosting
+              fi
+              if [ "$CH_FUNCTIONS" = "true" ]; then
+                add_target functions
+                DEPLOY_FUNCTIONS="true"
+              fi
+              if [ "$CH_FIRESTORE" = "true" ]; then
+                add_target firestore
+              fi
+              if [ "$CH_STORAGE" = "true" ]; then
+                add_target storage
+              fi
+              if [ -z "$TARGETS" ]; then
+                add_target hosting
+              fi
+              ;;
+          esac
+
+          echo "deploy_targets=${TARGETS}" >> "$GITHUB_OUTPUT"
+          echo "deploy_functions=${DEPLOY_FUNCTIONS}" >> "$GITHUB_OUTPUT"
+          echo "📦 firebase deploy --only ${TARGETS}"
+
+      - name: 🔎 Need gcloud for Flask URL?
+        id: flask
+        run: |
+          if [ -n "${{ secrets.NEXT_PUBLIC_FLASK_API_URL }}" ]; then
+            echo "need_gcloud=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "need_gcloud=true" >> "$GITHUB_OUTPUT"
           fi
-          if [ "$i" -eq 3 ]; then
-            echo "❌ 모든 시도 실패"
+
+      - name: 🔐 Authenticate to Google Cloud
+        if: steps.targets.outputs.deploy_functions == 'true' || steps.flask.outputs.need_gcloud == 'true'
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: 🔧 Set up gcloud
+        if: steps.targets.outputs.deploy_functions == 'true' || steps.flask.outputs.need_gcloud == 'true'
+        uses: google-github-actions/setup-gcloud@v3
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: 🌍 Environment (.env for build)
+        env:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+        run: |
+          echo "NODE_ENV=production" > .env
+          echo "SKIP_DB_INIT=true" >> .env
+          echo "NEXT_TELEMETRY_DISABLED=1" >> .env
+          echo "CI=true" >> .env
+          echo "GITHUB_ACTIONS=true" >> .env
+          echo "NEXT_PUBLIC_BUILD_SHA=${{ github.sha }}" >> .env
+          echo "NEXT_PUBLIC_BUILD_RUN_ID=${{ github.run_id }}" >> .env
+          echo "NEXT_PUBLIC_FIREBASE_API_KEY=${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}" >> .env
+          AUTH_DOMAIN="${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}"
+          [ -z "$AUTH_DOMAIN" ] && AUTH_DOMAIN="wiz-coco.firebaseapp.com"
+          echo "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=$AUTH_DOMAIN" >> .env
+          echo "NEXT_PUBLIC_FIREBASE_PROJECT_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}" >> .env
+          echo "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}" >> .env
+          echo "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}" >> .env
+          echo "NEXT_PUBLIC_FIREBASE_APP_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}" >> .env
+          echo "NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID }}" >> .env
+          FLASK_URL="${{ secrets.NEXT_PUBLIC_FLASK_API_URL }}"
+          if [ -z "${FLASK_URL}" ] && [ -n "${GCP_PROJECT_ID}" ]; then
+            FLASK_URL=$(gcloud run services describe wizcoco-api \
+              --region asia-northeast3 \
+              --project "${GCP_PROJECT_ID}" \
+              --format 'value(status.url)' 2>/dev/null || true)
+          fi
+          if [ -n "${FLASK_URL}" ]; then
+            echo "NEXT_PUBLIC_FLASK_API_URL=${FLASK_URL}" >> .env
+          fi
+
+      - name: 🏗️ Build
+        run: npm run build
+
+      - name: 🔧 Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: 🔧 Functions build
+        if: steps.targets.outputs.deploy_functions == 'true'
+        run: |
+          cd functions
+          npm ci --legacy-peer-deps --no-audit --no-fund
+          npm run build
+
+      - name: 🔍 Firebase secrets check
+        run: |
+          missing=()
+          for s in NEXT_PUBLIC_FIREBASE_API_KEY NEXT_PUBLIC_FIREBASE_PROJECT_ID FIREBASE_TOKEN FIREBASE_SERVICE_ACCOUNT; do
+            case $s in
+              NEXT_PUBLIC_FIREBASE_API_KEY) v="${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}" ;;
+              NEXT_PUBLIC_FIREBASE_PROJECT_ID) v="${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}" ;;
+              FIREBASE_TOKEN) v="${{ secrets.FIREBASE_TOKEN }}" ;;
+              FIREBASE_SERVICE_ACCOUNT) v="${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" ;;
+            esac
+            [ -z "$v" ] && missing+=("$s")
+          done
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "❌ Missing secrets: ${missing[*]}"
             exit 1
           fi
-          sleep 10
-        done
 
-    - name: 🔍 ESLint 검사
-      run: npm run lint --if-present || echo "ESLint 설정이 없습니다."
+      - name: 🔑 Firebase service account
+        run: echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" > firebase-service-account.json
 
-    - name: 🎯 TypeScript 타입 검사
-      run: npx tsc --noEmit --project tsconfig.json
-
-    - name: 🧪 단위 테스트 실행
-      run: npm test -- --testPathIgnorePatterns=dbCodeGenerator.test.ts --passWithNoTests --coverage
-
-    - name: 📊 테스트 커버리지 리포트
-      uses: actions/upload-artifact@v5
-      if: always()
-      with:
-        name: test-coverage
-        path: coverage/
-        retention-days: 30
-        if-no-files-found: ignore
-
-    - name: 🔐 Authenticate to Google Cloud (Flask API URL)
-      uses: google-github-actions/auth@v3
-      with:
-        credentials_json: ${{ secrets.GCP_SA_KEY }}
-
-    - name: 🔧 Set up gcloud (Flask API URL)
-      uses: google-github-actions/setup-gcloud@v3
-      with:
-        project_id: ${{ secrets.GCP_PROJECT_ID }}
-
-    - name: 🌍 환경 변수 설정
-      env:
-        GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-      run: |
-        echo "NODE_ENV=production" > .env
-        echo "SKIP_DB_INIT=true" >> .env
-        echo "NEXT_TELEMETRY_DISABLED=1" >> .env
-        echo "CI=true" >> .env
-        echo "GITHUB_ACTIONS=true" >> .env
-        echo "NEXT_PUBLIC_BUILD_SHA=${{ github.sha }}" >> .env
-        echo "NEXT_PUBLIC_BUILD_RUN_ID=${{ github.run_id }}" >> .env
-        echo "NEXT_PUBLIC_FIREBASE_API_KEY=${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}" >> .env
-        AUTH_DOMAIN="${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}"
-        if [ -z "$AUTH_DOMAIN" ]; then
-          AUTH_DOMAIN="wiz-coco.firebaseapp.com"
-        fi
-        echo "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=$AUTH_DOMAIN" >> .env
-        echo "NEXT_PUBLIC_FIREBASE_PROJECT_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}" >> .env
-        echo "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}" >> .env
-        echo "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}" >> .env
-        echo "NEXT_PUBLIC_FIREBASE_APP_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}" >> .env
-        echo "NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID }}" >> .env
-        FLASK_URL=""
-        if [ -n "${GCP_PROJECT_ID}" ]; then
-          FLASK_URL=$(gcloud run services describe wizcoco-api \
-            --region asia-northeast3 \
-            --project "${GCP_PROJECT_ID}" \
-            --format 'value(status.url)' 2>/dev/null || true)
-        fi
-        if [ -z "${FLASK_URL}" ] && [ -n "${{ secrets.NEXT_PUBLIC_FLASK_API_URL }}" ]; then
-          FLASK_URL="${{ secrets.NEXT_PUBLIC_FLASK_API_URL }}"
-        fi
-        if [ -n "${FLASK_URL}" ]; then
-          echo "NEXT_PUBLIC_FLASK_API_URL=${FLASK_URL}" >> .env
-          echo "✅ NEXT_PUBLIC_FLASK_API_URL=${FLASK_URL}"
-        else
-          echo "⚠️ Flask API URL을 확인하지 못했습니다."
-        fi
-
-    - name: 🏗️ 프로젝트 빌드
-      run: |
-        set -o pipefail
-        npm run build 2>&1 | tee build.log
-        if [ "${PIPESTATUS[0]}" -ne 0 ]; then
-          echo "❌ 프로젝트 빌드 실패"
-          exit 1
-        fi
-        echo "✅ 빌드 완료!"
-
-    - name: 📎 빌드 로그 업로드
-      if: always()
-      uses: actions/upload-artifact@v5
-      with:
-        name: build-log
-        path: build.log
-        if-no-files-found: ignore
-
-    - name: 🔧 Firebase CLI 설치
-      run: npm install -g firebase-tools
-
-    - name: 🔧 Functions 의존성 설치 및 빌드
-      run: |
-        cd functions
-        npm ci --legacy-peer-deps --no-audit --no-fund
-        npm run build
-
-    - name: 🔍 Firebase 설정 검증
-      run: |
-        required_vars=(
-          "NEXT_PUBLIC_FIREBASE_API_KEY"
-          "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN"
-          "NEXT_PUBLIC_FIREBASE_PROJECT_ID"
-          "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET"
-          "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID"
-          "NEXT_PUBLIC_FIREBASE_APP_ID"
-        )
-        missing_vars=()
-        for var in "${required_vars[@]}"; do
-          secret_value=""
-          case $var in
-            "NEXT_PUBLIC_FIREBASE_API_KEY") secret_value="${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}" ;;
-            "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN") secret_value="${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}" ;;
-            "NEXT_PUBLIC_FIREBASE_PROJECT_ID") secret_value="${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}" ;;
-            "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET") secret_value="${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}" ;;
-            "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID") secret_value="${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}" ;;
-            "NEXT_PUBLIC_FIREBASE_APP_ID") secret_value="${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}" ;;
-          esac
-          if [ -z "$secret_value" ]; then
-            missing_vars+=("$var")
+      - name: 🔐 Gemini Functions env (functions deploy only)
+        if: steps.targets.outputs.deploy_functions == 'true'
+        run: |
+          SHEET_ID="${{ secrets.COUNSEL_FAQ_SHEET_ID }}"
+          [ -z "$SHEET_ID" ] && SHEET_ID="unset"
+          GID="${{ secrets.COUNSEL_FAQ_SHEET_GID }}"
+          [ -z "$GID" ] && GID="0"
+          printf 'COUNSEL_FAQ_SHEET_ID=%s\nCOUNSEL_FAQ_SHEET_GID=%s\nCOST_SAVER_MODE=true\n' "$SHEET_ID" "$GID" > functions/.env
+          if [ -n "${{ secrets.GEMINI_API_KEY }}" ]; then
+            printf '%s' "${{ secrets.GEMINI_API_KEY }}" > /tmp/gemini-key.txt
+          else
+            printf 'unset' > /tmp/gemini-key.txt
           fi
-        done
-        if [ -z "${{ secrets.FIREBASE_TOKEN }}" ]; then
-          missing_vars+=("FIREBASE_TOKEN")
-        fi
-        if [ ${#missing_vars[@]} -gt 0 ]; then
-          echo "❌ 누락된 Secrets: ${missing_vars[*]}"
-          exit 1
-        fi
+          firebase functions:secrets:set GEMINI_API_KEY --data-file /tmp/gemini-key.txt --force \
+            --token "${{ secrets.FIREBASE_TOKEN }}" --project ${{ env.FIREBASE_PROJECT_ID }}
+          rm -f /tmp/gemini-key.txt
 
-    - name: 🔑 Firebase Service Account 설정
-      run: echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" > firebase-service-account.json
+      - name: 🚀 Firebase deploy
+        run: |
+          export GOOGLE_APPLICATION_CREDENTIALS="$PWD/firebase-service-account.json"
+          firebase deploy --only "${{ steps.targets.outputs.deploy_targets }}" --force \
+            --token "${{ secrets.FIREBASE_TOKEN }}" --project ${{ env.FIREBASE_PROJECT_ID }}
 
-    - name: 🔍 빌드 결과물 확인
-      run: |
-        if [ ! -d "out" ]; then
-          echo "❌ out 폴더가 존재하지 않습니다."
-          exit 1
-        fi
-        echo "✅ out 폴더 확인 — $(find out -type f | wc -l)개 파일"
-
-    - name: 🔐 Gemini AI 상담 Functions 환경 준비
-      run: |
-        SHEET_ID="${{ secrets.COUNSEL_FAQ_SHEET_ID }}"
-        if [ -z "$SHEET_ID" ]; then SHEET_ID="unset"; fi
-        GID="${{ secrets.COUNSEL_FAQ_SHEET_GID }}"
-        if [ -z "$GID" ]; then GID="0"; fi
-        printf 'COUNSEL_FAQ_SHEET_ID=%s\nCOUNSEL_FAQ_SHEET_GID=%s\nCOST_SAVER_MODE=true\n' "$SHEET_ID" "$GID" > functions/.env
-        if [ -n "${{ secrets.GEMINI_API_KEY }}" ]; then
-          printf '%s' "${{ secrets.GEMINI_API_KEY }}" > /tmp/gemini-key.txt
-        else
-          printf 'unset' > /tmp/gemini-key.txt
-        fi
-        firebase functions:secrets:set GEMINI_API_KEY --data-file /tmp/gemini-key.txt --force \
-          --token "${{ secrets.FIREBASE_TOKEN }}" --project ${{ env.FIREBASE_PROJECT_ID }}
-        rm -f /tmp/gemini-key.txt
-
-    - name: 🚀 Firebase Hosting + Functions 배포
-      run: |
-        export GOOGLE_APPLICATION_CREDENTIALS="$PWD/firebase-service-account.json"
-        firebase deploy --only hosting,functions,firestore,storage --force \
-          --token "${{ secrets.FIREBASE_TOKEN }}" --project ${{ env.FIREBASE_PROJECT_ID }}
-      env:
-        FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-
-    - name: 📊 배포 성공 알림
-      if: success()
-      run: |
-        echo "🎉 배포 완료: https://${{ env.FIREBASE_PROJECT_ID }}.web.app"
-        echo "🔗 커밋: ${{ github.sha }}"
-
-    - name: ❌ 배포 실패 알림
-      if: failure()
-      run: echo "❌ 배포 실패 — Firebase 설정·빌드 로그를 확인하세요."
+      - name: 📊 Done
+        if: success()
+        run: |
+          echo "🎉 Deployed: --only ${{ steps.targets.outputs.deploy_targets }}"
+          echo "🔗 https://${{ env.FIREBASE_PROJECT_ID }}.web.app"

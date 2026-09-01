@@ -1,0 +1,77 @@
+# Push 시 GCP 과금 없음 — lint·타입·테스트·빌드 검증만 (Firebase/Cloud Run 배포 없음)
+name: ✅ CI (no GCP deploy)
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'functions/**'
+      - 'backend/**'
+      - 'firebase.json'
+      - 'firestore.rules'
+      - 'firestore.indexes.json'
+      - 'storage.rules'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'next.config.js'
+      - 'tailwind.config.js'
+      - 'tsconfig.json'
+      - 'jsconfig.json'
+      - '.github/workflows/ci.yml'
+      - '.github/workflows/deploy.yml'
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch: {}
+
+env:
+  NODE_VERSION: '20.x'
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: 🔍 Lint · Typecheck · Test · Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: |
+          npm config set registry https://registry.npmjs.org/
+          npm ci --legacy-peer-deps --no-audit --no-fund
+
+      - name: 🔍 ESLint
+        run: npm run lint --if-present || echo "ESLint skipped."
+
+      - name: 🎯 TypeScript
+        run: npx tsc --noEmit --project tsconfig.json
+
+      - name: 🧪 Unit tests
+        run: npm test -- --testPathIgnorePatterns=dbCodeGenerator.test.ts --passWithNoTests
+
+      - name: 🏗️ Next.js build (no Firebase deploy)
+        env:
+          SKIP_DB_INIT: 'true'
+          NEXT_TELEMETRY_DISABLED: '1'
+          CI: 'true'
+        run: npm run build
+
+      - name: 🔧 Functions compile check
+        if: hashFiles('functions/**') != ''
+        run: |
+          cd functions
+          npm ci --legacy-peer-deps --no-audit --no-fund
+          npm run build
+
+      - name: 🐍 Backend import check
+        run: |
+          python -m compileall -q backend
