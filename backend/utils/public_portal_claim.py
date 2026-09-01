@@ -38,12 +38,11 @@ def _find_active_assessment(db, code: str):
     return refs[0] if refs else None
 
 
-def _parse_contact(raw: str) -> tuple[str, str]:
+def _parse_phone_contact(raw: str) -> str:
     s = (raw or "").strip()
     if "@" in s:
-        email = s.lower()
-        return email, ""
-    return "", normalize_recipient_phone(s)
+        return ""
+    return normalize_recipient_phone(s)
 
 
 def _delivery_success_message() -> str:
@@ -57,29 +56,21 @@ def claim_my_code_public(
     display_name: str,
     contact: str = "",
     phone: str = "",
-    email: str = "",
 ) -> dict:
     code = normalize_access_code(join_access_code)
     name = (display_name or "").strip()
-    raw_contact = (contact or phone or email or "").strip()
-    email_norm, phone_norm = _parse_contact(raw_contact)
+    raw_contact = (contact or phone or "").strip()
+    phone_norm = _parse_phone_contact(raw_contact)
 
     if not is_valid_access_code(code):
         return {"ok": False, "error": "invalid_code", "message": MSG_NOT_FOUND}
     if not name or len(name) > 80:
-        return {"ok": False, "error": "invalid_name", "message": "가명을 입력해 주세요."}
-    if email_norm:
-        if "@" not in email_norm or len(email_norm) < 5:
-            return {
-                "ok": False,
-                "error": "invalid_contact",
-                "message": "휴대폰 번호 또는 이메일을 입력해 주세요.",
-            }
-    elif len(phone_norm) < 10:
+        return {"ok": False, "error": "invalid_name", "message": "이름(가명)을 입력해 주세요."}
+    if "@" in raw_contact or len(phone_norm) < 10:
         return {
             "ok": False,
-            "error": "invalid_contact",
-            "message": "휴대폰 번호 또는 이메일을 입력해 주세요.",
+            "error": "invalid_phone",
+            "message": "휴대폰 번호를 입력해 주세요.",
         }
 
     ass_doc = _find_active_assessment(db, code)
@@ -110,12 +101,12 @@ def claim_my_code_public(
     cohort_name = (ass_data.get("cohortName") or ass_data.get("title") or "내담자").strip()
     title = (ass_data.get("title") or cohort_name).strip()
     welcome_message = (ass_data.get("welcomeMessage") or "").strip()
-    has_contact = bool(email_norm or phone_norm)
-    contact_kind = "email" if email_norm else "phone"
+    has_contact = bool(phone_norm)
+    contact_kind = "phone"
 
     created_row, notify_queued, notify_sent, notify_failed = create_portal_for_row(
         db,
-        row={"displayName": name, "email": email_norm, "phone": phone_norm},
+        row={"displayName": name, "email": "", "phone": phone_norm},
         counselor_uid=counselor_uid,
         cohort_id=cohort_id,
         cohort_name=cohort_name,

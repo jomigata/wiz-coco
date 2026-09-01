@@ -3,6 +3,7 @@
  */
 
 import { normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
+import { normalizeRecipientPhone } from '@/lib/phoneFormat';
 import { getJoinGuestAuthHeader } from '@/lib/joinGuestSession';
 import { getJoinParticipantAuthHeader } from '@/lib/joinParticipantSession';
 
@@ -68,12 +69,11 @@ export async function registerJoinParticipant(body: RegisterParticipantBody): Pr
 export async function claimJoinMyCode(body: {
   accessCode: string;
   displayName: string;
-  contact: string;
+  phone: string;
 }): Promise<{
   displayName: string;
   assessmentId: string;
   joinAccessCode: string;
-  contactKind: 'email' | 'phone';
   magicPath?: string;
   notifyStatus?: string;
   message?: string;
@@ -84,7 +84,7 @@ export async function claimJoinMyCode(body: {
     body: JSON.stringify({
       accessCode: normalizeAccessCodeInput(body.accessCode),
       displayName: body.displayName.trim(),
-      contact: body.contact.trim(),
+      phone: normalizeRecipientPhone(body.phone),
     }),
   });
   const data = await res.json().catch(() => ({}));

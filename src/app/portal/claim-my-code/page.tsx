@@ -24,20 +24,6 @@ import {
   usePortalAuthTheme,
 } from '@/components/portal/PortalAuthScreenLayout';
 
-function parseClaimContact(raw: string): { email: string; phone: string } {
-  const trimmed = raw.trim();
-  if (trimmed.includes('@')) {
-    return { email: trimmed.toLowerCase(), phone: '' };
-  }
-  return { email: '', phone: normalizeRecipientPhone(trimmed) };
-}
-
-function isValidClaimContact(raw: string): boolean {
-  const { email, phone } = parseClaimContact(raw);
-  if (email) return email.includes('@') && email.length >= 5;
-  return phone.length >= 10;
-}
-
 function extractMagicToken(magicPath: string): string {
   const query = magicPath.includes('?') ? magicPath.split('?')[1] : '';
   return new URLSearchParams(query).get('t') || '';
@@ -52,17 +38,18 @@ export default function ClaimMyCodePage() {
   const t = usePortalAuthTheme('start');
   const [joinCode, setJoinCode] = useState('');
   const [displayName, setDisplayName] = useState('');
-  const [contact, setContact] = useState('');
+  const [phone, setPhone] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [enteringPortal, setEnteringPortal] = useState(false);
   const [result, setResult] = useState<ClaimResult | null>(null);
 
   const normalizedJoinCode = normalizeAccessCodeInput(joinCode);
+  const phoneNorm = normalizeRecipientPhone(phone);
   const canSubmit =
     isValidAccessCodeInput(normalizedJoinCode) &&
     displayName.trim().length > 0 &&
-    isValidClaimContact(contact) &&
+    phoneNorm.length >= 10 &&
     !loading &&
     !result;
 
@@ -76,7 +63,7 @@ export default function ClaimMyCodePage() {
         const data = await claimJoinMyCode({
           accessCode: normalizedJoinCode,
           displayName: displayName.trim(),
-          contact: contact.trim(),
+          phone: phoneNorm,
         });
         setResult({
           magicPath: data.magicPath || '',
@@ -87,7 +74,7 @@ export default function ClaimMyCodePage() {
         setLoading(false);
       }
     },
-    [canSubmit, contact, displayName, normalizedJoinCode],
+    [canSubmit, displayName, normalizedJoinCode, phoneNorm],
   );
 
   const startHref = portalLoginHref('start');
@@ -100,7 +87,7 @@ export default function ClaimMyCodePage() {
       await resetAllSessionsBeforePortalLinkEntry({ notifyOtherTabs: false });
       const token = extractMagicToken(result.magicPath);
       if (!token) {
-        throw new Error('내검사실로 바로 이동할 수 없습니다. 발송된 링크 또는 검사 시작 화면을 이용해 주세요.');
+        throw new Error('내검사실로 이동할 수 없습니다. 문자(알림톡)를 확인해 주세요.');
       }
       const session = await verifyPortalMagicToken(token);
       persistClientPortalSession(session);
@@ -122,30 +109,17 @@ export default function ClaimMyCodePage() {
           <Link href="/" className={`text-xs underline-offset-2 hover:underline ${t.link}`}>
             ← 홈으로
           </Link>
-          <span className={`mt-3 inline-block text-[11px] uppercase tracking-[0.16em] ${t.accent}`}>
-            Free My Code
-          </span>
-          <h1 className="mt-3 text-2xl font-semibold tracking-tight text-white">
+          <h1 className="mt-4 text-2xl font-semibold tracking-tight text-white">
             무료 검사코드 (나의코드) 받기
           </h1>
-          <p className="mt-2 text-sm leading-relaxed text-slate-400">
-            상담사에게 안내받은 상담코드와 가명, 휴대폰 번호 또는 이메일을 입력하면 나의코드와 비밀번호를
-            받을 수 있습니다.
-          </p>
+          <p className="mt-2 text-sm text-slate-400">상담코드, 이름(가명), 휴대폰번호를 입력해 주세요.</p>
         </div>
 
         {result ? (
           <div className="space-y-4">
             <div className={`rounded-xl px-4 py-5 text-center ${t.infoBox}`}>
-              <div
-                className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400"
-                aria-hidden
-              >
-                <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
               <p className="text-sm font-medium text-white">발송이 완료되었습니다.</p>
+              <p className="mt-1 text-xs text-slate-400">휴대폰 문자(알림톡)를 확인해 주세요.</p>
             </div>
             {error ? <p className="text-sm text-red-400">{error}</p> : null}
             <button
@@ -195,19 +169,19 @@ export default function ClaimMyCodePage() {
               />
             </div>
             <div>
-              <label htmlFor="claim-contact" className={`mb-2 block text-sm font-medium ${t.label}`}>
-                휴대폰번호 / 이메일
+              <label htmlFor="claim-phone" className={`mb-2 block text-sm font-medium ${t.label}`}>
+                휴대폰번호
               </label>
               <input
-                id="claim-contact"
-                name="claim_contact"
-                type="text"
-                inputMode="text"
-                autoComplete="email tel"
-                placeholder="코드 받을 휴대폰 또는 이메일 1가지 입력"
+                id="claim-phone"
+                name="claim_phone"
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                placeholder="휴대폰번호 입력"
                 className={`w-full rounded-xl px-4 py-3 text-center focus:outline-none focus:ring-2 ${t.input}`}
-                value={contact}
-                onChange={(e) => setContact(e.target.value)}
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
                 disabled={loading}
               />
             </div>
@@ -222,19 +196,21 @@ export default function ClaimMyCodePage() {
           </form>
         )}
 
-        <p className="mt-6 text-center text-sm text-slate-400">
-          이미 나의코드가 있으신가요?{' '}
-          <Link
-            href={startHref}
-            onClick={(e) => {
-              e.preventDefault();
-              navigateToClientPortalLogin(router, startHref);
-            }}
-            className={`${t.link} font-semibold underline-offset-2 hover:underline`}
-          >
-            검사 시작
-          </Link>
-        </p>
+        {!result ? (
+          <p className="mt-5 text-center text-xs text-slate-500">
+            이미 나의코드가 있으신가요?{' '}
+            <Link
+              href={startHref}
+              onClick={(e) => {
+                e.preventDefault();
+                navigateToClientPortalLogin(router, startHref);
+              }}
+              className={`${t.link} underline-offset-2 hover:underline`}
+            >
+              검사 시작
+            </Link>
+          </p>
+        ) : null}
       </PortalAuthCard>
     </PortalAuthScreenLayout>
   );

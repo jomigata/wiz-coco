@@ -268,25 +268,18 @@ def finalize_participant():
 @bp.route("/claim-my-code", methods=["POST"])
 @limit_access_code
 def claim_my_code():
-    """상담(코드) + 가명 + 연락처(휴대폰 또는 이메일)로 나의코드·비밀번호 즉시 발급."""
+    """상담(코드) + 가명 + 휴대폰 번호로 나의코드·비밀번호 즉시 발급."""
     body = request.get_json() or {}
     code = normalize_access_code(body.get("accessCode") or body.get("joinAccessCode") or "")
     display_name = (body.get("displayName") or body.get("name") or "").strip()
-    contact = (
-        body.get("contact")
-        or body.get("phone")
-        or body.get("email")
-        or ""
-    ).strip()
-    if not contact and body.get("phone"):
-        contact = _normalize_phone(body.get("phone") or "")
+    phone = _normalize_phone(body.get("phone") or body.get("contact") or "")
 
     db = get_firestore()
     result = claim_my_code_public(
         db,
         join_access_code=code,
         display_name=display_name,
-        contact=contact,
+        phone=phone,
     )
     if not result.get("ok"):
         err = (result.get("error") or "").strip()
