@@ -154,6 +154,35 @@ function mergeDispatchOverride(
   return { ...recipient, ...override };
 }
 
+function patchDispatchFromResendDetails(
+  status: AssessmentDispatchStatus,
+  details: Array<{ portalId: string; status: string }> | undefined,
+): AssessmentDispatchStatus {
+  if (!details?.length) return status;
+  const byId = new Map(details.map((d) => [d.portalId, d.status]));
+  return {
+    ...status,
+    recipients: (status.recipients || []).map((row) => {
+      const nextStatus = byId.get(row.portalId);
+      if (!nextStatus) return row;
+      return {
+        ...row,
+        notifyStatus: nextStatus,
+        notifyKind: 'resend',
+      };
+    }),
+  };
+}
+
+function shouldClearDispatchOverride(row: DispatchRecipient): boolean {
+  const status = (row.notifyStatus || 'not_sent').trim();
+  if (status === 'sending' || status === 'pending') return true;
+  if (status === 'sent' || status === 'partial' || status === 'failed') {
+    return row.notifyKind === 'resend' || row.notifyKind === 'remind';
+  }
+  return false;
+}
+
 type CredentialSendMode = 'initial' | 'resend' | 'mixed';
 
 function hasCredentialBeenSent(r: DispatchRecipient): boolean {
@@ -596,6 +625,7 @@ export default function AssessmentDispatchPanel({
   );
 
   const needsLiveRefresh = useMemo(() => {
+    if (Object.keys(dispatchOverrides).length > 0) return true;
     if (pendingIssue || issuingPhase || hasPendingDispatchIssueSeed(assessmentId)) return true;
     return (visibleData?.recipients || []).some((r) => {
       const status = (r.notifyStatus || 'not_sent').trim();
@@ -603,7 +633,7 @@ export default function AssessmentDispatchPanel({
       if (issuingPhase && !(r.myCode || '').trim()) return true;
       return false;
     });
-  }, [pendingIssue, issuingPhase, assessmentId, visibleData?.recipients]);
+  }, [pendingIssue, issuingPhase, assessmentId, visibleData?.recipients, dispatchOverrides]);
 
   useEffect(() => {
     if (authPending || !isAuthenticated || !needsLiveRefresh) return;
@@ -630,7 +660,7 @@ export default function AssessmentDispatchPanel({
       let changed = false;
       for (const portalId of Object.keys(prev)) {
         const row = data.recipients.find((r) => r.portalId === portalId);
-        if (!row || row.notifyStatus !== 'sending') {
+        if (!row || shouldClearDispatchOverride(row)) {
           delete next[portalId];
           changed = true;
         }
@@ -656,6 +686,24 @@ export default function AssessmentDispatchPanel({
   );
 
   const sendingStartedAtRef = useRef<number | null>(null);
+  const burstLoadTimerRef = useRef<number[]>([]);
+
+  const scheduleBurstDispatchRefresh = useCallback(() => {
+    burstLoadTimerRef.current.forEach((id) => window.clearTimeout(id));
+    burstLoadTimerRef.current = [300, 700, 1200, 2000, 3500].map((delay) =>
+      window.setTimeout(() => {
+        void load({ silent: true });
+      }, delay),
+    );
+  }, [load]);
+
+  useEffect(
+    () => () => {
+      burstLoadTimerRef.current.forEach((id) => window.clearTimeout(id));
+    },
+    [],
+  );
+
   useEffect(() => {
     if (!needsLiveRefresh && !hasSendingNotify) {
       sendingStartedAtRef.current = null;
@@ -663,13 +711,24 @@ export default function AssessmentDispatchPanel({
     }
     if (authPending || !isAuthenticated) return;
     if (sendingStartedAtRef.current === null) sendingStartedAtRef.current = Date.now();
-    const pollMs = pendingIssue || issuingPhase ? 800 : 1500;
+    const hasActiveOverlay = Object.keys(dispatchOverrides).length > 0;
+    const pollMs =
+      pendingIssue || issuingPhase ? 500 : hasSendingNotify || hasActiveOverlay ? 600 : 1500;
     void load({ silent: true });
     const timer = window.setInterval(() => {
       void load({ silent: true });
     }, pollMs);
     return () => window.clearInterval(timer);
-  }, [needsLiveRefresh, hasSendingNotify, pendingIssue, issuingPhase, load, authPending, isAuthenticated]);
+  }, [
+    needsLiveRefresh,
+    hasSendingNotify,
+    pendingIssue,
+    issuingPhase,
+    load,
+    authPending,
+    isAuthenticated,
+    dispatchOverrides,
+  ]);
 
   const allIds = useMemo(
     () => (visibleData?.recipients || []).map((r) => r.portalId),
@@ -820,7 +879,25 @@ export default function AssessmentDispatchPanel({
     setResendLoading(true);
     try {
       const result = await resendDispatchCredentials(assessmentId, ids);
+      setData((prev) => {
+        if (!prev) return prev;
+        const fetchId = resolveDispatchFetchId(assessmentId) || assessmentId;
+        const patched = patchDispatchFromResendDetails(prev, result.details);
+        writeCachedDispatchStatus(fetchId, patched, user?.uid);
+        return patched;
+      });
+      setDispatchOverrides((prev) => {
+        const next = { ...prev };
+        for (const detail of result.details || []) {
+          const status = (detail.status || '').trim();
+          if (status === 'sent' || status === 'partial' || status === 'failed') {
+            delete next[detail.portalId];
+          }
+        }
+        return next;
+      });
       await load({ silent: true });
+      scheduleBurstDispatchRefresh();
       const channelSummary = parseDispatchChannelSummary(result.channelSummary);
       setDispatchComplete({
         kind: 'resend',

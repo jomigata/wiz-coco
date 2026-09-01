@@ -371,6 +371,7 @@ export async function resendDispatchCredentials(
   sent: number;
   failed: number;
   skipped: number;
+  details?: Array<{ portalId: string; status: string; message?: string }>;
   channelSummary?: import('@/lib/dispatchNotifySummary').DispatchChannelSummary;
 }> {
   const token = await getCounselorToken();
@@ -394,6 +395,7 @@ export async function resendDispatchCredentials(
     sent: number;
     failed: number;
     skipped: number;
+    details?: Array<{ portalId: string; status: string; message?: string }>;
     channelSummary?: import('@/lib/dispatchNotifySummary').DispatchChannelSummary;
   };
 }
