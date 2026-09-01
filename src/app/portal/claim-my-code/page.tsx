@@ -9,9 +9,15 @@ import {
   normalizeAccessCodeInput,
 } from '@/lib/accessCodeFormat';
 import { normalizeRecipientPhone } from '@/lib/phoneFormat';
+import { verifyPortalMagicToken } from '@/lib/clientPortalApi';
+import { persistClientPortalSession } from '@/lib/clientPortalSession';
+import { clearJoinGuestSession } from '@/lib/joinGuestSession';
+import { clearJoinParticipantSession } from '@/lib/joinParticipantSession';
 import { claimJoinMyCode } from '@/lib/joinFlowApi';
 import { portalLoginHref } from '@/lib/portalLoginIntent';
 import { navigateToClientPortalLogin } from '@/lib/portalLoginNavigation';
+import { resetAllSessionsBeforePortalLinkEntry } from '@/lib/portalLinkEntryReset';
+import { setPortalReturnPath } from '@/lib/portalReturnPath';
 import {
   PortalAuthCard,
   PortalAuthScreenLayout,
@@ -32,10 +38,13 @@ function isValidClaimContact(raw: string): boolean {
   return phone.length >= 10;
 }
 
+function extractMagicToken(magicPath: string): string {
+  const query = magicPath.includes('?') ? magicPath.split('?')[1] : '';
+  return new URLSearchParams(query).get('t') || '';
+}
+
 type ClaimResult = {
-  displayName: string;
-  contactKind: 'email' | 'phone';
-  message: string;
+  magicPath: string;
 };
 
 export default function ClaimMyCodePage() {
@@ -46,6 +55,7 @@ export default function ClaimMyCodePage() {
   const [contact, setContact] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [enteringPortal, setEnteringPortal] = useState(false);
   const [result, setResult] = useState<ClaimResult | null>(null);
 
   const normalizedJoinCode = normalizeAccessCodeInput(joinCode);
@@ -69,9 +79,7 @@ export default function ClaimMyCodePage() {
           contact: contact.trim(),
         });
         setResult({
-          displayName: data.displayName || displayName.trim(),
-          contactKind: data.contactKind === 'email' ? 'email' : 'phone',
-          message: data.message || '나의코드와 비밀번호를 발송했습니다.',
+          magicPath: data.magicPath || '',
         });
       } catch (err) {
         setError(err instanceof Error ? err.message : '나의코드 발급에 실패했습니다.');
@@ -84,8 +92,27 @@ export default function ClaimMyCodePage() {
 
   const startHref = portalLoginHref('start');
 
-  const goToExamStart = () => {
-    navigateToClientPortalLogin(router, startHref);
+  const goToMyPortal = async () => {
+    if (!result || enteringPortal) return;
+    setError('');
+    setEnteringPortal(true);
+    try {
+      await resetAllSessionsBeforePortalLinkEntry({ notifyOtherTabs: false });
+      const token = extractMagicToken(result.magicPath);
+      if (!token) {
+        throw new Error('내검사실로 바로 이동할 수 없습니다. 발송된 링크 또는 검사 시작 화면을 이용해 주세요.');
+      }
+      const session = await verifyPortalMagicToken(token);
+      persistClientPortalSession(session);
+      clearJoinGuestSession();
+      clearJoinParticipantSession();
+      setPortalReturnPath('/portal/');
+      router.push('/portal/');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '내검사실 이동에 실패했습니다.');
+    } finally {
+      setEnteringPortal(false);
+    }
   };
 
   return (
@@ -118,31 +145,16 @@ export default function ClaimMyCodePage() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <p className="text-sm font-medium leading-relaxed text-slate-100">{result.message}</p>
-              <p className="mt-2 text-xs leading-relaxed text-slate-400">
-                {result.contactKind === 'email'
-                  ? '입력하신 이메일을 확인해 주세요.'
-                  : '입력하신 휴대폰 문자(알림톡)를 확인해 주세요.'}
-              </p>
+              <p className="text-sm font-medium text-white">발송이 완료되었습니다.</p>
             </div>
+            {error ? <p className="text-sm text-red-400">{error}</p> : null}
             <button
               type="button"
-              onClick={goToExamStart}
-              className={`w-full rounded-xl px-4 py-3.5 text-sm font-semibold transition-colors ${t.button}`}
+              onClick={() => void goToMyPortal()}
+              disabled={enteringPortal}
+              className={`w-full rounded-xl px-4 py-3.5 text-sm font-semibold transition-colors disabled:opacity-50 ${t.button}`}
             >
-              검사 시작하기
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setResult(null);
-                setJoinCode('');
-                setDisplayName('');
-                setContact('');
-              }}
-              className="w-full rounded-xl border border-white/10 bg-transparent px-4 py-2.5 text-sm text-slate-400 transition hover:bg-white/[0.04]"
-            >
-              다시 받기
+              {enteringPortal ? '내검사실 이동 중…' : '검사 시작하기'}
             </button>
           </div>
         ) : (

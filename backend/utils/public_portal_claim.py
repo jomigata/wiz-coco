@@ -46,10 +46,8 @@ def _parse_contact(raw: str) -> tuple[str, str]:
     return "", normalize_recipient_phone(s)
 
 
-def _delivery_success_message(display_name: str, contact_kind: str) -> str:
-    if contact_kind == "email":
-        return f"{display_name}님, 나의코드와 비밀번호를 이메일로 발송했습니다."
-    return f"{display_name}님, 나의코드와 비밀번호를 문자(알림톡)로 발송했습니다."
+def _delivery_success_message() -> str:
+    return "발송이 완료되었습니다."
 
 
 def claim_my_code_public(
@@ -157,6 +155,7 @@ def claim_my_code_public(
         "assessmentId": ass_doc.id,
         "joinAccessCode": code,
         "contactKind": contact_kind,
+        "magicPath": created_row.get("magicPath") or "",
         "notifyStatus": "sent" if notify_sent else ("queued" if notify_queued else "skipped"),
-        "message": _delivery_success_message(name, contact_kind),
+        "message": _delivery_success_message(),
     }

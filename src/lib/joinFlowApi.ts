@@ -74,6 +74,7 @@ export async function claimJoinMyCode(body: {
   assessmentId: string;
   joinAccessCode: string;
   contactKind: 'email' | 'phone';
+  magicPath?: string;
   notifyStatus?: string;
   message?: string;
 }> {
