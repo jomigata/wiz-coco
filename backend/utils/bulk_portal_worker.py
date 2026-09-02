@@ -18,6 +18,7 @@ from config import (
 from utils.access_code import generate_unique_access_code, generate_unique_portal_access_code
 from utils.password import generate_four_digit_password, hash_password
 from utils.phone_format import normalize_recipient_phone
+from utils.public_claim_delivery import normalize_public_claim_channel
 
 CREATED_ROWS_SUBCOLLECTION = "createdRows"
 
@@ -44,6 +45,7 @@ def prepare_bulk_assessment(
     code_category: str = "",
     organization_id: str = "",
     prepaid_by_org: bool = False,
+    public_claim_channel: str = "",
 ) -> tuple[str, str, str]:
     """Returns (assessment_id, join_access_code, cohort_id)."""
     if existing_assessment_id:
@@ -79,6 +81,11 @@ def prepare_bulk_assessment(
         "clientPortalCohortId": cohort_id,
         "cohortName": cohort_name,
         **({"codeCategory": code_category} if code_category else {}),
+        **(
+            {"publicClaimChannel": normalize_public_claim_channel(public_claim_channel)}
+            if public_claim_channel
+            else {}
+        ),
         **(
             {"organizationId": organization_id, "prepaidByOrg": True}
             if organization_id

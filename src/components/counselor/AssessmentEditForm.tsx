@@ -19,6 +19,12 @@ import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import AssessmentSettingsFields from '@/components/counselor/AssessmentSettingsFields';
 import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
 import { FORM_INPUT, FORM_INPUT_BORDERED, FORM_LABEL } from '@/lib/assessmentFormUi';
+import PublicClaimChannelField from '@/components/counselor/PublicClaimChannelField';
+import {
+  PUBLIC_CLAIM_CHANNEL_PHONE,
+  normalizePublicClaimChannel,
+  type PublicClaimChannel,
+} from '@/lib/publicClaimDelivery';
 
 interface AssessmentEditFormProps {
   assessmentId: string;
@@ -53,6 +59,9 @@ export default function AssessmentEditForm({
     const valid = COUNSELING_CODE_TYPES.some((t) => t.value === cached);
     return (valid ? cached : 'group') as CounselingCodeType;
   });
+  const [publicClaimChannel, setPublicClaimChannel] = useState<PublicClaimChannel>(() =>
+    normalizePublicClaimChannel(readCachedAssessmentDetail(assessmentId)?.publicClaimChannel),
+  );
   const [selectedTestIds, setSelectedTestIds] = useState<Set<string>>(() => {
     const cached = readCachedAssessmentDetail(assessmentId);
     return new Set((cached?.testList || []).map((t) => t.testId).filter(Boolean));
@@ -83,6 +92,7 @@ export default function AssessmentEditForm({
         const category = (data.codeCategory || '').trim();
         const validCategory = COUNSELING_CODE_TYPES.some((t) => t.value === category);
         setCodeCategory((validCategory ? category : 'group') as CounselingCodeType);
+        setPublicClaimChannel(normalizePublicClaimChannel(data.publicClaimChannel));
         const ids = new Set((data.testList || []).map((t) => t.testId).filter(Boolean));
         setSelectedTestIds(ids);
       })
@@ -154,6 +164,7 @@ export default function AssessmentEditForm({
         welcomeMessage: welcomeMessage.trim(),
         usageEndDate: usageEndDate.trim(),
         codeCategory,
+        publicClaimChannel,
         testList,
       });
       if (variant === 'modal') {
@@ -236,6 +247,11 @@ export default function AssessmentEditForm({
                   ))}
                 </select>
               </div>
+              <PublicClaimChannelField
+                value={publicClaimChannel}
+                onChange={setPublicClaimChannel}
+                disabled={loading}
+              />
               <AssessmentSettingsFields
                 sections="meta"
                 compact

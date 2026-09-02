@@ -17,7 +17,7 @@ from utils.result_actor import (
     fallback_actor_label,
 )
 from utils.test_result_queries import query_results_shared_to_assessment
-from utils.assessment_dispatch import aggregate_assessment_list_stats
+from utils.public_claim_delivery import normalize_public_claim_channel
 from utils.counselor_scope import is_admin_scope, resource_owned_by_scope, resolve_list_counselor_uid, scope_counselor_uid
 from utils.assessment_list_stats import (
     LIST_STATS_FIELD,
@@ -413,6 +413,7 @@ def update_assessment(assessment_id):
     welcome_message = (body.get("welcomeMessage") or "").strip()
     usage_end_date = _normalize_usage_end_date(body.get("usageEndDate"))
     code_category = (body.get("codeCategory") or body.get("code_category") or "").strip()
+    public_claim_channel_raw = (body.get("publicClaimChannel") or body.get("public_claim_channel") or "").strip()
     test_list = body.get("testList") or []
     if not isinstance(test_list, list):
         test_list = []
@@ -455,6 +456,11 @@ def update_assessment(assessment_id):
             "testList": test_list,
             "updatedAt": SERVER_TIMESTAMP,
             "searchTokens": build_assessment_search_tokens(search_source),
+            **(
+                {"publicClaimChannel": normalize_public_claim_channel(public_claim_channel_raw)}
+                if public_claim_channel_raw
+                else {}
+            ),
         }
     )
     touch_assessment_list_stats(db, assessment_id)

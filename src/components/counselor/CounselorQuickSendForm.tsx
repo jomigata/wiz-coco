@@ -44,6 +44,11 @@ import {
   downloadGroupRecipientSampleTxt,
   getGroupRecipientSamplePreviewText,
 } from '@/lib/groupRecipientSampleDownload';
+import PublicClaimChannelField from '@/components/counselor/PublicClaimChannelField';
+import {
+  PUBLIC_CLAIM_CHANNEL_PHONE,
+  type PublicClaimChannel,
+} from '@/lib/publicClaimDelivery';
 import {
   formatRecipientRowsPreview,
   mergeRecipients,
@@ -100,6 +105,9 @@ export default function CounselorQuickSendForm({
   const resolvedAssessmentIdRef = useRef('');
   const [firstSendTrialEligible, setFirstSendTrialEligible] = useState(false);
   const [counselorAffiliation, setCounselorAffiliation] = useState('');
+  const [publicClaimChannel, setPublicClaimChannel] = useState<PublicClaimChannel>(
+    PUBLIC_CLAIM_CHANNEL_PHONE,
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
   const welcomeTextareaRef = useRef<HTMLTextAreaElement>(null);
   const customCohortTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -367,6 +375,7 @@ export default function CounselorQuickSendForm({
         welcomeMessage: message,
         testList,
         codeCategory: templateId === 'custom' ? 'group' : 'individual',
+        publicClaimChannel,
         rows: recipients.map((r) => ({
           displayName: r.displayName.trim(),
           phone: normalizeRecipientPhone(r.phone) || undefined,
@@ -832,6 +841,12 @@ export default function CounselorQuickSendForm({
           compact
           allowOverflow
         >
+          <PublicClaimChannelField
+            value={publicClaimChannel}
+            onChange={setPublicClaimChannel}
+            disabled={sendLocked}
+            className="mb-4"
+          />
           <div className="overflow-visible">
             <div className="mb-1.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 overflow-visible">
               <label htmlFor="quick-send-welcome" className="text-xs font-medium text-slate-400">

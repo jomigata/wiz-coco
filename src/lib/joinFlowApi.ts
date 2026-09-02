@@ -3,6 +3,11 @@
  */
 
 import { normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
+import {
+  normalizePublicClaimChannel,
+  type PublicClaimChannel,
+  publicClaimSuccessHint,
+} from '@/lib/publicClaimDelivery';
 import { normalizeRecipientPhone } from '@/lib/phoneFormat';
 import { getJoinGuestAuthHeader } from '@/lib/joinGuestSession';
 import { getJoinParticipantAuthHeader } from '@/lib/joinParticipantSession';
@@ -66,10 +71,36 @@ export async function registerJoinParticipant(body: RegisterParticipantBody): Pr
   return data;
 }
 
+export async function previewClaimMyCode(accessCode: string): Promise<{
+  joinAccessCode: string;
+  assessmentTitle?: string;
+  deliveryChannel: PublicClaimChannel;
+  configuredChannel?: PublicClaimChannel;
+  forcedEmail?: boolean;
+}> {
+  const res = await fetch(`${getBaseUrl()}/api/join/claim-my-code/preview`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ accessCode: normalizeAccessCodeInput(accessCode) }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(typeof data?.message === 'string' ? data.message : '상담코드 확인에 실패했습니다.');
+  }
+  return {
+    ...data,
+    deliveryChannel: normalizePublicClaimChannel(data.deliveryChannel),
+    configuredChannel: data.configuredChannel
+      ? normalizePublicClaimChannel(data.configuredChannel)
+      : undefined,
+  };
+}
+
 export async function claimJoinMyCode(body: {
   accessCode: string;
   displayName: string;
-  phone: string;
+  phone?: string;
+  email?: string;
 }): Promise<{
   displayName: string;
   assessmentId: string;
@@ -77,22 +108,32 @@ export async function claimJoinMyCode(body: {
   magicPath?: string;
   notifyStatus?: string;
   message?: string;
+  deliveryChannel?: PublicClaimChannel;
+  contactKind?: PublicClaimChannel;
 }> {
+  const payload: Record<string, string> = {
+    accessCode: normalizeAccessCodeInput(body.accessCode),
+    displayName: body.displayName.trim(),
+  };
+  if (body.email?.trim()) payload.email = body.email.trim().toLowerCase();
+  if (body.phone?.trim()) payload.phone = normalizeRecipientPhone(body.phone);
+
   const res = await fetch(`${getBaseUrl()}/api/join/claim-my-code`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      accessCode: normalizeAccessCodeInput(body.accessCode),
-      displayName: body.displayName.trim(),
-      phone: normalizeRecipientPhone(body.phone),
-    }),
+    body: JSON.stringify(payload),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     throw new Error(typeof data?.message === 'string' ? data.message : '나의코드 발급에 실패했습니다.');
   }
-  return data;
+  return {
+    ...data,
+    deliveryChannel: normalizePublicClaimChannel(data.deliveryChannel || data.contactKind),
+  };
 }
+
+export { publicClaimSuccessHint };
 
 export async function finalizeJoinParticipant(): Promise<{
   allCompleted: boolean;

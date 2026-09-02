@@ -52,6 +52,11 @@ import {
 } from '@/lib/counselorOrgInput';
 import AuthLink from '@/components/auth/AuthLink';
 import { COUNSELING_CODE_TYPES, type CounselingCodeType } from '@/data/counselingCodeTypes';
+import PublicClaimChannelField from '@/components/counselor/PublicClaimChannelField';
+import {
+  PUBLIC_CLAIM_CHANNEL_PHONE,
+  type PublicClaimChannel,
+} from '@/lib/publicClaimDelivery';
 
 type IssueIntent = 'excel' | 'send_all';
 type TestSortKey = 'no' | 'name';
@@ -125,6 +130,9 @@ export default function IndividualAssessmentCreateForm({
 
   const [cohortName, setCohortName] = useState('');
   const [codeCategory, setCodeCategory] = useState<CounselingCodeType>('group');
+  const [publicClaimChannel, setPublicClaimChannel] = useState<PublicClaimChannel>(
+    PUBLIC_CLAIM_CHANNEL_PHONE,
+  );
   const [title, setTitle] = useState('');
   const [welcomeMessage, setWelcomeMessage] = useState(DEFAULT_WELCOME_MESSAGE);
   const [usageEndDate, setUsageEndDate] = useState('');
@@ -544,6 +552,7 @@ export default function IndividualAssessmentCreateForm({
         usageEndDate: usageEndDate.trim(),
         testList,
         codeCategory,
+        publicClaimChannel,
         rows: recipients.map((r) => ({
           displayName: r.displayName.trim(),
           email: r.email.trim() || undefined,
@@ -766,6 +775,11 @@ export default function IndividualAssessmentCreateForm({
                 ))}
               </select>
             </div>
+            <PublicClaimChannelField
+              value={publicClaimChannel}
+              onChange={setPublicClaimChannel}
+              disabled={loading}
+            />
             <div className="space-y-4 border-t border-white/10 pt-4">
               <div>
                 <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2">

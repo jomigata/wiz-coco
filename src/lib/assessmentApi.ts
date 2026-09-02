@@ -413,6 +413,8 @@ export interface CounselorAssessment {
   cohortName?: string;
   /** 상담코드 유형: individual | group | school | corporate | community | other */
   codeCategory?: string;
+  /** 무료 검사코드 받기 — phone | email */
+  publicClaimChannel?: string;
   /** 관리자 목록 — 상담사 이메일 */
   counselorEmail?: string;
 }
@@ -518,6 +520,7 @@ export async function updateAssessment(
     welcomeMessage?: string;
     usageEndDate?: string;
     codeCategory?: string;
+    publicClaimChannel?: 'phone' | 'email';
     testList: { testId: string; name: string }[];
   }
 ): Promise<{ assessmentId: string; message: string }> {
@@ -535,6 +538,7 @@ export async function updateAssessment(
       welcomeMessage: (body.welcomeMessage || '').trim(),
       usageEndDate: (body.usageEndDate || '').trim(),
       codeCategory: (body.codeCategory || '').trim(),
+      publicClaimChannel: body.publicClaimChannel,
       testList: body.testList || [],
     }),
   });

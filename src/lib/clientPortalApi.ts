@@ -261,6 +261,7 @@ export async function bulkCreateClientPortals(body: {
   usageEndDate?: string;
   testList: { testId: string; name: string }[];
   codeCategory?: string;
+  publicClaimChannel?: 'phone' | 'email';
   queueNotify?: boolean;
   scheduledAt?: string;
   /** 기존 그룹코드(개별 발급) 검사 세트 재사용 */

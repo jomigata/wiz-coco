@@ -1,0 +1,35 @@
+"""무료 검사코드(공개 claim) — 전송 채널·적립금."""
+from __future__ import annotations
+
+PUBLIC_CLAIM_CHANNEL_PHONE = "phone"
+PUBLIC_CLAIM_CHANNEL_EMAIL = "email"
+VALID_PUBLIC_CLAIM_CHANNELS = frozenset({PUBLIC_CLAIM_CHANNEL_PHONE, PUBLIC_CLAIM_CHANNEL_EMAIL})
+
+# UI: 100p 표기 — 백엔드는 검사 크레딧 1건과 동일
+PUBLIC_CLAIM_PHONE_POINTS = 100
+PUBLIC_CLAIM_PHONE_CREDIT_COST = 1
+PUBLIC_CLAIM_EMAIL_CREDIT_COST = 0
+
+
+def normalize_public_claim_channel(raw: str | None) -> str:
+    value = (raw or "").strip().lower()
+    if value in VALID_PUBLIC_CLAIM_CHANNELS:
+        return value
+    return PUBLIC_CLAIM_CHANNEL_PHONE
+
+
+def resolve_effective_public_claim_channel(
+    configured_channel: str,
+    *,
+    counselor_balance: int,
+    credits_enforce: bool,
+) -> tuple[str, bool]:
+    """Returns (effective_channel, forced_to_email)."""
+    channel = normalize_public_claim_channel(configured_channel)
+    if (
+        channel == PUBLIC_CLAIM_CHANNEL_PHONE
+        and credits_enforce
+        and counselor_balance < PUBLIC_CLAIM_PHONE_CREDIT_COST
+    ):
+        return PUBLIC_CLAIM_CHANNEL_EMAIL, True
+    return channel, False

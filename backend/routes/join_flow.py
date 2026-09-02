@@ -19,7 +19,7 @@ from utils.access_code import (
 from utils.guest_auth import get_guest_session_from_request, issue_guest_token
 from utils.participant_auth import issue_participant_token
 from utils.join_portal_issue import try_issue_portal_for_participant
-from utils.public_portal_claim import claim_my_code_public
+from utils.public_portal_claim import claim_my_code_public, preview_public_claim
 
 bp = Blueprint("join_flow", __name__, url_prefix="/api/join")
 
@@ -265,14 +265,36 @@ def finalize_participant():
     )
 
 
+@bp.route("/claim-my-code/preview", methods=["POST"])
+@limit_access_code
+def claim_my_code_preview():
+    """상담(코드) 확인 — 공개 claim 전송 채널(휴대폰/이메일) 조회."""
+    body = request.get_json() or {}
+    code = normalize_access_code(body.get("accessCode") or body.get("joinAccessCode") or "")
+    db = get_firestore()
+    result = preview_public_claim(db, join_access_code=code)
+    if not result.get("ok"):
+        err = (result.get("error") or "").strip()
+        if err in ("not_found", "invalid_assessment"):
+            status = 404
+        elif err == "expired":
+            status = 410
+        else:
+            status = 400
+        return jsonify({"error": "Bad Request", "message": result.get("message", "")}), status
+    return jsonify(result), 200
+
+
 @bp.route("/claim-my-code", methods=["POST"])
 @limit_access_code
 def claim_my_code():
-    """상담(코드) + 가명 + 휴대폰 번호로 나의코드·비밀번호 즉시 발급."""
+    """상담(코드) + 가명 + 연락처(휴대폰 또는 이메일)로 나의코드·비밀번호 즉시 발급."""
     body = request.get_json() or {}
     code = normalize_access_code(body.get("accessCode") or body.get("joinAccessCode") or "")
     display_name = (body.get("displayName") or body.get("name") or "").strip()
-    phone = _normalize_phone(body.get("phone") or body.get("contact") or "")
+    phone = _normalize_phone(body.get("phone") or "")
+    email = (body.get("email") or "").strip().lower()
+    contact = (body.get("contact") or "").strip()
 
     db = get_firestore()
     result = claim_my_code_public(
@@ -280,6 +302,8 @@ def claim_my_code():
         join_access_code=code,
         display_name=display_name,
         phone=phone,
+        email=email,
+        contact=contact,
     )
     if not result.get("ok"):
         err = (result.get("error") or "").strip()
