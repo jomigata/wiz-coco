@@ -34,6 +34,11 @@ import {
   resultStatusCounts,
 } from '@/lib/counselorAssessmentResultDisplay';
 import CounselorRevenueLinksFooter from '@/components/counselor/CounselorRevenueLinksFooter';
+import {
+  aiCreditsToPoints,
+  assessmentCreditsToPoints,
+  formatPoints,
+} from '@/lib/pointsCatalog';
 
 function needsSend(a: CounselorAssessment): boolean {
   const { dispatchSent, dispatchFailed, dispatchSending, testComplete, testIncomplete } =
@@ -193,8 +198,10 @@ export default function CounselorHomeDashboard() {
       : (summary?.inProgressRecipients ?? 0) + (summary?.notStartedRecipients ?? 0);
   const newResultCount = recentResults.length;
   const remainingLabel =
-    creditBalance === null ? '—' : String(creditBalance);
+    creditBalance === null ? '—' : formatPoints(assessmentCreditsToPoints(creditBalance));
   const creditsLow = creditBalance !== null && creditBalance < 20;
+  const aiPointsLabel =
+    aiCreditBalance === null ? null : formatPoints(aiCreditsToPoints(aiCreditBalance));
 
   const todayRows = useMemo((): TodayRow[] => {
     const rows: TodayRow[] = [];
@@ -331,10 +338,10 @@ export default function CounselorHomeDashboard() {
             value={remainingLabel}
             hint={
               creditsLow
-                ? '크레딧이 적습니다 · 필요할 때만 충전'
-                : aiCreditBalance === null
-                  ? '검사 크레딧'
-                  : `검사 크레딧 · AI ${aiCreditBalance}`
+                ? '포인트가 적습니다 · 필요할 때만 충전'
+                : aiPointsLabel === null
+                  ? '검사 포인트'
+                  : `검사 포인트 · AI ${aiPointsLabel}`
             }
             href="/counselor/credits"
             accent="violet"

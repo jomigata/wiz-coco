@@ -31,6 +31,8 @@ export interface CreditLedgerEntry {
   counselorUid: string;
   delta: number;
   balanceAfter: number;
+  pointsDelta?: number;
+  pointsBalanceAfter?: number;
   reason: string;
   createdAt?: string;
   actorUid?: string;
@@ -51,18 +53,22 @@ export interface CommerceProduct {
   name: string;
   amount: number;
   credits: number;
+  points?: number;
   type: 'one_time' | 'subscription' | 'b2c_tier';
   channel?: string;
   entitlementTier?: string | null;
   planId?: string | null;
   overagePerCredit?: number | null;
+  wonPerPoint?: number;
 }
 
 export interface CounselorCreditsResponse {
   counselorUid: string;
   balance: number;
+  pointsBalance?: number;
   enforceCredits: boolean;
   pilotFreeCredits: number;
+  pilotFreePoints?: number;
   firstSendTrialEligible?: boolean;
   ledger: CreditLedgerEntry[];
   subscription?: CounselorSubscription | null;
@@ -112,7 +118,7 @@ export async function fetchMyCredits(limit = 20): Promise<CounselorCreditsRespon
   const res = await commerceFetch(`/api/commerce/credits/me?limit=${limit}`);
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw new Error(body.message || body.error || `크레딧 조회 실패 (${res.status})`);
+    throw new Error(body.message || body.error || `포인트 조회 실패 (${res.status})`);
   }
   return res.json();
 }
@@ -128,7 +134,7 @@ export async function fetchCounselorCredits(
   );
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw new Error(body.message || body.error || `크레딧 조회 실패 (${res.status})`);
+    throw new Error(body.message || body.error || `포인트 조회 실패 (${res.status})`);
   }
   return res.json();
 }
@@ -175,7 +181,7 @@ export async function grantCounselorCredits(params: {
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw new Error(body.message || body.error || `크레딧 지급 실패 (${res.status})`);
+    throw new Error(body.message || body.error || `포인트 지급 실패 (${res.status})`);
   }
   return res.json();
 }

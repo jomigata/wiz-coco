@@ -26,6 +26,15 @@ from utils.toss_payments import (
 from utils.commerce_fulfillment import fulfill_paid_order
 from utils.payment_history import list_payments
 from utils.commerce_settlement import build_settlement_summary
+from utils.points_display import (
+    PILOT_FREE_ASSESSMENT_POINTS,
+    POINTS_PER_ASSESSMENT_CREDIT,
+    WON_PER_POINT,
+    assessment_credits_to_points,
+    enrich_assessment_wallet_response,
+    format_points_ko,
+    product_credits_to_points,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -81,12 +90,17 @@ def _complete_order_flow(
 
 @bp.route("/catalog", methods=["GET"])
 def get_catalog():
+    products = public_catalog("b2b2c")
     return jsonify(
         {
             "pilotFreeCredits": PILOT_FREE_CREDITS,
+            "pilotFreePoints": PILOT_FREE_ASSESSMENT_POINTS,
             "channels": ["b2b2c", "b2b", "b2c"],
-            "products": public_catalog("b2b2c"),
-            "creditUnit": "1 credit = 1 client portal (one recipient)",
+            "products": products,
+            "pointUnit": "1 portal recipient = 10 points (100 KRW)",
+            "wonPerPoint": WON_PER_POINT,
+            "pointsPerAssessmentCredit": POINTS_PER_ASSESSMENT_CREDIT,
+            "creditUnit": "deprecated: use pointsBalance from API",
             "payments": {
                 "tossConfigured": is_toss_configured(),
                 "tossClientKey": TOSS_CLIENT_KEY or None,
@@ -106,19 +120,21 @@ def credits_me():
     sub_doc = db.collection("subscriptions").document(uid).get()
     subscription = sub_doc.to_dict() if sub_doc.exists else None
     return jsonify(
-        {
-            "counselorUid": uid,
-            "balance": balance,
-            "enforceCredits": COMMERCE_CREDITS_ENFORCE,
-            "pilotFreeCredits": PILOT_FREE_CREDITS,
-            "firstSendTrialEligible": is_first_send_trial_eligible(db, uid),
-            "subscription": subscription,
-            "ledger": ledger,
-            "payments": {
-                "tossClientKey": TOSS_CLIENT_KEY or None,
-                "mockEnabled": COMMERCE_MOCK_PAYMENTS,
-            },
-        }
+        enrich_assessment_wallet_response(
+            {
+                "counselorUid": uid,
+                "balance": balance,
+                "enforceCredits": COMMERCE_CREDITS_ENFORCE,
+                "pilotFreeCredits": PILOT_FREE_CREDITS,
+                "firstSendTrialEligible": is_first_send_trial_eligible(db, uid),
+                "subscription": subscription,
+                "ledger": ledger,
+                "payments": {
+                    "tossClientKey": TOSS_CLIENT_KEY or None,
+                    "mockEnabled": COMMERCE_MOCK_PAYMENTS,
+                },
+            }
+        )
     )
 
 
@@ -135,15 +151,17 @@ def credits_for_counselor(counselor_uid: str):
     user_data = user_doc.to_dict() if user_doc.exists else {}
     sub_doc = db.collection("subscriptions").document(uid).get()
     return jsonify(
-        {
-            "counselorUid": uid,
-            "balance": balance,
-            "email": user_data.get("email") or "",
-            "displayName": counselor_display_name(user_data),
-            "role": user_data.get("role") or "",
-            "subscription": sub_doc.to_dict() if sub_doc.exists else None,
-            "ledger": ledger,
-        }
+        enrich_assessment_wallet_response(
+            {
+                "counselorUid": uid,
+                "balance": balance,
+                "email": user_data.get("email") or "",
+                "displayName": counselor_display_name(user_data),
+                "role": user_data.get("role") or "",
+                "subscription": sub_doc.to_dict() if sub_doc.exists else None,
+                "ledger": ledger,
+            }
+        )
     )
 
 
@@ -183,14 +201,16 @@ def credits_lookup():
     balance = get_balance(db, counselor_uid)
     ledger = list_ledger(db, counselor_uid, limit=limit)
     return jsonify(
-        {
-            "counselorUid": counselor_uid,
-            "email": user_data.get("email") or email or "",
-            "displayName": counselor_display_name(user_data),
-            "role": role,
-            "balance": balance,
-            "ledger": ledger,
-        }
+        enrich_assessment_wallet_response(
+            {
+                "counselorUid": counselor_uid,
+                "email": user_data.get("email") or email or "",
+                "displayName": counselor_display_name(user_data),
+                "role": role,
+                "balance": balance,
+                "ledger": ledger,
+            }
+        )
     )
 
 

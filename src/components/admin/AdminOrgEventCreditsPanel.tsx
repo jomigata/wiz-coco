@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { adminGrantOrgCredits, type OrganizationRecord } from '@/lib/orgApi';
+import { assessmentCreditsToPoints, formatPoints } from '@/lib/pointsCatalog';
 
 const EVENT_PRESETS = [
   { id: 'workshop', label: '연수·세미나 (500)', amount: 500, reason: 'event_workshop' },
@@ -32,7 +33,7 @@ export default function AdminOrgEventCreditsPanel({ orgs, onGranted, onError }: 
     setLoading(true);
     try {
       await adminGrantOrgCredits(id, preset.amount, preset.reason);
-      onGranted(`${preset.label} — ${preset.amount} 크레딧 지급 완료`);
+      onGranted(`${preset.label} — ${formatPoints(assessmentCreditsToPoints(preset.amount))} 지급 완료`);
     } catch (err) {
       onError(err instanceof Error ? err.message : '지급 실패');
     } finally {
@@ -48,7 +49,7 @@ export default function AdminOrgEventCreditsPanel({ orgs, onGranted, onError }: 
       <div>
         <h2 className="text-lg font-semibold text-white">협회 행사 · 체험 코드 (일괄 선결제)</h2>
         <p className="mt-1 text-sm text-slate-400">
-          연수·회원 체험 등 행사용으로 기관에 검사 크레딧을 한 번에 넣습니다. 담당 상담사가 기관 잔액으로
+          연수·회원 체험 등 행사용으로 기관에 검사 포인트를 한 번에 넣습니다. 담당 상담사가 기관 잔액으로
           발송합니다.
         </p>
       </div>
@@ -66,7 +67,7 @@ export default function AdminOrgEventCreditsPanel({ orgs, onGranted, onError }: 
             const id = o.organizationId || o.id || '';
             return (
               <option key={id} value={id}>
-                {o.name} (잔액 {o.creditBalance ?? 0})
+                {o.name} (잔액 {formatPoints(assessmentCreditsToPoints(o.creditBalance ?? 0))})
               </option>
             );
           })}
@@ -98,7 +99,7 @@ export default function AdminOrgEventCreditsPanel({ orgs, onGranted, onError }: 
         disabled={loading || !orgId}
         className="w-full rounded-lg bg-amber-600 py-2.5 text-sm font-semibold text-white hover:bg-amber-500 disabled:opacity-50"
       >
-        {loading ? '지급 중…' : `${preset.amount.toLocaleString()} 크레딧 일괄 지급`}
+        {loading ? '지급 중…' : `${formatPoints(assessmentCreditsToPoints(preset.amount))} 일괄 지급`}
       </button>
     </form>
   );

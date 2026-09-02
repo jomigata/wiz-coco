@@ -10,6 +10,7 @@ import {
   type PaymentRecord,
 } from '@/lib/commerceApi';
 import AdminAiUsagePanel from '@/components/admin/AdminAiUsagePanel';
+import { assessmentCreditsToPoints, formatPoints } from '@/lib/pointsCatalog';
 
 type Tab = 'grant' | 'settlement' | 'ai';
 
@@ -39,7 +40,7 @@ export default function AdminCommercePage() {
       <div className="p-6 max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold text-white mb-2">협회 · 수익화 관리</h1>
         <p className="text-slate-400 text-sm mb-6">
-          상담사 검사 크레딧 지급 · PG 결제 정산 · AI 사용량
+          상담사 검사 포인트 지급 · PG 결제 정산 · AI 사용량
         </p>
 
         <div className="flex gap-2 mb-6 flex-wrap">
@@ -50,7 +51,7 @@ export default function AdminCommercePage() {
               tab === 'grant' ? 'bg-blue-600 text-white' : 'bg-white/10 text-slate-300'
             }`}
           >
-            크레딧 지급
+            포인트 지급
           </button>
           <button
             type="button"
@@ -109,8 +110,10 @@ export default function AdminCommercePage() {
                   </p>
                 </div>
                 <div className="rounded-xl border border-white/10 p-4 bg-white/5">
-                  <p className="text-xs text-slate-400">발급 크레딧</p>
-                  <p className="text-2xl font-bold text-white">{summary.totalCreditsGranted}</p>
+                  <p className="text-xs text-slate-400">발급 포인트</p>
+                  <p className="text-2xl font-bold text-white">
+                    {formatPoints(assessmentCreditsToPoints(summary.totalCreditsGranted))}
+                  </p>
                 </div>
                 <div className="rounded-xl border border-white/10 p-4 bg-white/5">
                   <p className="text-xs text-slate-400">
@@ -131,7 +134,8 @@ export default function AdminCommercePage() {
                     <li key={pid} className="flex justify-between text-slate-300">
                       <span>{pid}</span>
                       <span>
-                        {row.count}건 · {row.amount.toLocaleString()}원 · {row.credits}크레딧
+                        {row.count}건 · {row.amount.toLocaleString()}원 ·{' '}
+                        {formatPoints(assessmentCreditsToPoints(row.credits))}
                       </span>
                     </li>
                   ))}
@@ -146,7 +150,7 @@ export default function AdminCommercePage() {
                     <th className="px-3 py-2 text-left">일시</th>
                     <th className="px-3 py-2 text-left">상품</th>
                     <th className="px-3 py-2 text-right">금액</th>
-                    <th className="px-3 py-2 text-right">크레딧</th>
+                    <th className="px-3 py-2 text-right">포인트</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -157,7 +161,11 @@ export default function AdminCommercePage() {
                       <td className="px-3 py-2 text-right">
                         {(p.amount || 0).toLocaleString()}원
                       </td>
-                      <td className="px-3 py-2 text-right">{p.creditsGranted ?? '—'}</td>
+                      <td className="px-3 py-2 text-right">
+                        {p.creditsGranted != null
+                          ? formatPoints(assessmentCreditsToPoints(p.creditsGranted))
+                          : '—'}
+                      </td>
                     </tr>
                   ))}
                   {payments.length === 0 && (

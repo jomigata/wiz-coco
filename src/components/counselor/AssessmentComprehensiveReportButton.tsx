@@ -5,9 +5,10 @@ import Link from 'next/link';
 import {
   fetchComprehensiveReportsForResult,
   generateAssessmentReport,
-  reportGenerateCreditCost,
+  reportGeneratePointCost,
   saveReportAnnotations,
 } from '@/lib/aiReportApi';
+import { aiCreditsToPoints, formatPoints } from '@/lib/pointsCatalog';
 import { printComprehensiveReport } from '@/lib/assessmentReportPrint';
 import type { ComprehensiveReportResponse } from '@/types/aiUsage';
 
@@ -143,8 +144,8 @@ export default function AssessmentComprehensiveReportButton({
     });
   };
 
-  const creditCost = reportGenerateCreditCost(false);
-  const regenCost = reportGenerateCreditCost(true);
+  const pointCost = reportGeneratePointCost(false);
+  const regenPointCost = reportGeneratePointCost(true);
 
   return (
     <>
@@ -158,7 +159,7 @@ export default function AssessmentComprehensiveReportButton({
             : 'text-xs px-3 py-1.5 rounded-lg border border-emerald-400/40 text-emerald-200 hover:bg-emerald-950/40 disabled:opacity-50'
         }
       >
-        {loading ? '생성 중…' : `종합 리포트 (${creditCost} 크레딧)`}
+        {loading ? '생성 중…' : `종합 리포트 (${formatPoints(pointCost)})`}
       </button>
 
       {error && !open && <p className="text-xs text-red-300 mt-1">{error}</p>}
@@ -177,7 +178,7 @@ export default function AssessmentComprehensiveReportButton({
                   {report?.cached
                     ? ' · 캐시 (무료 열람)'
                     : report && report.creditsCharged > 0
-                      ? ` · ${report.creditsCharged} AI 크레딧 차감`
+                      ? ` · ${formatPoints(aiCreditsToPoints(report.creditsCharged))} 차감`
                       : ''}
                 </p>
               </div>
@@ -264,7 +265,7 @@ export default function AssessmentComprehensiveReportButton({
                     onClick={() => void runGenerate(true)}
                     className="text-xs px-3 py-1.5 rounded-lg border border-white/20 text-slate-300 hover:bg-white/5 disabled:opacity-50"
                   >
-                    재생성 ({regenCost} 크레딧, 50% 할인)
+                    재생성 ({formatPoints(regenPointCost)}, 50% 할인)
                   </button>
                 </>
               )}
@@ -272,7 +273,7 @@ export default function AssessmentComprehensiveReportButton({
                 href="/counselor/credits"
                 className="text-xs px-3 py-1.5 rounded-lg text-violet-300 hover:text-violet-200"
               >
-                AI 크레딧 충전 →
+                AI 포인트 충전 →
               </Link>
             </div>
 

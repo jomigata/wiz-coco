@@ -126,7 +126,7 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
     if (path.startsWith('/counselor/clients/detail')) return '검사발송 목록';
     if (path.startsWith('/counselor/clients/') && path !== '/counselor/clients') return '검사발송 목록';
     if (path.startsWith('/counselor/assign-tests')) return '검사 할당';
-    if (path.startsWith('/counselor/credits')) return '크레딧 · AI';
+    if (path.startsWith('/counselor/credits')) return '포인트 · AI';
     if (path.startsWith('/counselor/data-sharing')) return '데이터 공유 관리';
     if (path.startsWith('/counselor/bulk-invite')) return '일괄 초대';
     if (path.startsWith('/counselor/test-management')) return '신입생 검사 관리';
@@ -146,7 +146,7 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
       '/counselor/chat': '1:1 채팅',
       '/counselor/daily-records': '일상 기록',
       '/counselor/resources': '상담 자료',
-      '/counselor/credits': '크레딧 · AI',
+      '/counselor/credits': '포인트 · AI',
       '/counselor/data-sharing': '데이터 공유 관리',
       '/counselor/bulk-invite': '일괄 초대',
       '/counselor/test-management': '신입생 검사 관리',

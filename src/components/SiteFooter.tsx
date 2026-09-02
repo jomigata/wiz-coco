@@ -76,7 +76,7 @@ export default function SiteFooter() {
               </li>
               <li>
                 <Link href="/counselor/credits/" className="hover:text-white transition-colors">
-                  크레딧 · AI
+                  포인트 · AI
                 </Link>
               </li>
               <li>

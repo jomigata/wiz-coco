@@ -4,6 +4,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal
 
+from utils.points_display import product_credits_to_points, WON_PER_POINT
+
 ProductType = Literal["one_time", "subscription", "b2c_tier"]
 ProductChannel = Literal["b2b2c", "b2c", "b2b"]
 
@@ -44,7 +46,7 @@ COMMERCE_PRODUCTS: dict[str, CommerceProduct] = {
     ),
     "credit-pack-10": CommerceProduct(
         id="credit-pack-10",
-        name="크레딧 10팩",
+        name="포인트 100팩",
         amount=75_000,
         credits=10,
         product_type="one_time",
@@ -52,7 +54,7 @@ COMMERCE_PRODUCTS: dict[str, CommerceProduct] = {
     ),
     "credit-pack-50": CommerceProduct(
         id="credit-pack-50",
-        name="크레딧 50팩",
+        name="포인트 500팩",
         amount=300_000,
         credits=50,
         product_type="one_time",
@@ -93,16 +95,19 @@ def get_product(product_id: str) -> CommerceProduct | None:
 
 
 def product_to_public_dict(p: CommerceProduct) -> dict:
+    points = product_credits_to_points(p.credits)
     return {
         "id": p.id,
         "name": p.name,
         "amount": p.amount,
         "credits": p.credits,
+        "points": points,
         "type": p.product_type,
         "channel": p.channel,
         "planId": p.plan_id,
         "overagePerCredit": p.overage_per_credit,
         "entitlementTier": p.entitlement_tier,
+        "wonPerPoint": WON_PER_POINT,
     }
 
 

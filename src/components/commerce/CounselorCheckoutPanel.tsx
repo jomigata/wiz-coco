@@ -8,6 +8,7 @@ import {
   startCheckoutRedirect,
   type CommerceProduct,
 } from '@/lib/commerceApi';
+import { assessmentCreditsToPoints, formatPoints } from '@/lib/pointsCatalog';
 
 type Props = {
   onSuccess?: () => void;
@@ -40,7 +41,7 @@ export default function CounselorCheckoutPanel({ onSuccess }: Props) {
       const failUrl = `${origin}/counselor/credits/?checkout=fail`;
       const result = await startCheckoutRedirect(productId, successUrl, failUrl);
       if (result.creditsGranted != null) {
-        setMessage(`결제 완료 — ${result.creditsGranted}크레딧 충전됨`);
+        setMessage(`결제 완료 — ${formatPoints(assessmentCreditsToPoints(result.creditsGranted))} 충전됨`);
         onSuccess?.();
       }
     } catch (err) {
@@ -56,7 +57,9 @@ export default function CounselorCheckoutPanel({ onSuccess }: Props) {
     try {
       const prepared = await prepareCheckout(productId);
       const result = await mockCompleteCheckout(prepared.orderId);
-      setMessage(`[테스트] ${result.creditsGranted}크레딧 충전 (잔액 ${result.balance})`);
+      setMessage(
+        `[테스트] ${formatPoints(assessmentCreditsToPoints(result.creditsGranted ?? 0))} 충전 (잔액 ${formatPoints(assessmentCreditsToPoints(result.balance ?? 0))})`,
+      );
       onSuccess?.();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Mock 결제 실패');
@@ -71,9 +74,9 @@ export default function CounselorCheckoutPanel({ onSuccess }: Props) {
 
   return (
     <div className="rounded-xl border border-white/10 bg-slate-900/80 p-6 mb-6">
-      <h2 className="text-lg font-semibold text-white mb-2">크레딧 구매 · 구독</h2>
+      <h2 className="text-lg font-semibold text-white mb-2">포인트 구매 · 구독</h2>
       <p className="text-slate-400 text-sm mb-4">
-        결제 완료 시 검사 크레딧이 자동 충전됩니다. 구독 상품은 월간 크레딧 + 초과 건당 요금
+        결제 완료 시 검사 포인트가 자동 충전됩니다. 구독 상품은 월간 포인트 + 초과 10포인트당 요금
         정책이 적용됩니다.
       </p>
 
@@ -98,9 +101,9 @@ export default function CounselorCheckoutPanel({ onSuccess }: Props) {
               </span>
             </div>
             <p className="text-xs text-slate-400 mb-3">
-              {p.credits}크레딧
+              {formatPoints(p.points ?? assessmentCreditsToPoints(p.credits))}
               {p.type === 'subscription' && p.overagePerCredit
-                ? ` · 초과 ${p.overagePerCredit.toLocaleString()}원/건`
+                ? ` · 초과 10포인트당 ${p.overagePerCredit.toLocaleString()}원`
                 : ''}
             </p>
             <button

@@ -79,7 +79,7 @@ export const counselorMenuCategories: CounselorMainCategory[] = [
   {
     slug: COUNSELOR_TEST_MGMT_SLUG,
     category: '검사 관리',
-    description: '크레딧·할당·결과·추천',
+    description: '포인트·할당·결과·추천',
     icon: '👥',
     subcategories: [
       {
@@ -88,9 +88,9 @@ export const counselorMenuCategories: CounselorMainCategory[] = [
         flatItems: true,
         items: [
           {
-            name: '검사 크레딧',
+            name: '검사 포인트',
             href: '/counselor/credits',
-            description: '보유 크레딧·사용 내역 (협회 지급)',
+            description: '보유 포인트·사용 내역 (협회 지급)',
             icon: '💳',
           },
           {

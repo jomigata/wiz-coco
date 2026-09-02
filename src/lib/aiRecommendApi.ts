@@ -1,7 +1,7 @@
 import { httpsCallable } from 'firebase/functions';
 import { initializeFirebase } from '@/lib/firebase';
 import { getCounselorToken } from '@/lib/counselorAuth';
-import { aiPricingByFeature } from '@/data/aiPricingCatalog';
+import { aiFeatureCreditCost, aiFeaturePointCost } from '@/data/aiPricingCatalog';
 import type {
   RecommendTestsFromResultRequest,
   RecommendTestsFromResultResponse,
@@ -76,5 +76,9 @@ export async function fetchTestRecommendationCache(
 }
 
 export function testRecommendationCreditCost(): number {
-  return aiPricingByFeature('test_recommendation')?.credits ?? 1;
+  return aiFeatureCreditCost('test_recommendation');
+}
+
+export function testRecommendationPointCost(): number {
+  return aiFeaturePointCost('test_recommendation');
 }

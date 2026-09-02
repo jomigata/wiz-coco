@@ -24,7 +24,12 @@ from utils.counselor_ai_credits import (
     list_ai_ledger,
 )
 from utils.ai_reports import get_ai_report, list_ai_reports_for_result, update_ai_report_annotations
-from utils.ai_usage_admin import (
+from utils.points_display import (
+    PILOT_FREE_AI_POINTS,
+    POINTS_PER_AI_CREDIT,
+    WON_PER_POINT,
+    enrich_ai_wallet_response,
+)
     build_ai_usage_summary,
     get_admin_counselor_ai_detail,
     list_admin_ai_ledger,
@@ -50,8 +55,12 @@ def ai_usage_schema():
             },
             "featureLabels": {f: feature_label(f) for f in sorted(AI_USAGE_FEATURES)},
             "walletPolicy": "separate",
-            "creditUnit": "1 AI credit = abstract billing unit (not raw tokens)",
+            "pointUnit": "1 AI feature charge = N points (10 points = 1 legacy AI credit)",
+            "wonPerPoint": WON_PER_POINT,
+            "pointsPerAiCredit": POINTS_PER_AI_CREDIT,
             "pilotFreeAiCredits": PILOT_FREE_AI_CREDITS,
+            "pilotFreeAiPoints": PILOT_FREE_AI_POINTS,
+            "creditUnit": "deprecated: use pointsBalance from API",
             "enforceCredits": AI_CREDITS_ENFORCE,
             "docs": "/docs/AI_USAGE_SCHEMA.md",
             "implementedEndpoints": [
@@ -77,13 +86,15 @@ def ai_credits_me():
     uid = g.counselor_uid
     limit = request.args.get("limit", 30, type=int)
     return jsonify(
-        {
-            "counselorUid": uid,
-            "balance": get_ai_balance(db, uid),
-            "enforceCredits": AI_CREDITS_ENFORCE,
-            "pilotFreeAiCredits": PILOT_FREE_AI_CREDITS,
-            "ledger": list_ai_ledger(db, uid, limit=limit or 30),
-        }
+        enrich_ai_wallet_response(
+            {
+                "counselorUid": uid,
+                "balance": get_ai_balance(db, uid),
+                "enforceCredits": AI_CREDITS_ENFORCE,
+                "pilotFreeAiCredits": PILOT_FREE_AI_CREDITS,
+                "ledger": list_ai_ledger(db, uid, limit=limit or 30),
+            }
+        )
     )
 
 

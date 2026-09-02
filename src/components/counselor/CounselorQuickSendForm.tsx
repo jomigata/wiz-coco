@@ -478,7 +478,7 @@ export default function CounselorQuickSendForm({
       className="flex min-h-0 flex-1"
       description={
         firstSendTrialEligible
-          ? '첫 1명 보내기는 검사 크레딧을 차감하지 않습니다. 1. 검사 선택 → 2. 이름·연락처 입력 → 3. 보내기'
+          ? '첫 1명 보내기는 검사 포인트를 차감하지 않습니다. 1. 검사 선택 → 2. 이름·연락처 입력 → 3. 보내기'
           : '1. 검사 선택 → 2. 이름·연락처 입력 → 3. 보내기'
       }
       toolbar={fullLink}

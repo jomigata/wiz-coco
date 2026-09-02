@@ -4,8 +4,14 @@ import { useCallback, useEffect, useState } from 'react';
 import { LoadingMessage } from '@/components/ui/LoadingMessage';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import { fetchCounselorAiCredits } from '@/lib/aiUsageApi';
-import { AI_PRICING_CATALOG, PILOT_FREE_AI_CREDITS } from '@/data/aiPricingCatalog';
+import { AI_PRICING_CATALOG, PILOT_FREE_AI_POINTS } from '@/data/aiPricingCatalog';
 import type { CounselorAiCreditsMeResponse } from '@/types/aiUsage';
+import {
+  aiCreditsToPoints,
+  formatPoints,
+  formatPointsDelta,
+  resolvePointsBalance,
+} from '@/lib/pointsCatalog';
 
 export default function CounselorAiCreditsPanel() {
   const [data, setData] = useState<CounselorAiCreditsMeResponse | null>(null);
@@ -24,11 +30,13 @@ export default function CounselorAiCreditsPanel() {
     reload();
   }, [reload]);
 
+  const pointsBalance = data ? resolvePointsBalance(data, 'ai') : 0;
+
   if (loading && !data) {
     return (
       <LoadingMessage
         className="py-8"
-        message="AI 크레딧 정보를 로딩중…"
+        message="AI 포인트 정보를 로딩중…"
         textClassName="text-sm text-slate-400"
       />
     );
@@ -43,33 +51,33 @@ export default function CounselorAiCreditsPanel() {
       ) : null}
 
       <p className="text-sm text-slate-400">
-        검사 크레딧과 별도인 AI 전용 지갑입니다. 파일럿 상담사는 협회에서 최대{' '}
-        {data?.pilotFreeAiCredits ?? PILOT_FREE_AI_CREDITS} AI 크레딧을 지급받을 수 있습니다.
+        검사 포인트와 별도인 AI 전용 지갑입니다. 파일럿 상담사는 협회에서 최대{' '}
+        {formatPoints(data?.pilotFreeAiPoints ?? PILOT_FREE_AI_POINTS)}를 지급받을 수 있습니다.
       </p>
 
       {data ? (
         <>
-          <CounselorPageSection title="AI 크레딧 잔액">
-            <p className="text-4xl font-bold text-white">{data.balance}</p>
+          <CounselorPageSection title="AI 포인트 잔액">
+            <p className="text-4xl font-bold text-white">{formatPoints(pointsBalance)}</p>
             {data.enforceCredits ? (
-              <p className="mt-2 text-xs text-amber-300">AI 크레딧 부족 시 AI 기능이 차단됩니다.</p>
+              <p className="mt-2 text-xs text-amber-300">AI 포인트 부족 시 AI 기능이 차단됩니다.</p>
             ) : (
               <p className="mt-2 text-xs text-slate-400">
-                파일럿 모드: AI 크레딧 부족 시에도 일부 기능 사용 가능(정책 전환 예정).
+                파일럿 모드: AI 포인트 부족 시에도 일부 기능 사용 가능(정책 전환 예정).
               </p>
             )}
           </CounselorPageSection>
 
           <CounselorPageSection title="AI 기능 단가">
             <ul className="space-y-2 text-sm">
-              {AI_PRICING_CATALOG.filter((item) => item.credits > 0).map((item) => (
+              {AI_PRICING_CATALOG.filter((item) => item.points > 0).map((item) => (
                 <li
                   key={item.feature}
                   className="rounded-lg border border-white/5 bg-white/5 px-4 py-3 text-slate-300"
                 >
                   <div className="flex justify-between gap-4">
                     <span className="font-medium text-white">{item.label}</span>
-                    <span className="shrink-0 text-violet-300">{item.credits} AI 크레딧</span>
+                    <span className="shrink-0 text-violet-300">{formatPoints(item.points)}</span>
                   </div>
                   <p className="mt-1 text-xs text-slate-500">{item.description}</p>
                 </li>
@@ -88,13 +96,17 @@ export default function CounselorAiCreditsPanel() {
                   className="flex flex-col gap-1 rounded-lg border border-white/5 bg-white/5 px-4 py-3 text-slate-300 sm:flex-row sm:justify-between"
                 >
                   <span>
-                    {row.delta > 0 ? '+' : ''}
-                    {row.delta} · {row.reason}
+                    {formatPointsDelta(row.pointsDelta ?? aiCreditsToPoints(row.delta))} · {row.reason}
                     {row.tokensTotal ? (
                       <span className="ml-2 text-slate-500">({row.tokensTotal} tokens)</span>
                     ) : null}
                   </span>
-                  <span className="text-slate-500">잔액 {row.balanceAfter}</span>
+                  <span className="text-slate-500">
+                    잔액{' '}
+                    {formatPoints(
+                      row.pointsBalanceAfter ?? aiCreditsToPoints(row.balanceAfter),
+                    )}
+                  </span>
                 </li>
               ))}
             </ul>

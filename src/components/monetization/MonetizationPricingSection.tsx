@@ -59,7 +59,7 @@ export default function MonetizationPricingSection() {
           요금 안내 (가이드)
         </h2>
         <p className="text-slate-400 text-center mb-10 text-sm">
-          1단계 파일럿은 협회 Admin이 크레딧을 지급합니다. 정식 요금·PG 결제는 2단계에서
+          1단계 파일럿은 협회 Admin이 포인트를 지급합니다. 정식 요금·PG 결제는 2단계에서
           연동됩니다.
         </p>
 

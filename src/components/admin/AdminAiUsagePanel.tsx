@@ -9,6 +9,12 @@ import {
   grantCounselorAiCredits,
 } from '@/lib/aiUsageApi';
 import { PILOT_FREE_AI_CREDITS } from '@/data/aiPricingCatalog';
+import {
+  aiCreditsToPoints,
+  formatPoints,
+  formatPointsDelta,
+  PILOT_FREE_AI_POINTS,
+} from '@/lib/pointsCatalog';
 import type { AiAdminUsageSummary } from '@/types/aiUsage';
 
 export default function AdminAiUsagePanel() {
@@ -56,7 +62,9 @@ export default function AdminAiUsagePanel() {
         amount: grantAmount,
         reason: grantReason,
       });
-      setGrantMsg(`AI 크레딧 지급 완료: +${result.granted} → 잔액 ${result.balance}`);
+      setGrantMsg(
+        `AI 포인트 지급 완료: ${formatPointsDelta(aiCreditsToPoints(result.granted))} → 잔액 ${formatPoints(aiCreditsToPoints(result.balance))}`,
+      );
       const s = await fetchAiAdminUsageSummary(month);
       setSummary(s);
     } catch (err) {
@@ -86,7 +94,7 @@ export default function AdminAiUsagePanel() {
   return (
     <div className="space-y-6">
       <p className="text-slate-400 text-sm">
-        AI 크레딧 지급 · 기능별 사용량 · 토큰 원장 모니터링 (Wave 3 T-3-08)
+        AI 포인트 지급 · 기능별 사용량 · 토큰 원장 모니터링 (Wave 3 T-3-08)
       </p>
 
       <div className="flex items-center gap-3">
@@ -103,12 +111,16 @@ export default function AdminAiUsagePanel() {
       {summary && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="rounded-xl border border-violet-500/20 p-4 bg-violet-950/20">
-            <p className="text-xs text-violet-300">AI 크레딧 차감</p>
-            <p className="text-2xl font-bold text-white">{summary.creditsConsumed}</p>
+            <p className="text-xs text-violet-300">AI 포인트 차감</p>
+            <p className="text-2xl font-bold text-white">
+              {formatPoints(aiCreditsToPoints(summary.creditsConsumed))}
+            </p>
           </div>
           <div className="rounded-xl border border-white/10 p-4 bg-white/5">
-            <p className="text-xs text-slate-400">AI 크레딧 지급</p>
-            <p className="text-2xl font-bold text-white">{summary.creditsGranted}</p>
+            <p className="text-xs text-slate-400">AI 포인트 지급</p>
+            <p className="text-2xl font-bold text-white">
+              {formatPoints(aiCreditsToPoints(summary.creditsGranted))}
+            </p>
           </div>
           <div className="rounded-xl border border-white/10 p-4 bg-white/5">
             <p className="text-xs text-slate-400">활성 상담사</p>
@@ -136,7 +148,8 @@ export default function AdminAiUsagePanel() {
                     <span className="text-slate-500">({row.count}건)</span>
                   </span>
                   <span className="text-right shrink-0">
-                    -{row.creditsConsumed} / +{row.creditsGranted}
+                    {formatPointsDelta(-aiCreditsToPoints(row.creditsConsumed))} /{' '}
+                    {formatPointsDelta(aiCreditsToPoints(row.creditsGranted))}
                     {row.tokens > 0 ? (
                       <span className="block text-xs text-slate-500">{row.tokens} tok</span>
                     ) : null}
@@ -148,13 +161,14 @@ export default function AdminAiUsagePanel() {
           <div className="rounded-xl border border-white/10 p-4 bg-slate-900/50">
             <h3 className="text-white font-medium mb-3">AI 지갑 상위</h3>
             <p className="text-xs text-slate-500 mb-2">
-              전체 {summary.walletCount}지갑 · 합계 잔액 {summary.totalWalletBalance}
+              전체 {summary.walletCount}지갑 · 합계 잔액{' '}
+              {formatPoints(aiCreditsToPoints(summary.totalWalletBalance))}
             </p>
             <ul className="text-sm space-y-2">
               {summary.topWallets.map((w) => (
                 <li key={w.counselorUid} className="flex justify-between text-slate-300 font-mono text-xs">
                   <span className="truncate max-w-[200px]">{w.counselorUid}</span>
-                  <span>{w.balance}</span>
+                  <span>{formatPoints(aiCreditsToPoints(w.balance))}</span>
                 </li>
               ))}
               {summary.topWallets.length === 0 && (
@@ -169,7 +183,7 @@ export default function AdminAiUsagePanel() {
         onSubmit={handleGrant}
         className="rounded-xl border border-violet-500/20 bg-slate-900/80 p-6 space-y-4"
       >
-        <h2 className="text-lg font-semibold text-white">AI 크레딧 지급</h2>
+        <h2 className="text-lg font-semibold text-white">AI 포인트 지급</h2>
         <input
           value={grantUid}
           onChange={(e) => setGrantUid(e.target.value)}
@@ -197,7 +211,7 @@ export default function AdminAiUsagePanel() {
           disabled={loading}
           className="w-full py-2.5 rounded-lg bg-violet-600 text-white font-semibold hover:bg-violet-500 disabled:opacity-50"
         >
-          AI 크레딧 지급 (파일럿 기본 {PILOT_FREE_AI_CREDITS})
+          AI 포인트 지급 (파일럿 기본 {formatPoints(PILOT_FREE_AI_POINTS)})
         </button>
         {grantMsg && <p className="text-sm text-emerald-300">{grantMsg}</p>}
       </form>
@@ -224,7 +238,10 @@ export default function AdminAiUsagePanel() {
         {lookupResult && (
           <div className="text-sm text-slate-300">
             <p>
-              잔액: <span className="text-white font-semibold">{lookupResult.balance}</span>
+              잔액:{' '}
+              <span className="text-white font-semibold">
+                {formatPoints(aiCreditsToPoints(lookupResult.balance))}
+              </span>
               {lookupResult.email ? ` · ${lookupResult.email}` : ''}
             </p>
           </div>
@@ -252,7 +269,9 @@ export default function AdminAiUsagePanel() {
                   {row.counselorUid || row.clientId || '—'}
                 </td>
                 <td className="px-3 py-2">{row.feature || row.reason}</td>
-                <td className="px-3 py-2 text-right">{row.delta}</td>
+                <td className="px-3 py-2 text-right">
+                  {formatPointsDelta(aiCreditsToPoints(row.delta))}
+                </td>
                 <td className="px-3 py-2 text-right">{row.tokensTotal ?? '—'}</td>
               </tr>
             ))}

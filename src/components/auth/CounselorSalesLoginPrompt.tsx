@@ -11,7 +11,7 @@ type Props = {
 
 export default function CounselorSalesLoginPrompt({
   title = '상담사 전용 영업 도구',
-  description = '파트너·요금·Discover·크레딧 안내는 승인된 상담사에게만 제공됩니다. 로그인 후 상담관리 메뉴에서 이용할 수 있습니다.',
+  description = '파트너·요금·Discover·포인트 안내는 승인된 상담사에게만 제공됩니다. 로그인 후 상담관리 메뉴에서 이용할 수 있습니다.',
 }: Props) {
   return (
     <main

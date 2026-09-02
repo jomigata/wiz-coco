@@ -154,6 +154,9 @@ def list_admin_ai_ledger(
     return rows[:limit]
 
 
+from utils.points_display import enrich_ai_wallet_response
+
+
 def get_admin_counselor_ai_detail(db, counselor_uid: str, *, ledger_limit: int = 30) -> dict:
     from utils.counselor_ai_credits import get_ai_balance, list_ai_ledger
 
@@ -162,9 +165,11 @@ def get_admin_counselor_ai_detail(db, counselor_uid: str, *, ledger_limit: int =
     if user_doc.exists:
         email = (user_doc.to_dict() or {}).get("email")
 
-    return {
-        "counselorUid": counselor_uid,
-        "email": email,
-        "balance": get_ai_balance(db, counselor_uid),
-        "ledger": list_ai_ledger(db, counselor_uid, limit=ledger_limit),
-    }
+    return enrich_ai_wallet_response(
+        {
+            "counselorUid": counselor_uid,
+            "email": email,
+            "balance": get_ai_balance(db, counselor_uid),
+            "ledger": list_ai_ledger(db, counselor_uid, limit=ledger_limit),
+        }
+    )

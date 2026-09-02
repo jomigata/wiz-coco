@@ -1,27 +1,22 @@
-"""무료 검사코드(공개 claim) — 전송 채널·포인트."""
+"""무료 검사코드(공개 claim) — @/utils/points_display 재export."""
 from __future__ import annotations
+
+from utils.points_display import (
+    POINT_COST_PUBLIC_CLAIM_EMAIL,
+    POINT_COST_PUBLIC_CLAIM_PHONE,
+    PUBLIC_CLAIM_EMAIL_CREDIT_COST,
+    PUBLIC_CLAIM_PHONE_CREDIT_COST,
+    assessment_credits_to_points,
+)
 
 PUBLIC_CLAIM_CHANNEL_PHONE = "phone"
 PUBLIC_CLAIM_CHANNEL_EMAIL = "email"
 VALID_PUBLIC_CLAIM_CHANNELS = frozenset({PUBLIC_CLAIM_CHANNEL_PHONE, PUBLIC_CLAIM_CHANNEL_EMAIL})
 
-# 1포인트 = 10원 · 검사 크레딧 1건 = 10포인트 (= 100원)
-WON_PER_POINT = 10
-POINTS_PER_CREDIT = 10
-PUBLIC_CLAIM_PHONE_POINT_COST = 10
-PUBLIC_CLAIM_PHONE_CREDIT_COST = 1
-PUBLIC_CLAIM_EMAIL_CREDIT_COST = 0
+PUBLIC_CLAIM_PHONE_POINT_COST = POINT_COST_PUBLIC_CLAIM_PHONE
+PUBLIC_CLAIM_PHONE_POINTS = POINT_COST_PUBLIC_CLAIM_PHONE
 
-# 하위 호환
-PUBLIC_CLAIM_PHONE_POINTS = PUBLIC_CLAIM_PHONE_POINT_COST
-
-
-def credits_to_points(credits: int) -> int:
-    try:
-        n = int(credits)
-    except (TypeError, ValueError):
-        n = 0
-    return max(0, n * POINTS_PER_CREDIT)
+credits_to_points = assessment_credits_to_points
 
 
 def normalize_public_claim_channel(raw: str | None) -> str:
@@ -42,7 +37,7 @@ def resolve_effective_public_claim_channel(
     if (
         channel == PUBLIC_CLAIM_CHANNEL_PHONE
         and credits_enforce
-        and credits_to_points(counselor_balance) < PUBLIC_CLAIM_PHONE_POINT_COST
+        and assessment_credits_to_points(counselor_balance) < POINT_COST_PUBLIC_CLAIM_PHONE
     ):
         return PUBLIC_CLAIM_CHANNEL_EMAIL, True
     return channel, False

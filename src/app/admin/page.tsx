@@ -46,12 +46,12 @@ export default function AdminDashboard() {
       stats: { value: '89', label: '완료된 검사', change: '+15' }
     },
     {
-      title: '크레딧 · 수익화',
-      description: '상담사 파일럿 크레딧 지급',
+      title: '포인트 · 수익화',
+      description: '상담사 파일럿 포인트 지급',
       href: '/admin/commerce',
       icon: '💰',
       color: 'from-amber-500 to-orange-500',
-      stats: { value: 'Pilot', label: '1단계', change: '크레딧' }
+      stats: { value: 'Pilot', label: '1단계', change: '포인트' }
     },
     {
       title: '콘텐츠 관리',

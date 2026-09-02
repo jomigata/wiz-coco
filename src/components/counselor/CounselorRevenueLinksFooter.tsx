@@ -20,7 +20,7 @@ export default function CounselorRevenueLinksFooter({ creditBalance, orgLiaisonC
           href="/counselor/credits"
           className={lowCredits ? 'font-medium text-amber-300 hover:text-amber-200' : 'text-slate-400 hover:text-slate-200'}
         >
-          {lowCredits ? '검사 크레딧 충전 (잔액 부족)' : '검사·AI 크레딧 충전'}
+          {lowCredits ? '검사 포인트 충전 (잔액 부족)' : '검사·AI 포인트 충전'}
         </AuthLink>
         {orgLiaisonCount > 0 ? (
           <AuthLink href="/counselor/assessments/new" className="text-slate-400 hover:text-slate-200">

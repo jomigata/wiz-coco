@@ -135,7 +135,7 @@ export async function adminGrantOrgCredits(orgId: string, amount: number, reason
   });
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
-    throw new Error(data.message || '크레딧 지급 실패');
+    throw new Error(data.message || '포인트 지급 실패');
   }
   return res.json();
 }

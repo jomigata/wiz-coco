@@ -297,7 +297,7 @@ export default function OrgDispatchPage() {
             disabled={loading}
             className="w-full py-2.5 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-500 disabled:opacity-50"
           >
-            {loading ? '처리 중…' : '기관 크레딧으로 일괄 발송'}
+            {loading ? '처리 중…' : '기관 포인트로 일괄 발송'}
           </button>
         </form>
       </div>

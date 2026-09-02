@@ -6,6 +6,7 @@ import RoleGuard from '@/components/RoleGuard';
 import { fetchOrgMe, type OrgCohortSummary } from '@/lib/orgApi';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
+import { assessmentCreditsToPoints, formatPoints } from '@/lib/pointsCatalog';
 
 export default function OrgDashboardPage() {
   const { user, authPending, showLoginRequired } = useAuthResolved();
@@ -58,13 +59,15 @@ export default function OrgDashboardPage() {
           <>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
               <div className="rounded-xl border border-emerald-500/30 bg-emerald-950/20 p-5">
-                <p className="text-xs text-emerald-300">기관 크레딧</p>
-                <p className="text-3xl font-bold text-white">{data.creditBalance}</p>
+                <p className="text-xs text-emerald-300">기관 포인트</p>
+                <p className="text-3xl font-bold text-white">
+                  {formatPoints(assessmentCreditsToPoints(data.creditBalance ?? 0))}
+                </p>
               </div>
               <div className="rounded-xl border border-white/10 bg-white/5 p-5 sm:col-span-2">
                 <p className="text-xs text-slate-400">안내</p>
                 <p className="text-sm text-slate-300 mt-1">
-                  1크레딧 = 내담자 1명. 기관 선결제로 임직원·학생은 코드만으로 무료 검사합니다.
+                  10포인트 = 내담자 1명. 기관 선결제로 임직원·학생은 코드만으로 무료 검사합니다.
                 </p>
               </div>
             </div>

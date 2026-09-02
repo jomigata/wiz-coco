@@ -12,7 +12,13 @@ import {
   fetchMyCredits,
   type CounselorCreditsResponse,
 } from '@/lib/commerceApi';
-import { PILOT_FREE_CREDITS } from '@/data/monetizationCatalog';
+import {
+  assessmentCreditsToPoints,
+  formatPoints,
+  formatPointsDelta,
+  PILOT_FREE_ASSESSMENT_POINTS,
+  resolvePointsBalance,
+} from '@/lib/pointsCatalog';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
 import {
@@ -38,7 +44,7 @@ function TabBar({
             : 'text-slate-400 hover:text-white hover:bg-white/5'
         }`}
       >
-        검사 크레딧
+        검사 포인트
       </button>
       <button
         type="button"
@@ -49,7 +55,7 @@ function TabBar({
             : 'text-slate-400 hover:text-white hover:bg-white/5'
         }`}
       >
-        AI 크레딧
+        AI 포인트
       </button>
     </div>
   );
@@ -116,7 +122,8 @@ function CreditsContent() {
     if (checkout === 'success' && paymentKey && orderId && amount > 0) {
       completeCheckoutFromReturn({ paymentKey, orderId, amount })
         .then((r) => {
-          setPayMessage(`${r.creditsGranted ?? 0}크레딧이 충전되었습니다.`);
+          const grantedPoints = assessmentCreditsToPoints(r.creditsGranted ?? 0);
+          setPayMessage(`${formatPoints(grantedPoints)}가 충전되었습니다.`);
           reload();
           window.history.replaceState({}, '', '/counselor/credits/');
         })
@@ -129,8 +136,10 @@ function CreditsContent() {
     }
   }, [authPending, user, searchParams, reload]);
 
+  const pointsBalance = data ? resolvePointsBalance(data, 'assessment') : 0;
+
   if (authPending) {
-    return <AuthLoadingState message="크레딧 정보를 로딩중…" />;
+    return <AuthLoadingState message="포인트 정보를 로딩중…" />;
   }
 
   if (showLoginRequired || !user) {
@@ -140,7 +149,7 @@ function CreditsContent() {
   if (tab === 'ai') {
     return (
       <CounselorPageSection
-        title="AI 크레딧"
+        title="AI 포인트"
         className="flex min-h-0 flex-1"
         toolbar={<TabBar tab={tab} setTab={setTab} />}
       >
@@ -150,15 +159,15 @@ function CreditsContent() {
   }
 
   if (loading && !data) {
-    return <AuthLoadingState message="크레딧 정보를 로딩중…" />;
+    return <AuthLoadingState message="포인트 정보를 로딩중…" />;
   }
 
   return (
     <CounselorPageSection
-      title="검사 크레딧"
+      title="검사 포인트"
       dense
       className="flex min-h-0 flex-1"
-      description={`내담자 1명(포털 1개) 발급 = 1크레딧. 파일럿 상담사는 협회에서 ${PILOT_FREE_CREDITS}크레딧을 지급받을 수 있습니다.`}
+      description={`내담자 1명(포털 1개) 발급 = 10포인트(100원). 파일럿 상담사는 협회에서 ${formatPoints(PILOT_FREE_ASSESSMENT_POINTS)}를 지급받을 수 있습니다.`}
       toolbar={<TabBar tab={tab} setTab={setTab} />}
     >
       {payMessage && (
@@ -172,9 +181,9 @@ function CreditsContent() {
         </div>
       )}
 
-      {data && data.balance < 20 ? (
+      {data && pointsBalance < 200 ? (
         <div className="mb-4 rounded-lg border border-amber-500/35 bg-amber-950/30 p-4 text-sm text-amber-100">
-          검사 크레딧이 {data.balance}회 남았습니다. 필요할 때만 아래에서 충전하세요.
+          검사 포인트가 {formatPoints(pointsBalance)} 남았습니다. 필요할 때만 아래에서 충전하세요.
         </div>
       ) : null}
 
@@ -183,21 +192,22 @@ function CreditsContent() {
       {data && (
         <>
           <div className="rounded-xl border border-blue-500/30 bg-blue-950/30 p-6 mb-6">
-            <p className="text-sm text-blue-200 mb-1">보유 크레딧</p>
-            <p className="text-4xl font-bold text-white">{data.balance}</p>
+            <p className="text-sm text-blue-200 mb-1">보유 검사 포인트</p>
+            <p className="text-4xl font-bold text-white">{formatPoints(pointsBalance)}</p>
             {data.subscription?.planId && (
               <p className="text-sm text-indigo-200 mt-2">
-                구독: {data.subscription.planId} · 월 {data.subscription.creditsPerMonth}크레딧
+                구독: {data.subscription.planId} · 월{' '}
+                {formatPoints(assessmentCreditsToPoints(data.subscription.creditsPerMonth ?? 0))}
                 {data.subscription.currentPeriodEnd
                   ? ` · 만료 ${String(data.subscription.currentPeriodEnd).slice(0, 10)}`
                   : ''}
               </p>
             )}
             {data.enforceCredits ? (
-              <p className="text-xs text-amber-300 mt-2">크레딧 부족 시 일괄 발송이 차단됩니다.</p>
+              <p className="text-xs text-amber-300 mt-2">포인트 부족 시 일괄 발송이 차단됩니다.</p>
             ) : (
               <p className="text-xs text-slate-400 mt-2">
-                파일럿 모드: 크레딧 부족 시에도 발송 가능(협회 정책 전환 예정).
+                파일럿 모드: 포인트 부족 시에도 발송 가능(협회 정책 전환 예정).
               </p>
             )}
           </div>
@@ -228,10 +238,17 @@ function CreditsContent() {
                 className="flex justify-between rounded-lg border border-white/5 bg-white/5 px-4 py-3 text-slate-300"
               >
                 <span>
-                  {row.delta > 0 ? '+' : ''}
-                  {row.delta} · {row.reason}
+                  {formatPointsDelta(
+                    row.pointsDelta ?? assessmentCreditsToPoints(row.delta),
+                  )}{' '}
+                  · {row.reason}
                 </span>
-                <span className="text-slate-500">잔액 {row.balanceAfter}</span>
+                <span className="text-slate-500">
+                  잔액{' '}
+                  {formatPoints(
+                    row.pointsBalanceAfter ?? assessmentCreditsToPoints(row.balanceAfter),
+                  )}
+                </span>
               </li>
             ))}
           </ul>

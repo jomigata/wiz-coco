@@ -11,6 +11,7 @@ import {
   type OrganizationRecord,
 } from '@/lib/orgApi';
 import AdminOrgEventCreditsPanel from '@/components/admin/AdminOrgEventCreditsPanel';
+import { assessmentCreditsToPoints, formatPoints } from '@/lib/pointsCatalog';
 
 export default function AdminOrganizationsPage() {
   const [orgs, setOrgs] = useState<OrganizationRecord[]>([]);
@@ -59,7 +60,7 @@ export default function AdminOrganizationsPage() {
     setLoading(true);
     try {
       await adminGrantOrgCredits(grantOrgId.trim(), grantAmount, 'poc_prepaid');
-      setMessage(`${grantAmount} 크레딧 지급 완료`);
+      setMessage(`${formatPoints(assessmentCreditsToPoints(grantAmount))} 지급 완료`);
       await reload();
     } catch (err) {
       setError(err instanceof Error ? err.message : '지급 실패');
@@ -131,7 +132,7 @@ export default function AdminOrganizationsPage() {
         />
 
         <form onSubmit={handleGrant} className="rounded-xl border border-white/10 p-6 mb-8 space-y-3 bg-slate-900/50">
-          <h2 className="text-lg font-semibold text-white">기관 크레딧 지급 (선결제)</h2>
+          <h2 className="text-lg font-semibold text-white">기관 포인트 지급 (선결제)</h2>
           <input
             value={grantOrgId}
             onChange={(e) => setGrantOrgId(e.target.value)}
@@ -147,7 +148,7 @@ export default function AdminOrganizationsPage() {
             className="w-full rounded-lg bg-slate-800 border border-white/10 px-3 py-2 text-white text-sm"
           />
           <button type="submit" disabled={loading} className="w-full py-2 rounded-lg bg-emerald-700 text-white font-semibold">
-            크레딧 지급
+            포인트 지급
           </button>
         </form>
 
@@ -158,7 +159,7 @@ export default function AdminOrganizationsPage() {
             return (
               <li key={id} className="rounded-lg border border-white/10 p-4 bg-white/5 text-sm text-slate-300">
                 <p className="font-medium text-white">{o.name}</p>
-                <p className="text-xs text-slate-500">{id} · {o.type} · 크레딧 {o.creditBalance ?? 0}</p>
+                <p className="text-xs text-slate-500">{id} · {o.type} · {formatPoints(assessmentCreditsToPoints(o.creditBalance ?? 0))}</p>
                 <p className="text-xs">담당 상담사: {o.liaisonCounselorUid || '—'}</p>
                 <p className="text-xs">org_admin: {o.adminUid || '—'}</p>
                 <div className="mt-2 flex flex-wrap gap-2">

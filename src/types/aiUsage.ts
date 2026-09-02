@@ -49,6 +49,8 @@ export type AiUsageLedgerEntry = {
   feature: AiUsageFeature;
   delta: number;
   balanceAfter: number;
+  pointsDelta?: number;
+  pointsBalanceAfter?: number;
   reason: AiUsageReason | string;
   tokensPrompt?: number;
   tokensCompletion?: number;
@@ -130,8 +132,10 @@ export type AiUsageSchemaResponse = {
 export type CounselorAiCreditsMeResponse = {
   counselorUid: string;
   balance: number;
+  pointsBalance?: number;
   enforceCredits: boolean;
   pilotFreeAiCredits: number;
+  pilotFreeAiPoints?: number;
   ledger: AiUsageLedgerDocument[];
 };
 

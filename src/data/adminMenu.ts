@@ -83,9 +83,9 @@ export const adminMenuCategories: TestCategory[] = [
             icon: '🧠',
           },
           {
-            name: '크레딧 · 수익화',
+            name: '포인트 · 수익화',
             href: '/admin/commerce',
-            description: '상담사 파일럿 크레딧 지급·조회',
+            description: '상담사 파일럿 포인트 지급·조회',
             icon: '💰',
           },
           {

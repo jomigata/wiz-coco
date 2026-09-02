@@ -12,8 +12,9 @@ import { counselorAssessmentTestOptions } from '@/data/counselorAssessmentTests'
 import {
   fetchTestRecommendationCache,
   recommendTestsFromResult,
-  testRecommendationCreditCost,
+  testRecommendationPointCost,
 } from '@/lib/aiRecommendApi';
+import { formatPoints } from '@/lib/pointsCatalog';
 import { createCareAssignments } from '@/lib/careAssignmentApi';
 import { counselorClientDetailHref } from '@/lib/counselorClientRoutes';
 import type { TestRecommendationItem } from '@/types/aiRecommendation';
@@ -72,7 +73,7 @@ function TestRecommendationsContent() {
   const [selectedTests, setSelectedTests] = useState<Set<string>>(new Set());
   const [assignBusy, setAssignBusy] = useState(false);
   const [assignMsg, setAssignMsg] = useState('');
-  const creditCost = testRecommendationCreditCost();
+  const pointCost = testRecommendationPointCost();
 
   useEffect(() => {
     const run = async () => {
@@ -245,13 +246,13 @@ function TestRecommendationsContent() {
         description={
           filterPortalId ? (
             <>
-              선택 내담자 완료 검사만 표시 · AI 추천 1회 = {creditCost} 크레딧 ·{' '}
+              선택 내담자 완료 검사만 표시 · AI 추천 1회 = {formatPoints(pointCost)} ·{' '}
               <Link href="/counselor/test-recommendations" className="text-sky-400 hover:text-sky-300">
                 전체 보기
               </Link>
             </>
           ) : (
-            <>완료된 검사 결과를 바탕으로 AI가 추가 검사를 추천합니다. 추천 1회 = {creditCost} AI 크레딧.</>
+            <>완료된 검사 결과를 바탕으로 AI가 추가 검사를 추천합니다. 추천 1회 = {formatPoints(pointCost)}.</>
           )
         }
         toolbar={
@@ -364,7 +365,7 @@ function TestRecommendationsContent() {
                     onClick={() => void loadRecommendations(selectedId, true)}
                     className="text-xs px-3 py-1.5 rounded-lg border border-white/20 text-slate-300 hover:bg-white/5 disabled:opacity-50"
                   >
-                    재추천 ({creditCost} 크레딧)
+                    재추천 ({formatPoints(pointCost)})
                   </button>
                 </div>
 
@@ -427,7 +428,7 @@ function TestRecommendationsContent() {
                           href="/counselor/credits"
                           className="px-4 py-2 rounded-lg text-violet-300 text-sm hover:text-violet-200"
                         >
-                          AI 크레딧
+                          AI 포인트
                         </Link>
                       </div>
                     )}

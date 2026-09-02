@@ -60,6 +60,7 @@ from utils.counselor_credits import (
     is_first_send_trial_eligible,
     mark_first_send_trial_used,
 )
+from utils.points_display import assessment_credits_to_points, format_points_ko
 from utils.assessment_dispatch import (
     get_assessment_dispatch_status,
     resend_portal_credentials,
@@ -750,13 +751,20 @@ def bulk_create():
     if COMMERCE_CREDITS_ENFORCE and not trial_eligible:
         balance = get_balance(db, counselor_uid)
         if balance < credit_required:
+            points_balance = assessment_credits_to_points(balance)
+            points_required = assessment_credits_to_points(credit_required)
             return (
                 jsonify(
                     {
                         "error": "Payment Required",
-                        "message": f"검사 크레딧이 부족합니다. (보유 {balance}, 필요 {credit_required})",
+                        "message": (
+                            f"검사 포인트가 부족합니다. "
+                            f"(보유 {format_points_ko(points_balance)}, 필요 {format_points_ko(points_required)})"
+                        ),
                         "balance": balance,
+                        "pointsBalance": points_balance,
                         "required": credit_required,
+                        "pointsRequired": points_required,
                     }
                 ),
                 402,

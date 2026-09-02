@@ -2,7 +2,7 @@ import { httpsCallable } from 'firebase/functions';
 import { initializeFirebase } from '@/lib/firebase';
 import { getCounselorToken } from '@/lib/counselorAuth';
 import type { AiReportDoc, ComprehensiveReportResponse } from '@/types/aiUsage';
-import { aiPricingByFeature } from '@/data/aiPricingCatalog';
+import { aiFeatureCreditCost, aiFeaturePointCost } from '@/data/aiPricingCatalog';
 
 function getBaseUrl(): string {
   if (process.env.NEXT_PUBLIC_FLASK_API_URL) {
@@ -84,6 +84,9 @@ export async function saveReportAnnotations(
 }
 
 export function reportGenerateCreditCost(forceRegenerate?: boolean): number {
-  const base = aiPricingByFeature('report_generate')?.credits ?? 5;
-  return forceRegenerate ? Math.max(1, Math.ceil(base / 2)) : base;
+  return aiFeatureCreditCost('report_generate', forceRegenerate);
+}
+
+export function reportGeneratePointCost(forceRegenerate?: boolean): number {
+  return aiFeaturePointCost('report_generate', forceRegenerate);
 }

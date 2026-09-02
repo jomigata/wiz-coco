@@ -10,7 +10,7 @@ import CounselorSalesLoginPrompt from '@/components/auth/CounselorSalesLoginProm
 import CounselorSalesBackLink from '@/components/counselor/CounselorSalesBackLink';
 import { AuthLoadingState } from '@/components/auth/AuthStatusViews';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
-import { PILOT_FREE_CREDITS } from '@/data/monetizationCatalog';
+import { PILOT_FREE_ASSESSMENT_POINTS, formatPoints } from '@/lib/pointsCatalog';
 import { APP_HEADER_PT } from '@/lib/appChromeLayout';
 
 function PartnersContent() {
@@ -42,7 +42,7 @@ function PartnersContent() {
           <ul className="space-y-3 text-slate-300 text-sm">
             <li className="flex gap-2">
               <span className="text-blue-400">1.</span>
-              협회 승인 상담사에게 무료 {PILOT_FREE_CREDITS}크레딧 지급 (내담자 1명 = 1크레딧)
+              협회 승인 상담사에게 무료 {formatPoints(PILOT_FREE_ASSESSMENT_POINTS)} 지급 (내담자 1명 = 10포인트)
             </li>
             <li className="flex gap-2">
               <span className="text-blue-400">2.</span>

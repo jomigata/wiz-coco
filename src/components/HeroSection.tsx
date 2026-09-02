@@ -58,7 +58,7 @@ export default function HeroSection() {
           <p className="text-base md:text-lg text-slate-400 mb-12 leading-relaxed max-w-xl mx-auto">
             {isAuthenticated
               ? isApprovedCounselor
-                ? '배정된 검사를 진행하거나, 상담관리 → 영업 · 파트너에서 Discover·요금·크레딧 도구를 이용할 수 있습니다.'
+                ? '배정된 검사를 진행하거나, 상담관리 → 영업 · 파트너에서 Discover·요금·포인트 도구를 이용할 수 있습니다.'
                 : '배정된 검사를 진행하거나, 상담사 승인 후 전문가 기능을 이용할 수 있습니다.'
               : '안내 받으신 상담(코드)와 비밀번호만 입력하면, 별도 가입 없이 배정된 검사를 바로 진행할 수 있습니다.'}
           </p>

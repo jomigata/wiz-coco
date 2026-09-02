@@ -3,6 +3,11 @@
 import React, { useState } from 'react';
 import { PILOT_FREE_CREDITS } from '@/data/monetizationCatalog';
 import {
+  assessmentCreditsToPoints,
+  formatPoints,
+  formatPointsDelta,
+} from '@/lib/pointsCatalog';
+import {
   grantCounselorCredits,
   lookupCounselorCredits,
   type CreditLedgerEntry,
@@ -115,7 +120,9 @@ export default function AdminCounselorCreditGrantPanel() {
         amount,
         reason,
       });
-      setMessage(`지급 완료: +${result.granted.toLocaleString()} → 잔액 ${result.balance.toLocaleString()}`);
+      setMessage(
+        `지급 완료: ${formatPointsDelta(assessmentCreditsToPoints(result.granted))} → 잔액 ${formatPoints(assessmentCreditsToPoints(result.balance))}`,
+      );
       if (uid) {
         await refreshLookup(uid);
       } else if (targetEmail) {
@@ -155,7 +162,7 @@ export default function AdminCounselorCreditGrantPanel() {
         className="rounded-xl border border-white/10 bg-slate-900/80 p-6 space-y-4"
       >
         <h2 className="text-lg font-semibold text-white">상담사 찾기 (이메일)</h2>
-        <p className="text-sm text-slate-400">이메일로 상담사를 찾은 뒤 검사 크레딧을 지급합니다.</p>
+        <p className="text-sm text-slate-400">이메일로 상담사를 찾은 뒤 검사 포인트를 지급합니다.</p>
         <div className="flex flex-col gap-3 sm:flex-row">
           <input
             type="email"
@@ -179,7 +186,7 @@ export default function AdminCounselorCreditGrantPanel() {
         onSubmit={handleGrant}
         className="rounded-xl border border-blue-500/25 bg-slate-900/80 p-6 space-y-4"
       >
-        <h2 className="text-lg font-semibold text-white">검사 크레딧 지급</h2>
+        <h2 className="text-lg font-semibold text-white">검사 포인트 지급</h2>
 
         {lookup ? (
           <div className="rounded-lg border border-white/10 bg-white/5 p-4 text-sm">
@@ -189,7 +196,10 @@ export default function AdminCounselorCreditGrantPanel() {
             <p className="mt-1 text-slate-400">{lookup.email}</p>
             <p className="mt-1 font-mono text-xs text-slate-500">{lookup.counselorUid}</p>
             <p className="mt-3 text-cyan-200">
-              현재 잔액: <span className="text-xl font-bold text-white">{lookup.balance.toLocaleString()}</span> 크레딧
+              현재 잔액:{' '}
+              <span className="text-xl font-bold text-white">
+                {formatPoints(assessmentCreditsToPoints(lookup.balance))}
+              </span>
             </p>
           </div>
         ) : (
@@ -244,7 +254,7 @@ export default function AdminCounselorCreditGrantPanel() {
           disabled={loading || !lookup}
           className="w-full rounded-lg bg-blue-600 py-3 text-sm font-semibold text-white hover:bg-blue-500 disabled:opacity-50"
         >
-          {loading ? '처리 중…' : `${amount.toLocaleString()} 크레딧 지급`}
+          {loading ? '처리 중…' : `${formatPoints(assessmentCreditsToPoints(amount))} 지급`}
         </button>
       </form>
 
@@ -278,10 +288,11 @@ export default function AdminCounselorCreditGrantPanel() {
                 className="flex justify-between border-b border-white/5 pb-2 text-slate-300"
               >
                 <span>
-                  {row.delta > 0 ? '+' : ''}
-                  {row.delta.toLocaleString()} · {row.reason}
+                  {formatPointsDelta(assessmentCreditsToPoints(row.delta))} · {row.reason}
                 </span>
-                <span className="text-slate-500">잔액 {row.balanceAfter.toLocaleString()}</span>
+                <span className="text-slate-500">
+                  잔액 {formatPoints(assessmentCreditsToPoints(row.balanceAfter))}
+                </span>
               </li>
             ))}
           </ul>

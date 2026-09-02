@@ -3,10 +3,12 @@
 import { useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import {
-  assessmentInterpretCreditCost,
+  assessmentInterpretPointCost,
   fetchAiReportsForResult,
   interpretAssessmentResult,
 } from '@/lib/aiInterpretApi';
+import { aiCreditsChargedToPoints } from '@/data/aiPricingCatalog';
+import { formatPoints } from '@/lib/pointsCatalog';
 
 type Props = {
   resultId: string;
@@ -97,8 +99,8 @@ export default function AssessmentAiInterpretButton({
     }
   };
 
-  const creditCost = assessmentInterpretCreditCost(false);
-  const regenCost = assessmentInterpretCreditCost(true);
+  const pointCost = assessmentInterpretPointCost(false);
+  const regenCost = assessmentInterpretPointCost(true);
 
   return (
     <>
@@ -113,7 +115,7 @@ export default function AssessmentAiInterpretButton({
               : 'text-xs px-3 py-1.5 rounded-lg border border-violet-400/40 text-violet-200 hover:bg-violet-950/40 disabled:opacity-50'
           }
         >
-          {loading ? '생성 중…' : `AI 해석 (${creditCost} 크레딧)`}
+          {loading ? '생성 중…' : `AI 해석 (${formatPoints(pointCost)})`}
         </button>
       </div>
 
@@ -130,7 +132,7 @@ export default function AssessmentAiInterpretButton({
                 <p className="text-xs text-slate-500 mt-1">
                   {testLabel || '검사'}
                   {clientLabel ? ` · ${clientLabel}` : ''}
-                  {cached ? ' · 캐시 (무료 열람)' : creditsCharged > 0 ? ` · ${creditsCharged} AI 크레딧 차감` : ''}
+                  {cached ? ' · 캐시 (무료 열람)' : creditsCharged > 0 ? ` · ${formatPoints(aiCreditsChargedToPoints(creditsCharged))} 차감` : ''}
                 </p>
               </div>
               <button
@@ -158,14 +160,14 @@ export default function AssessmentAiInterpretButton({
                   onClick={() => void runInterpret(true)}
                   className="text-xs px-3 py-1.5 rounded-lg border border-white/20 text-slate-300 hover:bg-white/5 disabled:opacity-50"
                 >
-                  재생성 ({regenCost} 크레딧, 50% 할인)
+                  재생성 ({formatPoints(regenCost)}, 50% 할인)
                 </button>
               )}
               <Link
                 href="/counselor/credits"
                 className="text-xs px-3 py-1.5 rounded-lg text-violet-300 hover:text-violet-200"
               >
-                AI 크레딧 충전 →
+                AI 포인트 충전 →
               </Link>
             </div>
 
