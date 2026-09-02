@@ -205,6 +205,7 @@ def create_portal_for_row(
     notify_queued = False
     notify_sent = 0
     notify_failed = 0
+    notify_errors: list[str] = []
     if queue_notify and (email or phone):
         if immediate_notify and not scheduled_at_iso:
             from utils.notification_worker import deliver_portal_credentials
@@ -224,6 +225,7 @@ def create_portal_for_row(
                 notify_kind="initial",
             )
             status = result.get("status") or "failed"
+            notify_errors = list(result.get("errors") or [])
             if status == "sent":
                 notify_sent = 1
             elif status in ("failed", "partial"):
@@ -262,6 +264,8 @@ def create_portal_for_row(
         "magicUrl": magic_url,
         "assessmentId": assessment_ref_id,
     }
+    if queue_notify and immediate_notify and not scheduled_at_iso:
+        created["notifyErrors"] = notify_errors
     try:
         from utils.assessment_list_stats import touch_assessment_list_stats
 

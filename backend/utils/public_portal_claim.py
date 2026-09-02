@@ -70,6 +70,31 @@ def _delivery_success_message(channel: str) -> str:
     return "발송이 완료되었습니다."
 
 
+_SENDER_RECIPIENT_ERRORS = frozenset(
+    {"alimtalk_sender_equals_recipient", "sms_sender_equals_recipient"}
+)
+
+
+def _notify_failure_message(errors: list[str]) -> str:
+    codes = [str(e).strip() for e in errors if str(e).strip()]
+    if any(code in _SENDER_RECIPIENT_ERRORS for code in codes):
+        return (
+            "등록된 발신번호와 같은 번호로는 알림을 받을 수 없습니다. "
+            "다른 휴대폰 번호를 입력해 주세요."
+        )
+    if "alimtalk_not_configured" in codes or "solapi_not_configured" in codes:
+        return "문자·알림톡 발송 설정이 완료되지 않았습니다. 담당 상담사에게 문의해 주세요."
+    if "solapi_sms_not_configured" in codes:
+        return "문자 발송 설정이 완료되지 않았습니다. 담당 상담사에게 문의해 주세요."
+    for code in codes:
+        if code.startswith("alimtalk_status_") or "실패" in code or "3027" in code:
+            return f"알림톡 발송에 실패했습니다. ({code}) 잠시 후 다시 시도하거나 담당 상담사에게 문의해 주세요."
+    for code in codes:
+        if len(code) > 12 and not code.isascii():
+            return f"발송에 실패했습니다. ({code}) 잠시 후 다시 시도해 주세요."
+    return "접속 정보 발송에 실패했습니다. 잠시 후 다시 시도하거나 담당 상담사에게 문의해 주세요."
+
+
 def preview_public_claim(db, *, join_access_code: str) -> dict:
     code = normalize_access_code(join_access_code)
     if not is_valid_access_code(code):
@@ -210,10 +235,12 @@ def claim_my_code_public(
     )
 
     if has_contact and notify_failed and notify_sent == 0 and not notify_queued:
+        notify_errors = list(created_row.get("notifyErrors") or [])
         return {
             "ok": False,
             "error": "notify_failed",
-            "message": "접속 정보 발송에 실패했습니다. 잠시 후 다시 시도하거나 담당 상담사에게 문의해 주세요.",
+            "message": _notify_failure_message(notify_errors),
+            "notifyErrors": notify_errors,
         }
 
     if credit_cost > 0:

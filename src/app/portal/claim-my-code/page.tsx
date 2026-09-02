@@ -187,9 +187,11 @@ export default function ClaimMyCodePage() {
           </div>
         ) : step === 'contact' ? (
           <form onSubmit={handleSendCode} className="space-y-4" autoComplete="off">
-            <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-center">
-              <p className="text-xs text-slate-500">상담코드</p>
-              <p className="font-mono text-sm font-semibold tracking-wider text-sky-200">{joinCode}</p>
+            <div className="rounded-xl border border-sky-400/25 bg-sky-500/10 px-4 py-5 text-center">
+              <p className="text-xs font-medium tracking-widest text-sky-300/80">상담코드</p>
+              <p className="mt-2 font-mono text-3xl font-bold tracking-[0.18em] text-sky-50 sm:text-4xl">
+                {normalizedJoinCode || joinCode}
+              </p>
             </div>
             {forcedEmail ? (
               <p className="text-xs text-amber-200/90">
