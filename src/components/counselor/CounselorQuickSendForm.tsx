@@ -679,7 +679,7 @@ export default function CounselorQuickSendForm({
                 onChange={setPublicClaimChannel}
                 disabled={sendLocked}
                 label="나의코드/비밀번호 전송방법"
-                hintOverride="내담자가 무료 검사코드 받기에서 연락처를 입력하면, 선택한 방법(휴대폰·카톡/문자 또는 이메일)으로 나의코드·비밀번호가 발송됩니다."
+                hintOverride={`내담자가 무료 검사코드 받기에서 연락처를 입력하면 선택한 방법으로 나의코드·비밀번호가 발송됩니다. 보유 포인트가 100포인트 미만이면 휴대폰 선택 시에도 내담자 화면에서는 이메일(무료)로 자동 전환됩니다.`}
               />
             </div>
           ) : (

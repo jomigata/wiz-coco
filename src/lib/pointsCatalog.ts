@@ -15,6 +15,8 @@ export const POINTS_PER_CREDIT = POINTS_PER_ASSESSMENT_CREDIT;
 export const POINT_COST_PORTAL_RECIPIENT = 10;
 export const POINT_COST_PUBLIC_CLAIM_PHONE = 10;
 export const POINT_COST_PUBLIC_CLAIM_EMAIL = 0;
+/** 휴대폰(알림톡/문자) 허용 최소 보유 포인트 — 미만이면 내담자 claim 시 이메일로 전환 */
+export const PUBLIC_CLAIM_PHONE_MIN_BALANCE_POINTS = 100;
 
 export const PUBLIC_CLAIM_PHONE_POINT_COST = POINT_COST_PUBLIC_CLAIM_PHONE;
 export const PUBLIC_CLAIM_PHONE_CREDIT_COST = 1;

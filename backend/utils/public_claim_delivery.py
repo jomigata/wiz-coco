@@ -6,6 +6,7 @@ from utils.points_display import (
     POINT_COST_PUBLIC_CLAIM_PHONE,
     PUBLIC_CLAIM_EMAIL_CREDIT_COST,
     PUBLIC_CLAIM_PHONE_CREDIT_COST,
+    PUBLIC_CLAIM_PHONE_MIN_BALANCE_POINTS,
     assessment_credits_to_points,
 )
 
@@ -30,14 +31,14 @@ def resolve_effective_public_claim_channel(
     configured_channel: str,
     *,
     counselor_balance: int,
-    credits_enforce: bool,
+    credits_enforce: bool = True,
 ) -> tuple[str, bool]:
     """Returns (effective_channel, forced_to_email)."""
+    _ = credits_enforce  # claim 시 포인트 부족 전환은 enforce 여부와 무관
     channel = normalize_public_claim_channel(configured_channel)
     if (
         channel == PUBLIC_CLAIM_CHANNEL_PHONE
-        and credits_enforce
-        and assessment_credits_to_points(counselor_balance) < POINT_COST_PUBLIC_CLAIM_PHONE
+        and assessment_credits_to_points(counselor_balance) < PUBLIC_CLAIM_PHONE_MIN_BALANCE_POINTS
     ):
         return PUBLIC_CLAIM_CHANNEL_EMAIL, True
     return channel, False

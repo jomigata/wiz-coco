@@ -4,11 +4,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { fetchMyCredits } from '@/lib/commerceApi';
 import {
   PUBLIC_CLAIM_CHANNEL_OPTIONS,
-  PUBLIC_CLAIM_PHONE_POINT_COST,
+  PUBLIC_CLAIM_PHONE_MIN_BALANCE_POINTS,
   creditsToPoints,
   formatPoints,
-  phoneChannelAffordable,
-  resolvePublicClaimChannelForCounselor,
   type PublicClaimChannel,
   normalizePublicClaimChannel,
 } from '@/lib/publicClaimDelivery';
@@ -52,22 +50,15 @@ export default function PublicClaimChannelField({
     };
   }, []);
 
-  const phoneAffordable = balance === null ? true : phoneChannelAffordable(balance);
-
-  useEffect(() => {
-    if (balance === null) return;
-    const resolved = resolvePublicClaimChannelForCounselor(value, balance);
-    if (resolved !== value) onChange(resolved);
-  }, [balance, value, onChange]);
-
   const hint = useMemo(() => {
     if (hintOverride !== undefined) return hintOverride;
     if (balance === null) return null;
-    if (!phoneAffordable) {
-      return `보유 ${formatPoints(creditsToPoints(balance))} — ${formatPoints(PUBLIC_CLAIM_PHONE_POINT_COST)} 미만이어서 이메일(무료)로만 설정됩니다.`;
-    }
-    return `1포인트 = 10원 · 보유 ${formatPoints(creditsToPoints(balance))}. 무료 검사코드 받기에서 내담자 연락처 종류를 결정합니다.`;
-  }, [balance, hintOverride, phoneAffordable]);
+    return (
+      `1포인트 = 10원 · 보유 ${formatPoints(creditsToPoints(balance))}. ` +
+      `휴대폰을 선택해도 보유 포인트가 ${formatPoints(PUBLIC_CLAIM_PHONE_MIN_BALANCE_POINTS)} 미만이면 ` +
+      `내담자가 코드를 받을 때 이메일(무료)로 자동 전환됩니다.`
+    );
+  }, [balance, hintOverride]);
 
   return (
     <div className={className}>
@@ -76,14 +67,12 @@ export default function PublicClaimChannelField({
       </p>
       <div className="space-y-2">
         {PUBLIC_CLAIM_CHANNEL_OPTIONS.map((opt) => {
-          const isPhone = opt.value === 'phone';
-          const optionDisabled = disabled || (isPhone && !phoneAffordable);
           const active = normalizePublicClaimChannel(value) === opt.value;
           return (
             <label
               key={opt.value}
               className={`${OPTION_BASE} ${active ? OPTION_ACTIVE : OPTION_IDLE} ${
-                optionDisabled ? 'cursor-not-allowed opacity-55' : ''
+                disabled ? 'cursor-not-allowed opacity-55' : ''
               }`}
             >
               <input
@@ -91,7 +80,7 @@ export default function PublicClaimChannelField({
                 name="public_claim_channel"
                 value={opt.value}
                 checked={active}
-                disabled={optionDisabled}
+                disabled={disabled}
                 onChange={() => onChange(opt.value)}
                 className="mt-1 accent-sky-500"
               />

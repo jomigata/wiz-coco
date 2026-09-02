@@ -8,6 +8,7 @@ export {
   POINT_COST_PUBLIC_CLAIM_EMAIL,
   PUBLIC_CLAIM_PHONE_POINT_COST,
   PUBLIC_CLAIM_PHONE_CREDIT_COST,
+  PUBLIC_CLAIM_PHONE_MIN_BALANCE_POINTS,
   assessmentCreditsToPoints,
   creditsToPoints,
   pointsToWon,
@@ -22,6 +23,7 @@ export const PUBLIC_CLAIM_CHANNEL_EMAIL: PublicClaimChannel = 'email';
 
 import {
   POINT_COST_PUBLIC_CLAIM_PHONE,
+  PUBLIC_CLAIM_PHONE_MIN_BALANCE_POINTS,
   assessmentCreditsToPoints,
   formatPoints,
 } from '@/lib/pointsCatalog';
@@ -32,16 +34,18 @@ export function normalizePublicClaimChannel(raw: unknown): PublicClaimChannel {
 }
 
 export function phoneChannelAffordable(creditBalance: number): boolean {
-  return assessmentCreditsToPoints(creditBalance) >= POINT_COST_PUBLIC_CLAIM_PHONE;
+  return assessmentCreditsToPoints(creditBalance) >= PUBLIC_CLAIM_PHONE_MIN_BALANCE_POINTS;
+}
+
+/** 내담자 claim(다음 화면) 시 휴대폰 발송 가능 여부 */
+export function phoneChannelAvailableAtClaim(creditBalance: number): boolean {
+  return phoneChannelAffordable(creditBalance);
 }
 
 export function resolvePublicClaimChannelForCounselor(
   selected: PublicClaimChannel,
-  creditBalance: number,
+  _creditBalance: number,
 ): PublicClaimChannel {
-  if (selected === PUBLIC_CLAIM_CHANNEL_PHONE && !phoneChannelAffordable(creditBalance)) {
-    return PUBLIC_CLAIM_CHANNEL_EMAIL;
-  }
   return selected;
 }
 
