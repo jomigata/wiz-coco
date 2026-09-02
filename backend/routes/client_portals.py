@@ -68,6 +68,7 @@ from utils.assessment_dispatch import (
     archive_dispatch_portals,
     list_archived_portals,
     restore_archived_portals,
+    update_dispatch_recipient_contact,
 )
 from utils.client_portal_list import (
     list_counselor_client_portals,
@@ -1037,6 +1038,32 @@ def resend_dispatch(assessment_id):
         return jsonify({"error": "Forbidden", "message": str(exc)}), 403
     except ValueError as exc:
         return jsonify({"error": "Not Found", "message": str(exc)}), 404
+    return jsonify(result)
+
+
+@bp.route("/assessments/<assessment_id>/dispatch/recipients/<portal_id>", methods=["PATCH"])
+@require_counselor
+def patch_dispatch_recipient_contact(assessment_id, portal_id):
+    """상담진행 현황 — 내담자 휴대폰·이메일 수정."""
+    body = request.get_json(silent=True) or {}
+    phone = body.get("phone")
+    email = body.get("email")
+    if phone is None and email is None:
+        return jsonify({"error": "Bad Request", "message": "phone 또는 email이 필요합니다."}), 400
+    db = get_firestore()
+    try:
+        result = update_dispatch_recipient_contact(
+            db,
+            assessment_id=assessment_id,
+            counselor_uid=scope_counselor_uid(),
+            portal_id=portal_id,
+            phone=str(phone or "").strip(),
+            email=str(email or "").strip(),
+        )
+    except PermissionError as exc:
+        return jsonify({"error": "Forbidden", "message": str(exc)}), 403
+    except ValueError as exc:
+        return jsonify({"error": "Bad Request", "message": str(exc)}), 400
     return jsonify(result)
 
 

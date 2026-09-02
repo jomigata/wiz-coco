@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 
 from firebase_admin.firestore import SERVER_TIMESTAMP
 
-from config import NOTIFICATION_QUEUE_COLLECTION, PUBLIC_SITE_URL, is_email_configured, CLIENT_PORTALS_COLLECTION
+from config import NOTIFICATION_QUEUE_COLLECTION, PUBLIC_SITE_URL, is_email_configured, CLIENT_PORTALS_COLLECTION, ASSESSMENTS_COLLECTION
 from firebase_init import get_firestore
 from utils.email_notify import (
     send_portal_invite_email,
@@ -24,6 +24,7 @@ from utils.kakao_alimtalk import (
     send_test_reminder_alimtalk,
 )
 from utils.portal_magic import create_portal_magic_link_token
+from utils.password import generate_four_digit_password, hash_password
 from utils.solapi_client import check_solapi_group_delivery
 
 logger = logging.getLogger(__name__)
@@ -186,8 +187,118 @@ def _finalize_delivery_result(
     }
 
 
+def _attempt_portal_sms_fallback_after_alimtalk_failure(
+    *,
+    db,
+    portal_ref,
+    queue_ref,
+    email: str,
+    phone: str,
+    email_ch: str,
+    errors: list[str],
+    notify_kind: str,
+    sent_via: str,
+    prior_err: str,
+) -> tuple[str, str] | None:
+    """알림톡 비동기 실패 시 SMS 대체 발송 (Solapi 템플릿 대체발송 비허용 대응)."""
+    if not phone:
+        return None
+    if "sms" in sent_via and "kakao" not in sent_via and "alimtalk" not in (prior_err or "").lower():
+        return None
+
+    snap = portal_ref.get()
+    if not snap.exists:
+        return None
+    pdata = snap.to_dict() or {}
+    portal_id = snap.id
+    portal_access_code = (pdata.get("accessCode") or "").strip()
+    if not portal_access_code:
+        return None
+
+    assigned = list(pdata.get("assignedAssessmentIds") or [])
+    assessment_id = str(assigned[0]).strip() if assigned else ""
+    join_access_code = ""
+    cohort_name = ""
+    assessment_title = ""
+    welcome_message = ""
+    if assessment_id:
+        ass_doc = db.collection(ASSESSMENTS_COLLECTION).document(assessment_id).get()
+        if ass_doc.exists:
+            ass = ass_doc.to_dict() or {}
+            join_access_code = (ass.get("accessCode") or "").strip()
+            cohort_name = (ass.get("cohortName") or "").strip()
+            assessment_title = (ass.get("title") or "").strip()
+            welcome_message = (ass.get("welcomeMessage") or "").strip()
+
+    new_pin = generate_four_digit_password()
+    magic = create_portal_magic_link_token(portal_id, portal_access_code)
+    magic_path = f"/go?t={magic}"
+    magic_url = f"{PUBLIC_SITE_URL.rstrip('/')}{magic_path}"
+
+    if prior_err and prior_err not in errors:
+        errors.append(prior_err)
+    if "alimtalk_failed_sms_fallback" not in errors:
+        errors.append("alimtalk_failed_sms_fallback")
+
+    sms_ok, sms_err, pending_gid = send_portal_credentials_sms(
+        to_phone=phone,
+        access_code=portal_access_code,
+        pin=new_pin,
+        magic_url=magic_url,
+        join_access_code=join_access_code,
+        display_name=(pdata.get("displayName") or "").strip(),
+    )
+    if sms_err and sms_err not in errors:
+        errors.append(sms_err)
+
+    phone_ch = CHANNEL_FAILED
+    solapi_group_id = ""
+    updated_sent_via = sent_via or "kakao"
+    if sms_err == "solapi_delivery_pending" and pending_gid:
+        solapi_group_id = pending_gid
+        phone_ch = CHANNEL_SENDING
+        updated_sent_via = f"{updated_sent_via},sms".strip(",")
+        portal_ref.update({"pinHash": hash_password(new_pin), "solapiGroupId": pending_gid})
+    elif sms_ok:
+        phone_ch = CHANNEL_SENT
+        updated_sent_via = f"{updated_sent_via},sms".strip(",")
+        portal_ref.update({"pinHash": hash_password(new_pin)})
+    else:
+        if "phone_send_failed" not in errors:
+            errors.append("phone_send_failed")
+
+    result = _finalize_delivery_result(
+        email=email,
+        phone=phone,
+        email_ok=email_ch == CHANNEL_SENT,
+        alimtalk_ok=False,
+        sms_ok=sms_ok or phone_ch == CHANNEL_SENDING,
+        errors=errors,
+        email_channel=email_ch,
+        phone_channel=phone_ch,
+        solapi_group_id=solapi_group_id,
+    )
+    status = result["status"]
+    _apply_notify_snapshot(
+        portal_ref=portal_ref,
+        queue_ref=queue_ref,
+        email=email,
+        phone=phone,
+        email_channel=email_ch,
+        phone_channel=phone_ch,
+        status=status,
+        errors=result["errors"],
+        sent_via=result.get("sentVia") or updated_sent_via or None,
+        notify_kind=notify_kind,
+        solapi_group_id=solapi_group_id,
+    )
+    outcome = "pending" if status == "sending" else ("delivered" if status == "sent" else "failed")
+    return status, outcome
+
+
 def _confirm_one_solapi_sending(
     *,
+    db,
     portal_id: str,
     portal_ref,
     queue_ref,
@@ -212,6 +323,21 @@ def _confirm_one_solapi_sending(
         elif "kakao" not in sent_via and "sms" not in sent_via:
             sent_via = f"{sent_via},sms".strip(",")
     else:
+        fallback = _attempt_portal_sms_fallback_after_alimtalk_failure(
+            db=db,
+            portal_ref=portal_ref,
+            queue_ref=queue_ref,
+            email=email,
+            phone=phone,
+            email_ch=email_ch,
+            errors=errors,
+            notify_kind=notify_kind,
+            sent_via=sent_via,
+            prior_err=err,
+        )
+        if fallback is not None:
+            return fallback
+
         phone_ch = CHANNEL_FAILED
         if err and err not in errors:
             errors.append(err)
@@ -405,6 +531,7 @@ def confirm_solapi_sending_for_portals(
                     continue
 
             status, outcome = _confirm_one_solapi_sending(
+                db=db,
                 portal_id=portal_id,
                 portal_ref=portal_ref,
                 queue_ref=None,
@@ -514,6 +641,7 @@ def confirm_pending_solapi_notifications(*, limit: int = 40) -> dict:
             continue
 
         status, outcome = _confirm_one_solapi_sending(
+            db=db,
             portal_id=portal_id,
             portal_ref=portal_ref,
             queue_ref=doc.reference,

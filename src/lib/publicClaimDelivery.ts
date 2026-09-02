@@ -72,6 +72,6 @@ export function publicClaimContactLabel(channel: PublicClaimChannel): string {
 
 export function publicClaimSuccessHint(channel: PublicClaimChannel): string {
   return channel === PUBLIC_CLAIM_CHANNEL_EMAIL
-    ? '이메일을 확인해 주세요.'
-    : '휴대폰 문자(알림톡)를 확인해 주세요.';
+    ? '이메일로 코드/비밀번호 발송하였습니다.'
+    : '휴대폰 문자(알림톡)으로 코드/비밀번호 발송하였습니다.';
 }

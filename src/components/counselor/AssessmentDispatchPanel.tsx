@@ -34,6 +34,7 @@ import {
   fetchAssessmentDispatchStatus,
   resendDispatchCredentials,
   sendDispatchTestReminders,
+  updateDispatchRecipientContact,
   type AssessmentDispatchStatus,
   type DispatchRecipient,
   type DispatchTestResult,
@@ -205,7 +206,7 @@ function credentialSendModeLabel(mode: CredentialSendMode): string {
     case 'initial':
       return '선택된 코드발송';
     case 'resend':
-      return '코드 재발송';
+      return '나의코드 전달';
     default:
       return '접속 정보 발송';
   }
@@ -473,6 +474,11 @@ export default function AssessmentDispatchPanel({
   const [remindLoading, setRemindLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [moveOpen, setMoveOpen] = useState(false);
+  const [editRecipient, setEditRecipient] = useState<DispatchRecipient | null>(null);
+  const [editPhone, setEditPhone] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editSaving, setEditSaving] = useState(false);
+  const [editError, setEditError] = useState('');
   const [confirmAction, setConfirmAction] = useState<BulkConfirmAction>(null);
   const [dispatchProgress, setDispatchProgress] = useState<DispatchProgress | null>(null);
   const [dispatchComplete, setDispatchComplete] = useState<DispatchComplete | null>(null);
@@ -572,6 +578,57 @@ export default function AssessmentDispatchPanel({
       }
     }
   }, [assessmentId, user?.uid]);
+
+  const openEditContact = useCallback((recipient: DispatchRecipient) => {
+    setEditRecipient(recipient);
+    setEditPhone(recipient.phone?.trim() ? formatPhoneDisplay(recipient.phone) : '');
+    setEditEmail(recipient.email?.trim() || '');
+    setEditError('');
+  }, []);
+
+  const closeEditContact = useCallback(() => {
+    if (editSaving) return;
+    setEditRecipient(null);
+    setEditPhone('');
+    setEditEmail('');
+    setEditError('');
+  }, [editSaving]);
+
+  const saveEditContact = useCallback(async () => {
+    if (!editRecipient) return;
+    const phone = normalizeRecipientPhone(editPhone);
+    const email = editEmail.trim().toLowerCase();
+    if (!phone && !email) {
+      setEditError('휴대폰 또는 이메일 중 하나는 입력해야 합니다.');
+      return;
+    }
+    setEditSaving(true);
+    setEditError('');
+    try {
+      const updated = await updateDispatchRecipientContact(assessmentId, editRecipient.portalId, {
+        phone,
+        email,
+      });
+      setData((prev) => {
+        if (!prev) return prev;
+        const next: AssessmentDispatchStatus = {
+          ...prev,
+          recipients: prev.recipients.map((row) =>
+            row.portalId === updated.portalId
+              ? { ...row, phone: updated.phone, email: updated.email }
+              : row,
+          ),
+        };
+        writeCachedDispatchStatus(assessmentId, next, user?.uid);
+        return next;
+      });
+      closeEditContact();
+    } catch (err) {
+      setEditError(err instanceof Error ? err.message : '연락처 수정에 실패했습니다.');
+    } finally {
+      setEditSaving(false);
+    }
+  }, [assessmentId, closeEditContact, editEmail, editPhone, editRecipient, user?.uid]);
 
   useEffect(() => {
     if (authPending || !isAuthenticated) return;
@@ -1196,6 +1253,7 @@ export default function AssessmentDispatchPanel({
                   <col className="w-52" />
                   <col className="w-28" />
                   <col className="w-36" />
+                  {!adminClientProgressView ? <col className="w-16" /> : null}
                 </colgroup>
                 <thead className={counselorListTheadClass}>
               <tr className={counselorListHeaderRowGrayClass}>
@@ -1263,6 +1321,11 @@ export default function AssessmentDispatchPanel({
                   onSort={toggleSort}
                   className="w-36"
                 />
+                {!adminClientProgressView ? (
+                  <th className={`${counselorListTdClass} w-16 text-center text-xs font-medium text-slate-400`}>
+                    수정
+                  </th>
+                ) : null}
               </tr>
             </thead>
             <tbody>
@@ -1345,6 +1408,17 @@ export default function AssessmentDispatchPanel({
                       <td className="px-3 py-2.5 align-top whitespace-nowrap text-sm tabular-nums text-slate-400">
                         {fieldPending.notifyAt ? DISPATCH_CHECKING_LABEL : formatNotifyDate(r.notifyAt)}
                       </td>
+                      {!adminClientProgressView ? (
+                        <td className="px-2 py-2.5 align-top text-center" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            type="button"
+                            onClick={() => openEditContact(r)}
+                            className="rounded-md border border-white/15 bg-white/[0.04] px-2 py-1 text-xs text-sky-200 transition-colors hover:border-sky-400/40 hover:bg-sky-500/10"
+                          >
+                            수정
+                          </button>
+                        </td>
+                      ) : null}
                     </tr>
                     {isOpen ? (
                       <tr>
@@ -1354,7 +1428,7 @@ export default function AssessmentDispatchPanel({
                           aria-hidden="true"
                         />
                         <td
-                          colSpan={6}
+                          colSpan={adminClientProgressView ? 6 : 7}
                           className="border-b border-slate-700/60 bg-slate-900/20 px-3 py-3 pb-4 align-top"
                         >
                           {tests.length === 0 ? (
@@ -1806,7 +1880,7 @@ export default function AssessmentDispatchPanel({
                   : confirmAction === 'delete'
                     ? '삭제'
                     : credentialSendMode === 'resend'
-                      ? '재발송'
+                      ? '나의코드 전달'
                       : '발송'}
               </button>
             </div>
@@ -1870,6 +1944,72 @@ export default function AssessmentDispatchPanel({
           </div>
         </div>
       )}
+
+      {editRecipient ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          onClick={() => closeEditContact()}
+        >
+          <div
+            className="w-full max-w-md rounded-xl border border-slate-600 bg-slate-800 p-4 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-semibold text-white">연락처 수정</h3>
+            <p className="mt-1 text-sm text-slate-400">
+              {editRecipient.displayName || '내담자'} · {formatAccessCodeDisplay(editRecipient.myCode)}
+            </p>
+            <div className="mt-4 space-y-3">
+              <div>
+                <label htmlFor="dispatch-edit-phone" className="mb-1 block text-xs text-slate-400">
+                  휴대폰
+                </label>
+                <input
+                  id="dispatch-edit-phone"
+                  type="tel"
+                  value={editPhone}
+                  onChange={(e) => setEditPhone(formatPhoneDisplay(e.target.value) || e.target.value)}
+                  disabled={editSaving}
+                  className="w-full rounded-lg border border-white/15 bg-slate-900/80 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500/40"
+                  placeholder="010-0000-0000"
+                />
+              </div>
+              <div>
+                <label htmlFor="dispatch-edit-email" className="mb-1 block text-xs text-slate-400">
+                  이메일
+                </label>
+                <input
+                  id="dispatch-edit-email"
+                  type="email"
+                  value={editEmail}
+                  onChange={(e) => setEditEmail(e.target.value)}
+                  disabled={editSaving}
+                  className="w-full rounded-lg border border-white/15 bg-slate-900/80 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500/40"
+                  placeholder="email@example.com"
+                />
+              </div>
+              {editError ? <p className="text-sm text-red-400">{editError}</p> : null}
+            </div>
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => closeEditContact()}
+                disabled={editSaving}
+                className="rounded-lg bg-slate-700 px-4 py-2 text-sm text-slate-200 hover:bg-slate-600 disabled:opacity-50"
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                onClick={() => void saveEditContact()}
+                disabled={editSaving}
+                className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500 disabled:opacity-50"
+              >
+                {editSaving ? '저장 중…' : '저장'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <CounselorPortalMoveDialog
         open={moveOpen}

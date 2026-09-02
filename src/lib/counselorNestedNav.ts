@@ -245,8 +245,24 @@ export function isAssessmentsMenuSelected(pathname: string, search: string): boo
 }
 
 /** 상담코드 메뉴 선택 시 고정 소분류 */
-export function getAssessmentsParentSubmenuItems(options?: { admin?: boolean }): CounselorParentSubmenuItem[] {
+export function getAssessmentsParentSubmenuItems(options?: {
+  admin?: boolean;
+  pathname?: string;
+  search?: string;
+}): CounselorParentSubmenuItem[] {
+  const assessmentId =
+    options?.pathname != null
+      ? resolveAssessmentContextId(options.pathname, options.search || '')
+      : null;
+  const progressHref = buildProgressHref(assessmentId, options?.search || '?from=assessments');
+
   const items: CounselorParentSubmenuItem[] = [
+    {
+      order: 0,
+      label: '상담진행 현황',
+      href: progressHref,
+      isActive: (p) => p.startsWith('/counselor/assessments/progress'),
+    },
     {
       order: 1,
       label: '상담코드 생성',

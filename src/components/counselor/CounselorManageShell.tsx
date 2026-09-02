@@ -125,7 +125,11 @@ export default function CounselorManageShell({ children }: Props) {
                               );
                               const parentSubmenu =
                                 normalizedItemHref === '/counselor/assessments'
-                                  ? getAssessmentsParentSubmenuItems({ admin: adminUser })
+                                  ? getAssessmentsParentSubmenuItems({
+                                      admin: adminUser,
+                                      pathname,
+                                      search,
+                                    })
                                   : normalizedItemHref === '/counselor/clients'
                                     ? getClientsParentSubmenuItems({ admin: adminUser })
                                     : [];

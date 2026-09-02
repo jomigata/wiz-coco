@@ -402,6 +402,31 @@ export async function resendDispatchCredentials(
   };
 }
 
+export async function updateDispatchRecipientContact(
+  assessmentId: string,
+  portalId: string,
+  contact: { phone?: string; email?: string },
+): Promise<{ portalId: string; phone: string; email: string }> {
+  const token = await getCounselorToken();
+  if (!token) throw new Error('전문가·상담사 로그인이 필요합니다.');
+  const res = await fetch(
+    `${getBaseUrl()}/api/client-portals/assessments/${encodeURIComponent(assessmentId)}/dispatch/recipients/${encodeURIComponent(portalId)}`,
+    {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(contact),
+    },
+  );
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(typeof data?.message === 'string' ? data.message : '연락처 수정에 실패했습니다.');
+  }
+  return data as { portalId: string; phone: string; email: string };
+}
+
 export async function sendDispatchTestReminders(
   assessmentId: string,
   portalIds: string[]

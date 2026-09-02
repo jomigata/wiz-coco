@@ -834,6 +834,43 @@ def resend_portal_credentials(
     }
 
 
+def update_dispatch_recipient_contact(
+    db,
+    *,
+    assessment_id: str,
+    counselor_uid: str | None,
+    portal_id: str,
+    phone: str = "",
+    email: str = "",
+) -> dict:
+    """상담진행 현황 — 내담자 휴대폰·이메일 수정."""
+    from utils.phone_format import normalize_recipient_phone
+
+    _verify_assessment_owned(db, assessment_id, counselor_uid)
+    pid = (portal_id or "").strip()
+    if not pid:
+        raise ValueError("portalId가 필요합니다.")
+
+    pref = db.collection(CLIENT_PORTALS_COLLECTION).document(pid)
+    pdoc = pref.get()
+    if not pdoc.exists:
+        raise ValueError("내담자를 찾을 수 없습니다.")
+    pdata = pdoc.to_dict() or {}
+    if not _portal_owned_by_scope(pdata, counselor_uid):
+        raise PermissionError("접근 권한이 없습니다.")
+    assigned = list(pdata.get("assignedAssessmentIds") or [])
+    if assessment_id not in assigned:
+        raise ValueError("해당 상담코드에 배정되지 않은 내담자입니다.")
+
+    norm_phone = normalize_recipient_phone((phone or "").strip())
+    norm_email = (email or "").strip().lower()
+    if not norm_phone and not norm_email:
+        raise ValueError("휴대폰 또는 이메일 중 하나는 입력해야 합니다.")
+
+    pref.update({"phone": norm_phone, "email": norm_email})
+    return {"portalId": pid, "phone": norm_phone, "email": norm_email}
+
+
 def _pending_tests_from_rows(test_rows: list[dict]) -> list[dict]:
     return [t for t in (test_rows or []) if (t.get("status") or "") != "completed"]
 
