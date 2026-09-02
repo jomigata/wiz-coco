@@ -24,16 +24,27 @@ def is_solapi_configured() -> bool:
 
 
 def normalize_kr_phone(phone: str) -> str:
+    """국내 번호 — 숫자만, 0 접두 (내부 비교·저장용)."""
     digits = "".join(c for c in str(phone or "") if c.isdigit())
     if not digits:
         return ""
-    if digits.startswith("82"):
-        return digits
+    if digits.startswith("82") and len(digits) >= 10:
+        return "0" + digits[2:]
     if digits.startswith("0"):
-        return "82" + digits[1:]
-    if len(digits) == 10 or len(digits) == 11:
-        return "82" + digits
+        return digits
+    if len(digits) == 10 and digits.startswith("10"):
+        return "0" + digits
     return digits
+
+
+def format_solapi_to_phone(phone: str) -> str:
+    """Solapi API to/from — 국내 발송 권장 형식 (예: 010-5182-5410)."""
+    domestic = normalize_kr_phone(phone)
+    if len(domestic) == 11 and domestic.startswith("01"):
+        return f"{domestic[:3]}-{domestic[3:7]}-{domestic[7:]}"
+    if len(domestic) == 10 and domestic.startswith("02"):
+        return f"{domestic[:2]}-{domestic[2:6]}-{domestic[6:]}"
+    return domestic
 
 
 def phones_match(a: str, b: str) -> bool:

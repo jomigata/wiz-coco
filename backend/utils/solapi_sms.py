@@ -6,7 +6,7 @@ import logging
 from config import SOLAPI_SENDER
 from utils.solapi_client import (
     is_solapi_configured,
-    normalize_kr_phone,
+    format_solapi_to_phone,
     recipient_conflicts_with_sender,
     solapi_send_messages,
     extract_solapi_group_id,
@@ -20,7 +20,7 @@ def is_solapi_sms_configured() -> bool:
 
 
 def send_solapi_sms(*, to_phone: str, text: str) -> tuple[bool, str, str]:
-    phone = normalize_kr_phone(to_phone)
+    phone = format_solapi_to_phone(to_phone)
     if not phone:
         return False, "no_phone", ""
     if recipient_conflicts_with_sender(to_phone):
@@ -32,11 +32,13 @@ def send_solapi_sms(*, to_phone: str, text: str) -> tuple[bool, str, str]:
     if not body:
         return False, "empty_text", ""
 
+    sender = format_solapi_to_phone(SOLAPI_SENDER) or SOLAPI_SENDER
+
     ok, err, resp = solapi_send_messages(
         [
             {
                 "to": phone,
-                "from": SOLAPI_SENDER,
+                "from": sender,
                 "text": body[:2000],
             }
         ]
