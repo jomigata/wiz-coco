@@ -53,7 +53,6 @@ COMMERCE_CREDITS_ENFORCE = os.getenv("COMMERCE_CREDITS_ENFORCE", "false").lower(
     "true",
     "yes",
 )
-PILOT_FREE_CREDITS = int(os.getenv("PILOT_FREE_CREDITS", "50"))
 FIRST_SEND_TRIAL_ENABLED = os.getenv("FIRST_SEND_TRIAL_ENABLED", "true").lower() in (
     "1",
     "true",
@@ -97,7 +96,6 @@ COUNSELOR_AI_CREDITS_COLLECTION = "counselorAiCredits"
 AI_USAGE_LEDGER_COLLECTION = "aiUsageLedger"
 AI_REPORTS_COLLECTION = "aiReports"
 AI_CREDITS_ENFORCE = os.getenv("AI_CREDITS_ENFORCE", "false").lower() in ("1", "true", "yes")
-PILOT_FREE_AI_CREDITS = int(os.getenv("PILOT_FREE_AI_CREDITS", "20"))
 
 # 공개 사이트 URL (매직 링크·초대 메일)
 PUBLIC_SITE_URL = os.getenv("PUBLIC_SITE_URL", "https://wizcoco.com").rstrip("/")

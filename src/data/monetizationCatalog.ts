@@ -1,5 +1,4 @@
 /** 협회·B2B2C 중심 수익화 상품 카탈로그 (1단계: 정적, Admin/PG 연동 전) */
-import { PILOT_FREE_ASSESSMENT_POINTS, formatPoints } from '@/lib/pointsCatalog';
 
 export type MonetizationChannel = 'b2b2c' | 'b2b' | 'b2c';
 
@@ -54,43 +53,8 @@ export const monetizationChannelSummaries: {
   },
 ];
 
-/** 상담사·기관 대상 파일럿·정식 패키지 */
-export const counselorMonetizationProducts: MonetizationProduct[] = [
-  {
-    id: 'pilot-50',
-    channel: 'b2b2c',
-    name: '파일럿 패키지',
-    description: '협회 승인 상담사 파일럿 — 상담코드(내담자 1명 = 10포인트)',
-    priceLabel: `무료 ${formatPoints(PILOT_FREE_ASSESSMENT_POINTS)}`,
-    priceNote: '1단계 파일럿 한정 · 협회 Admin 지급',
-    features: ['상담코드 50건 상당', '일괄 발송·진행률 대시보드', '결과 PDF·상담사 열람'],
-    highlighted: true,
-    ctaLabel: '상담사 신청',
-    ctaHref: '/counselor-application/',
-  },
-  {
-    id: 'counselor-starter',
-    channel: 'b2b2c',
-    name: '스타터',
-    description: '월 정기 포인트 (2단계 PG 연동 예정)',
-    priceLabel: '월 150,000원',
-    priceNote: '200포인트 · 초과 10포인트당 7,500원',
-    features: ['월 200포인트', '카카오·문자 발송', '상담사 전용 지원'],
-    ctaLabel: '구매하기',
-    ctaHref: '/counselor/credits/',
-  },
-  {
-    id: 'counselor-pro',
-    channel: 'b2b2c',
-    name: '프로',
-    description: '활동량 많은 상담사·센터',
-    priceLabel: '월 250,000원',
-    priceNote: '500포인트 · 초과 10포인트당 6,000원',
-    features: ['월 500포인트', '우선 지원', '센터 로고 (3단계 화이트라벨)'],
-    ctaLabel: '구매하기',
-    ctaHref: '/counselor/credits/',
-  },
-];
+/** 상담사·센터 B2B2C 패키지 (정식 요금은 협회·Admin 협의) */
+export const counselorMonetizationProducts: MonetizationProduct[] = [];
 
 export const orgMonetizationProducts: MonetizationProduct[] = [
   {
@@ -100,7 +64,7 @@ export const orgMonetizationProducts: MonetizationProduct[] = [
     description: '30명 일괄 검사 + 진행률 모니터링',
     priceLabel: '200,000 ~ 400,000원',
     priceNote: '협의 · 선결제',
-    features: ['300포인트 상당', 'cohort 관리', '담당자 대시보드'],
+    features: ['cohort 관리', '담당자 대시보드', '일괄 발송'],
     ctaLabel: '기관 문의',
     ctaHref: '/partners/#inquiry',
   },
@@ -117,10 +81,6 @@ export const orgMonetizationProducts: MonetizationProduct[] = [
     ctaHref: '/partners/#inquiry',
   },
 ];
-
-export const PILOT_FREE_CREDITS = 50;
-/** @deprecated use PILOT_FREE_ASSESSMENT_POINTS from pointsCatalog */
-export { PILOT_FREE_ASSESSMENT_POINTS };
 
 /** B2C Discover 개인 이용권 (4단계) */
 export const b2cMonetizationProducts: MonetizationProduct[] = [

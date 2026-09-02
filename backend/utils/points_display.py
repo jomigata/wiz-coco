@@ -26,10 +26,6 @@ AI_POINT_COST_INTERPRET = AI_CREDIT_COST_INTERPRET * POINTS_PER_AI_CREDIT
 AI_POINT_COST_RECOMMEND = AI_CREDIT_COST_RECOMMEND * POINTS_PER_AI_CREDIT
 AI_POINT_COST_REPORT = AI_CREDIT_COST_REPORT * POINTS_PER_AI_CREDIT
 
-# 파일럿 (DB credit → points)
-PILOT_FREE_ASSESSMENT_POINTS = 50 * POINTS_PER_ASSESSMENT_CREDIT
-PILOT_FREE_AI_POINTS = 20 * POINTS_PER_AI_CREDIT
-
 # 하위 호환 (public claim 모듈)
 POINTS_PER_CREDIT = POINTS_PER_ASSESSMENT_CREDIT
 PUBLIC_CLAIM_PHONE_POINT_COST = POINT_COST_PUBLIC_CLAIM_PHONE
@@ -100,12 +96,6 @@ def enrich_assessment_wallet_response(payload: dict, *, ledger_key: str = "ledge
     out["pointsPerAssessmentCredit"] = POINTS_PER_ASSESSMENT_CREDIT
     if ledger_key in out and isinstance(out[ledger_key], list):
         out[ledger_key] = [enrich_assessment_ledger_row(r) for r in out[ledger_key]]
-    if "pilotFreeCredits" in out:
-        try:
-            pilot = int(out.get("pilotFreeCredits") or 0)
-        except (TypeError, ValueError):
-            pilot = 0
-        out["pilotFreePoints"] = pilot * POINTS_PER_ASSESSMENT_CREDIT
     return out
 
 

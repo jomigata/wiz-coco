@@ -8,12 +8,10 @@ import {
   fetchAdminCounselorAiCredits,
   grantCounselorAiCredits,
 } from '@/lib/aiUsageApi';
-import { PILOT_FREE_AI_CREDITS } from '@/data/aiPricingCatalog';
 import {
   aiCreditsToPoints,
   formatPoints,
   formatPointsDelta,
-  PILOT_FREE_AI_POINTS,
 } from '@/lib/pointsCatalog';
 import type { AiAdminUsageSummary } from '@/types/aiUsage';
 
@@ -27,7 +25,7 @@ export default function AdminAiUsagePanel() {
   const [error, setError] = useState('');
 
   const [grantUid, setGrantUid] = useState('');
-  const [grantAmount, setGrantAmount] = useState(PILOT_FREE_AI_CREDITS);
+  const [grantAmount, setGrantAmount] = useState(4);
   const [grantReason, setGrantReason] = useState('pilot_grant');
   const [grantMsg, setGrantMsg] = useState('');
 
@@ -211,7 +209,7 @@ export default function AdminAiUsagePanel() {
           disabled={loading}
           className="w-full py-2.5 rounded-lg bg-violet-600 text-white font-semibold hover:bg-violet-500 disabled:opacity-50"
         >
-          AI 포인트 지급 (파일럿 기본 {formatPoints(PILOT_FREE_AI_POINTS)})
+          AI 포인트 지급
         </button>
         {grantMsg && <p className="text-sm text-emerald-300">{grantMsg}</p>}
       </form>

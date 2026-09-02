@@ -31,30 +31,16 @@
 | AI 종합 리포트 | 5 | 50 |
 | 재생성 | 50% | 50% (포인트 기준 반올림) |
 
-## 파일럿 지급
+## 충전·구독 상품
 
-| 대상 | DB | 포인트 |
-|------|-----|--------|
-| 검사 지갑 | 50 credits | 500 |
-| AI 지갑 | 20 AI credits | 200 |
-
-## 충전 상품 (B2B2C)
-
-| 상품 ID | 표시명 | DB credits | 포인트 | 금액 |
-|---------|--------|------------|--------|------|
-| credit-pack-10 | 포인트 100팩 | 10 | 100 | ₩75,000 |
-| credit-pack-50 | 포인트 500팩 | 50 | 500 | ₩300,000 |
-| counselor-starter | 스타터 월 구독 | 20/월 | 200/월 | ₩150,000 |
-| counselor-pro | 프로 월 구독 | 50/월 | 500/월 | ₩250,000 |
-
-초과 사용: 스타터 **₩7,500/건(10포인트)**, 프로 **₩6,000/건(10포인트)** — DB는 여전히 1 credit 단위 차감.
+상담사 B2B2C 충전 팩·월 구독(스타터/프로) 및 파일럿 고정 지급량(검사 500p / AI 200p)은 **제거**되었습니다.  
+포인트는 **Admin 수동 지급** 또는 **기관·협회 협의**로 운영합니다.
 
 ## API 필드 (하위 호환)
 
 - `balance` — DB 크레딧 정수 (유지)
 - `pointsBalance` — UI용 포인트 (신규)
 - `pointsDelta`, `pointsBalanceAfter` — 원장 행 (신규)
-- `creditUnit` — deprecated, `pointUnit` / `pointsPerAssessmentCredit` 참고
 
 ## 코드 위치
 
@@ -68,6 +54,5 @@
 
 1. **Firestore 컬렉션/필드명 변경 없음** — `counselorCredits`, `counselorAiCredits`, `balance` 유지  
 2. **과거 원장 `reason` 문자열** — 그대로 보존  
-3. **상품 ID** `credit-pack-*` — PG·주문 호환을 위해 유지  
-4. **3개 지갑 분리** — 검사 포인트 / AI 포인트 / 기관 포인트 혼동 주의  
-5. **Cloud Functions** 내부 `creditsCharged` 필드는 API 응답 그대로; UI에서 포인트 환산 표시
+3. **3개 지갑 분리** — 검사 포인트 / AI 포인트 / 기관 포인트 혼동 주의  
+4. **Cloud Functions** 내부 `creditsCharged` 필드는 API 응답 그대로; UI에서 포인트 환산 표시

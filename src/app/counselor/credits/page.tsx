@@ -16,7 +16,6 @@ import {
   assessmentCreditsToPoints,
   formatPoints,
   formatPointsDelta,
-  PILOT_FREE_ASSESSMENT_POINTS,
   resolvePointsBalance,
 } from '@/lib/pointsCatalog';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
@@ -167,7 +166,7 @@ function CreditsContent() {
       title="검사 포인트"
       dense
       className="flex min-h-0 flex-1"
-      description={`내담자 1명(포털 1개) 발급 = 10포인트(100원). 파일럿 상담사는 협회에서 ${formatPoints(PILOT_FREE_ASSESSMENT_POINTS)}를 지급받을 수 있습니다.`}
+      description={`내담자 1명(포털 1개) 발급 = 10포인트(100원). 잔액은 협회 Admin에서 지급·조정합니다.`}
       toolbar={<TabBar tab={tab} setTab={setTab} />}
     >
       {payMessage && (

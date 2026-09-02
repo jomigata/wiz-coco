@@ -24,42 +24,6 @@ class CommerceProduct:
 
 
 COMMERCE_PRODUCTS: dict[str, CommerceProduct] = {
-    "counselor-starter": CommerceProduct(
-        id="counselor-starter",
-        name="스타터 월 구독",
-        amount=150_000,
-        credits=20,
-        product_type="subscription",
-        channel="b2b2c",
-        plan_id="starter",
-        overage_per_credit=7_500,
-    ),
-    "counselor-pro": CommerceProduct(
-        id="counselor-pro",
-        name="프로 월 구독",
-        amount=250_000,
-        credits=50,
-        product_type="subscription",
-        channel="b2b2c",
-        plan_id="pro",
-        overage_per_credit=6_000,
-    ),
-    "credit-pack-10": CommerceProduct(
-        id="credit-pack-10",
-        name="포인트 100팩",
-        amount=75_000,
-        credits=10,
-        product_type="one_time",
-        channel="b2b2c",
-    ),
-    "credit-pack-50": CommerceProduct(
-        id="credit-pack-50",
-        name="포인트 500팩",
-        amount=300_000,
-        credits=50,
-        product_type="one_time",
-        channel="b2b2c",
-    ),
     "b2c-basic": CommerceProduct(
         id="b2c-basic",
         name="Basic 리포트",

@@ -8,7 +8,7 @@ import HomeSectionShell from '@/components/home/HomeSectionShell';
 function ProductCard({
   product,
 }: {
-  product: (typeof counselorMonetizationProducts)[number];
+  product: (typeof orgMonetizationProducts)[number];
 }) {
   return (
     <div
@@ -59,16 +59,19 @@ export default function MonetizationPricingSection() {
           요금 안내 (가이드)
         </h2>
         <p className="text-slate-400 text-center mb-10 text-sm">
-          1단계 파일럿은 협회 Admin이 포인트를 지급합니다. 정식 요금·PG 결제는 2단계에서
-          연동됩니다.
+          상담사·기관 요금은 협회와 협의합니다. 정식 PG 결제는 2단계에서 연동됩니다.
         </p>
 
-        <h3 className="text-lg font-semibold text-blue-200 mb-4">전문상담사 · 센터</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          {counselorMonetizationProducts.map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
-        </div>
+        {counselorMonetizationProducts.length > 0 ? (
+          <>
+            <h3 className="text-lg font-semibold text-blue-200 mb-4">전문상담사 · 센터</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+              {counselorMonetizationProducts.map((p) => (
+                <ProductCard key={p.id} product={p} />
+              ))}
+            </div>
+          </>
+        ) : null}
 
         <h3 className="text-lg font-semibold text-blue-200 mb-4">학교 · 기업 · 기관</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl">

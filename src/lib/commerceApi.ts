@@ -67,7 +67,7 @@ export interface CounselorCreditsResponse {
   balance: number;
   pointsBalance?: number;
   enforceCredits: boolean;
-  pilotFreeCredits: number;
+  pilotFreeCredits?: number;
   pilotFreePoints?: number;
   firstSendTrialEligible?: boolean;
   ledger: CreditLedgerEntry[];

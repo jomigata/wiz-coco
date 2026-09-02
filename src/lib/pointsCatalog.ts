@@ -19,12 +19,6 @@ export const POINT_COST_PUBLIC_CLAIM_EMAIL = 0;
 export const PUBLIC_CLAIM_PHONE_POINT_COST = POINT_COST_PUBLIC_CLAIM_PHONE;
 export const PUBLIC_CLAIM_PHONE_CREDIT_COST = 1;
 
-export const PILOT_FREE_ASSESSMENT_CREDITS = 50;
-export const PILOT_FREE_ASSESSMENT_POINTS = PILOT_FREE_ASSESSMENT_CREDITS * POINTS_PER_ASSESSMENT_CREDIT;
-
-export const PILOT_FREE_AI_CREDITS = 20;
-export const PILOT_FREE_AI_POINTS = PILOT_FREE_AI_CREDITS * POINTS_PER_AI_CREDIT;
-
 // --- AI 기능 (포인트) ---
 export const AI_POINT_COSTS = {
   counsel_message: 0,
@@ -73,27 +67,6 @@ export const AI_PRICING_POINTS: {
     description: '복수 검사 통합 리포트',
   },
 ];
-
-// --- 상품 (충전 팩) ---
-export const COMMERCE_PRODUCT_POINTS: Record<
-  string,
-  { name: string; points: number; amount: number; note?: string }
-> = {
-  'credit-pack-10': { name: '포인트 100팩', points: 100, amount: 75_000 },
-  'credit-pack-50': { name: '포인트 500팩', points: 500, amount: 300_000 },
-  'counselor-starter': {
-    name: '스타터 월 구독',
-    points: 200,
-    amount: 150_000,
-    note: '월 200포인트 · 초과 750포인트당 7,500원',
-  },
-  'counselor-pro': {
-    name: '프로 월 구독',
-    points: 500,
-    amount: 250_000,
-    note: '월 500포인트 · 초과 750포인트당 6,000원',
-  },
-};
 
 export function assessmentCreditsToPoints(credits: number): number {
   const n = Number.isFinite(credits) ? credits : 0;

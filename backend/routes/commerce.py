@@ -8,7 +8,6 @@ from auth_middleware import require_counselor, require_admin
 from config import (
     USERS_COLLECTION,
     COMMERCE_CREDITS_ENFORCE,
-    PILOT_FREE_CREDITS,
     TOSS_CLIENT_KEY,
     COMMERCE_MOCK_PAYMENTS,
     PLATFORM_FEE_RATE,
@@ -27,7 +26,6 @@ from utils.commerce_fulfillment import fulfill_paid_order
 from utils.payment_history import list_payments
 from utils.commerce_settlement import build_settlement_summary
 from utils.points_display import (
-    PILOT_FREE_ASSESSMENT_POINTS,
     POINTS_PER_ASSESSMENT_CREDIT,
     WON_PER_POINT,
     assessment_credits_to_points,
@@ -93,8 +91,6 @@ def get_catalog():
     products = public_catalog("b2b2c")
     return jsonify(
         {
-            "pilotFreeCredits": PILOT_FREE_CREDITS,
-            "pilotFreePoints": PILOT_FREE_ASSESSMENT_POINTS,
             "channels": ["b2b2c", "b2b", "b2c"],
             "products": products,
             "pointUnit": "1 portal recipient = 10 points (100 KRW)",
@@ -125,7 +121,6 @@ def credits_me():
                 "counselorUid": uid,
                 "balance": balance,
                 "enforceCredits": COMMERCE_CREDITS_ENFORCE,
-                "pilotFreeCredits": PILOT_FREE_CREDITS,
                 "firstSendTrialEligible": is_first_send_trial_eligible(db, uid),
                 "subscription": subscription,
                 "ledger": ledger,

@@ -2,8 +2,6 @@
 import {
   AI_POINT_COSTS,
   AI_PRICING_POINTS,
-  PILOT_FREE_AI_CREDITS,
-  PILOT_FREE_AI_POINTS,
   aiCreditsToPoints,
   type AiPointFeature,
 } from '@/lib/pointsCatalog';
@@ -26,8 +24,6 @@ export const AI_PRICING_CATALOG: AiPricingItem[] = AI_PRICING_POINTS.map((item) 
   points: item.points,
   description: item.description,
 }));
-
-export { PILOT_FREE_AI_CREDITS, PILOT_FREE_AI_POINTS };
 
 export function aiPricingByFeature(feature: string): AiPricingItem | undefined {
   return AI_PRICING_CATALOG.find((item) => item.feature === feature);

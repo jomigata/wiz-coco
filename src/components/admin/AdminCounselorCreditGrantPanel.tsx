@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import { PILOT_FREE_CREDITS } from '@/data/monetizationCatalog';
 import {
   assessmentCreditsToPoints,
   formatPoints,
@@ -13,7 +12,8 @@ import {
   type CreditLedgerEntry,
 } from '@/lib/commerceApi';
 
-const PRESET_AMOUNTS = [10000, 50000, 100000] as const;
+const DEFAULT_GRANT_CREDITS = 10;
+const PRESET_AMOUNTS = [10, 50, 100] as const;
 
 const REASON_OPTIONS = [
   { value: 'admin_grant', label: '관리자 지급' },
@@ -33,7 +33,7 @@ type LookupState = {
 export default function AdminCounselorCreditGrantPanel() {
   const [email, setEmail] = useState('');
   const [counselorUid, setCounselorUid] = useState('');
-  const [amount, setAmount] = useState(PILOT_FREE_CREDITS);
+  const [amount, setAmount] = useState(DEFAULT_GRANT_CREDITS);
   const [reason, setReason] = useState('admin_grant');
   const [lookup, setLookup] = useState<LookupState | null>(null);
   const [message, setMessage] = useState('');

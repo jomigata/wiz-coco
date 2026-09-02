@@ -123,7 +123,7 @@ export type AiUsageSchemaResponse = {
   featureLabels: Record<string, string>;
   walletPolicy: 'separate' | 'unified';
   creditUnit: string;
-  pilotFreeAiCredits: number;
+  pilotFreeAiCredits?: number;
   enforceCredits: boolean;
   docs: string;
   implementedEndpoints: string[];
@@ -134,7 +134,7 @@ export type CounselorAiCreditsMeResponse = {
   balance: number;
   pointsBalance?: number;
   enforceCredits: boolean;
-  pilotFreeAiCredits: number;
+  pilotFreeAiCredits?: number;
   pilotFreeAiPoints?: number;
   ledger: AiUsageLedgerDocument[];
 };

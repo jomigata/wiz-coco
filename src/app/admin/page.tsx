@@ -47,11 +47,11 @@ export default function AdminDashboard() {
     },
     {
       title: '포인트 · 수익화',
-      description: '상담사 파일럿 포인트 지급',
+      description: '상담사 검사·AI 포인트 지급',
       href: '/admin/commerce',
       icon: '💰',
       color: 'from-amber-500 to-orange-500',
-      stats: { value: 'Pilot', label: '1단계', change: '포인트' }
+      stats: { value: 'Admin', label: '포인트', change: '지급' }
     },
     {
       title: '콘텐츠 관리',

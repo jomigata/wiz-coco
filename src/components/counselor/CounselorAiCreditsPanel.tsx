@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { LoadingMessage } from '@/components/ui/LoadingMessage';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import { fetchCounselorAiCredits } from '@/lib/aiUsageApi';
-import { AI_PRICING_CATALOG, PILOT_FREE_AI_POINTS } from '@/data/aiPricingCatalog';
+import { AI_PRICING_CATALOG } from '@/data/aiPricingCatalog';
 import type { CounselorAiCreditsMeResponse } from '@/types/aiUsage';
 import {
   aiCreditsToPoints,
@@ -51,8 +51,7 @@ export default function CounselorAiCreditsPanel() {
       ) : null}
 
       <p className="text-sm text-slate-400">
-        검사 포인트와 별도인 AI 전용 지갑입니다. 파일럿 상담사는 협회에서 최대{' '}
-        {formatPoints(data?.pilotFreeAiPoints ?? PILOT_FREE_AI_POINTS)}를 지급받을 수 있습니다.
+        검사 포인트와 별도인 AI 전용 지갑입니다. AI 포인트는 협회 Admin에서 지급·조정합니다.
       </p>
 
       {data ? (
@@ -63,7 +62,7 @@ export default function CounselorAiCreditsPanel() {
               <p className="mt-2 text-xs text-amber-300">AI 포인트 부족 시 AI 기능이 차단됩니다.</p>
             ) : (
               <p className="mt-2 text-xs text-slate-400">
-                파일럿 모드: AI 포인트 부족 시에도 일부 기능 사용 가능(정책 전환 예정).
+                현재 정책: AI 포인트 부족 시에도 일부 기능 사용 가능(정책 전환 예정).
               </p>
             )}
           </CounselorPageSection>
