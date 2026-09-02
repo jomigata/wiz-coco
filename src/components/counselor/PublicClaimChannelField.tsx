@@ -24,9 +24,18 @@ type Props = {
   onChange: (value: PublicClaimChannel) => void;
   disabled?: boolean;
   className?: string;
+  label?: string;
+  hintOverride?: string | null;
 };
 
-export default function PublicClaimChannelField({ value, onChange, disabled = false, className = '' }: Props) {
+export default function PublicClaimChannelField({
+  value,
+  onChange,
+  disabled = false,
+  className = '',
+  label = '코드전송 방법',
+  hintOverride,
+}: Props) {
   const [balance, setBalance] = useState<number | null>(null);
 
   useEffect(() => {
@@ -52,17 +61,18 @@ export default function PublicClaimChannelField({ value, onChange, disabled = fa
   }, [balance, value, onChange]);
 
   const hint = useMemo(() => {
+    if (hintOverride !== undefined) return hintOverride;
     if (balance === null) return null;
     if (!phoneAffordable) {
       return `보유 ${formatPoints(creditsToPoints(balance))} — ${formatPoints(PUBLIC_CLAIM_PHONE_POINT_COST)} 미만이어서 이메일(무료)로만 설정됩니다.`;
     }
     return `1포인트 = 10원 · 보유 ${formatPoints(creditsToPoints(balance))}. 무료 검사코드 받기에서 내담자 연락처 종류를 결정합니다.`;
-  }, [balance, phoneAffordable]);
+  }, [balance, hintOverride, phoneAffordable]);
 
   return (
     <div className={className}>
       <p className={FIELD_LABEL}>
-        코드전송 방법 <span className="text-red-400">*</span>
+        {label} <span className="text-red-400">*</span>
       </p>
       <div className="space-y-2">
         {PUBLIC_CLAIM_CHANNEL_OPTIONS.map((opt) => {

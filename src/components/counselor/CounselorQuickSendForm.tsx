@@ -119,7 +119,7 @@ export default function CounselorQuickSendForm({
       .then((data) => {
         const eligible = Boolean(data.firstSendTrialEligible);
         setFirstSendTrialEligible(eligible);
-        if (eligible) setTemplateId('stress');
+        if (eligible) setTemplateId('free');
       })
       .catch(() => setFirstSendTrialEligible(false));
   }, [user]);
@@ -148,6 +148,7 @@ export default function CounselorQuickSendForm({
   }, [user?.uid, user?.displayName]);
 
   const template = COUNSELOR_SEND_TEMPLATES.find((t) => t.id === templateId) ?? null;
+  const isFreeTemplate = templateId === 'free';
   const customSelectedTests = useMemo(
     () => counselorAssessmentTestOptions.filter((t) => customTestIds.has(t.testId)),
     [customTestIds],
@@ -309,21 +310,23 @@ export default function CounselorQuickSendForm({
         return;
       }
     }
-    if (recipients.length === 0) {
+    if (!isFreeTemplate && recipients.length === 0) {
       setError('내담자 1명 이상(이름·이메일 또는 휴대폰)을 입력하거나 명단을 첨부해 주세요.');
       return;
     }
-    if (recipients.length > GROUP_RECIPIENT_MAX) {
+    if (!isFreeTemplate && recipients.length > GROUP_RECIPIENT_MAX) {
       setError(`한 번에 최대 ${GROUP_RECIPIENT_MAX.toLocaleString('ko-KR')}명까지 보낼 수 있습니다.`);
       return;
     }
 
-    const invalid = recipients.find((r) => {
-      const emailNorm = r.email.trim();
-      const phoneNorm = normalizeRecipientPhone(r.phone);
-      if (emailNorm && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailNorm)) return true;
-      return !phoneNorm && !emailNorm;
-    });
+    const invalid = isFreeTemplate
+      ? null
+      : recipients.find((r) => {
+          const emailNorm = r.email.trim();
+          const phoneNorm = normalizeRecipientPhone(r.phone);
+          if (emailNorm && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailNorm)) return true;
+          return !phoneNorm && !emailNorm;
+        });
     if (invalid) {
       if (invalid.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(invalid.email.trim())) {
         setError(`「${invalid.displayName}」님의 이메일 형식을 확인해 주세요.`);
@@ -350,21 +353,23 @@ export default function CounselorQuickSendForm({
     const pendingId = createPendingDispatchAssessmentId();
     pendingAssessmentIdRef.current = pendingId;
     resolvedAssessmentIdRef.current = '';
-    seedDispatchStatusBeforeIssue(
-      pendingId,
-      {
-        title,
-        cohortName,
-        testList,
-        recipients: recipients.map((row) => ({
-          displayName: row.displayName.trim(),
-          email: row.email.trim() || undefined,
-          phone: normalizeRecipientPhone(row.phone) || undefined,
-        })),
-        queueNotify: true,
-      },
-      user?.uid,
-    );
+    if (!isFreeTemplate) {
+      seedDispatchStatusBeforeIssue(
+        pendingId,
+        {
+          title,
+          cohortName,
+          testList,
+          recipients: recipients.map((row) => ({
+            displayName: row.displayName.trim(),
+            email: row.email.trim() || undefined,
+            phone: normalizeRecipientPhone(row.phone) || undefined,
+          })),
+          queueNotify: true,
+        },
+        user?.uid,
+      );
+    }
     setSendOverlay({ kind: 'pending' });
     setError('');
 
@@ -376,18 +381,21 @@ export default function CounselorQuickSendForm({
         testList,
         codeCategory: templateId === 'custom' ? 'group' : 'individual',
         publicClaimChannel,
-        rows: recipients.map((r) => ({
-          displayName: r.displayName.trim(),
-          phone: normalizeRecipientPhone(r.phone) || undefined,
-          email: r.email.trim() || undefined,
-          queueNotify: true,
-        })),
-        queueNotify: true,
+        publicClaimOnly: isFreeTemplate,
+        rows: isFreeTemplate
+          ? []
+          : recipients.map((r) => ({
+              displayName: r.displayName.trim(),
+              phone: normalizeRecipientPhone(r.phone) || undefined,
+              email: r.email.trim() || undefined,
+              queueNotify: true,
+            })),
+        queueNotify: !isFreeTemplate,
       });
 
       const assessmentId = result.assessmentId || '';
       const accessCode = result.joinAccessCode || result.created?.[0]?.joinAccessCode || '';
-      const createdCount = result.created?.length ?? recipients.length;
+      const createdCount = result.created?.length ?? (isFreeTemplate ? 0 : recipients.length);
       if (assessmentId && accessCode) {
         const optimistic: CounselorAssessment = {
           id: assessmentId,
@@ -411,31 +419,33 @@ export default function CounselorQuickSendForm({
       if (result.credits?.trial) {
         setFirstSendTrialEligible(false);
       }
-      finalizePendingDispatchIssue(
-        pendingId,
-        {
-          assessmentId,
-          title,
-          cohortName,
-          joinAccessCode: accessCode,
-          testList,
-          recipients: (result.created || []).length
-            ? (result.created || []).map((row) => ({
-                portalId: row.portalId,
-                displayName: row.displayName,
-                email: row.email,
-                phone: row.phone,
-                myCode: row.myCode || row.accessCode,
-              }))
-            : recipients.map((row) => ({
-                displayName: row.displayName.trim(),
-                email: row.email.trim() || undefined,
-                phone: normalizeRecipientPhone(row.phone) || undefined,
-              })),
-          queueNotify: true,
-        },
-        user?.uid,
-      );
+      if (!isFreeTemplate) {
+        finalizePendingDispatchIssue(
+          pendingId,
+          {
+            assessmentId,
+            title,
+            cohortName,
+            joinAccessCode: accessCode,
+            testList,
+            recipients: (result.created || []).length
+              ? (result.created || []).map((row) => ({
+                  portalId: row.portalId,
+                  displayName: row.displayName,
+                  email: row.email,
+                  phone: row.phone,
+                  myCode: row.myCode || row.accessCode,
+                }))
+              : recipients.map((row) => ({
+                  displayName: row.displayName.trim(),
+                  email: row.email.trim() || undefined,
+                  phone: normalizeRecipientPhone(row.phone) || undefined,
+                })),
+            queueNotify: true,
+          },
+          user?.uid,
+        );
+      }
       resolvedAssessmentIdRef.current = assessmentId;
       setSendOverlay({ kind: 'done', assessmentId: pendingId });
       return assessmentId;
@@ -485,7 +495,7 @@ export default function CounselorQuickSendForm({
     >
       {firstSendTrialEligible ? (
         <p className="mx-auto mb-3 max-w-2xl rounded-lg border border-emerald-500/25 bg-emerald-950/30 px-3 py-2 text-sm text-emerald-200">
-          첫 검사 보내기는 무료입니다. 「마음상태 검사」는 3분 마음 체크(6문항)로 부담 없이 시작할 수 있습니다.
+          첫 검사 보내기는 무료입니다. 「무료검사」로 상담코드를 만들면 내담자가 직접 나의코드를 받을 수 있습니다.
         </p>
       ) : null}
       <form onSubmit={handleSend} className="mx-auto flex max-w-2xl flex-col gap-3 p-1">
@@ -498,7 +508,7 @@ export default function CounselorQuickSendForm({
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             {COUNSELOR_SEND_TEMPLATES.map((item, templateIndex) => {
               const active = templateId === item.id;
-              const recommend = firstSendTrialEligible && item.id === 'stress';
+              const recommend = firstSendTrialEligible && item.id === 'free';
               const templateOrder = templateIndex + 1;
 
               if (item.customOrgInput) {
@@ -647,9 +657,33 @@ export default function CounselorQuickSendForm({
         <CounselorSendStepBlock
           step={2}
           title="누구에게 보낼까요?"
-          subtitle="이름·연락처를 입력하거나 파일로 여러 명을 추가하세요"
+          subtitle={
+            isFreeTemplate
+              ? '무료 내담자용 — 상담코드만 공유하면 내담자가 직접 나의코드를 받습니다'
+              : '이름·연락처를 입력하거나 파일로 여러 명을 추가하세요'
+          }
           compact
         >
+          {isFreeTemplate ? (
+            <div className="space-y-4">
+              <div className="rounded-xl border border-emerald-400/25 bg-emerald-500/10 px-4 py-4">
+                <p className="text-sm font-semibold text-emerald-100">무료 내담자용</p>
+                <p className="mt-2 text-sm leading-relaxed text-slate-300">
+                  상담코드를 내담자에게 알려 주면, 홈페이지의{' '}
+                  <span className="font-medium text-white">무료 검사코드 받기</span>에서 상담코드·이름(가명)·연락처만
+                  입력해 나의코드와 비밀번호를 자동으로 받을 수 있습니다.
+                </p>
+              </div>
+              <PublicClaimChannelField
+                value={publicClaimChannel}
+                onChange={setPublicClaimChannel}
+                disabled={sendLocked}
+                label="나의코드/비밀번호 전송방법"
+                hintOverride="내담자가 무료 검사코드 받기에서 연락처를 입력하면, 선택한 방법(휴대폰·카톡/문자 또는 이메일)으로 나의코드·비밀번호가 발송됩니다."
+              />
+            </div>
+          ) : (
+            <>
           <div className="mb-1.5 hidden gap-3 text-xs text-slate-400 sm:grid sm:grid-cols-3">
             <span>이름</span>
             <span>휴대폰</span>
@@ -832,6 +866,8 @@ export default function CounselorQuickSendForm({
               </div>
             ) : null}
           </div>
+            </>
+          )}
         </CounselorSendStepBlock>
 
         <CounselorSendStepBlock
@@ -841,12 +877,14 @@ export default function CounselorQuickSendForm({
           compact
           allowOverflow
         >
-          <PublicClaimChannelField
-            value={publicClaimChannel}
-            onChange={setPublicClaimChannel}
-            disabled={sendLocked}
-            className="mb-4"
-          />
+          {!isFreeTemplate ? (
+            <PublicClaimChannelField
+              value={publicClaimChannel}
+              onChange={setPublicClaimChannel}
+              disabled={sendLocked}
+              className="mb-4"
+            />
+          ) : null}
           <div className="overflow-visible">
             <div className="mb-1.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 overflow-visible">
               <label htmlFor="quick-send-welcome" className="text-xs font-medium text-slate-400">
@@ -881,16 +919,20 @@ export default function CounselorQuickSendForm({
             disabled={sendLocked}
             className="mt-3 w-full rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-950/40 transition hover:from-emerald-500 hover:via-teal-500 hover:to-cyan-500 disabled:opacity-50"
           >
-            검사 보내기
+            {isFreeTemplate ? '상담코드 만들기' : '검사 보내기'}
           </button>
         </CounselorSendStepBlock>
       </form>
       <CounselorActionProgressOverlay
         open={Boolean(sendOverlay)}
         phase={sendOverlay?.kind === 'done' ? 'success' : 'loading'}
-        title={sendOverlay?.kind === 'done' ? '발송 완료' : '발송 중…'}
+        title={sendOverlay?.kind === 'done' ? (isFreeTemplate ? '생성 완료' : '발송 완료') : isFreeTemplate ? '생성 중…' : '발송 중…'}
         message={
-          sendOverlay?.kind === 'done' ? '완료되었습니다.' : '잠시만 기다려 주세요.'
+          sendOverlay?.kind === 'done'
+            ? isFreeTemplate
+              ? '무료 내담자용 상담코드가 생성되었습니다.'
+              : '완료되었습니다.'
+            : '잠시만 기다려 주세요.'
         }
         hint={
           sendOverlay?.kind !== 'done'

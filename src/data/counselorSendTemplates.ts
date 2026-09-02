@@ -1,6 +1,6 @@
 import { counselorAssessmentTestOptions } from './counselorAssessmentTests';
 
-export type CounselorSendTemplateId = 'basic' | 'relation' | 'stress' | 'custom';
+export type CounselorSendTemplateId = 'free' | 'basic' | 'relation' | 'custom';
 
 export type CounselorSendTemplate = {
   id: CounselorSendTemplateId;
@@ -18,6 +18,13 @@ export type CounselorSendTemplate = {
 /** 상담사가 고르는 검사 세트. 끝까지 되는 검사만 넣는다. */
 export const COUNSELOR_SEND_TEMPLATES: CounselorSendTemplate[] = [
   {
+    id: 'free',
+    name: '무료검사',
+    description: '상담코드만 공유하면 내담자가 직접 나의코드를 받습니다.',
+    presetGroupName: '무료검사',
+    testIds: ['generic'],
+  },
+  {
     id: 'basic',
     name: '성격유형 검사',
     description: '개인의 종합적인 성격과 속마음을 알아봅니다.',
@@ -30,13 +37,6 @@ export const COUNSELOR_SEND_TEMPLATES: CounselorSendTemplate[] = [
     description: '커플이나 가족간의 관계와 궁합을 알아봅니다.',
     presetGroupName: '관계.궁합 검사',
     testIds: ['inside-mbti'],
-  },
-  {
-    id: 'stress',
-    name: '마음상태 검사',
-    description: '개인의 마음상태와 스트레스를 알아봅니다.',
-    presetGroupName: '마음상태 검사',
-    testIds: ['generic'],
   },
   {
     id: 'custom',

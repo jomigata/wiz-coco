@@ -658,6 +658,7 @@ def bulk_create():
     body = request.get_json() or {}
     cohort_name = (body.get("cohortName") or body.get("cohort_name") or "").strip()
     rows = body.get("rows") or []
+    public_claim_only = bool(body.get("publicClaimOnly") or body.get("public_claim_only"))
     title = (body.get("title") or "").strip()
     welcome_message = (body.get("welcomeMessage") or "").strip()
     usage_end_date = (body.get("usageEndDate") or "").strip()
@@ -672,9 +673,11 @@ def bulk_create():
         return jsonify({"error": "Bad Request", "message": "기관/단체/그룹명(cohortName)이 필요합니다."}), 400
     if not title:
         return jsonify({"error": "Bad Request", "message": "검사 세트 제목(title)이 필요합니다."}), 400
-    if not isinstance(rows, list) or not rows:
+    if not isinstance(rows, list):
+        return jsonify({"error": "Bad Request", "message": "초대할 내담자 목록(rows) 형식이 올바르지 않습니다."}), 400
+    if not rows and not public_claim_only:
         return jsonify({"error": "Bad Request", "message": "초대할 내담자 목록(rows)이 필요합니다."}), 400
-    if len(rows) > BULK_PORTAL_MAX_ROWS:
+    if rows and len(rows) > BULK_PORTAL_MAX_ROWS:
         return (
             jsonify(
                 {
@@ -716,6 +719,25 @@ def bulk_create():
         msg = str(exc)
         code = 404 if "찾을 수 없" in msg else 400
         return jsonify({"error": "Bad Request" if code == 400 else "Not Found", "message": msg}), code
+
+    if public_claim_only and not rows:
+        return (
+            jsonify(
+                {
+                    "publicClaimOnly": True,
+                    "assessmentId": assessment_ref_id,
+                    "joinAccessCode": join_access_code,
+                    "cohortId": cohort_id,
+                    "cohortName": cohort_name,
+                    "created": [],
+                    "notifyQueued": 0,
+                    "notifySent": 0,
+                    "notifyFailed": 0,
+                    "message": "무료 내담자용 상담코드가 생성되었습니다.",
+                }
+            ),
+            201,
+        )
 
     normalized_rows = [
         {
