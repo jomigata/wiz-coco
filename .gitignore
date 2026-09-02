@@ -102,6 +102,7 @@ firebase-debug.*.log
 
 # Python (backend)
 backend/venv/
+backend/.venv/
 backend/__pycache__/
 backend/**/__pycache__/
 backend/.env
