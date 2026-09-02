@@ -1,14 +1,27 @@
-"""무료 검사코드(공개 claim) — 전송 채널·적립금."""
+"""무료 검사코드(공개 claim) — 전송 채널·포인트."""
 from __future__ import annotations
 
 PUBLIC_CLAIM_CHANNEL_PHONE = "phone"
 PUBLIC_CLAIM_CHANNEL_EMAIL = "email"
 VALID_PUBLIC_CLAIM_CHANNELS = frozenset({PUBLIC_CLAIM_CHANNEL_PHONE, PUBLIC_CLAIM_CHANNEL_EMAIL})
 
-# UI: 100p 표기 — 백엔드는 검사 크레딧 1건과 동일
-PUBLIC_CLAIM_PHONE_POINTS = 100
+# 1포인트 = 10원 · 검사 크레딧 1건 = 100포인트 (= 1,000원)
+WON_PER_POINT = 10
+POINTS_PER_CREDIT = 100
+PUBLIC_CLAIM_PHONE_POINT_COST = 100
 PUBLIC_CLAIM_PHONE_CREDIT_COST = 1
 PUBLIC_CLAIM_EMAIL_CREDIT_COST = 0
+
+# 하위 호환
+PUBLIC_CLAIM_PHONE_POINTS = PUBLIC_CLAIM_PHONE_POINT_COST
+
+
+def credits_to_points(credits: int) -> int:
+    try:
+        n = int(credits)
+    except (TypeError, ValueError):
+        n = 0
+    return max(0, n * POINTS_PER_CREDIT)
 
 
 def normalize_public_claim_channel(raw: str | None) -> str:
@@ -29,7 +42,7 @@ def resolve_effective_public_claim_channel(
     if (
         channel == PUBLIC_CLAIM_CHANNEL_PHONE
         and credits_enforce
-        and counselor_balance < PUBLIC_CLAIM_PHONE_CREDIT_COST
+        and credits_to_points(counselor_balance) < PUBLIC_CLAIM_PHONE_POINT_COST
     ):
         return PUBLIC_CLAIM_CHANNEL_EMAIL, True
     return channel, False

@@ -193,7 +193,7 @@ export default function ClaimMyCodePage() {
             </div>
             {forcedEmail ? (
               <p className="text-xs text-amber-200/90">
-                담당 상담사 적립금이 부족하여 이메일로만 코드를 받을 수 있습니다.
+                담당 상담사 포인트가 부족하여 이메일로만 코드를 받을 수 있습니다.
               </p>
             ) : null}
             <div>

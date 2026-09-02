@@ -4,7 +4,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { fetchMyCredits } from '@/lib/commerceApi';
 import {
   PUBLIC_CLAIM_CHANNEL_OPTIONS,
-  PUBLIC_CLAIM_PHONE_POINTS,
+  PUBLIC_CLAIM_PHONE_POINT_COST,
+  creditsToPoints,
+  formatPoints,
   phoneChannelAffordable,
   resolvePublicClaimChannelForCounselor,
   type PublicClaimChannel,
@@ -52,9 +54,9 @@ export default function PublicClaimChannelField({ value, onChange, disabled = fa
   const hint = useMemo(() => {
     if (balance === null) return null;
     if (!phoneAffordable) {
-      return `적립금이 ${PUBLIC_CLAIM_PHONE_POINTS}p 미만이어서 이메일(무료)로만 설정됩니다.`;
+      return `보유 ${formatPoints(creditsToPoints(balance))} — ${formatPoints(PUBLIC_CLAIM_PHONE_POINT_COST)} 미만이어서 이메일(무료)로만 설정됩니다.`;
     }
-    return '무료 검사코드 받기 페이지에서 내담자가 입력하는 연락처 종류입니다.';
+    return `1포인트 = 10원 · 보유 ${formatPoints(creditsToPoints(balance))}. 무료 검사코드 받기에서 내담자 연락처 종류를 결정합니다.`;
   }, [balance, phoneAffordable]);
 
   return (

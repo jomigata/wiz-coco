@@ -1,29 +1,52 @@
-/** 무료 검사코드(공개 claim) — 전송 채널·적립금 표기 */
+/** 무료 검사코드(공개 claim) — 전송 채널·포인트 표기 */
 
 export type PublicClaimChannel = 'phone' | 'email';
 
 export const PUBLIC_CLAIM_CHANNEL_PHONE: PublicClaimChannel = 'phone';
 export const PUBLIC_CLAIM_CHANNEL_EMAIL: PublicClaimChannel = 'email';
 
-/** UI 표기 — 백엔드 크레딧 1건과 동일 */
-export const PUBLIC_CLAIM_PHONE_POINTS = 100;
+/** 1포인트 = 10원 */
+export const WON_PER_POINT = 10;
+
+/** 검사 크레딧 1건 = 100포인트 (= 1,000원) */
+export const POINTS_PER_CREDIT = 100;
+
+/** 휴대폰(카톡/문자) 공개 claim 1건 차감 포인트 — 크레딧 1건과 동일 */
+export const PUBLIC_CLAIM_PHONE_POINT_COST = 100;
+
+/** @deprecated PUBLIC_CLAIM_PHONE_POINT_COST 사용 */
+export const PUBLIC_CLAIM_PHONE_POINTS = PUBLIC_CLAIM_PHONE_POINT_COST;
 
 export const PUBLIC_CLAIM_PHONE_CREDIT_COST = 1;
+
+export function creditsToPoints(credits: number): number {
+  const n = Number.isFinite(credits) ? credits : 0;
+  return Math.max(0, Math.round(n * POINTS_PER_CREDIT));
+}
+
+export function pointsToWon(points: number): number {
+  const n = Number.isFinite(points) ? points : 0;
+  return Math.max(0, Math.round(n * WON_PER_POINT));
+}
+
+export function formatPoints(points: number): string {
+  return `${points.toLocaleString('ko-KR')}포인트`;
+}
 
 export function normalizePublicClaimChannel(raw: unknown): PublicClaimChannel {
   const value = String(raw || '').trim().toLowerCase();
   return value === PUBLIC_CLAIM_CHANNEL_EMAIL ? PUBLIC_CLAIM_CHANNEL_EMAIL : PUBLIC_CLAIM_CHANNEL_PHONE;
 }
 
-export function phoneChannelAffordable(balance: number): boolean {
-  return balance >= PUBLIC_CLAIM_PHONE_CREDIT_COST;
+export function phoneChannelAffordable(creditBalance: number): boolean {
+  return creditsToPoints(creditBalance) >= PUBLIC_CLAIM_PHONE_POINT_COST;
 }
 
 export function resolvePublicClaimChannelForCounselor(
   selected: PublicClaimChannel,
-  balance: number,
+  creditBalance: number,
 ): PublicClaimChannel {
-  if (selected === PUBLIC_CLAIM_CHANNEL_PHONE && !phoneChannelAffordable(balance)) {
+  if (selected === PUBLIC_CLAIM_CHANNEL_PHONE && !phoneChannelAffordable(creditBalance)) {
     return PUBLIC_CLAIM_CHANNEL_EMAIL;
   }
   return selected;
@@ -37,7 +60,7 @@ export const PUBLIC_CLAIM_CHANNEL_OPTIONS: {
   {
     value: PUBLIC_CLAIM_CHANNEL_PHONE,
     label: '휴대폰(카톡/문자)',
-    priceNote: `적립금 ${PUBLIC_CLAIM_PHONE_POINTS}p 차감`,
+    priceNote: `${formatPoints(PUBLIC_CLAIM_PHONE_POINT_COST)} 차감`,
   },
   {
     value: PUBLIC_CLAIM_CHANNEL_EMAIL,
