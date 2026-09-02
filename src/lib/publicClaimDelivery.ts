@@ -8,11 +8,11 @@ export const PUBLIC_CLAIM_CHANNEL_EMAIL: PublicClaimChannel = 'email';
 /** 1포인트 = 10원 */
 export const WON_PER_POINT = 10;
 
-/** 검사 크레딧 1건 = 100포인트 (= 1,000원) */
-export const POINTS_PER_CREDIT = 100;
+/** 검사 크레딧 1건 = 10포인트 (= 100원) */
+export const POINTS_PER_CREDIT = 10;
 
-/** 휴대폰(카톡/문자) 공개 claim 1건 차감 포인트 — 크레딧 1건과 동일 */
-export const PUBLIC_CLAIM_PHONE_POINT_COST = 100;
+/** 휴대폰(카톡/문자) 공개 claim 1건 — 10포인트 (= 크레딧 1건) */
+export const PUBLIC_CLAIM_PHONE_POINT_COST = 10;
 
 /** @deprecated PUBLIC_CLAIM_PHONE_POINT_COST 사용 */
 export const PUBLIC_CLAIM_PHONE_POINTS = PUBLIC_CLAIM_PHONE_POINT_COST;
