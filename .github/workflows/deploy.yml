@@ -239,15 +239,15 @@ jobs:
           npm run build
 
       - name: 🔍 Firebase secrets check
+        env:
+          NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
         run: |
           missing=()
           for s in NEXT_PUBLIC_FIREBASE_API_KEY NEXT_PUBLIC_FIREBASE_PROJECT_ID FIREBASE_TOKEN FIREBASE_SERVICE_ACCOUNT; do
-            case $s in
-              NEXT_PUBLIC_FIREBASE_API_KEY) v="${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}" ;;
-              NEXT_PUBLIC_FIREBASE_PROJECT_ID) v="${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}" ;;
-              FIREBASE_TOKEN) v="${{ secrets.FIREBASE_TOKEN }}" ;;
-              FIREBASE_SERVICE_ACCOUNT) v="${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" ;;
-            esac
+            v="${!s}"
             [ -z "$v" ] && missing+=("$s")
           done
           if [ ${#missing[@]} -gt 0 ]; then
@@ -256,7 +256,9 @@ jobs:
           fi
 
       - name: 🔑 Firebase service account
-        run: echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" > firebase-service-account.json
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > firebase-service-account.json
 
       - name: 🔐 Gemini Functions env (functions deploy only)
         if: steps.targets.outputs.deploy_functions == 'true'
