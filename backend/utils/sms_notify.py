@@ -59,27 +59,34 @@ def send_portal_credentials_sms(
     magic_url: str,
     join_access_code: str = "",
     display_name: str = "",
+    compact: bool = False,
 ) -> tuple[bool, str, str]:
     phone = (to_phone or "").strip()
     if not phone:
-        return False, "no_phone"
+        return False, "no_phone", ""
     if not is_sms_configured():
         logger.info("SMS skipped (no provider configured) for %s", phone[:4] + "****")
-        return False, "sms_not_configured"
+        return False, "sms_not_configured", ""
 
-    name = (display_name or "").strip() or "내담자"
     join_code = (join_access_code or "").strip().upper()
     my_code = (access_code or "").strip().upper()
     pin_display = _format_pin_display(pin)
-    login_url = f"{PUBLIC_SITE_URL.rstrip('/')}/portal/login/"
+    link = (magic_url or "").strip()
 
-    parts = [f"[WizCoCo] {name}님 검사시작"]
-    if join_code:
-        parts.append(f"상담(코드) {join_code}")
-    parts.append(f"나의코드 {my_code} 비밀번호 {pin_display}")
-    parts.append(login_url)
-    parts.append(magic_url)
-    body = "\n".join(parts)
+    if compact:
+        # 알림톡 실패 fallback — magic URL 1개만, SMS(단문) 구간 유지
+        code_part = f"{join_code}/{my_code}" if join_code else my_code
+        body = f"[WizCoCo]{code_part}/{pin_display} {link}".strip()
+    else:
+        name = (display_name or "").strip() or "내담자"
+        login_url = f"{PUBLIC_SITE_URL.rstrip('/')}/portal/login/"
+        parts = [f"[WizCoCo] {name}님 검사시작"]
+        if join_code:
+            parts.append(f"상담(코드) {join_code}")
+        parts.append(f"나의코드 {my_code} 비밀번호 {pin_display}")
+        parts.append(login_url)
+        parts.append(link)
+        body = "\n".join(parts)
 
     return _send_sms_body(to_phone=phone, body=body)
 

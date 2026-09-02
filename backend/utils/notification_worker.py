@@ -25,7 +25,7 @@ from utils.kakao_alimtalk import (
 )
 from utils.portal_magic import create_portal_magic_link_token
 from utils.password import generate_four_digit_password, hash_password
-from utils.solapi_client import check_solapi_group_delivery
+from utils.solapi_client import check_solapi_group_delivery, wait_solapi_group_outcome
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +34,33 @@ CHANNEL_SENDING = "sending"
 CHANNEL_SENT = "sent"
 CHANNEL_FAILED = "failed"
 SENDING_STALE_SECONDS = 90
+ALIMTALK_CONFIRM_TIMEOUT_SEC = 25
+
+
+def _is_alimtalk_failure_reason(err: str) -> bool:
+    e = (err or "").lower()
+    return any(
+        token in e
+        for token in (
+            "3104",
+            "3027",
+            "kakao",
+            "alimtalk",
+            "카카오",
+            "미사용",
+            "alimtalk_status_",
+        )
+    )
+
+
+def _should_try_alimtalk_sms_fallback(*, prior_err: str, sent_via: str) -> bool:
+    if _is_alimtalk_failure_reason(prior_err):
+        return True
+    if "kakao" in sent_via or "alimtalk" in sent_via:
+        return True
+    if "sms" in sent_via and "kakao" not in sent_via and not _is_alimtalk_failure_reason(prior_err):
+        return False
+    return bool(prior_err and prior_err != "solapi_delivery_pending")
 
 
 def _notify_channel_state(has_contact: bool, *, sending: bool = False, ok: bool | None = None) -> str:
@@ -203,7 +230,7 @@ def _attempt_portal_sms_fallback_after_alimtalk_failure(
     """알림톡 비동기 실패 시 SMS 대체 발송 (Solapi 템플릿 대체발송 비허용 대응)."""
     if not phone:
         return None
-    if "sms" in sent_via and "kakao" not in sent_via and "alimtalk" not in (prior_err or "").lower():
+    if not _should_try_alimtalk_sms_fallback(prior_err=prior_err, sent_via=sent_via):
         return None
 
     snap = portal_ref.get()
@@ -247,6 +274,7 @@ def _attempt_portal_sms_fallback_after_alimtalk_failure(
         magic_url=magic_url,
         join_access_code=join_access_code,
         display_name=(pdata.get("displayName") or "").strip(),
+        compact=True,
     )
     if sms_err and sms_err not in errors:
         errors.append(sms_err)
@@ -752,6 +780,7 @@ def deliver_portal_credentials(
     email_ok = False
     sms_ok = False
     alimtalk_ok = False
+    alimtalk_err = ""
     errors: list[str] = []
     solapi_group_id = ""
 
@@ -844,7 +873,41 @@ def deliver_portal_credentials(
         elif alimtalk_ok:
             phone_channel = CHANNEL_SENT
 
-    if phone and not alimtalk_ok and not solapi_group_id:
+        if solapi_group_id and phone_channel == CHANNEL_SENDING:
+            outcome, poll_err = wait_solapi_group_outcome(
+                solapi_group_id,
+                timeout_sec=ALIMTALK_CONFIRM_TIMEOUT_SEC,
+            )
+            if outcome == "delivered":
+                alimtalk_ok = True
+                phone_channel = CHANNEL_SENT
+                solapi_group_id = ""
+            elif outcome == "failed":
+                alimtalk_ok = False
+                solapi_group_id = ""
+                if poll_err and poll_err not in errors:
+                    errors.append(poll_err)
+                sms_ok, sms_err, pending_gid = send_portal_credentials_sms(
+                    to_phone=phone,
+                    access_code=access_code,
+                    pin=pin,
+                    magic_url=magic_url,
+                    join_access_code=join_access_code,
+                    display_name=display_name,
+                    compact=True,
+                )
+                if sms_err and sms_err not in errors:
+                    errors.append(sms_err)
+                if sms_err == "solapi_delivery_pending" and pending_gid:
+                    solapi_group_id = pending_gid
+                    phone_channel = CHANNEL_SENDING
+                elif sms_ok:
+                    phone_channel = CHANNEL_SENT
+                else:
+                    phone_channel = CHANNEL_FAILED if phone_channel != CHANNEL_SENDING else phone_channel
+
+    if phone and not alimtalk_ok and not solapi_group_id and not sms_ok:
+        alimtalk_failed = bool(alimtalk_err and alimtalk_err not in ("alimtalk_not_configured",))
         sms_ok, sms_err, pending_gid = send_portal_credentials_sms(
             to_phone=phone,
             access_code=access_code,
@@ -852,6 +915,7 @@ def deliver_portal_credentials(
             magic_url=magic_url,
             join_access_code=join_access_code,
             display_name=display_name,
+            compact=alimtalk_failed,
         )
         if sms_err:
             errors.append(sms_err)

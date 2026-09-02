@@ -323,6 +323,19 @@ def extract_solapi_group_id(body: dict | None) -> str:
     return _extract_group_id(body)
 
 
+def wait_solapi_group_outcome(group_id: str, *, timeout_sec: float = 25) -> tuple[str, str]:
+    """delivered | failed | pending — 알림톡·SMS 그룹 결과 대기."""
+    gid = (group_id or "").strip()
+    if not gid:
+        return "pending", ""
+    ok, err = _wait_solapi_group_delivery(gid, timeout_sec=timeout_sec)
+    if ok:
+        return "delivered", ""
+    if err == "solapi_delivery_pending":
+        return "pending", err
+    return "failed", err or "solapi_delivery_failed"
+
+
 def solapi_send_messages(messages: list[dict]) -> tuple[bool, str, dict | None]:
     """POST /messages/v4/send-many — 성공 여부, 오류 메시지, 응답 본문."""
     if COST_SAVER_MODE:
@@ -336,7 +349,26 @@ def solapi_send_messages(messages: list[dict]) -> tuple[bool, str, dict | None]:
     if not messages:
         return False, "no_messages", None
 
-    payload = {"messages": messages}
+    normalized_messages: list[dict] = []
+    for raw in messages:
+        msg = dict(raw)
+        if msg.get("to"):
+            msg["to"] = format_solapi_to_phone(str(msg["to"]))
+        if msg.get("from"):
+            formatted_from = format_solapi_to_phone(str(msg["from"]))
+            if formatted_from:
+                msg["from"] = formatted_from
+        normalized_messages.append(msg)
+
+    payload = {"messages": normalized_messages}
+    if normalized_messages:
+        first = normalized_messages[0]
+        logger.info(
+            "Solapi send-many: to=%s from=%s type=%s",
+            first.get("to"),
+            first.get("from"),
+            "alimtalk" if first.get("kakaoOptions") else "sms",
+        )
     req = request.Request(
         f"{SOLAPI_API_BASE}/messages/v4/send-many",
         data=json.dumps(payload).encode("utf-8"),

@@ -230,6 +230,8 @@ def create_portal_for_row(
                 notify_sent = 1
             elif status in ("failed", "partial"):
                 notify_failed = 1
+            elif status == "sending":
+                notify_queued = True
         else:
             _enqueue_portal_notification(
                 db.collection(NOTIFICATION_QUEUE_COLLECTION),
