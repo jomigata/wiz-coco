@@ -15,6 +15,7 @@ from config import (
 from utils.notification_worker import deliver_portal_credentials, deliver_test_reminder, confirm_solapi_sending_for_portals
 from utils.password import generate_four_digit_password, hash_password
 from utils.portal_magic import create_portal_magic_link_token
+from utils.short_link import resolve_message_go_url
 
 logger = logging.getLogger(__name__)
 
@@ -784,7 +785,11 @@ def resend_portal_credentials(
         new_pin = generate_four_digit_password()
         magic = create_portal_magic_link_token(pid, portal_access_code)
         magic_path = f"/go?t={magic}"
-        magic_url = f"{PUBLIC_SITE_URL.rstrip('/')}{magic_path}"
+        magic_url = resolve_message_go_url(
+            db,
+            magic_path=magic_path,
+            portal_id=pid,
+        )
 
         portal_status = (pdata.get("lastNotifyStatus") or "not_sent").strip()
         notify_kind = "initial" if portal_status == "not_sent" else "resend"
@@ -945,7 +950,11 @@ def send_test_reminders(
         portal_access_code = (pdata.get("accessCode") or "").strip()
         magic = create_portal_magic_link_token(pid, portal_access_code)
         magic_path = f"/go?t={magic}"
-        magic_url = f"{PUBLIC_SITE_URL.rstrip('/')}{magic_path}"
+        magic_url = resolve_message_go_url(
+            db,
+            magic_path=magic_path,
+            portal_id=pid,
+        )
 
         result = deliver_test_reminder(
             email=email,

@@ -19,6 +19,7 @@ from utils.access_code import generate_unique_access_code, generate_unique_porta
 from utils.password import generate_four_digit_password, hash_password
 from utils.phone_format import normalize_recipient_phone
 from utils.public_claim_delivery import normalize_public_claim_channel
+from utils.short_link import resolve_message_go_url
 
 CREATED_ROWS_SUBCOLLECTION = "createdRows"
 
@@ -200,7 +201,11 @@ def create_portal_for_row(
     magic_path = f"/go?t={magic}"
     from config import PUBLIC_SITE_URL
 
-    magic_url = f"{PUBLIC_SITE_URL.rstrip('/')}{magic_path}"
+    magic_url = resolve_message_go_url(
+        db,
+        magic_path=magic_path,
+        portal_id=portal_ref.id,
+    )
 
     notify_queued = False
     notify_sent = 0

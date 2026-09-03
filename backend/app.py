@@ -22,6 +22,7 @@ from routes.public_api import bp as public_api_bp, admin_bp as developer_admin_b
 from routes.care_assignments import bp as care_assignments_bp
 from routes.ai_credits import bp as ai_credits_bp
 from routes.portal_chat import bp as portal_chat_bp
+from routes.short_links import bp as short_links_bp
 
 
 def create_app():
@@ -52,6 +53,7 @@ def create_app():
     app.register_blueprint(care_assignments_bp)
     app.register_blueprint(ai_credits_bp)
     app.register_blueprint(portal_chat_bp)
+    app.register_blueprint(short_links_bp)
 
     @app.errorhandler(Exception)
     def handle_unexpected_error(exc):

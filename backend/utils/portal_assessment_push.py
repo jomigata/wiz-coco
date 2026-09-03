@@ -14,6 +14,7 @@ from utils.assessment_dispatch import _pending_tests_from_rows, _test_detail_row
 from utils.counselor_credits import consume_credits, get_balance
 from utils.notification_worker import deliver_test_reminder
 from utils.portal_magic import create_portal_magic_link_token
+from utils.short_link import resolve_message_go_url
 
 
 def _normalize_test_list(test_list: list | None) -> list[dict]:
@@ -132,7 +133,11 @@ def _notify_portal_push(
     return {
         "status": status,
         "pendingCount": len(pending),
-        "magicUrl": f"{PUBLIC_SITE_URL.rstrip('/')}{magic_path}",
+        "magicUrl": resolve_message_go_url(
+            db,
+            magic_path=magic_path,
+            portal_id=portal_id,
+        ),
         "sentVia": result.get("sentVia"),
     }
 

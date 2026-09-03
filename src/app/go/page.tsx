@@ -4,7 +4,11 @@ import React, { Suspense, useEffect, useState } from 'react';
 import { LoadingMessage } from '@/components/ui/LoadingMessage';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { verifyPortalMagicToken, type PortalMagicVerifyError } from '@/lib/clientPortalApi';
+import {
+  resolveShortLinkCode,
+  verifyPortalMagicToken,
+  type PortalMagicVerifyError,
+} from '@/lib/clientPortalApi';
 import { persistClientPortalSession } from '@/lib/clientPortalSession';
 import { clearJoinGuestSession } from '@/lib/joinGuestSession';
 import { clearJoinParticipantSession } from '@/lib/joinParticipantSession';
@@ -38,26 +42,49 @@ function GoLoading() {
 function GoContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const token = searchParams.get('t') || '';
+  const directToken = (searchParams.get('t') || '').trim();
+  const shortCode = (searchParams.get('c') || '').trim();
+  const queryTab = (searchParams.get('tab') || '').trim();
   const [error, setError] = useState('');
   const [expiresAt, setExpiresAt] = useState<number | undefined>();
 
   useEffect(() => {
-    if (!token) {
-      setError('유효하지 않은 링크입니다.');
-      return;
-    }
     let cancelled = false;
+
     (async () => {
       await resetAllSessionsBeforePortalLinkEntry();
       if (cancelled) return;
+
+      let token = directToken;
+      let tab = queryTab;
+
+      if (!token && shortCode) {
+        try {
+          const resolved = await resolveShortLinkCode(shortCode);
+          if (cancelled) return;
+          token = (resolved.magicToken || '').trim();
+          if (!tab && resolved.tab) tab = resolved.tab.trim();
+          if (typeof resolved.expiresAt === 'number') {
+            setExpiresAt(resolved.expiresAt);
+          }
+        } catch (err) {
+          if (cancelled) return;
+          setError(err instanceof Error ? err.message : '링크를 사용할 수 없습니다.');
+          return;
+        }
+      }
+
+      if (!token) {
+        setError('유효하지 않은 링크입니다.');
+        return;
+      }
+
       try {
         const result = await verifyPortalMagicToken(token);
         if (cancelled) return;
         persistClientPortalSession(result);
         clearJoinGuestSession();
         clearJoinParticipantSession();
-        const tab = (searchParams.get('tab') || '').trim();
         const dest = tab ? `/portal/?tab=${encodeURIComponent(tab)}` : '/portal/';
         setPortalReturnPath(dest);
         router.replace(dest);
@@ -70,10 +97,11 @@ function GoContent() {
         }
       }
     })();
+
     return () => {
       cancelled = true;
     };
-  }, [token, router, searchParams]);
+  }, [directToken, shortCode, queryTab, router]);
 
   if (error) {
     const expiryLabel = formatExpiryLabel(expiresAt);
@@ -84,22 +112,25 @@ function GoContent() {
             링크를 사용할 수 없습니다
           </h1>
           <div className="rounded-xl border border-amber-500/20 bg-[#1a1408]/80 px-4 py-3.5 mb-4">
-            <p className="text-sm leading-relaxed text-slate-300">
-              검사 바로시작 링크는 발송 후 72시간까지만 유효합니다.
-              {expiryLabel ? (
-                <>
-                  {' '}
-                  (<span className="text-amber-200/90">유효기한: {expiryLabel}까지</span>)
-                </>
-              ) : null}
-            </p>
+            <p className="text-sm leading-relaxed text-slate-300">{error}</p>
+            {!error.includes('72시간') ? (
+              <p className="mt-2 text-sm leading-relaxed text-slate-400">
+                검사 바로시작 링크는 발송 후 72시간까지만 유효합니다.
+                {expiryLabel ? (
+                  <>
+                    {' '}
+                    (<span className="text-amber-200/90">유효기한: {expiryLabel}까지</span>)
+                  </>
+                ) : null}
+              </p>
+            ) : null}
           </div>
           <div className="rounded-xl border border-sky-400/35 bg-sky-500/10 px-4 py-3.5 mb-6">
             <p className="text-sky-100 font-semibold text-sm">
               나의코드 / 비밀번호 이용을 추천합니다
             </p>
             <p className="mt-1.5 text-slate-300 text-xs leading-relaxed">
-              안내 이메일에 적힌 <span className="text-white font-medium">나의코드</span>와{' '}
+              안내 이메일·문자에 적힌 <span className="text-white font-medium">나의코드</span>와{' '}
               <span className="text-white font-medium">4자리 비밀번호</span>로 로그인하면 언제든
               검사를 이어갈 수 있습니다.
             </p>

@@ -64,6 +64,29 @@ export type PortalMagicVerifyError = Error & {
   issuedAt?: number;
 };
 
+export type ShortLinkResolveResult = {
+  code: string;
+  magicToken: string;
+  tab?: string;
+  expiresAt?: number;
+  issuedAt?: number;
+};
+
+export async function resolveShortLinkCode(code: string): Promise<ShortLinkResolveResult> {
+  const slug = (code || '').trim();
+  if (!slug) throw new Error('유효하지 않은 링크입니다.');
+  const res = await fetch(`${getBaseUrl()}/api/short-links/${encodeURIComponent(slug)}`);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(
+      typeof data?.message === 'string'
+        ? data.message
+        : '링크가 유효하지 않거나 만료되었습니다.',
+    );
+  }
+  return data as ShortLinkResolveResult;
+}
+
 export async function verifyPortalMagicToken(token: string): Promise<ClientPortalLoginResult> {
   const res = await fetch(`${getBaseUrl()}/api/client-portals/magic-link/verify`, {
     method: 'POST',

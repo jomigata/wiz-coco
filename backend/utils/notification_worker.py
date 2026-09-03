@@ -26,6 +26,7 @@ from utils.kakao_alimtalk import (
 from utils.portal_magic import create_portal_magic_link_token
 from utils.password import generate_four_digit_password, hash_password
 from utils.solapi_client import check_solapi_group_delivery, wait_solapi_group_outcome
+from utils.short_link import resolve_message_go_url
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +36,34 @@ CHANNEL_SENT = "sent"
 CHANNEL_FAILED = "failed"
 SENDING_STALE_SECONDS = 90
 ALIMTALK_CONFIRM_TIMEOUT_SEC = 25
+
+
+def _apply_short_go_url(
+    *,
+    magic_path: str = "",
+    magic_url: str = "",
+    portal_id: str = "",
+    tab: str = "",
+) -> str:
+    """발송용 go URL — /go/?c= 단축 (이메일·SMS·알림톡 공통)."""
+    if not (magic_path or magic_url):
+        return (magic_url or "").strip() or PUBLIC_SITE_URL
+    try:
+        db = get_firestore()
+        return resolve_message_go_url(
+            db,
+            magic_path=magic_path,
+            magic_url=magic_url,
+            portal_id=portal_id,
+            tab=tab,
+        )
+    except Exception:
+        logger.exception("_apply_short_go_url failed")
+        if magic_url:
+            return magic_url.strip()
+        if magic_path:
+            return f"{PUBLIC_SITE_URL.rstrip('/')}{magic_path}"
+        return PUBLIC_SITE_URL
 
 
 def _is_alimtalk_failure_reason(err: str) -> bool:
@@ -260,7 +289,10 @@ def _attempt_portal_sms_fallback_after_alimtalk_failure(
     new_pin = generate_four_digit_password()
     magic = create_portal_magic_link_token(portal_id, portal_access_code)
     magic_path = f"/go?t={magic}"
-    magic_url = f"{PUBLIC_SITE_URL.rstrip('/')}{magic_path}"
+    magic_url = _apply_short_go_url(
+        magic_path=magic_path,
+        portal_id=portal_id,
+    )
 
     if prior_err and prior_err not in errors:
         errors.append(prior_err)
@@ -775,7 +807,13 @@ def deliver_portal_credentials(
     """나의코드·PIN 등 포털 접속 정보를 이메일·문자로 즉시 발송."""
     email = (email or "").strip().lower()
     phone = (phone or "").strip()
-    magic_url = f"{PUBLIC_SITE_URL.rstrip('/')}{magic_path}" if magic_path else PUBLIC_SITE_URL
+    long_magic_url = f"{PUBLIC_SITE_URL.rstrip('/')}{magic_path}" if magic_path else PUBLIC_SITE_URL
+    portal_id_str = portal_ref.id if portal_ref is not None else ""
+    magic_url = _apply_short_go_url(
+        magic_path=magic_path,
+        magic_url=long_magic_url,
+        portal_id=portal_id_str,
+    )
 
     email_ok = False
     sms_ok = False
@@ -983,7 +1021,13 @@ def deliver_test_reminder(
     """미실시·미완료 검사 현황과 검사 연결 링크를 이메일·문자로 즉시 발송."""
     email = (email or "").strip().lower()
     phone = (phone or "").strip()
-    magic_url = f"{PUBLIC_SITE_URL.rstrip('/')}{magic_path}" if magic_path else PUBLIC_SITE_URL
+    long_magic_url = f"{PUBLIC_SITE_URL.rstrip('/')}{magic_path}" if magic_path else PUBLIC_SITE_URL
+    portal_id_str = portal_ref.id if portal_ref is not None else ""
+    magic_url = _apply_short_go_url(
+        magic_path=magic_path,
+        magic_url=long_magic_url,
+        portal_id=portal_id_str,
+    )
 
     email_ok = False
     sms_ok = False
@@ -1155,7 +1199,12 @@ def deliver_care_assignment(
     """치료·과제 할당 안내를 이메일·문자로 즉시 발송."""
     email = (email or "").strip().lower()
     phone = (phone or "").strip()
-    magic_url = f"{PUBLIC_SITE_URL.rstrip('/')}{magic_path}" if magic_path else PUBLIC_SITE_URL
+    long_magic_url = f"{PUBLIC_SITE_URL.rstrip('/')}{magic_path}" if magic_path else PUBLIC_SITE_URL
+    magic_url = _apply_short_go_url(
+        magic_path=magic_path,
+        magic_url=long_magic_url,
+        tab="care",
+    )
 
     email_ok = False
     sms_ok = False
