@@ -12,7 +12,12 @@ from config import (
     PUBLIC_SITE_URL,
     TEST_RESULTS_COLLECTION,
 )
-from utils.notification_worker import deliver_portal_credentials, deliver_test_reminder, confirm_solapi_sending_for_portals
+from utils.notification_worker import (
+    deliver_portal_credentials,
+    deliver_test_reminder,
+    confirm_solapi_sending_for_portals,
+    pick_portals_for_solapi_confirm,
+)
 from utils.password import generate_four_digit_password, hash_password
 from utils.portal_magic import create_portal_magic_link_token
 from utils.short_link import resolve_message_go_url
@@ -661,25 +666,27 @@ def get_assessment_dispatch_status(db, assessment_id: str, counselor_uid: str | 
     rows = [(pid, pdata) for pid, pdata in rows if (pdata.get("status") or "active") == "active"]
     portal_ids = [pid for pid, _ in rows]
 
-    sending_portal_ids = [
-        pid
+    sending_portal_data = {
+        pid: pdata
         for pid, pdata in rows
         if (pdata.get("lastNotifyStatus") or "").strip() == "sending"
-    ]
-    if sending_portal_ids:
+    }
+    to_confirm = pick_portals_for_solapi_confirm(sending_portal_data)
+    if to_confirm:
         try:
-            confirm_solapi_sending_for_portals(db, sending_portal_ids, counselor_uid=counselor_uid)
+            confirm_solapi_sending_for_portals(db, to_confirm, counselor_uid=counselor_uid)
         except Exception:
             # Solapi 조회·Firestore 갱신 중 오류가 나더라도 발송현황 조회 자체는 계속 반환한다.
             # (다음 polling에서 재시도되므로 여기서 전체 응답을 500으로 만들지 않는다.)
             logger.exception(
                 "confirm_solapi_sending_for_portals failed for assessment=%s portals=%s",
                 assessment_id,
-                sending_portal_ids,
+                to_confirm,
             )
+        to_confirm_set = set(to_confirm)
         refreshed: list[tuple[str, dict]] = []
         for pid, pdata in rows:
-            if pid in sending_portal_ids:
+            if pid in to_confirm_set:
                 fresh = db.collection(CLIENT_PORTALS_COLLECTION).document(pid).get()
                 refreshed.append((pid, fresh.to_dict() or pdata))
             else:

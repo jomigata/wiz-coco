@@ -1,5 +1,6 @@
 """notificationQueue pending 항목 처리 — 이메일/SMS 발송."""
 import logging
+import time
 from datetime import datetime, timezone
 
 from firebase_admin.firestore import SERVER_TIMESTAMP
@@ -36,6 +37,11 @@ CHANNEL_SENT = "sent"
 CHANNEL_FAILED = "failed"
 SENDING_STALE_SECONDS = 90
 ALIMTALK_CONFIRM_TIMEOUT_SEC = 25
+# 발송현황 폴링마다 Solapi groups/messages API 중복 호출 방지 (프로세스 메모리)
+SOLAPI_CONFIRM_MIN_INTERVAL_SEC = 5.0
+QUEUE_GROUP_LOOKUP_COOLDOWN_SEC = 15.0
+_last_solapi_confirm_at: dict[str, float] = {}
+_last_queue_group_lookup_at: dict[str, float] = {}
 
 
 def _apply_short_go_url(
@@ -444,6 +450,47 @@ def _portal_notify_age_seconds(pdata: dict) -> float | None:
     return None
 
 
+def _solapi_confirm_interval_elapsed(portal_id: str) -> bool:
+    last = _last_solapi_confirm_at.get(portal_id, 0.0)
+    return (time.time() - last) >= SOLAPI_CONFIRM_MIN_INTERVAL_SEC
+
+
+def _record_solapi_confirm(portal_id: str) -> None:
+    _last_solapi_confirm_at[portal_id] = time.time()
+
+
+def _queue_group_lookup_elapsed(portal_id: str) -> bool:
+    last = _last_queue_group_lookup_at.get(portal_id, 0.0)
+    return (time.time() - last) >= QUEUE_GROUP_LOOKUP_COOLDOWN_SEC
+
+
+def _record_queue_group_lookup(portal_id: str) -> None:
+    _last_queue_group_lookup_at[portal_id] = time.time()
+
+
+def pick_portals_for_solapi_confirm(portal_data_by_id: dict[str, dict]) -> list[str]:
+    """발송현황 조회 시 Solapi confirm API가 필요한 포털만 반환 (중복 폴링 억제)."""
+    due: list[str] = []
+    for portal_id, pdata in portal_data_by_id.items():
+        pid = (portal_id or "").strip()
+        if not pid or not pdata:
+            continue
+        if (pdata.get("lastNotifyStatus") or "").strip() != "sending":
+            continue
+        age = _portal_notify_age_seconds(pdata)
+        if age is not None and age >= SENDING_STALE_SECONDS:
+            due.append(pid)
+            continue
+        group_id = (pdata.get("solapiGroupId") or "").strip()
+        if group_id:
+            if _solapi_confirm_interval_elapsed(pid):
+                due.append(pid)
+            continue
+        if _queue_group_lookup_elapsed(pid):
+            due.append(pid)
+    return due
+
+
 def _finalize_stale_sending_portal(
     *,
     portal_ref,
@@ -528,24 +575,26 @@ def confirm_solapi_sending_for_portals(
 
             group_id = (pdata.get("solapiGroupId") or "").strip()
             if not group_id:
-                try:
-                    queue_match = (
-                        db.collection(NOTIFICATION_QUEUE_COLLECTION)
-                        .where("portalId", "==", portal_id)
-                        .where("status", "==", "sending")
-                        .limit(3)
-                        .stream()
-                    )
-                    for qdoc in queue_match:
-                        qdata = qdoc.to_dict() or {}
-                        q_gid = (qdata.get("solapiGroupId") or "").strip()
-                        if q_gid:
-                            group_id = q_gid
-                            break
-                except Exception:
-                    logger.exception(
-                        "notificationQueue lookup failed for portal=%s", portal_id
-                    )
+                if _queue_group_lookup_elapsed(portal_id):
+                    _record_queue_group_lookup(portal_id)
+                    try:
+                        queue_match = (
+                            db.collection(NOTIFICATION_QUEUE_COLLECTION)
+                            .where("portalId", "==", portal_id)
+                            .where("status", "==", "sending")
+                            .limit(3)
+                            .stream()
+                        )
+                        for qdoc in queue_match:
+                            qdata = qdoc.to_dict() or {}
+                            q_gid = (qdata.get("solapiGroupId") or "").strip()
+                            if q_gid:
+                                group_id = q_gid
+                                break
+                    except Exception:
+                        logger.exception(
+                            "notificationQueue lookup failed for portal=%s", portal_id
+                        )
 
             age = _portal_notify_age_seconds(pdata)
 
@@ -571,6 +620,7 @@ def confirm_solapi_sending_for_portals(
                 continue
 
             if age is not None and age >= SENDING_STALE_SECONDS:
+                _record_solapi_confirm(portal_id)
                 outcome, _err = check_solapi_group_delivery(group_id)
                 if outcome == "pending":
                     status = _finalize_stale_sending_portal(
@@ -590,6 +640,11 @@ def confirm_solapi_sending_for_portals(
                         failed += 1
                     continue
 
+            if not _solapi_confirm_interval_elapsed(portal_id):
+                still_pending += 1
+                continue
+
+            _record_solapi_confirm(portal_id)
             status, outcome = _confirm_one_solapi_sending(
                 db=db,
                 portal_id=portal_id,
