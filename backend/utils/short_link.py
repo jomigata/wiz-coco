@@ -1,6 +1,7 @@
 """SMS·이메일·알림톡용 짧은 go 링크 — Firestore shortLinks 컬렉션."""
 from __future__ import annotations
 
+import hashlib
 import logging
 import re
 import secrets
@@ -18,9 +19,23 @@ SHORT_LINK_CODE_ALPHABET = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ234
 SHORT_LINK_CODE_LENGTH = 7
 _TOKEN_FROM_PATH_RE = re.compile(r"[?&]t=([^&]+)")
 
+# 동일 magic 토큰 재발송 시 Firestore read/write 반복 방지 (프로세스 메모리, TTL 5분)
+_GO_URL_CACHE: dict[str, tuple[str, float]] = {}
+_GO_URL_CACHE_TTL_SEC = 300
+
 
 def _generate_short_code() -> str:
     return "".join(secrets.choice(SHORT_LINK_CODE_ALPHABET) for _ in range(SHORT_LINK_CODE_LENGTH))
+
+
+def _deterministic_short_code(magic_token: str, tab: str = "") -> str:
+    """magicToken+tab 해시 → 고정 doc ID. where 쿼리 없이 get() 1회로 조회."""
+    payload = f"{magic_token}\0{(tab or '').strip()}".encode("utf-8")
+    digest = hashlib.sha256(payload).digest()
+    return "".join(
+        SHORT_LINK_CODE_ALPHABET[digest[i] % len(SHORT_LINK_CODE_ALPHABET)]
+        for i in range(SHORT_LINK_CODE_LENGTH)
+    )
 
 
 def extract_magic_token(*, magic_path: str = "", magic_url: str = "") -> str:
@@ -82,22 +97,20 @@ def find_existing_short_code_for_magic(
     token = (magic_token or "").strip()
     if not token:
         return ""
-    want_tab = (tab or "").strip()
+    code = _deterministic_short_code(token, tab)
     try:
-        matches = (
-            db.collection(SHORT_LINKS_COLLECTION)
-            .where("magicToken", "==", token)
-            .limit(8)
-            .stream()
-        )
-        for doc in matches:
-            data = doc.to_dict() or {}
-            if (data.get("tab") or "").strip() != want_tab:
-                continue
-            if _short_link_not_expired(data):
-                return doc.id
+        snap = db.collection(SHORT_LINKS_COLLECTION).document(code).get()
+        if not snap.exists:
+            return ""
+        data = snap.to_dict() or {}
+        if (data.get("magicToken") or "").strip() != token:
+            return ""
+        if (data.get("tab") or "").strip() != (tab or "").strip():
+            return ""
+        if _short_link_not_expired(data):
+            return code
     except Exception:
-        logger.exception("find_existing_short_code_for_magic query failed")
+        logger.exception("find_existing_short_code_for_magic get failed")
     return ""
 
 
@@ -108,29 +121,39 @@ def get_or_create_short_link_for_magic(
     portal_id: str = "",
     tab: str = "",
 ) -> str:
-    """신규 단축 코드 생성 (magic 토큰 매핑). 코드 문자열 반환."""
+    """magic 토큰당 고정 doc ID — 조회 1회, 없을 때만 set."""
     token = (magic_token or "").strip()
     if not token:
         raise ValueError("magic_token required")
 
-    existing = find_existing_short_code_for_magic(db, magic_token=token, tab=tab)
-    if existing:
-        return existing
+    want_tab = (tab or "").strip()
+    code = _deterministic_short_code(token, want_tab)
+    coll = db.collection(SHORT_LINKS_COLLECTION)
+    ref = coll.document(code)
+    snap = ref.get()
 
     issued_at, expires_at = get_portal_magic_link_timestamps(token)
     if expires_at is None:
         expires_at = int(time.time()) + PORTAL_MAGIC_LINK_MAX_AGE
 
-    coll = db.collection(SHORT_LINKS_COLLECTION)
-    for _ in range(8):
-        code = _generate_short_code()
-        ref = coll.document(code)
-        if ref.get().exists:
-            continue
+    if snap.exists:
+        data = snap.to_dict() or {}
+        stored_token = (data.get("magicToken") or "").strip()
+        if stored_token == token and (data.get("tab") or "").strip() == want_tab:
+            if _short_link_not_expired(data):
+                return code
+            payload = {"expiresAt": expires_at}
+            if issued_at is not None:
+                payload["issuedAt"] = issued_at
+            ref.update(payload)
+            return code
+        # 해시 충돌 — 랜덤 코드 fallback (극히 드묾)
+        logger.warning("short_link deterministic code collision for %s", code[:4])
+    else:
         payload = {
             "magicToken": token,
             "portalId": (portal_id or "").strip() or None,
-            "tab": (tab or "").strip() or None,
+            "tab": want_tab or None,
             "expiresAt": expires_at,
             "createdAt": SERVER_TIMESTAMP,
         }
@@ -138,6 +161,23 @@ def get_or_create_short_link_for_magic(
             payload["issuedAt"] = issued_at
         ref.set(payload)
         return code
+
+    for _ in range(8):
+        fallback_code = _generate_short_code()
+        fallback_ref = coll.document(fallback_code)
+        if fallback_ref.get().exists:
+            continue
+        payload = {
+            "magicToken": token,
+            "portalId": (portal_id or "").strip() or None,
+            "tab": want_tab or None,
+            "expiresAt": expires_at,
+            "createdAt": SERVER_TIMESTAMP,
+        }
+        if issued_at is not None:
+            payload["issuedAt"] = issued_at
+        fallback_ref.set(payload)
+        return fallback_code
 
     raise RuntimeError("short_link_code_generation_failed")
 
@@ -177,6 +217,12 @@ def resolve_message_go_url(
         return long_url
 
     resolved_tab = (tab or "").strip() or extract_tab_from_magic_path(magic_path, long_url)
+    cache_key = f"{token}|{resolved_tab}|{(portal_id or '').strip()}"
+    now = time.time()
+    cached = _GO_URL_CACHE.get(cache_key)
+    if cached and cached[1] > now:
+        return cached[0]
+
     try:
         code = get_or_create_short_link_for_magic(
             db,
@@ -184,7 +230,9 @@ def resolve_message_go_url(
             portal_id=portal_id,
             tab=resolved_tab,
         )
-        return build_short_go_url(code)
+        url = build_short_go_url(code)
+        _GO_URL_CACHE[cache_key] = (url, now + _GO_URL_CACHE_TTL_SEC)
+        return url
     except Exception:
         logger.exception("resolve_message_go_url failed")
         return long_url

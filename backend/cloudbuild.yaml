@@ -1,3 +1,5 @@
+# LEGACY / 수동 빌드 전용 — CI는 GitHub Actions docker build 사용 (.github/workflows/deploy-backend.yml).
+# CI에서 gcloud builds submit 사용 금지 (Cloud Build VM 분·과금 절감).
 # Cloud Build: Flask API 이미지 빌드 후 Artifact Registry(서울) 푸시
 # options.logging: CLOUD_LOGGING_ONLY → 기본 로그 버킷 권한 없이 빌드 가능 (GitHub Actions SA)
 # 태그 전략: SHA 태그(추적용) + latest 태그(최신 식별용) 동시 생성

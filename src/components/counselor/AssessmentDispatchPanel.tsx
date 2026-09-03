@@ -525,7 +525,7 @@ export default function AssessmentDispatchPanel({
       if (issueError) setPendingIssueError(issueError);
     };
     syncPendingResolution();
-    const timer = window.setInterval(syncPendingResolution, 400);
+    const timer = window.setInterval(syncPendingResolution, 800);
     return () => window.clearInterval(timer);
   }, [assessmentId, pendingIssue, router]);
 
@@ -705,7 +705,7 @@ export default function AssessmentDispatchPanel({
     };
 
     syncFromCache();
-    const cacheTimer = window.setInterval(syncFromCache, 500);
+    const cacheTimer = window.setInterval(syncFromCache, 1000);
     return () => window.clearInterval(cacheTimer);
   }, [authPending, isAuthenticated, needsLiveRefresh, assessmentId, user?.uid]);
 
@@ -770,7 +770,7 @@ export default function AssessmentDispatchPanel({
     if (sendingStartedAtRef.current === null) sendingStartedAtRef.current = Date.now();
     const hasActiveOverlay = Object.keys(dispatchOverrides).length > 0;
     const pollMs =
-      pendingIssue || issuingPhase ? 500 : hasSendingNotify || hasActiveOverlay ? 600 : 1500;
+      pendingIssue || issuingPhase ? 1000 : hasSendingNotify || hasActiveOverlay ? 1500 : 3000;
     void load({ silent: true });
     const timer = window.setInterval(() => {
       void load({ silent: true });

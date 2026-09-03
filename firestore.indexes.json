@@ -99,13 +99,6 @@
         { "fieldPath": "counselorId", "order": "ASCENDING" },
         { "fieldPath": "assignmentId", "order": "ASCENDING" }
       ]
-    },
-    {
-      "collectionGroup": "shortLinks",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "magicToken", "order": "ASCENDING" }
-      ]
     }
   ],
   "fieldOverrides": []

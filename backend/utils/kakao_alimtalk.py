@@ -133,7 +133,8 @@ def _send_alimtalk(
                     "pfId": SOLAPI_KAKAO_PF_ID,
                     "templateId": template_id,
                     "variables": variables,
-                    "disableSms": False,
+                    # Solapi 콘솔·API 문자 대체발송 OFF — 앱(notification_worker) compact SMS fallback만 사용 (이중 과금 방지)
+                    "disableSms": True,
                 },
             }
         ]
