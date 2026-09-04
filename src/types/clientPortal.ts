@@ -119,6 +119,8 @@ export type CounselorClientPortalListItem = {
   notifyStatus: string;
   notifyError?: string | null;
   notifyAt?: string | null;
+  notifySentVia?: string | null;
+  notifyKind?: string | null;
   lastLoginAt?: string | null;
   createdAt?: string | null;
   counselorTags?: string[];

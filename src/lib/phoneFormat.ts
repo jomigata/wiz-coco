@@ -81,6 +81,22 @@ function formatDigitsWithDashes(digits: string): string | null {
   return null;
 }
 
+/** UI 입력 중 — 숫자만 받아 010-1234-5678 형식으로 포맷 (최대 11자리) */
+export function formatPhoneWhileTyping(raw: string): string {
+  const digits = normalizeRecipientPhone(raw).slice(0, 11);
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 7) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+  return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
+}
+
+/** formatPhoneWhileTyping 후 커서 위치 (하이픈 건너뜀) */
+export function phoneInputCaretIndex(formatted: string): number {
+  const digits = normalizeRecipientPhone(formatted).length;
+  if (digits <= 3) return digits;
+  if (digits <= 7) return digits + 1;
+  return digits + 2;
+}
+
 /** UI·Excel 등 표시용. 빈 값이면 '' */
 export function formatPhoneDisplay(raw: unknown): string {
   const trimmed = raw == null ? '' : String(raw).trim();

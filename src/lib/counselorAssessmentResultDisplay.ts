@@ -31,6 +31,23 @@ export function formatTestIncompleteMetric(a: CounselorAssessment): string {
   return String(testIncomplete);
 }
 
+/** 상담코드·검사발송 목록 — 진행현황 색상 (발송현황과 동일 계열) */
+export function assessmentProgressDisplay(a: CounselorAssessment): {
+  text: string;
+  className: string;
+} {
+  const { testIncomplete, testComplete, dispatchTotal } = resultStatusCounts(a);
+  const completeSuffix = testComplete > 0 ? ` · 완료 ${testComplete}` : '';
+
+  if (testIncomplete === 0 && testComplete > 0 && dispatchTotal > 0) {
+    return { text: `완료${completeSuffix}`, className: 'font-medium text-emerald-200' };
+  }
+  if (testComplete > 0 && testIncomplete > 0) {
+    return { text: `${testIncomplete}${completeSuffix}`, className: 'font-medium text-sky-200' };
+  }
+  return { text: `${testIncomplete}${completeSuffix}`, className: 'font-medium text-amber-200' };
+}
+
 /** QuickSend 등에서 title 끝에 붙는 " · N명" (최초 발송 인원) — 목록 표시에서 제외 */
 export function stripAssessmentTitleDispatchCountSuffix(title: string): string {
   return title.replace(/\s·\s*\d+명\s*$/, '').trim();

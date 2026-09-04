@@ -1,4 +1,5 @@
 import type { ArchivedDispatchRecipient } from '@/lib/clientPortalApi';
+import { formatPhoneDisplay } from '@/lib/phoneFormat';
 
 export type DispatchDisplayRecipient = {
   email?: string | null;
@@ -69,6 +70,24 @@ function phoneChannelLabel(flags: ReturnType<typeof parseSentViaFlags>): string 
   if (flags.alimtalkOk) return '알림톡';
   if (flags.smsOk) return '문자';
   return '휴대폰';
+}
+
+function phoneDeliveryMethodSuffix(via: ReturnType<typeof parseSentViaFlags>): string {
+  if (via.alimtalkOk) return '알림톡';
+  if (via.smsOk) return '문자';
+  return '';
+}
+
+export function formatRecipientContactLine(
+  phone?: string | null,
+  email?: string | null,
+): string {
+  const parts: string[] = [];
+  const phoneText = formatPhoneDisplay((phone || '').trim());
+  const emailText = (email || '').trim();
+  if (phoneText) parts.push(phoneText);
+  if (emailText) parts.push(emailText);
+  return parts.length ? parts.join(' / ') : '—';
 }
 
 function emailChannelOutcome(
@@ -299,8 +318,18 @@ export function dispatchStatusDisplay(r: DispatchDisplayRecipient): DispatchStat
       else if (hasEmail && !hasPhone) title = '이메일로 발송됨';
       else if (status === 'partial') title = notifyErrorHint(r.notifyError) || '일부 채널만 발송되었습니다.';
 
+      const via = parseSentViaFlags(r.notifySentVia);
+      let mainText = dispatchSuccessLabel(kindPrefix);
+      if (hasPhone) {
+        const phoneSuffix = phoneDeliveryMethodSuffix(via);
+        const phoneOk = phoneChannelOutcome(status, via, parseNotifyErrors(r.notifyError)) === 'ok';
+        if (phoneSuffix && phoneOk) {
+          mainText = `${mainText} ${phoneSuffix}`;
+        }
+      }
+
       return statusView(
-        dispatchSuccessLabel(kindPrefix),
+        mainText,
         detailParts,
         'text-emerald-300',
         title,

@@ -17,9 +17,13 @@ import CounselorListSearchInput from '@/components/counselor/CounselorListSearch
 import CounselorSlashInfoCell from '@/components/counselor/CounselorSlashInfoCell';
 import {
   assessmentGroupTitleParts,
-  formatTestIncompleteMetric,
+  assessmentProgressDisplay,
   resultStatusCounts,
 } from '@/lib/counselorAssessmentResultDisplay';
+import {
+  normalizePublicClaimChannel,
+  PUBLIC_CLAIM_CHANNEL_OPTIONS,
+} from '@/lib/publicClaimDelivery';
 import AssessmentAddRecipientModal, {
   buildContextFromAssessment,
 } from '@/components/counselor/AssessmentAddRecipientModal';
@@ -71,6 +75,13 @@ function parseCreatedAt(iso?: string): number {
 
 function assessmentInfoLabel(a: CounselorAssessment): string {
   return `${getAssessmentOrgLabel(a)} / ${(a.title || '—').trim()}`;
+}
+
+function formatAssessmentDeliveryMethod(a: CounselorAssessment): string {
+  const channel = normalizePublicClaimChannel(a.publicClaimChannel);
+  return (
+    PUBLIC_CLAIM_CHANNEL_OPTIONS.find((opt) => opt.value === channel)?.label || '휴대폰(카톡/문자)'
+  );
 }
 
 function assessmentHasPendingDispatch(a: CounselorAssessment): boolean {
@@ -749,14 +760,6 @@ export default function AssessmentList({
                     onSort={toggleSort}
                     className="whitespace-nowrap"
                   />
-                  <SortableColumnHeader
-                    label="상담코드"
-                    sortKey="accessCode"
-                    activeKey={sortKey}
-                    direction={sortDir}
-                    onSort={toggleSort}
-                    className="whitespace-nowrap text-center"
-                  />
                     <DualFieldSortHeader
                       leftLabel="그룹명"
                       rightLabel="소속"
@@ -766,6 +769,17 @@ export default function AssessmentList({
                       onSortLeft={() => toggleCounselFieldSort('org')}
                       onSortRight={() => toggleCounselFieldSort('title')}
                     />
+                  <SortableColumnHeader
+                    label="상담코드"
+                    sortKey="accessCode"
+                    activeKey={sortKey}
+                    direction={sortDir}
+                    onSort={toggleSort}
+                    className="whitespace-nowrap text-center"
+                  />
+                  <th scope="col" className={`${counselorListThClass} whitespace-nowrap text-center`}>
+                    <span className="block">전송방법</span>
+                  </th>
                   <th scope="col" className={`${counselorListThClass} whitespace-nowrap text-center`}>
                     <span className="block">진행현황</span>
                   </th>
@@ -790,7 +804,7 @@ export default function AssessmentList({
               </thead>
               <tbody>
                 {paginatedItems.map((a, idx) => {
-                  const { testComplete } = resultStatusCounts(a);
+                  const progress = assessmentProgressDisplay(a);
                   const expired = isExpired(a.usageEndDate);
                   const { primary: infoPrimary, secondary: infoSecondary } = assessmentGroupTitleParts(a);
                   const isSelected = selected.has(a.id);
@@ -816,14 +830,6 @@ export default function AssessmentList({
                         <span className={cellLinkClass}>{formatCounselorIssueDate(a.createdAt)}</span>
                       </td>
                       <td
-                        className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer text-center`}
-                        onClick={() => goToProgress(a.id)}
-                      >
-                        <span className={`${cellLinkClass} font-mono tracking-wide text-cyan-300/95`}>
-                          {formatAccessCodeDisplay(a.accessCode)}
-                        </span>
-                      </td>
-                      <td
                         className={`max-w-[16rem] ${counselorListTdCompactClass} cursor-pointer`}
                         onClick={() => goToProgress(a.id)}
                       >
@@ -841,12 +847,22 @@ export default function AssessmentList({
                         )}
                       </td>
                       <td
-                        className={`whitespace-nowrap ${counselorListTdCompactClass} text-center cursor-default tabular-nums text-slate-200`}
+                        className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer text-center`}
+                        onClick={() => goToProgress(a.id)}
                       >
-                        {formatTestIncompleteMetric(a)}
-                        {testComplete > 0 ? (
-                          <span className="ml-1 text-slate-500">· 완료 {testComplete}</span>
-                        ) : null}
+                        <span className={`${cellLinkClass} font-mono tracking-wide text-cyan-300/95`}>
+                          {formatAccessCodeDisplay(a.accessCode)}
+                        </span>
+                      </td>
+                      <td
+                        className={`whitespace-nowrap ${counselorListTdCompactClass} text-center text-slate-300`}
+                      >
+                        {formatAssessmentDeliveryMethod(a)}
+                      </td>
+                      <td
+                        className={`whitespace-nowrap ${counselorListTdCompactClass} text-center cursor-default tabular-nums ${progress.className}`}
+                      >
+                        {progress.text}
                       </td>
                       <td
                         className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer text-center ${expired ? 'text-red-400' : ''}`}

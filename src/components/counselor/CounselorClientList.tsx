@@ -12,8 +12,6 @@ import CounselorListSearchInput from '@/components/counselor/CounselorListSearch
 import CounselorSlashInfoCell from '@/components/counselor/CounselorSlashInfoCell';
 import DispatchStatusText from '@/components/counselor/DispatchStatusText';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
-import { displayContactPhone } from '@/lib/contactPrivacy';
-import { formatPhoneDisplayOr } from '@/lib/phoneFormat';
 import { counselingCodeTypeLabel } from '@/data/counselingCodeTypes';
 import {
   counselorListBodyRowClass,
@@ -52,7 +50,7 @@ import {
 import { stripAssessmentTitleDispatchCountSuffix } from '@/lib/counselorAssessmentResultDisplay';
 import { counselorClientProgressHref } from '@/lib/counselorClientRoutes';
 import { exportClientPortalItems } from '@/lib/clientPortalListExport';
-import { dispatchStatusDisplay } from '@/lib/dispatchRecipientDisplay';
+import { dispatchStatusDisplay, formatRecipientContactLine } from '@/lib/dispatchRecipientDisplay';
 import { INDIVIDUAL_COHORT_KEY } from '@/lib/monitoringRealtime';
 import { rememberCounselorAssessmentContext, rememberCounselorProgressFrom } from '@/lib/counselorNestedNav';
 import { consumeCounselorListSkipReload } from '@/lib/counselorListNavigationCache';
@@ -1164,6 +1162,17 @@ export default function CounselorClientList({
                       onSortLeft={() => toggleNameFieldSort('name')}
                       onSortRight={() => toggleNameFieldSort('code')}
                     />
+                    <SortableColumnHeader
+                      label="진행현황"
+                      sortKey="progress"
+                      activeKey={sortKey}
+                      direction={sortDir}
+                      onSort={toggleSort}
+                      className="whitespace-nowrap"
+                    />
+                    <th scope="col" className={`${counselorListThClass} whitespace-nowrap`}>
+                      <span className="block">연락처</span>
+                    </th>
                     <CounselDualFieldSortHeader
                       leftLabel="그룹명"
                       rightLabel="소속"
@@ -1176,22 +1185,6 @@ export default function CounselorClientList({
                     <SortableColumnHeader
                       label="발송현황"
                       sortKey="notifyStatus"
-                      activeKey={sortKey}
-                      direction={sortDir}
-                      onSort={toggleSort}
-                      className="whitespace-nowrap"
-                    />
-                    <SortableColumnHeader
-                      label="진행현황"
-                      sortKey="progress"
-                      activeKey={sortKey}
-                      direction={sortDir}
-                      onSort={toggleSort}
-                      className="whitespace-nowrap"
-                    />
-                    <SortableColumnHeader
-                      label="휴대폰"
-                      sortKey="phone"
                       activeKey={sortKey}
                       direction={sortDir}
                       onSort={toggleSort}
@@ -1219,10 +1212,7 @@ export default function CounselorClientList({
                   {paginatedItems.map((item, idx) => {
                     const progress = progressLabel(item);
                     const primaryAssessment = item.assessments[0];
-                    const phoneMasked = displayContactPhone(item.phone, false);
-                    const phoneFull = item.phone?.trim()
-                      ? formatPhoneDisplayOr(item.phone)
-                      : undefined;
+                    const contactLine = formatRecipientContactLine(item.phone, item.email);
                     const infoOrg = primaryAssessment
                       ? primaryAssessment.orgName || item.cohortName || '—'
                       : item.cohortName || '—';
@@ -1236,6 +1226,8 @@ export default function CounselorClientList({
                       notifyStatus: item.notifyStatus,
                       notifyError: item.notifyError,
                       notifyAt: item.notifyAt,
+                      notifySentVia: item.notifySentVia,
+                      notifyKind: item.notifyKind,
                     });
                     const isSelected = selected.has(item.portalId);
 
@@ -1315,6 +1307,18 @@ export default function CounselorClientList({
                           />
                         </td>
                         <td
+                          className={`whitespace-nowrap ${counselorListTdClass} ${rowClickable ? 'cursor-pointer' : ''} ${progress.className}`}
+                          onClick={rowClickable ? () => goToProgress(item) : undefined}
+                        >
+                          {progress.text}
+                        </td>
+                        <td
+                          className={`max-w-[14rem] ${counselorListTdClass} ${rowClickable ? 'cursor-pointer' : ''} text-slate-300`}
+                          onClick={rowClickable ? () => goToProgress(item) : undefined}
+                        >
+                          <span className={`block truncate ${cellInteractionClass}`}>{contactLine}</span>
+                        </td>
+                        <td
                           className={`max-w-[14rem] ${counselorListTdClass} ${rowClickable ? 'cursor-pointer' : ''}`}
                           onClick={rowClickable ? () => goToProgress(item) : undefined}
                         >
@@ -1336,19 +1340,6 @@ export default function CounselorClientList({
                           onClick={rowClickable ? () => goToProgress(item) : undefined}
                         >
                           <DispatchStatusText value={dispatchViewForRow} />
-                        </td>
-                        <td
-                          className={`whitespace-nowrap ${counselorListTdClass} ${rowClickable ? 'cursor-pointer' : ''} ${progress.className}`}
-                          onClick={rowClickable ? () => goToProgress(item) : undefined}
-                        >
-                          {progress.text}
-                        </td>
-                        <td
-                          className={`whitespace-nowrap ${counselorListTdClass} ${rowClickable ? 'cursor-pointer' : ''} text-slate-300 tabular-nums`}
-                          onClick={rowClickable ? () => goToProgress(item) : undefined}
-                        >
-                          {phoneMasked}
-                          {phoneFull ? <span className="sr-only">{phoneFull}</span> : null}
                         </td>
                         <td
                           className={`whitespace-nowrap ${counselorListTdClass} ${rowClickable ? 'cursor-pointer' : ''} text-center text-slate-200`}

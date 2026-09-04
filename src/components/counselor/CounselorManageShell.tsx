@@ -18,6 +18,7 @@ import { clearAssessmentListSearch } from '@/lib/counselorAssessmentListSearch';
 import { getAppRoleSync, isAdmin } from '@/utils/roleUtils';
 import {
   COUNSELOR_ASSESSMENT_CODE_SLUG,
+  COUNSELOR_DISPATCH_MGMT_SLUG,
   getCounselorCategoryDefaultHref,
   isMenuItemActive,
   resolveCounselorCategorySlugForPath,
@@ -101,7 +102,7 @@ export default function CounselorManageShell({ children }: Props) {
                 </div>
 
                 {expanded ? (
-                  <div className="ml-2 mt-0.5 space-y-1 border-l border-white/10 pl-1.5">
+                  <div className="mt-0.5 space-y-1 pl-11">
                     {category.subcategories.map((sub) => {
                       if (sub.adminOnly && !adminUser) return null;
                       const visibleItems = sub.items.filter((item) => !item.adminOnly || adminUser);
@@ -174,7 +175,7 @@ export default function CounselorManageShell({ children }: Props) {
                                         clearAssessmentListSearch();
                                       }
                                     }}
-                                    className={`block truncate rounded-md px-2 py-1 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${
+                                    className={`block truncate rounded-md py-1 pl-0 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${
                                       active
                                         ? 'bg-sky-600/30 font-semibold text-sky-100'
                                         : 'text-slate-300 hover:bg-white/[0.06] hover:text-white'
@@ -206,7 +207,7 @@ export default function CounselorManageShell({ children }: Props) {
                                           clearAssessmentListSearch();
                                         }
                                       }}
-                                      className={`block truncate rounded-md py-1 pl-3 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${
+                                      className={`block truncate rounded-md py-1 pl-4 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${
                                         nestedActive
                                           ? 'bg-sky-600/30 font-semibold text-sky-100'
                                           : 'text-slate-300 hover:bg-white/[0.06] hover:text-white'
@@ -243,7 +244,7 @@ export default function CounselorManageShell({ children }: Props) {
                                             );
                                           }
                                         }}
-                                        className={`block truncate rounded-md py-1 pl-3 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${
+                                        className={`block truncate rounded-md py-1 pl-4 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${
                                           ctxActive
                                             ? 'bg-sky-600/30 font-semibold text-sky-100'
                                             : 'text-slate-400 hover:bg-white/[0.06] hover:text-white'
@@ -267,7 +268,7 @@ export default function CounselorManageShell({ children }: Props) {
                                   <li key={`${item.href}-${nested.label}`}>
                                     <AuthLink
                                       href={href}
-                                      className={`block truncate rounded-md py-1 pl-3 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${
+                                      className={`block truncate rounded-md py-1 pl-4 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${
                                         nestedActive
                                           ? 'bg-sky-600/30 font-semibold text-sky-100'
                                           : 'text-slate-300 hover:bg-white/[0.06] hover:text-white'
@@ -312,6 +313,9 @@ function getCategoryEntryHref(
 ): string {
   if (category.slug === 'data' && adminUser) {
     return PERMANENTLY_DELETED_ASSESSMENTS_HREF;
+  }
+  if (category.slug === COUNSELOR_DISPATCH_MGMT_SLUG) {
+    return '/counselor/clients';
   }
   return getCounselorCategoryDefaultHref(category.slug);
 }

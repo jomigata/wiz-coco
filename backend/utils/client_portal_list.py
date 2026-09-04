@@ -232,6 +232,7 @@ def list_counselor_client_portals(
                 "notifyStatus": notify_status,
                 "notifyError": notify_error,
                 "notifyAt": notify_at,
+                "notifySentVia": notify_snap.get("sentVia") or "",
                 "notifyKind": notify_snap.get("notifyKind") or "initial",
                 "lastLoginAt": _iso_timestamp(pdata.get("lastLoginAt")),
                 "createdAt": _iso_timestamp(pdata.get("createdAt")),

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -8,7 +8,7 @@ import {
   isValidAccessCodeInput,
   normalizeAccessCodeInput,
 } from '@/lib/accessCodeFormat';
-import { normalizeRecipientPhone } from '@/lib/phoneFormat';
+import { normalizeRecipientPhone, formatPhoneWhileTyping, phoneInputCaretIndex } from '@/lib/phoneFormat';
 import { verifyPortalMagicToken } from '@/lib/clientPortalApi';
 import { persistClientPortalSession } from '@/lib/clientPortalSession';
 import { clearJoinGuestSession } from '@/lib/joinGuestSession';
@@ -61,6 +61,7 @@ export default function ClaimMyCodePage() {
   const [loading, setLoading] = useState(false);
   const [enteringPortal, setEnteringPortal] = useState(false);
   const [result, setResult] = useState<ClaimResult | null>(null);
+  const phoneInputRef = useRef<HTMLInputElement>(null);
 
   const normalizedJoinCode = normalizeAccessCodeInput(joinCode);
   const phoneNorm = normalizeRecipientPhone(phone);
@@ -239,15 +240,26 @@ export default function ClaimMyCodePage() {
                   휴대폰번호
                 </label>
                 <input
+                  ref={phoneInputRef}
                   id="claim-phone"
                   name="claim_phone"
                   type="tel"
-                  inputMode="tel"
+                  inputMode="numeric"
                   autoComplete="tel"
-                  placeholder="휴대폰번호 입력"
-                  className={`w-full rounded-xl px-4 py-3 text-center focus:outline-none focus:ring-2 ${t.input}`}
+                  autoFocus
+                  placeholder="010-0000-0000"
+                  className={`w-full rounded-xl px-4 py-3 text-center tracking-wider focus:outline-none focus:ring-2 ${t.input}`}
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  onChange={(e) => {
+                    const formatted = formatPhoneWhileTyping(e.target.value);
+                    setPhone(formatted);
+                    requestAnimationFrame(() => {
+                      const el = phoneInputRef.current;
+                      if (!el) return;
+                      const pos = phoneInputCaretIndex(formatted);
+                      el.setSelectionRange(pos, pos);
+                    });
+                  }}
                   disabled={loading}
                 />
               </div>

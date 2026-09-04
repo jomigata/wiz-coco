@@ -156,15 +156,6 @@ export function getAssessmentListContextNestedItems(
     });
   }
 
-  if (path.startsWith('/counselor/assessments/progress') && progressFrom !== 'clients') {
-    items.push({
-      order: 50,
-      label: '상담진행 현황',
-      href: buildProgressHref(assessmentId, search),
-      isActive: (p) => p.startsWith('/counselor/assessments/progress'),
-    });
-  }
-
   if (path.startsWith('/counselor/assessments/edit')) {
     items.push({
       order: 51,
@@ -250,26 +241,37 @@ export function getAssessmentsParentSubmenuItems(options?: {
   pathname?: string;
   search?: string;
 }): CounselorParentSubmenuItem[] {
+  const path = options?.pathname ? normalizeCounselorPath(options.pathname) : '';
   const assessmentId =
     options?.pathname != null
       ? resolveAssessmentContextId(options.pathname, options.search || '')
       : null;
+  const progressFrom = options?.pathname
+    ? resolveCounselorProgressFrom(options.pathname, options.search || '')
+    : 'assessments';
   const progressHref = buildProgressHref(assessmentId, options?.search || '?from=assessments');
 
-  const items: CounselorParentSubmenuItem[] = [
-    {
+  const items: CounselorParentSubmenuItem[] = [];
+
+  if (
+    assessmentId &&
+    progressFrom !== 'clients' &&
+    path.startsWith('/counselor/assessments/progress')
+  ) {
+    items.push({
       order: 0,
       label: '상담진행 현황',
       href: progressHref,
       isActive: (p) => p.startsWith('/counselor/assessments/progress'),
-    },
-    {
-      order: 1,
-      label: '상담코드 생성',
-      href: ASSESSMENTS_NEW_HREF,
-      isActive: (p) => p.startsWith(ASSESSMENTS_NEW_HREF),
-    },
-  ];
+    });
+  }
+
+  items.push({
+    order: 1,
+    label: '상담코드 생성',
+    href: ASSESSMENTS_NEW_HREF,
+    isActive: (p) => p.startsWith(ASSESSMENTS_NEW_HREF),
+  });
   if (options?.admin) {
     items.push({
       order: 55,
