@@ -44,6 +44,7 @@ on:
 env:
   NODE_VERSION: '20.x'
   FIREBASE_PROJECT_ID: 'wiz-coco'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
 concurrency:
   group: deploy-firebase-${{ github.ref }}
@@ -86,7 +87,18 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
 
-      - uses: dorny/paths-filter@v3
+      # workflow_dispatch에는 before SHA가 없어 paths-filter 경고 발생 → 수동은 deploy_mode로 범위 결정
+      - name: Manual deploy — skip path diff
+        if: github.event_name == 'workflow_dispatch'
+        id: changes
+        run: |
+          echo "hosting=true" >> "$GITHUB_OUTPUT"
+          echo "functions=false" >> "$GITHUB_OUTPUT"
+          echo "firestore=false" >> "$GITHUB_OUTPUT"
+          echo "storage=false" >> "$GITHUB_OUTPUT"
+
+      - uses: dorny/paths-filter@v4
+        if: github.event_name != 'workflow_dispatch'
         id: changes
         with:
           filters: |
