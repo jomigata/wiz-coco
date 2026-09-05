@@ -16,6 +16,42 @@ export type DispatchDisplayRecipient = {
   requiredCount?: number | null;
 };
 
+/** 발송성공·완료 진행현황 공통 색상 */
+export const DISPATCH_SUCCESS_TEXT_CLASS = 'text-emerald-300';
+export const RECIPIENT_PROGRESS_COMPLETE_CLASS = 'text-emerald-300';
+export const RECIPIENT_PROGRESS_NOT_STARTED_CLASS = 'text-red-400';
+
+export function recipientProgressDisplay(input: {
+  testStatus?: string | null;
+  completedCount?: number | null;
+  requiredCount?: number | null;
+}): { text: string; className: string } {
+  const completed = input.completedCount ?? 0;
+  const total = input.requiredCount ?? 0;
+  const status = (input.testStatus || '').trim();
+
+  if (status === 'completed' || (total > 0 && completed >= total)) {
+    return {
+      text: `완료 (${completed}/${total})`,
+      className: `font-medium ${RECIPIENT_PROGRESS_COMPLETE_CLASS}`,
+    };
+  }
+  if (status === 'in_progress' || (completed > 0 && total > 0 && completed < total)) {
+    const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+    return {
+      text: `진행 ${pct}% (${completed}/${total})`,
+      className: 'font-medium text-sky-200',
+    };
+  }
+  if (total <= 0) {
+    return { text: '검사 없음', className: 'font-medium text-slate-400' };
+  }
+  return {
+    text: `미시작 (0/${total})`,
+    className: `font-medium ${RECIPIENT_PROGRESS_NOT_STARTED_CLASS}`,
+  };
+}
+
 function notifyErrorHint(error: string | null | undefined): string | undefined {
   const err = (error || '').trim();
   if (!err) return undefined;
@@ -70,12 +106,6 @@ function phoneChannelLabel(flags: ReturnType<typeof parseSentViaFlags>): string 
   if (flags.alimtalkOk) return '알림톡';
   if (flags.smsOk) return '문자';
   return '휴대폰';
-}
-
-function phoneDeliveryMethodSuffix(via: ReturnType<typeof parseSentViaFlags>): string {
-  if (via.alimtalkOk) return '알림톡';
-  if (via.smsOk) return '문자';
-  return '';
 }
 
 export function formatRecipientContactLine(
@@ -318,20 +348,12 @@ export function dispatchStatusDisplay(r: DispatchDisplayRecipient): DispatchStat
       else if (hasEmail && !hasPhone) title = '이메일로 발송됨';
       else if (status === 'partial') title = notifyErrorHint(r.notifyError) || '일부 채널만 발송되었습니다.';
 
-      const via = parseSentViaFlags(r.notifySentVia);
-      let mainText = dispatchSuccessLabel(kindPrefix);
-      if (hasPhone) {
-        const phoneSuffix = phoneDeliveryMethodSuffix(via);
-        const phoneOk = phoneChannelOutcome(status, via, parseNotifyErrors(r.notifyError)) === 'ok';
-        if (phoneSuffix && phoneOk) {
-          mainText = `${mainText} ${phoneSuffix}`;
-        }
-      }
+      const mainText = dispatchSuccessLabel(kindPrefix);
 
       return statusView(
         mainText,
         detailParts,
-        'text-emerald-300',
+        DISPATCH_SUCCESS_TEXT_CLASS,
         title,
       );
     }
@@ -374,14 +396,11 @@ export function dispatchStatusDisplay(r: DispatchDisplayRecipient): DispatchStat
 }
 
 export function testSummary(r: DispatchDisplayRecipient): { text: string; className: string } {
-  const required = r.requiredCount ?? 0;
-  const completed = r.completedCount ?? 0;
-  const allComplete =
-    r.testStatus === 'completed' || (required > 0 && completed >= required);
-  if (allComplete) {
-    return { text: '검사완료', className: 'text-emerald-300' };
-  }
-  return { text: '미실시', className: 'text-red-400' };
+  return recipientProgressDisplay({
+    testStatus: r.testStatus,
+    completedCount: r.completedCount,
+    requiredCount: r.requiredCount,
+  });
 }
 
 export function formatNotifyDate(iso: string | null | undefined): string {

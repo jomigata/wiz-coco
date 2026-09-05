@@ -262,6 +262,12 @@ export function getCounselorCategoryHubHref(slug: string): string {
   return `/counselor/hub/${slug}/`;
 }
 
+/** 상단·좌측 메뉴 대분류 클릭 시 실제 이동 URL (허브 우회) */
+export function getCounselorCategoryEntryHref(slug: string): string {
+  if (slug === COUNSELOR_DISPATCH_MGMT_SLUG) return '/counselor/clients';
+  return getCounselorCategoryHubHref(slug);
+}
+
 export const COUNSELOR_MAIN_HREF = '/counselor';
 
 export const COUNSELOR_SALES_HUB_SLUG = 'sales';

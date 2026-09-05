@@ -15,14 +15,14 @@ import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import CounselorListPagination from '@/components/counselor/CounselorListPagination';
 import CounselorListSearchInput from '@/components/counselor/CounselorListSearchInput';
 import CounselorSlashInfoCell from '@/components/counselor/CounselorSlashInfoCell';
+import CounselorProgressMetricsInline from '@/components/counselor/CounselorProgressMetricsInline';
 import {
   assessmentGroupTitleParts,
-  assessmentProgressDisplay,
   resultStatusCounts,
 } from '@/lib/counselorAssessmentResultDisplay';
 import {
   normalizePublicClaimChannel,
-  PUBLIC_CLAIM_CHANNEL_OPTIONS,
+  PUBLIC_CLAIM_CHANNEL_EMAIL,
 } from '@/lib/publicClaimDelivery';
 import AssessmentAddRecipientModal, {
   buildContextFromAssessment,
@@ -79,9 +79,7 @@ function assessmentInfoLabel(a: CounselorAssessment): string {
 
 function formatAssessmentDeliveryMethod(a: CounselorAssessment): string {
   const channel = normalizePublicClaimChannel(a.publicClaimChannel);
-  return (
-    PUBLIC_CLAIM_CHANNEL_OPTIONS.find((opt) => opt.value === channel)?.label || '휴대폰(카톡/문자)'
-  );
+  return channel === PUBLIC_CLAIM_CHANNEL_EMAIL ? '이메일' : '휴대폰';
 }
 
 function assessmentHasPendingDispatch(a: CounselorAssessment): boolean {
@@ -804,7 +802,7 @@ export default function AssessmentList({
               </thead>
               <tbody>
                 {paginatedItems.map((a, idx) => {
-                  const progress = assessmentProgressDisplay(a);
+                  const { testComplete, testIncomplete, dispatchTotal } = resultStatusCounts(a);
                   const expired = isExpired(a.usageEndDate);
                   const { primary: infoPrimary, secondary: infoSecondary } = assessmentGroupTitleParts(a);
                   const isSelected = selected.has(a.id);
@@ -860,9 +858,16 @@ export default function AssessmentList({
                         {formatAssessmentDeliveryMethod(a)}
                       </td>
                       <td
-                        className={`whitespace-nowrap ${counselorListTdCompactClass} text-center cursor-default tabular-nums ${progress.className}`}
+                        className={`whitespace-nowrap ${counselorListTdCompactClass} text-center cursor-default tabular-nums`}
                       >
-                        {progress.text}
+                        <CounselorProgressMetricsInline
+                          totalClients={dispatchTotal}
+                          showTotalClients={false}
+                          items={[
+                            { label: '검사완료', value: testComplete, tone: 'success' },
+                            { label: '미완료', value: testIncomplete, tone: 'danger' },
+                          ]}
+                        />
                       </td>
                       <td
                         className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer text-center ${expired ? 'text-red-400' : ''}`}

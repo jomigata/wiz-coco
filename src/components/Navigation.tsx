@@ -13,7 +13,7 @@ import { useCounselorApplicationNotificationCount } from '@/hooks/useCounselorAp
 import { getVisibleTestMenuItems, TestCategory, TestSubcategory, TEST_CATEGORY_SLUGS, TEST_SUBCATEGORY_SLUGS } from '@/data/psychologyTestMenu';
 import { counselingMenuCategories, COUNSELING_MAIN_HREF } from '@/data/counselingMenu';
 import { aiMindAssistantMenuCategories, AI_MIND_ASSISTANT_MAIN_HREF } from '@/data/aiMindAssistantMenu';
-import { counselorMenuCategories, getCounselorCategoryHubHref } from '@/data/counselorMenu';
+import { counselorMenuCategories, getCounselorCategoryEntryHref } from '@/data/counselorMenu';
 import { adminMenuCategories, ADMIN_MAIN_HREF, withAdminMenuBadges } from '@/data/adminMenu';
 import { useAutoScroll } from '@/hooks/useAutoScroll';
 import { useHorizontalMenuPlacement } from '@/hooks/useHorizontalMenuPlacement';
@@ -1084,7 +1084,7 @@ export default function Navigation() {
                     {counselorMenuCategories.map((category) => (
                       <Link
                         key={category.slug}
-                        href={getCounselorCategoryHubHref(category.slug)}
+                        href={getCounselorCategoryEntryHref(category.slug)}
                         className="flex items-center gap-3 rounded-xl border border-white/10 px-4 py-3 transition-all duration-300 hover:border-white/30 hover:bg-blue-500/10"
                         onClick={() => setIsMobileMenuOpen(false)}
                       >

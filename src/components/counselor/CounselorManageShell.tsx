@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import AuthLink from '@/components/auth/AuthLink';
-import { counselorMenuCategories, getCounselorCategoryHubHref } from '@/data/counselorMenu';
+import { counselorMenuCategories, getCounselorCategoryEntryHref } from '@/data/counselorMenu';
 import {
   getAssessmentListContextNestedItems,
   getAssessmentsParentSubmenuItems,
@@ -18,8 +18,6 @@ import { clearAssessmentListSearch } from '@/lib/counselorAssessmentListSearch';
 import { getAppRoleSync, isAdmin } from '@/utils/roleUtils';
 import {
   COUNSELOR_ASSESSMENT_CODE_SLUG,
-  COUNSELOR_DISPATCH_MGMT_SLUG,
-  getCounselorCategoryDefaultHref,
   isMenuItemActive,
   resolveCounselorCategorySlugForPath,
 } from '@/lib/counselorManageShell';
@@ -83,26 +81,28 @@ export default function CounselorManageShell({ children }: Props) {
                   >
                     <span className="text-[10px]">{expanded ? '▼' : '▶'}</span>
                   </button>
-                  <AuthLink
-                    href={categoryEntryHref}
-                    onClick={() => setExpandedSlug(category.slug)}
-                    className={`min-w-0 flex-1 rounded-md px-2 py-1.5 text-left font-normal transition-colors hover:bg-white/[0.06] ${
-                      activeCategorySlug === category.slug && !activeNested
-                        ? 'bg-sky-500/15 text-sky-100'
-                        : 'text-slate-200'
-                    }`}
-                  >
-                    <span className="mr-1" aria-hidden>
-                      {category.icon}
-                    </span>
-                    <span className="text-xs leading-tight sm:text-[13px]">
-                      {stripCategoryNumber(category.category)}
-                    </span>
-                  </AuthLink>
-                </div>
+                  <div className="min-w-0 flex-1">
+                    <AuthLink
+                      href={categoryEntryHref}
+                      onClick={() => setExpandedSlug(category.slug)}
+                      className={`block rounded-md px-2 py-1.5 font-normal transition-colors hover:bg-white/[0.06] ${
+                        activeCategorySlug === category.slug && !activeNested
+                          ? 'bg-sky-500/15 text-sky-100'
+                          : 'text-slate-200'
+                      }`}
+                    >
+                      <span className="inline-flex min-w-0 items-center">
+                        <span className="mr-1 w-5 shrink-0 text-center" aria-hidden>
+                          {category.icon}
+                        </span>
+                        <span className="text-xs leading-tight sm:text-[13px]">
+                          {stripCategoryNumber(category.category)}
+                        </span>
+                      </span>
+                    </AuthLink>
 
-                {expanded ? (
-                  <div className="mt-0.5 space-y-1 pl-11">
+                    {expanded ? (
+                      <div className="mt-0.5 space-y-1 pl-6">
                     {category.subcategories.map((sub) => {
                       if (sub.adminOnly && !adminUser) return null;
                       const visibleItems = sub.items.filter((item) => !item.adminOnly || adminUser);
@@ -207,7 +207,7 @@ export default function CounselorManageShell({ children }: Props) {
                                           clearAssessmentListSearch();
                                         }
                                       }}
-                                      className={`block truncate rounded-md py-1 pl-4 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${
+                                      className={`block truncate rounded-md py-1 pl-5 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${
                                         nestedActive
                                           ? 'bg-sky-600/30 font-semibold text-sky-100'
                                           : 'text-slate-300 hover:bg-white/[0.06] hover:text-white'
@@ -244,7 +244,7 @@ export default function CounselorManageShell({ children }: Props) {
                                             );
                                           }
                                         }}
-                                        className={`block truncate rounded-md py-1 pl-4 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${
+                                        className={`block truncate rounded-md py-1 pl-5 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${
                                           ctxActive
                                             ? 'bg-sky-600/30 font-semibold text-sky-100'
                                             : 'text-slate-400 hover:bg-white/[0.06] hover:text-white'
@@ -268,7 +268,7 @@ export default function CounselorManageShell({ children }: Props) {
                                   <li key={`${item.href}-${nested.label}`}>
                                     <AuthLink
                                       href={href}
-                                      className={`block truncate rounded-md py-1 pl-4 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${
+                                      className={`block truncate rounded-md py-1 pl-5 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${
                                         nestedActive
                                           ? 'bg-sky-600/30 font-semibold text-sky-100'
                                           : 'text-slate-300 hover:bg-white/[0.06] hover:text-white'
@@ -286,8 +286,10 @@ export default function CounselorManageShell({ children }: Props) {
                         </div>
                       );
                     })}
+                      </div>
+                    ) : null}
                   </div>
-                ) : null}
+                </div>
               </div>
             );
           })}
@@ -314,8 +316,5 @@ function getCategoryEntryHref(
   if (category.slug === 'data' && adminUser) {
     return PERMANENTLY_DELETED_ASSESSMENTS_HREF;
   }
-  if (category.slug === COUNSELOR_DISPATCH_MGMT_SLUG) {
-    return '/counselor/clients';
-  }
-  return getCounselorCategoryDefaultHref(category.slug);
+  return getCounselorCategoryEntryHref(category.slug);
 }

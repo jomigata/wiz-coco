@@ -227,6 +227,16 @@ function progressStatusForRow(recipient: DispatchRecipient): { text: string; cla
   return testSummary(recipient);
 }
 
+function recipientContactDisplay(
+  r: DispatchRecipient,
+  revealed: boolean,
+): string {
+  const parts: string[] = [];
+  if (r.phone?.trim()) parts.push(displayContactPhone(r.phone, revealed));
+  if (r.email?.trim()) parts.push(displayContactEmail(r.email, revealed));
+  return parts.length ? parts.join(' / ') : '—';
+}
+
 function dispatchStatusForRow(recipient: DispatchRecipient): DispatchStatusView {
   return dispatchStatusDisplay(recipient);
 }
@@ -1103,6 +1113,14 @@ export default function AssessmentDispatchPanel({
   if (!data || !displayData) return null;
 
   const adminClientProgressView = adminUser && entryFrom === 'clients';
+  const clientsMergedContact = entryFrom === 'clients';
+  const expandedDetailColSpan = adminClientProgressView
+    ? clientsMergedContact
+      ? 5
+      : 6
+    : clientsMergedContact
+      ? 6
+      : 7;
 
   const backHref =
     entryFrom === 'deleted-recipients'
@@ -1249,8 +1267,14 @@ export default function AssessmentDispatchPanel({
                   {!adminClientProgressView ? <col className="w-10" /> : null}
                   <col className="w-36" />
                   <col className="w-36" />
-                  <col className="w-32" />
-                  <col className="w-52" />
+                  {clientsMergedContact ? (
+                    <col className="w-52" />
+                  ) : (
+                    <>
+                      <col className="w-32" />
+                      <col className="w-52" />
+                    </>
+                  )}
                   <col className="w-28" />
                   <col className="w-36" />
                   {!adminClientProgressView ? <col className="w-16" /> : null}
@@ -1289,22 +1313,30 @@ export default function AssessmentDispatchPanel({
                   onSort={toggleSort}
                   className="w-36"
                 />
-                <SortableColumnHeader
-                  label="휴대폰"
-                  sortKey="phone"
-                  activeKey={sortKey}
-                  direction={sortDir}
-                  onSort={toggleSort}
-                  className="w-32"
-                />
-                <SortableColumnHeader
-                  label="이메일"
-                  sortKey="email"
-                  activeKey={sortKey}
-                  direction={sortDir}
-                  onSort={toggleSort}
-                  className="w-52"
-                />
+                {clientsMergedContact ? (
+                  <th scope="col" className={`${counselorListThGrayClass} w-52 whitespace-nowrap`}>
+                    연락처
+                  </th>
+                ) : (
+                  <>
+                    <SortableColumnHeader
+                      label="휴대폰"
+                      sortKey="phone"
+                      activeKey={sortKey}
+                      direction={sortDir}
+                      onSort={toggleSort}
+                      className="w-32"
+                    />
+                    <SortableColumnHeader
+                      label="이메일"
+                      sortKey="email"
+                      activeKey={sortKey}
+                      direction={sortDir}
+                      onSort={toggleSort}
+                      className="w-52"
+                    />
+                  </>
+                )}
                 <SortableColumnHeader
                   label="발송현황"
                   sortKey="notifyStatus"
@@ -1383,18 +1415,26 @@ export default function AssessmentDispatchPanel({
                         </span>
                         <span>{summary.text}</span>
                       </td>
-                      <td className="px-3 py-2 text-slate-300 align-top whitespace-nowrap tabular-nums">
-                        {r.phone?.trim() ? displayContactPhone(r.phone, contactRevealed) : '—'}
-                      </td>
-                      <td className="px-3 py-2 text-slate-300 align-top truncate tabular-nums">
-                        {r.email?.trim() ? (
-                          displayContactEmail(r.email, contactRevealed)
-                        ) : (
-                          <span className="text-amber-300/90" title="이메일 주소 없음">
-                            없음
-                          </span>
-                        )}
-                      </td>
+                      {clientsMergedContact ? (
+                        <td className="px-3 py-2 text-slate-300 align-top whitespace-nowrap tabular-nums">
+                          {recipientContactDisplay(r, contactRevealed)}
+                        </td>
+                      ) : (
+                        <>
+                          <td className="px-3 py-2 text-slate-300 align-top whitespace-nowrap tabular-nums">
+                            {r.phone?.trim() ? displayContactPhone(r.phone, contactRevealed) : '—'}
+                          </td>
+                          <td className="px-3 py-2 text-slate-300 align-top truncate tabular-nums">
+                            {r.email?.trim() ? (
+                              displayContactEmail(r.email, contactRevealed)
+                            ) : (
+                              <span className="text-amber-300/90" title="이메일 주소 없음">
+                                없음
+                              </span>
+                            )}
+                          </td>
+                        </>
+                      )}
                       <td
                         className="px-3 py-2.5 align-top whitespace-nowrap text-sm"
                         title={fieldPending.notifyStatus ? undefined : notify.title}
@@ -1428,7 +1468,7 @@ export default function AssessmentDispatchPanel({
                           aria-hidden="true"
                         />
                         <td
-                          colSpan={adminClientProgressView ? 6 : 7}
+                          colSpan={expandedDetailColSpan}
                           className="border-b border-slate-700/60 bg-slate-900/20 px-3 py-3 pb-4 align-top"
                         >
                           {tests.length === 0 ? (

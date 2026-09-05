@@ -50,7 +50,7 @@ import {
 import { stripAssessmentTitleDispatchCountSuffix } from '@/lib/counselorAssessmentResultDisplay';
 import { counselorClientProgressHref } from '@/lib/counselorClientRoutes';
 import { exportClientPortalItems } from '@/lib/clientPortalListExport';
-import { dispatchStatusDisplay, formatRecipientContactLine } from '@/lib/dispatchRecipientDisplay';
+import { dispatchStatusDisplay, formatRecipientContactLine, recipientProgressDisplay } from '@/lib/dispatchRecipientDisplay';
 import { INDIVIDUAL_COHORT_KEY } from '@/lib/monitoringRealtime';
 import { rememberCounselorAssessmentContext, rememberCounselorProgressFrom } from '@/lib/counselorNestedNav';
 import { consumeCounselorListSkipReload } from '@/lib/counselorListNavigationCache';
@@ -145,26 +145,27 @@ function formatUsageEndDate(iso: string | undefined): string {
 }
 
 function progressLabel(item: CounselorClientPortalListItem): { text: string; className: string } {
-  const { label, percent, completedTests, totalTests } = item.progress;
-  if (label === 'completed') {
+  if (item.progress.label === 'no_tests') {
+    return { text: '검사 없음', className: 'font-medium text-slate-400' };
+  }
+  if (item.progress.label === 'in_progress') {
+    const base = recipientProgressDisplay({
+      testStatus: 'in_progress',
+      completedCount: item.progress.completedTests,
+      requiredCount: item.progress.totalTests,
+    });
     return {
-      text: `완료 (${completedTests}/${totalTests})`,
-      className: 'font-medium text-emerald-200',
+      text: `진행 ${item.progress.percent}% (${item.progress.completedTests}/${item.progress.totalTests})`,
+      className: base.className,
     };
   }
-  if (label === 'in_progress') {
-    return {
-      text: `진행 ${percent}% (${completedTests}/${totalTests})`,
-      className: 'font-medium text-sky-200',
-    };
-  }
-  if (label === 'not_started') {
-    return {
-      text: `미시작 (0/${totalTests})`,
-      className: 'font-medium text-amber-200',
-    };
-  }
-  return { text: '검사 없음', className: 'font-medium text-slate-400' };
+  const testStatus =
+    item.progress.label === 'completed' ? 'completed' : 'not_started';
+  return recipientProgressDisplay({
+    testStatus,
+    completedCount: item.progress.completedTests,
+    requiredCount: item.progress.totalTests,
+  });
 }
 
 function progressSortValue(item: CounselorClientPortalListItem): number {

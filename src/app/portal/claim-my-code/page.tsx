@@ -8,7 +8,7 @@ import {
   isValidAccessCodeInput,
   normalizeAccessCodeInput,
 } from '@/lib/accessCodeFormat';
-import { normalizeRecipientPhone, formatPhoneWhileTyping, phoneInputCaretIndex } from '@/lib/phoneFormat';
+import { normalizeRecipientPhone, formatPhoneWhileTyping, phoneInputCaretIndex, PHONE_INPUT_MASK_PLACEHOLDER } from '@/lib/phoneFormat';
 import { verifyPortalMagicToken } from '@/lib/clientPortalApi';
 import { persistClientPortalSession } from '@/lib/clientPortalSession';
 import { clearJoinGuestSession } from '@/lib/joinGuestSession';
@@ -189,7 +189,7 @@ export default function ClaimMyCodePage() {
             </button>
           </div>
         ) : step === 'contact' ? (
-          <form onSubmit={handleSendCode} className="space-y-4" autoComplete="off">
+          <form onSubmit={handleSendCode} className="space-y-4" autoComplete="off" lang="ko">
             <div className="rounded-xl border border-sky-400/25 bg-sky-500/10 px-4 py-5 text-center">
               <p className="text-xs font-medium tracking-widest text-sky-300/80">상담코드</p>
               <p className="mt-2 font-mono text-3xl font-bold tracking-[0.18em] text-sky-50 sm:text-4xl">
@@ -210,6 +210,9 @@ export default function ClaimMyCodePage() {
                 name="claim_display_name"
                 type="text"
                 autoComplete="off"
+                autoFocus
+                lang="ko"
+                inputMode="text"
                 placeholder="사용자 이름(가명) 입력"
                 className={`w-full rounded-xl px-4 py-3 text-center focus:outline-none focus:ring-2 ${t.input}`}
                 value={displayName}
@@ -246,8 +249,8 @@ export default function ClaimMyCodePage() {
                   type="tel"
                   inputMode="numeric"
                   autoComplete="tel"
-                  autoFocus
-                  placeholder="010-0000-0000"
+                  lang="ko"
+                  placeholder={PHONE_INPUT_MASK_PLACEHOLDER}
                   className={`w-full rounded-xl px-4 py-3 text-center tracking-wider focus:outline-none focus:ring-2 ${t.input}`}
                   value={phone}
                   onChange={(e) => {

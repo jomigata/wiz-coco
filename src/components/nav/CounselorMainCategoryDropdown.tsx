@@ -3,7 +3,7 @@
 import AuthLink from '@/components/auth/AuthLink';
 import type { RefObject } from 'react';
 import type { CounselorMainCategory } from '@/data/counselorMenu';
-import { getCounselorCategoryHubHref } from '@/data/counselorMenu';
+import { getCounselorCategoryEntryHref } from '@/data/counselorMenu';
 import { NAV_MEGA_MENU_BG } from '@/components/layout/appChromeTheme';
 
 type CounselorMainCategoryDropdownProps = {
@@ -35,7 +35,7 @@ export default function CounselorMainCategoryDropdown({
           {categories.map((category) => (
             <AuthLink
               key={category.slug}
-              href={getCounselorCategoryHubHref(category.slug)}
+              href={getCounselorCategoryEntryHref(category.slug)}
               className="group flex items-center gap-4 rounded-xl border-2 border-white/20 px-4 py-3 transition-all duration-300 hover:border-white"
               onClick={onCloseMenu}
             >

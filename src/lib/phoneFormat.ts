@@ -81,21 +81,35 @@ function formatDigitsWithDashes(digits: string): string | null {
   return null;
 }
 
-/** UI 입력 중 — 숫자만 받아 010-1234-5678 형식으로 포맷 (최대 11자리) */
+/** UI 입력 중 — 숫자만 받아 010-1234-5678 / 010-123-4567 형식 (최대 11자리) */
 export function formatPhoneWhileTyping(raw: string): string {
   const digits = normalizeRecipientPhone(raw).slice(0, 11);
   if (digits.length <= 3) return digits;
-  if (digits.length <= 7) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
-  return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
+  const head = digits.slice(0, 3);
+  if (digits.length <= 6) return `${head}-${digits.slice(3)}`;
+  if (digits.length === 11 && digits.startsWith('01')) {
+    const tail = digits.slice(3);
+    return `${head}-${tail.slice(0, 4)}-${tail.slice(4)}`;
+  }
+  const tail = digits.slice(3);
+  return `${head}-${tail.slice(0, 3)}-${tail.slice(3)}`;
 }
 
-/** formatPhoneWhileTyping 후 커서 위치 (하이픈 건너뜀) */
+/** formatPhoneWhileTyping 후 커서 위치 (하이픈 뒤) */
 export function phoneInputCaretIndex(formatted: string): number {
-  const digits = normalizeRecipientPhone(formatted).length;
-  if (digits <= 3) return digits;
-  if (digits <= 7) return digits + 1;
-  return digits + 2;
+  const digits = normalizeRecipientPhone(formatted);
+  const len = Math.min(digits.length, 11);
+  if (len <= 3) return len;
+  if (len <= 6) return len + 1;
+  if (len === 11 && digits.startsWith('01')) {
+    if (len <= 7) return len + 1;
+    return len + 2;
+  }
+  return len + 2;
 }
+
+/** claim 등 빈 입력칸 마스크 placeholder */
+export const PHONE_INPUT_MASK_PLACEHOLDER = '   -     -    ';
 
 /** UI·Excel 등 표시용. 빈 값이면 '' */
 export function formatPhoneDisplay(raw: unknown): string {

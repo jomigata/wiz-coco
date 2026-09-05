@@ -1,5 +1,11 @@
 import React from 'react';
-import type { DispatchStatusView } from '@/lib/dispatchRecipientDisplay';
+import type { ChannelDetailPart, DispatchStatusView } from '@/lib/dispatchRecipientDisplay';
+
+function detailPartClassName(part: ChannelDetailPart): string | undefined {
+  if (part.failed) return '!text-red-400 font-medium';
+  if (part.text.startsWith('이메일')) return 'text-white';
+  return undefined;
+}
 
 export default function DispatchStatusText({ value }: { value: DispatchStatusView }) {
   const { mainText, detailParts, className, title } = value;
@@ -13,7 +19,7 @@ export default function DispatchStatusText({ value }: { value: DispatchStatusVie
           {detailParts.map((part, index) => (
             <React.Fragment key={`${part.text}-${index}`}>
               {index > 0 ? '·' : null}
-              <span className={part.failed ? '!text-red-400 font-medium' : undefined}>{part.text}</span>
+              <span className={detailPartClassName(part)}>{part.text}</span>
             </React.Fragment>
           ))}
           {')'}
