@@ -1,5 +1,5 @@
-# Firebase Hosting / Functions 배포 (기본: 수동만 — push 시 GCP 과금 없음)
-# push 자동 배포: GitHub repo Variable `AUTO_DEPLOY_ON_PUSH` = `true` 일 때만
+# Firebase Hosting / Functions 배포
+# push 자동 배포: GitHub repo Variable `AUTO_DEPLOY_ON_PUSH` = `true` (저장소 기본 정책)
 name: 🚀 WizCoCo Deploy (Firebase)
 
 on:
@@ -90,7 +90,7 @@ jobs:
       # workflow_dispatch에는 before SHA가 없어 paths-filter 경고 발생 → 수동은 deploy_mode로 범위 결정
       - name: Manual deploy — skip path diff
         if: github.event_name == 'workflow_dispatch'
-        id: changes
+        id: changes_manual
         run: |
           echo "hosting=true" >> "$GITHUB_OUTPUT"
           echo "functions=false" >> "$GITHUB_OUTPUT"
@@ -99,7 +99,7 @@ jobs:
 
       - uses: dorny/paths-filter@v4
         if: github.event_name != 'workflow_dispatch'
-        id: changes
+        id: changes_paths
         with:
           filters: |
             hosting:
@@ -133,10 +133,10 @@ jobs:
         id: targets
         env:
           DEPLOY_MODE: ${{ github.event.inputs.deploy_mode || 'auto' }}
-          CH_HOSTING: ${{ steps.changes.outputs.hosting }}
-          CH_FUNCTIONS: ${{ steps.changes.outputs.functions }}
-          CH_FIRESTORE: ${{ steps.changes.outputs.firestore }}
-          CH_STORAGE: ${{ steps.changes.outputs.storage }}
+          CH_HOSTING: ${{ steps.changes_manual.outputs.hosting || steps.changes_paths.outputs.hosting }}
+          CH_FUNCTIONS: ${{ steps.changes_manual.outputs.functions || steps.changes_paths.outputs.functions }}
+          CH_FIRESTORE: ${{ steps.changes_manual.outputs.firestore || steps.changes_paths.outputs.firestore }}
+          CH_STORAGE: ${{ steps.changes_manual.outputs.storage || steps.changes_paths.outputs.storage }}
         run: |
           TARGETS=""
           DEPLOY_FUNCTIONS="false"

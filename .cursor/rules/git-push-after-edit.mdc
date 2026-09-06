@@ -24,9 +24,22 @@ alwaysApply: true
 
 ### 배포 (GitHub Actions 자동)
 
-- **`main` 브랜치에 `origin`으로 푸시되면** 저장소의 GitHub Actions(예: `.github/workflows/deploy.yml`)가 **자동으로 CI/CD·배포 파이프라인을 실행**한다.
-- 에이전트는 일반적으로 **로컬 `firebase deploy` / 수동 워크플로 실행을 사용자에게 요구하지 않는다.** 저장소 정책상 로컬 배포 스크립트가 비활성 메시지인 경우가 많으며, **원격 푸시가 배포 트리거**이다.
-- 사용자가 명시적으로 로컬 배포를 요청한 경우에만 해당 스크립트를 검토·실행한다.
+- **`main` 브랜치에 `origin`으로 푸시되면** GitHub Actions가 CI·배포 파이프라인을 실행한다.
+- 저장소 Variable **`AUTO_DEPLOY_ON_PUSH=true`** 이면 push 후 **Firebase Hosting**(`deploy.yml`)·**Cloud Run API**(`deploy-backend.yml`)가 실제 배포까지 진행한다.
+- 에이전트는 **로컬 `firebase deploy`를 사용자에게 요구하지 않는다.** 푸시 후 Actions로 배포한다.
+
+### 푸시·배포 후 필수 점검 (에이전트)
+
+코드·백엔드·프론트 등 **사이트에서 확인 가능한 변경**을 포함한 작업을 마친 뒤:
+
+1. `git push origin HEAD` 완료 후 **`gh run list --limit 5 --branch main`** 으로 최근 run 확인  
+2. 아래 워크플로가 **실패(빨간 X)** 가 아닌지, **gate만 성공하고 deploy job이 0초 스킵**이 아닌지 확인  
+   - `🚀 WizCoCo Deploy (Firebase)` — job **🏗️ Build & Deploy** 성공  
+   - `🚀 Deploy Flask API to Cloud Run` — job **deploy-backend** 성공 (`backend/**` 변경 시)  
+3. `deploy.yml` 워크플로 파일 오류(Invalid workflow file)면 **푸시 전에 수정**하고 재푸시  
+4. `backend/**`만 변경되어 Firebase deploy가 안 뜬 경우: **`gh workflow run deploy-backend.yml`** 로 API 배포  
+5. 배포 성공 후 **`https://wiz-coco.web.app/build-version.json`** 의 `sha`가 방금 푸시한 커밋 SHA(앞 7자 이상 일치)인지 확인  
+6. 사용자에게 **「사이트에서 테스트 가능」** 은 위 점검 통과 후에만 안내한다. 실패·스킵 시 원인과 조치를 보고한다.
 
 ### 푸시를 반드시 직접 실행하는 이유
 

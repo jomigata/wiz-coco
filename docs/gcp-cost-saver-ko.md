@@ -93,8 +93,8 @@ Console → **Cloud Storage** → `gcf-sources-*`, `gcf-artifacts-*`, `*_cloudbu
 ## `npm run deploy:auto` 와의 관계
 
 로컬 `deploy:auto`는 **git push**만 수행합니다.  
-`AUTO_DEPLOY_ON_PUSH=false`(기본)이면 push 후 **CI만** 돌고 GCP 배포는 **하지 않습니다**.  
-배포가 필요할 때 Actions에서 수동 Run 하세요.
+저장소 Variable **`AUTO_DEPLOY_ON_PUSH=true`** 이면 push 후 Firebase·Cloud Run까지 자동 배포됩니다 (에이전트 작업 기본).  
+비용 절감 모드로 되돌리려면 Variable을 `false`로 두고 Actions에서 수동 Run 하세요.
 
 ---
 
