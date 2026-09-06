@@ -11,7 +11,7 @@ import {
   writeCachedAssessmentDetail,
 } from '@/lib/counselorSessionCache';
 import { rememberCounselorAssessmentContext } from '@/lib/counselorNestedNav';
-import { ASSESSMENT_AFFILIATION_LABEL } from '@/lib/counselorOrgInput';
+import { ASSESSMENT_AFFILIATION_LABEL, ASSESSMENT_GROUP_NAME_LABEL } from '@/lib/counselorOrgInput';
 import { counselorAssessmentTestOptions } from '@/data/counselorAssessmentTests';
 import { COUNSELING_CODE_TYPES, type CounselingCodeType } from '@/data/counselingCodeTypes';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
@@ -48,6 +48,9 @@ export default function AssessmentEditForm({
   );
 
   const [title, setTitle] = useState(() => readCachedAssessmentDetail(assessmentId)?.title || '');
+  const [cohortName, setCohortName] = useState(
+    () => readCachedAssessmentDetail(assessmentId)?.cohortName || '',
+  );
   const [welcomeMessage, setWelcomeMessage] = useState(
     () => readCachedAssessmentDetail(assessmentId)?.welcomeMessage || '',
   );
@@ -87,6 +90,7 @@ export default function AssessmentEditForm({
         rememberCounselorAssessmentContext(assessmentId);
         setInitial(data);
         setTitle(data.title || '');
+        setCohortName(data.cohortName || '');
         setWelcomeMessage(data.welcomeMessage || '');
         setUsageEndDate((data.usageEndDate || '').trim());
         const category = (data.codeCategory || '').trim();
@@ -127,7 +131,7 @@ export default function AssessmentEditForm({
       observer.disconnect();
       window.removeEventListener('resize', syncRightHeight);
     };
-  }, [title, welcomeMessage, usageEndDate, codeCategory, initial, selectedTestIds.size]);
+  }, [title, cohortName, welcomeMessage, usageEndDate, initial, selectedTestIds.size]);
 
   const canSubmit = Boolean(user) && !authPending && !loading && !loadingData && initial;
 
@@ -145,12 +149,13 @@ export default function AssessmentEditForm({
     setError('');
     if (!initial) return;
     const trimmedTitle = title.trim();
-    if (!trimmedTitle) {
-      setError(`${ASSESSMENT_AFFILIATION_LABEL}을 입력해 주세요.`);
+    const trimmedCohortName = cohortName.trim();
+    if (!trimmedCohortName) {
+      setError(`${ASSESSMENT_GROUP_NAME_LABEL}을 입력해 주세요.`);
       return;
     }
-    if (!codeCategory) {
-      setError('상담유형을 선택해 주세요.');
+    if (!trimmedTitle) {
+      setError(`${ASSESSMENT_AFFILIATION_LABEL}을 입력해 주세요.`);
       return;
     }
     const testList = counselorAssessmentTestOptions
@@ -160,6 +165,7 @@ export default function AssessmentEditForm({
     try {
       await updateAssessment(assessmentId, {
         title: trimmedTitle,
+        cohortName: trimmedCohortName,
         targetAudience: initial.issueType === 'individual' ? '개인' : '그룹',
         welcomeMessage: welcomeMessage.trim(),
         usageEndDate: usageEndDate.trim(),
@@ -229,29 +235,20 @@ export default function AssessmentEditForm({
           >
             <div className="space-y-4">
               <div>
-                <label htmlFor="edit-code-category" className={`${FORM_LABEL} mb-1.5`}>
-                  상담유형 <span className="text-red-400">*</span>
+                <label htmlFor="edit-cohort-name" className={`${FORM_LABEL} mb-1.5`}>
+                  {ASSESSMENT_GROUP_NAME_LABEL} <span className="text-red-400">*</span>
                 </label>
-                <select
-                  id="edit-code-category"
+                <input
+                  id="edit-cohort-name"
+                  type="text"
                   className={`${FORM_INPUT_BORDERED} py-2 text-sm`}
-                  value={codeCategory}
-                  onChange={(e) => setCodeCategory(e.target.value as CounselingCodeType)}
+                  value={cohortName}
+                  onChange={(e) => setCohortName(e.target.value)}
                   disabled={loading}
                   required
-                >
-                  {COUNSELING_CODE_TYPES.map((t) => (
-                    <option key={t.value} value={t.value}>
-                      {t.label} — {t.description}
-                    </option>
-                  ))}
-                </select>
+                  maxLength={120}
+                />
               </div>
-              <PublicClaimChannelField
-                value={publicClaimChannel}
-                onChange={setPublicClaimChannel}
-                disabled={loading}
-              />
               <AssessmentSettingsFields
                 sections="meta"
                 compact
@@ -264,6 +261,11 @@ export default function AssessmentEditForm({
                 onUsageEndDateChange={setUsageEndDate}
                 selectedTestIds={selectedTestIds}
                 onToggleTest={toggleTest}
+                disabled={loading}
+              />
+              <PublicClaimChannelField
+                value={publicClaimChannel}
+                onChange={setPublicClaimChannel}
                 disabled={loading}
               />
             </div>

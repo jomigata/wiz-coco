@@ -4,6 +4,7 @@ import type { ChannelDetailPart, DispatchStatusView } from '@/lib/dispatchRecipi
 function detailPartClassName(part: ChannelDetailPart): string | undefined {
   if (part.failed) return '!text-red-400 font-medium';
   if (part.text.startsWith('이메일')) return 'text-white';
+  if (part.text.startsWith('알림톡') || part.text.startsWith('문자')) return 'text-amber-300';
   return undefined;
 }
 

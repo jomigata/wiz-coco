@@ -34,6 +34,13 @@ import CounselorPortalMoveDialog from '@/components/counselor/CounselorPortalMov
 import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
 import CounselorActionCompleteModal from '@/components/counselor/CounselorActionCompleteModal';
 import CounselorConfirmModal from '@/components/counselor/CounselorConfirmModal';
+import CounselorNotifyConfirmDialog from '@/components/counselor/CounselorNotifyConfirmDialog';
+import {
+  buildDispatchGroupsFromSelections,
+  executeGroupedDispatchNotify,
+  flattenDispatchRecipients,
+  type DispatchNotifyGroup,
+} from '@/lib/counselorBulkDispatch';
 import CounselorListBackLink from '@/components/counselor/CounselorListBackLink';
 import { DELETED_RECIPIENTS_HREF } from '@/lib/counselorNestedNav';
 import { LoadingMessage } from '@/components/ui/LoadingMessage';
@@ -50,7 +57,8 @@ import {
 import { stripAssessmentTitleDispatchCountSuffix } from '@/lib/counselorAssessmentResultDisplay';
 import { counselorClientProgressHref } from '@/lib/counselorClientRoutes';
 import { exportClientPortalItems } from '@/lib/clientPortalListExport';
-import { dispatchStatusDisplay, formatRecipientContactLine, recipientProgressDisplay } from '@/lib/dispatchRecipientDisplay';
+import RecipientContactCell from '@/components/counselor/RecipientContactCell';
+import { dispatchStatusDisplay, formatNotifyDate, recipientProgressDisplay } from '@/lib/dispatchRecipientDisplay';
 import { INDIVIDUAL_COHORT_KEY } from '@/lib/monitoringRealtime';
 import { rememberCounselorAssessmentContext, rememberCounselorProgressFrom } from '@/lib/counselorNestedNav';
 import { consumeCounselorListSkipReload } from '@/lib/counselorListNavigationCache';
@@ -526,6 +534,9 @@ export default function CounselorClientList({
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [usageEndMap, setUsageEndMap] = useState<Record<string, string>>({});
   const [moveOpen, setMoveOpen] = useState(false);
+  const [notifyConfirmKind, setNotifyConfirmKind] = useState<'remind' | 'resend' | null>(null);
+  const [notifyDispatchGroups, setNotifyDispatchGroups] = useState<DispatchNotifyGroup[]>([]);
+  const [notifyDispatchLoading, setNotifyDispatchLoading] = useState(false);
   const [archivedRaw, setArchivedRaw] = useState<ArchivedDispatchRecipient[]>([]);
   const [permanentlyDeletedRaw, setPermanentlyDeletedRaw] = useState<PermanentlyDeletedPortal[]>([]);
   const [restoring, setRestoring] = useState(false);
@@ -954,6 +965,43 @@ export default function CounselorClientList({
     [sortedFiltered, selected],
   );
 
+  const openBulkNotifyConfirm = (kind: 'remind' | 'resend') => {
+    if (selectedItems.length === 0) return;
+    const groups = buildDispatchGroupsFromSelections(selectedItems);
+    if (groups.length === 0) {
+      setError('선택한 내담자에 연결된 상담코드가 없습니다.');
+      return;
+    }
+    setNotifyDispatchGroups(groups);
+    setNotifyConfirmKind(kind);
+  };
+
+  const handleBulkNotifyConfirm = async (notifyChannels: ('email' | 'phone')[]) => {
+    if (!notifyConfirmKind || notifyDispatchGroups.length === 0) return;
+    setNotifyDispatchLoading(true);
+    setError('');
+    setMessage('');
+    try {
+      const result = await executeGroupedDispatchNotify({
+        kind: notifyConfirmKind,
+        groups: notifyDispatchGroups,
+        notifyChannels,
+      });
+      setNotifyConfirmKind(null);
+      setNotifyDispatchGroups([]);
+      setSelected(new Set());
+      setActionComplete({
+        title: notifyConfirmKind === 'remind' ? '미실시 알림 발송 완료' : '나의코드 전달 완료',
+        message: `발송 ${result.sent}건 · 실패 ${result.failed}건 · 생략 ${result.skipped}건`,
+      });
+      void load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '발송에 실패했습니다.');
+    } finally {
+      setNotifyDispatchLoading(false);
+    }
+  };
+
   const handleClientDownload = () => {
     exportClientPortalItems(selectedItems, 'download');
   };
@@ -1022,7 +1070,7 @@ export default function CounselorClientList({
     ? '영구삭제일'
     : deletedMode
       ? '삭제일'
-      : '발송일';
+      : '발송일시';
   const searchPlaceholder = adminUser
     ? '이름 · 이메일 · 연락처 · 상담유형 · 상담정보 · 태그 · 상담사 이메일'
     : '이름 · 이메일 · 연락처 · 상담유형 · 상담정보 · 태그';
@@ -1031,16 +1079,6 @@ export default function CounselorClientList({
     <CounselorPageSection
       title={pageTitle}
       titleAccent={deletedMode || permanentlyDeletedMode ? 'deleted' : 'list'}
-      headerAction={
-        !deletedMode && !permanentlyDeletedMode && !adminUser ? (
-          <AuthLink
-            href={DELETED_RECIPIENTS_HREF}
-            className="inline-flex shrink-0 items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1.5 text-xs font-medium text-slate-300 transition-colors hover:bg-white/5 sm:text-sm"
-          >
-            삭제된 내담자
-          </AuthLink>
-        ) : null
-      }
       dense
       className="flex min-h-0 flex-1"
       bodyClassName="flex min-h-0 flex-1 flex-col !p-0"
@@ -1073,7 +1111,36 @@ export default function CounselorClientList({
             value={searchQuery}
             onChange={setSearchQuery}
             placeholder={searchPlaceholder}
+            className="min-w-0 flex-1"
           />
+          {!deletedMode && !permanentlyDeletedMode && !adminUser ? (
+            <span className="ml-auto inline-flex shrink-0 flex-wrap items-center justify-end gap-1.5">
+              <button
+                type="button"
+                onClick={toggleAllOnPage}
+                disabled={loading || paginatedItems.length === 0}
+                className="rounded-md border border-white/10 bg-[#101f38]/90 px-2.5 py-1.5 text-xs text-slate-300 transition-colors hover:bg-white/5 disabled:opacity-50 sm:text-sm"
+              >
+                {allPageSelected ? '전체 해제' : '전체 선택'}
+              </button>
+              <button
+                type="button"
+                disabled={selected.size === 0 || notifyDispatchLoading}
+                className="rounded-md bg-amber-600/90 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-amber-500 disabled:opacity-50 sm:text-sm"
+                onClick={() => openBulkNotifyConfirm('remind')}
+              >
+                미실시 알림 ({selected.size})
+              </button>
+              <button
+                type="button"
+                disabled={selected.size === 0 || notifyDispatchLoading}
+                className="rounded-md bg-sky-600/90 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-sky-500 disabled:opacity-50 sm:text-sm"
+                onClick={() => openBulkNotifyConfirm('resend')}
+              >
+                나의코드 전달 ({selected.size})
+              </button>
+            </span>
+          ) : null}
         </span>
       }
     >
@@ -1144,6 +1211,15 @@ export default function CounselorClientList({
                         />
                       ) : null}
                     </th>
+                    <CounselDualFieldSortHeader
+                      leftLabel="그룹명"
+                      rightLabel="소속"
+                      activeKey={sortKey}
+                      sortKey="counselInfo"
+                      phase={counselSortPhase}
+                      onSortLeft={() => toggleCounselFieldSort('org')}
+                      onSortRight={() => toggleCounselFieldSort('title')}
+                    />
                     <SortableColumnHeader
                       label={dateColumnLabel}
                       sortKey="notifyAt"
@@ -1174,15 +1250,6 @@ export default function CounselorClientList({
                     <th scope="col" className={`${counselorListThClass} whitespace-nowrap`}>
                       <span className="block">연락처</span>
                     </th>
-                    <CounselDualFieldSortHeader
-                      leftLabel="그룹명"
-                      rightLabel="소속"
-                      activeKey={sortKey}
-                      sortKey="counselInfo"
-                      phase={counselSortPhase}
-                      onSortLeft={() => toggleCounselFieldSort('org')}
-                      onSortRight={() => toggleCounselFieldSort('title')}
-                    />
                     <SortableColumnHeader
                       label="발송현황"
                       sortKey="notifyStatus"
@@ -1190,14 +1257,6 @@ export default function CounselorClientList({
                       direction={sortDir}
                       onSort={toggleSort}
                       className="whitespace-nowrap"
-                    />
-                    <SortableColumnHeader
-                      label="사용종료일"
-                      sortKey="usageEndDate"
-                      activeKey={sortKey}
-                      direction={sortDir}
-                      onSort={toggleSort}
-                      className="whitespace-nowrap text-center"
                     />
                     {adminUser ? (
                       <CounselorAdminEmailSortHeader
@@ -1213,14 +1272,12 @@ export default function CounselorClientList({
                   {paginatedItems.map((item, idx) => {
                     const progress = progressLabel(item);
                     const primaryAssessment = item.assessments[0];
-                    const contactLine = formatRecipientContactLine(item.phone, item.email);
                     const infoOrg = primaryAssessment
                       ? primaryAssessment.orgName || item.cohortName || '—'
                       : item.cohortName || '—';
                     const infoSecondary = stripAssessmentTitleDispatchCountSuffix(
                       primaryAssessment?.title || '—',
                     );
-                    const usageEnd = primaryUsageEndDate(item, usageEndMap);
                     const dispatchView = dispatchStatusDisplay({
                       email: item.email,
                       phone: item.phone,
@@ -1289,10 +1346,27 @@ export default function CounselorClientList({
                           )}
                         </td>
                         <td
-                          className={`whitespace-nowrap ${counselorListTdClass} ${rowClickable ? 'cursor-pointer' : ''} text-slate-200`}
+                          className={`max-w-[14rem] ${counselorListTdClass} ${rowClickable ? 'cursor-pointer' : ''}`}
                           onClick={rowClickable ? () => goToProgress(item) : undefined}
                         >
-                          {formatDateOnly(item.notifyAt)}
+                          {primaryAssessment ? (
+                            <CounselorSlashInfoCell
+                              primary={infoOrg}
+                              secondary={infoSecondary}
+                              hoverTypeLabel={counselingCodeTypeLabel(primaryAssessment.codeCategory)}
+                              normalWeight
+                              showTooltip={false}
+                              className={cellInteractionClass}
+                            />
+                          ) : (
+                            <span className="text-slate-500">—</span>
+                          )}
+                        </td>
+                        <td
+                          className={`whitespace-nowrap ${counselorListTdClass} ${rowClickable ? 'cursor-pointer' : ''} text-slate-200 tabular-nums`}
+                          onClick={rowClickable ? () => goToProgress(item) : undefined}
+                        >
+                          {formatNotifyDate(item.notifyAt)}
                         </td>
                         <td
                           className={`max-w-[11rem] ${counselorListTdClass} ${rowClickable ? 'cursor-pointer' : ''}`}
@@ -1314,39 +1388,16 @@ export default function CounselorClientList({
                           {progress.text}
                         </td>
                         <td
-                          className={`max-w-[14rem] ${counselorListTdClass} ${rowClickable ? 'cursor-pointer' : ''} text-slate-300`}
-                          onClick={rowClickable ? () => goToProgress(item) : undefined}
-                        >
-                          <span className={`block truncate ${cellInteractionClass}`}>{contactLine}</span>
-                        </td>
-                        <td
                           className={`max-w-[14rem] ${counselorListTdClass} ${rowClickable ? 'cursor-pointer' : ''}`}
                           onClick={rowClickable ? () => goToProgress(item) : undefined}
                         >
-                          {primaryAssessment ? (
-                            <CounselorSlashInfoCell
-                              primary={infoOrg}
-                              secondary={infoSecondary}
-                              hoverTypeLabel={counselingCodeTypeLabel(primaryAssessment.codeCategory)}
-                              normalWeight
-                              showTooltip={false}
-                              className={cellInteractionClass}
-                            />
-                          ) : (
-                            <span className="text-slate-500">—</span>
-                          )}
+                          <RecipientContactCell phone={item.phone} email={item.email} />
                         </td>
                         <td
                           className={`max-w-[10rem] ${counselorListTdClass} ${rowClickable ? 'cursor-pointer' : ''}`}
                           onClick={rowClickable ? () => goToProgress(item) : undefined}
                         >
                           <DispatchStatusText value={dispatchViewForRow} />
-                        </td>
-                        <td
-                          className={`whitespace-nowrap ${counselorListTdClass} ${rowClickable ? 'cursor-pointer' : ''} text-center text-slate-200`}
-                          onClick={rowClickable ? () => goToProgress(item) : undefined}
-                        >
-                          {formatUsageEndDate(usageEnd)}
                         </td>
                         {adminUser ? <CounselorAdminEmailTd email={item.counselorEmail} /> : null}
                       </tr>
@@ -1458,13 +1509,13 @@ export default function CounselorClientList({
                         {clientDeleteLoading ? '삭제 중…' : `삭제 (${selected.size})`}
                       </button>
                     ) : null}
-                    {selected.size > 0 && !adminUser ? (
+                    {selected.size >= 2 && !adminUser ? (
                       <button
                         type="button"
                         onClick={() => setMoveOpen(true)}
                         className="inline-flex shrink-0 items-center justify-center rounded-md border border-sky-500/40 bg-sky-900/40 px-2.5 py-1 text-sm font-medium text-sky-100 transition-colors hover:bg-sky-800/50"
                       >
-                        다른 상담코드로 이동
+                        나의코드 이동 ({selected.size})
                       </button>
                     ) : null}
                   </div>
@@ -1475,6 +1526,23 @@ export default function CounselorClientList({
         )}
       </motion.div>
 
+      <CounselorNotifyConfirmDialog
+        open={Boolean(notifyConfirmKind)}
+        kind={notifyConfirmKind === 'resend' ? 'resend' : 'remind'}
+        recipients={flattenDispatchRecipients(notifyDispatchGroups)}
+        loading={notifyDispatchLoading}
+        onCancel={() => {
+          if (notifyDispatchLoading) return;
+          setNotifyConfirmKind(null);
+          setNotifyDispatchGroups([]);
+        }}
+        onConfirm={(channels) => void handleBulkNotifyConfirm(channels)}
+      />
+      <CounselorActionProgressOverlay
+        open={notifyDispatchLoading}
+        title={notifyConfirmKind === 'remind' ? '미실시 알림 발송 중…' : '나의코드 전달 중…'}
+        message="잠시만 기다려 주세요."
+      />
       <CounselorPortalMoveDialog
         open={moveOpen}
         portalIds={selectedPortalIds}

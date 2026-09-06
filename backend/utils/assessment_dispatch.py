@@ -734,6 +734,25 @@ def get_assessment_dispatch_status(db, assessment_id: str, counselor_uid: str | 
         )
 
     recipients.sort(key=lambda r: (r.get("displayName") or "", r.get("portalId") or ""))
+
+    if counselor_uid:
+        from utils.portal_assessment_move_tombstone import (
+            list_move_tombstones_for_assessment,
+            tombstones_to_dispatch_recipients,
+        )
+
+        tombstones = list_move_tombstones_for_assessment(
+            db,
+            assessment_id=assessment_id,
+            counselor_uid=counselor_uid,
+        )
+        if tombstones:
+            moved_rows = tombstones_to_dispatch_recipients(tombstones)
+            existing_ids = {r.get("portalId") for r in recipients}
+            for row in moved_rows:
+                if row.get("portalId") not in existing_ids:
+                    recipients.append(row)
+
     return {
         "assessmentId": assessment_id,
         "title": ass.get("title") or "",
@@ -744,15 +763,114 @@ def get_assessment_dispatch_status(db, assessment_id: str, counselor_uid: str | 
     }
 
 
+def _normalize_notify_channels(raw) -> list[str] | None:
+    if raw is None:
+        return None
+    if isinstance(raw, str):
+        items = [raw]
+    elif isinstance(raw, list):
+        items = raw
+    else:
+        return None
+    out: list[str] = []
+    for item in items:
+        value = str(item or "").strip().lower()
+        if value in ("email", "phone") and value not in out:
+            out.append(value)
+    return out or None
+
+
+def _will_use_phone_channel(email: str, phone: str, notify_channels: list[str] | None) -> bool:
+    if not (phone or "").strip():
+        return False
+    if notify_channels is None:
+        return True
+    return "phone" in notify_channels
+
+
+def _apply_notify_channels_to_contact(
+    email: str,
+    phone: str,
+    notify_channels: list[str] | None,
+) -> tuple[str, str]:
+    if notify_channels is None:
+        return email, phone
+    allowed = set(notify_channels)
+    if "email" not in allowed:
+        email = ""
+    if "phone" not in allowed:
+        phone = ""
+    return email, phone
+
+
+def _ensure_notify_phone_credits(db, counselor_uid: str | None, phone_send_count: int) -> None:
+    from config import COMMERCE_CREDITS_ENFORCE
+    from utils.counselor_credits import get_balance
+    from utils.points_display import assessment_credits_to_points
+
+    if not COMMERCE_CREDITS_ENFORCE or phone_send_count <= 0 or not counselor_uid:
+        return
+    balance = get_balance(db, counselor_uid)
+    if balance < phone_send_count:
+        points_balance = assessment_credits_to_points(balance)
+        points_required = assessment_credits_to_points(phone_send_count)
+        raise ValueError(
+            f"검사 포인트가 부족합니다. (보유 {points_balance}포인트, 필요 {points_required}포인트)"
+        )
+
+
+def _consume_notify_phone_credit(
+    db,
+    *,
+    counselor_uid: str | None,
+    portal_id: str,
+    assessment_id: str,
+    reason: str,
+) -> None:
+    from config import COMMERCE_CREDITS_ENFORCE
+    from utils.counselor_credits import consume_credits
+
+    if not COMMERCE_CREDITS_ENFORCE or not counselor_uid:
+        return
+    consume_credits(
+        db,
+        counselor_uid,
+        1,
+        reason=reason,
+        actor_uid=counselor_uid,
+        metadata={"portalId": portal_id, "assessmentId": assessment_id},
+    )
+
+
 def resend_portal_credentials(
     db,
     *,
     assessment_id: str,
     counselor_uid: str | None,
     portal_ids: list[str],
+    notify_channels: list[str] | None = None,
 ) -> dict:
     ass = _verify_assessment_owned(db, assessment_id, counselor_uid)
     join_access_code = (ass.get("accessCode") or "").strip()
+    channels = _normalize_notify_channels(notify_channels)
+
+    phone_send_count = 0
+    for portal_id in portal_ids:
+        pid = (portal_id or "").strip()
+        if not pid:
+            continue
+        pdoc = db.collection(CLIENT_PORTALS_COLLECTION).document(pid).get()
+        if not pdoc.exists:
+            continue
+        pdata = pdoc.to_dict() or {}
+        email = (pdata.get("email") or "").strip().lower()
+        phone = (pdata.get("phone") or "").strip()
+        email, phone = _apply_notify_channels_to_contact(email, phone, channels)
+        if not email and not phone:
+            continue
+        if _will_use_phone_channel(email, phone, channels):
+            phone_send_count += 1
+    _ensure_notify_phone_credits(db, counselor_uid, phone_send_count)
 
     sent = 0
     failed = 0
@@ -783,6 +901,7 @@ def resend_portal_credentials(
 
         email = (pdata.get("email") or "").strip().lower()
         phone = (pdata.get("phone") or "").strip()
+        email, phone = _apply_notify_channels_to_contact(email, phone, channels)
         if not email and not phone:
             skipped += 1
             details.append({"portalId": pid, "status": "skipped", "message": "no_contact"})
@@ -814,12 +933,21 @@ def resend_portal_credentials(
             welcome_message=(ass.get("welcomeMessage") or "").strip(),
             portal_ref=pref,
             notify_kind=notify_kind,
+            allowed_channels=channels,
         )
         status = result.get("status") or "failed"
         result_errors = result.get("errors") or []
         if status == "sent":
             pref.update({"pinHash": hash_password(new_pin)})
             sent += 1
+            if _will_use_phone_channel(email, phone, channels):
+                _consume_notify_phone_credit(
+                    db,
+                    counselor_uid=counselor_uid,
+                    portal_id=pid,
+                    assessment_id=assessment_id,
+                    reason="dispatch_resend_phone",
+                )
         elif status == "sending":
             sent += 0
         else:
@@ -893,9 +1021,29 @@ def send_test_reminders(
     assessment_id: str,
     counselor_uid: str | None,
     portal_ids: list[str],
+    notify_channels: list[str] | None = None,
 ) -> dict:
     """미완료 검사자에게 미실시 현황·검사 링크 알림 (비밀번호 재발급 없음)."""
     ass = _verify_assessment_owned(db, assessment_id, counselor_uid)
+    channels = _normalize_notify_channels(notify_channels)
+
+    phone_send_count = 0
+    for portal_id in portal_ids:
+        pid = (portal_id or "").strip()
+        if not pid:
+            continue
+        pdoc = db.collection(CLIENT_PORTALS_COLLECTION).document(pid).get()
+        if not pdoc.exists:
+            continue
+        pdata = pdoc.to_dict() or {}
+        email = (pdata.get("email") or "").strip().lower()
+        phone = (pdata.get("phone") or "").strip()
+        email, phone = _apply_notify_channels_to_contact(email, phone, channels)
+        if not email and not phone:
+            continue
+        if _will_use_phone_channel(email, phone, channels):
+            phone_send_count += 1
+    _ensure_notify_phone_credits(db, counselor_uid, phone_send_count)
 
     join_access_code = (ass.get("accessCode") or "").strip()
     assessment_title = (ass.get("title") or "").strip()
@@ -943,6 +1091,7 @@ def send_test_reminders(
 
         email = (pdata.get("email") or "").strip().lower()
         phone = (pdata.get("phone") or "").strip()
+        email, phone = _apply_notify_channels_to_contact(email, phone, channels)
         if not email and not phone:
             skipped += 1
             details.append({"portalId": pid, "status": "skipped", "message": "no_contact"})
@@ -976,11 +1125,20 @@ def send_test_reminders(
             magic_path=magic_path,
             portal_ref=pref,
             notify_kind="remind",
+            allowed_channels=channels,
         )
         status = result.get("status") or "failed"
         pref.update({"lastRemindStatus": status, "lastRemindAt": SERVER_TIMESTAMP})
         if status == "sent":
             sent += 1
+            if _will_use_phone_channel(email, phone, channels):
+                _consume_notify_phone_credit(
+                    db,
+                    counselor_uid=counselor_uid,
+                    portal_id=pid,
+                    assessment_id=assessment_id,
+                    reason="dispatch_remind_phone",
+                )
         elif status == "skipped":
             skipped += 1
         else:

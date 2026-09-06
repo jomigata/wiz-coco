@@ -61,25 +61,27 @@ def _enqueue_care_assignment_notify(
     display_name: str,
     title: str,
     portal_access_code: str,
+    notify_channels: list[str] | None = None,
 ) -> str:
     """T-2-08 — care_assignment 알림 큐 적재."""
-    db.collection(NOTIFICATION_QUEUE_COLLECTION).add(
-        {
-            "type": "care_assignment",
-            "status": "pending",
-            "portalId": portal_id,
-            "assignmentId": assignment_id,
-            "counselorId": counselor_uid,
-            "email": email,
-            "phone": phone,
-            "displayName": display_name,
-            "payload": {
-                "title": title,
-                "portalAccessCode": portal_access_code,
-            },
-            "createdAt": SERVER_TIMESTAMP,
-        }
-    )
+    payload = {
+        "type": "care_assignment",
+        "status": "pending",
+        "portalId": portal_id,
+        "assignmentId": assignment_id,
+        "counselorId": counselor_uid,
+        "email": email,
+        "phone": phone,
+        "displayName": display_name,
+        "payload": {
+            "title": title,
+            "portalAccessCode": portal_access_code,
+        },
+        "createdAt": SERVER_TIMESTAMP,
+    }
+    if notify_channels is not None:
+        payload["notifyChannels"] = list(notify_channels)
+    db.collection(NOTIFICATION_QUEUE_COLLECTION).add(payload)
     return "pending"
 
 
@@ -100,6 +102,34 @@ def create_care_assignments(db, counselor_uid: str, body: dict) -> dict:
     notify_skipped = 0
     assignments_out: list[dict] = []
     details: list[dict] = []
+
+    notify_channels = payload.get("notifyChannels")
+    if payload.get("notifyOnAssign") and notify_channels is not None:
+        from utils.assessment_dispatch import (
+            _apply_notify_channels_to_contact,
+            _ensure_notify_phone_credits,
+            _normalize_notify_channels,
+            _will_use_phone_channel,
+        )
+
+        channels = _normalize_notify_channels(notify_channels)
+        phone_send_count = 0
+        for portal_id in payload["portalIds"]:
+            portal_snap = get_portal_doc(db, portal_id)
+            if not portal_snap:
+                continue
+            pdata = portal_snap.to_dict() or {}
+            if (pdata.get("counselorId") or "") != counselor_uid:
+                continue
+            if (pdata.get("status") or "active") != "active":
+                continue
+            email = (pdata.get("email") or "").strip().lower()
+            phone = (pdata.get("phone") or "").strip()
+            email, phone = _apply_notify_channels_to_contact(email, phone, channels)
+            if email or phone:
+                if _will_use_phone_channel(email, phone, channels):
+                    phone_send_count += 1
+        _ensure_notify_phone_credits(db, counselor_uid, phone_send_count)
 
     for portal_id in payload["portalIds"]:
         try:
@@ -166,6 +196,12 @@ def create_care_assignments(db, counselor_uid: str, body: dict) -> dict:
             if payload.get("notifyOnAssign"):
                 email = (pdata.get("email") or "").strip().lower()
                 phone = (pdata.get("phone") or "").strip()
+                if notify_channels is not None:
+                    from utils.assessment_dispatch import _apply_notify_channels_to_contact
+
+                    email, phone = _apply_notify_channels_to_contact(
+                        email, phone, notify_channels
+                    )
                 access_code = (pdata.get("accessCode") or "").strip()
                 if email or phone:
                     try:
@@ -179,8 +215,23 @@ def create_care_assignments(db, counselor_uid: str, body: dict) -> dict:
                             display_name=display_name,
                             title=title,
                             portal_access_code=access_code,
+                            notify_channels=notify_channels,
                         )
                         notify_sent += 1
+                        if notify_channels is not None:
+                            from utils.assessment_dispatch import (
+                                _consume_notify_phone_credit,
+                                _will_use_phone_channel,
+                            )
+
+                            if _will_use_phone_channel(email, phone, notify_channels):
+                                _consume_notify_phone_credit(
+                                    db,
+                                    counselor_uid=counselor_uid,
+                                    portal_id=portal_id,
+                                    assessment_id="",
+                                    reason="care_assign_phone",
+                                )
                     except Exception as exc:
                         notify_status = "failed"
                         notify_error = str(exc)

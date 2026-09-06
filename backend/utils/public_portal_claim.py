@@ -12,6 +12,7 @@ from utils.portal_magic import create_portal_magic_link_token
 from utils.public_claim_delivery import (
     PUBLIC_CLAIM_CHANNEL_EMAIL,
     PUBLIC_CLAIM_CHANNEL_PHONE,
+    PUBLIC_CLAIM_CHANNEL_PHONE_EMAIL,
     PUBLIC_CLAIM_EMAIL_CREDIT_COST,
     PUBLIC_CLAIM_PHONE_CREDIT_COST,
     normalize_public_claim_channel,
@@ -189,6 +190,19 @@ def claim_my_code_public(
                 "message": "이메일을 입력해 주세요.",
             }
         phone_norm = ""
+    elif channel == PUBLIC_CLAIM_CHANNEL_PHONE_EMAIL:
+        if not email_norm:
+            return {
+                "ok": False,
+                "error": "invalid_email",
+                "message": "이메일을 입력해 주세요.",
+            }
+        if len(phone_norm) < 10:
+            return {
+                "ok": False,
+                "error": "invalid_phone",
+                "message": "휴대폰 번호를 입력해 주세요.",
+            }
     else:
         if len(phone_norm) < 10:
             return {
@@ -200,7 +214,7 @@ def claim_my_code_public(
 
     credit_cost = (
         PUBLIC_CLAIM_PHONE_CREDIT_COST
-        if channel == PUBLIC_CLAIM_CHANNEL_PHONE
+        if channel in (PUBLIC_CLAIM_CHANNEL_PHONE, PUBLIC_CLAIM_CHANNEL_PHONE_EMAIL)
         else PUBLIC_CLAIM_EMAIL_CREDIT_COST
     )
 

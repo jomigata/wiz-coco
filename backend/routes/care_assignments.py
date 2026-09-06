@@ -78,6 +78,11 @@ def create_care_assignment_route():
         result = create_care_assignments(db, g.counselor_uid, body)
     except CareAssignmentValidationError as exc:
         return jsonify({"error": "Bad Request", "message": str(exc)}), 400
+    except ValueError as exc:
+        msg = str(exc)
+        if "포인트" in msg or "크레딧" in msg:
+            return jsonify({"error": "Payment Required", "message": msg}), 402
+        return jsonify({"error": "Bad Request", "message": msg}), 400
     except Exception as exc:
         return jsonify({"error": "Internal Server Error", "message": str(exc)}), 500
     status_code = 201 if result.get("assigned", 0) > 0 else 200

@@ -1,21 +1,21 @@
 """포인트 표기 — DB는 검사/AI '크레딧' 정수 유지, API·UI는 포인트 노출."""
 from __future__ import annotations
 
-# 1포인트 = 10원
-WON_PER_POINT = 10
+# 1포인트 = 1원
+WON_PER_POINT = 1
 
-# 검사 지갑: DB 크레딧 1건 = 10포인트 (= 100원)
-POINTS_PER_ASSESSMENT_CREDIT = 10
+# 검사 지갑: DB 크레딧 1건 = 100포인트 (= 100원)
+POINTS_PER_ASSESSMENT_CREDIT = 100
 
-# AI 지갑: DB AI크레딧 1건 = 10포인트 (동일 환산)
-POINTS_PER_AI_CREDIT = 10
+# AI 지갑: DB AI크레딧 1건 = 100포인트 (동일 환산)
+POINTS_PER_AI_CREDIT = 100
 
 # --- 검사(포털) 차감 ---
-POINT_COST_PORTAL_RECIPIENT = 10  # 내담자 1명 발급·발송
-POINT_COST_PUBLIC_CLAIM_PHONE = 10
+POINT_COST_PORTAL_RECIPIENT = 100  # 내담자 1명 발급·발송
+POINT_COST_PUBLIC_CLAIM_PHONE = 100
 POINT_COST_PUBLIC_CLAIM_EMAIL = 0
 # 휴대폰(알림톡/문자) 허용 최소 보유 포인트 — 미만이면 내담자 claim 시 이메일로 전환
-PUBLIC_CLAIM_PHONE_MIN_BALANCE_POINTS = 10
+PUBLIC_CLAIM_PHONE_MIN_BALANCE_POINTS = 100
 
 # --- AI 기능 차감 (DB AI credit × POINTS_PER_AI_CREDIT) ---
 AI_CREDIT_COST_INTERPRET = 4

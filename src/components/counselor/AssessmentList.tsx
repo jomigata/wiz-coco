@@ -624,16 +624,7 @@ export default function AssessmentList({
       showHierarchyBreadcrumb
       title="상담코드"
       titleAccent="list"
-      headerAction={
-        adminUser ? undefined : (
-          <AuthLink
-            href={DELETED_ASSESSMENTS_HREF}
-            className="inline-flex shrink-0 items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1.5 text-xs font-medium text-slate-300 transition-colors hover:bg-white/5 sm:text-sm"
-          >
-            삭제된 상담코드
-          </AuthLink>
-        )
-      }
+      headerAction={undefined}
       className="flex min-h-0 flex-1"
       bodyClassName="flex min-h-0 flex-1 flex-col !p-0"
       noBodyPadding
@@ -751,7 +742,7 @@ export default function AssessmentList({
                     )}
                   </th>
                   <SortableColumnHeader
-                    label="발급일"
+                    label="생성일시"
                     sortKey="createdAt"
                     activeKey={sortKey}
                     direction={sortDir}
@@ -825,7 +816,9 @@ export default function AssessmentList({
                         className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer text-white`}
                         onClick={() => goToProgress(a.id)}
                       >
-                        <span className={cellLinkClass}>{formatCounselorIssueDate(a.createdAt)}</span>
+                        {a.createdAt
+                          ? new Date(a.createdAt).toLocaleString('ko-KR')
+                          : '—'}
                       </td>
                       <td
                         className={`max-w-[16rem] ${counselorListTdCompactClass} cursor-pointer`}

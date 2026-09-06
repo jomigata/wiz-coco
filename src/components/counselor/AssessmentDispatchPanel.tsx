@@ -13,11 +13,13 @@ import { formatPhoneDisplay, normalizeRecipientPhone } from '@/lib/phoneFormat';
 import { displayContactEmail, displayContactPhone } from '@/lib/contactPrivacy';
 import DispatchStatusText from '@/components/counselor/DispatchStatusText';
 import {
+  DISPATCH_SUCCESS_TEXT_CLASS,
   dispatchStatusDisplay,
   formatNotifyDate,
   testSummary,
   type DispatchStatusView,
 } from '@/lib/dispatchRecipientDisplay';
+import RecipientContactCell from '@/components/counselor/RecipientContactCell';
 import {
   downloadDispatchRecipientsExcel,
   printDispatchRecipients,
@@ -33,6 +35,7 @@ import {
   archiveDispatchRecipients,
   fetchAssessmentDispatchStatus,
   resendDispatchCredentials,
+  restoreAssessmentMove,
   sendDispatchTestReminders,
   updateDispatchRecipientContact,
   type AssessmentDispatchStatus,
@@ -68,7 +71,7 @@ import CounselorListSearchInput from '@/components/counselor/CounselorListSearch
 import CounselorProgressMetricsInline from '@/components/counselor/CounselorProgressMetricsInline';
 import { stripAssessmentTitleDispatchCountSuffix } from '@/lib/counselorAssessmentResultDisplay';
 import { replaceWithAuthSession } from '@/utils/authSessionLifecycle';
-import { buildAssessmentListHref, writeAssessmentListSearch } from '@/lib/counselorAssessmentListSearch';
+import { buildAssessmentListHref, writeAssessmentListSearch, buildAssessmentProgressHref } from '@/lib/counselorAssessmentListSearch';
 import { matchesWildcardFields } from '@/lib/wildcardSearch';
 import {
   counselorListBodyRowClass,
@@ -84,6 +87,8 @@ import {
 } from '@/lib/counselorListTableStyles';
 import CounselorNextTestRecommendCard from '@/components/counselor/CounselorNextTestRecommendCard';
 import CounselorQuickCareRecommendCard from '@/components/counselor/CounselorQuickCareRecommendCard';
+import CounselorNotifyConfirmDialog from '@/components/counselor/CounselorNotifyConfirmDialog';
+import type { NotifyRecipientContact } from '@/lib/counselorNotifyChannels';
 import { LoadingMessage } from '@/components/ui/LoadingMessage';
 
 function formatCompletedAt(iso: string | null | undefined): string {
@@ -215,7 +220,7 @@ function credentialSendModeLabel(mode: CredentialSendMode): string {
 function testStatusLabel(status: DispatchTestResult['status']): { text: string; className: string } {
   switch (status) {
     case 'completed':
-      return { text: '완료', className: 'text-emerald-300' };
+      return { text: '완료', className: DISPATCH_SUCCESS_TEXT_CLASS };
     case 'in_progress':
       return { text: '진행 중', className: 'text-amber-300' };
     default:
@@ -224,17 +229,14 @@ function testStatusLabel(status: DispatchTestResult['status']): { text: string; 
 }
 
 function progressStatusForRow(recipient: DispatchRecipient): { text: string; className: string } {
+  if (recipient.moveStatus === 'moved_out') {
+    return { text: '이동완료 (나의코드)', className: 'text-slate-500' };
+  }
   return testSummary(recipient);
 }
 
-function recipientContactDisplay(
-  r: DispatchRecipient,
-  revealed: boolean,
-): string {
-  const parts: string[] = [];
-  if (r.phone?.trim()) parts.push(displayContactPhone(r.phone, revealed));
-  if (r.email?.trim()) parts.push(displayContactEmail(r.email, revealed));
-  return parts.length ? parts.join(' / ') : '—';
+function isMovedOutRecipient(r: DispatchRecipient): boolean {
+  return r.moveStatus === 'moved_out';
 }
 
 function dispatchStatusForRow(recipient: DispatchRecipient): DispatchStatusView {
@@ -242,6 +244,7 @@ function dispatchStatusForRow(recipient: DispatchRecipient): DispatchStatusView 
 }
 
 function canSendReminder(r: DispatchRecipient): boolean {
+  if (isMovedOutRecipient(r)) return false;
   if (!hasCredentialBeenSent(r)) return false;
   if (r.testStatus === 'completed') return false;
   const pending = (r.tests ?? []).some((t) => t.status !== 'completed');
@@ -443,7 +446,7 @@ function skipCredentialReason(r: DispatchRecipient, mode: CredentialSendMode): s
   return '발송 대상 아님';
 }
 
-type BulkConfirmAction = 'remind' | 'resend' | 'delete' | null;
+type BulkConfirmAction = 'delete' | null;
 type DispatchProgress = { kind: 'remind' | 'resend' | 'delete'; count: number };
 type DispatchComplete = {
   kind: 'remind' | 'resend' | 'delete';
@@ -490,6 +493,9 @@ export default function AssessmentDispatchPanel({
   const [editSaving, setEditSaving] = useState(false);
   const [editError, setEditError] = useState('');
   const [confirmAction, setConfirmAction] = useState<BulkConfirmAction>(null);
+  const [notifyConfirmKind, setNotifyConfirmKind] = useState<'remind' | 'resend' | null>(null);
+  const [restoreTombstoneId, setRestoreTombstoneId] = useState<string | null>(null);
+  const [restoreLoading, setRestoreLoading] = useState(false);
   const [dispatchProgress, setDispatchProgress] = useState<DispatchProgress | null>(null);
   const [dispatchComplete, setDispatchComplete] = useState<DispatchComplete | null>(null);
   const [sortKey, setSortKey] = useState<RecipientSortKey | null>('notifyAt');
@@ -858,7 +864,7 @@ export default function AssessmentDispatchPanel({
   );
 
   const resendEligibleSelected = useMemo(
-    () => selectedRecipients.filter((r) => r.email || r.phone),
+    () => selectedRecipients.filter((r) => !isMovedOutRecipient(r) && (r.email || r.phone)),
     [selectedRecipients],
   );
 
@@ -938,14 +944,46 @@ export default function AssessmentDispatchPanel({
     setExpandedId((prev) => (prev === id ? null : id));
   };
 
-  const handleResend = async () => {
+  const notifyConfirmRecipients = useMemo<NotifyRecipientContact[]>(() => {
+    const targets =
+      notifyConfirmKind === 'remind' ? remindEligibleSelected : credentialTargetSelected;
+    return targets.map((r) => ({
+      displayName: r.displayName,
+      email: r.email,
+      phone: r.phone,
+    }));
+  }, [notifyConfirmKind, remindEligibleSelected, credentialTargetSelected]);
+
+  const handleRestoreMove = async (tombstoneId: string) => {
+    setRestoreLoading(true);
+    try {
+      await restoreAssessmentMove(tombstoneId);
+      setRestoreTombstoneId(null);
+      setExpandedId(null);
+      await load({ silent: true });
+      setDispatchComplete({
+        kind: 'delete',
+        summary: '이전 상담코드로 복구했습니다.',
+      });
+    } catch (err) {
+      setDispatchComplete({
+        kind: 'delete',
+        error: true,
+        summary: err instanceof Error ? err.message : '복구에 실패했습니다.',
+      });
+    } finally {
+      setRestoreLoading(false);
+    }
+  };
+
+  const handleResend = async (notifyChannels: ('email' | 'phone')[]) => {
     if (!assessmentId || credentialTargetSelected.length === 0) return;
     const ids = credentialTargetSelected.map((r) => r.portalId);
     applySendingOverlay(ids, 'resend');
     setDispatchProgress({ kind: 'resend', count: ids.length });
     setResendLoading(true);
     try {
-      const result = await resendDispatchCredentials(assessmentId, ids);
+      const result = await resendDispatchCredentials(assessmentId, ids, notifyChannels);
       setData((prev) => {
         if (!prev) return prev;
         const fetchId = resolveDispatchFetchId(assessmentId) || assessmentId;
@@ -985,13 +1023,13 @@ export default function AssessmentDispatchPanel({
     }
   };
 
-  const handleRemind = async (portalIds: string[]) => {
+  const handleRemind = async (portalIds: string[], notifyChannels: ('email' | 'phone')[]) => {
     if (!assessmentId || portalIds.length === 0) return;
     applySendingOverlay(portalIds, 'remind');
     setDispatchProgress({ kind: 'remind', count: portalIds.length });
     setRemindLoading(true);
     try {
-      const result = await sendDispatchTestReminders(assessmentId, portalIds);
+      const result = await sendDispatchTestReminders(assessmentId, portalIds, notifyChannels);
       await load({ silent: true });
       const channelSummary = parseDispatchChannelSummary(result.channelSummary);
       setDispatchComplete({
@@ -1064,16 +1102,20 @@ export default function AssessmentDispatchPanel({
   };
 
   const confirmBulkAction = async () => {
-    if (confirmAction === 'remind') {
-      const ids = remindEligibleSelected.map((r) => r.portalId);
-      setConfirmAction(null);
-      await handleRemind(ids);
-    } else if (confirmAction === 'resend') {
-      setConfirmAction(null);
-      await handleResend();
-    } else if (confirmAction === 'delete') {
+    if (confirmAction === 'delete') {
       setConfirmAction(null);
       await handleDelete();
+    }
+  };
+
+  const handleNotifyConfirm = async (notifyChannels: ('email' | 'phone')[]) => {
+    if (notifyConfirmKind === 'remind') {
+      const ids = remindEligibleSelected.map((r) => r.portalId);
+      setNotifyConfirmKind(null);
+      await handleRemind(ids, notifyChannels);
+    } else if (notifyConfirmKind === 'resend') {
+      setNotifyConfirmKind(null);
+      await handleResend(notifyChannels);
     }
   };
 
@@ -1113,14 +1155,14 @@ export default function AssessmentDispatchPanel({
   if (!data || !displayData) return null;
 
   const adminClientProgressView = adminUser && entryFrom === 'clients';
-  const clientsMergedContact = entryFrom === 'clients';
-  const expandedDetailColSpan = adminClientProgressView
-    ? clientsMergedContact
-      ? 5
-      : 6
-    : clientsMergedContact
-      ? 6
-      : 7;
+  const clientsSimplifiedView = entryFrom === 'clients' && !adminUser;
+  const clientsMergedContact = entryFrom !== 'deleted-recipients' && !adminClientProgressView;
+  const showTableCheckbox = !adminClientProgressView && !clientsSimplifiedView;
+  const showTableSort = !clientsSimplifiedView;
+  const showBulkToolbar = entryFrom === 'assessments' && !adminUser;
+  const showFooterActions = !adminClientProgressView && !clientsSimplifiedView;
+  const leadingDetailSpacerColSpan = adminClientProgressView || clientsSimplifiedView ? 1 : 2;
+  const expandedDetailColSpan = (clientsMergedContact ? 5 : 6) + (!adminClientProgressView ? 1 : 0);
 
   const backHref =
     entryFrom === 'deleted-recipients'
@@ -1140,6 +1182,7 @@ export default function AssessmentDispatchPanel({
     <CounselorPageSection
       title={
         <span className="inline-flex flex-wrap items-center gap-2">
+          <CounselorListBackLink href={backHref} label={backButtonLabel} />
           <span>{progressPageTitle}</span>
           {displayData.cohortName ? (
             <span className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-slate-900/50 px-2 py-1">
@@ -1181,13 +1224,6 @@ export default function AssessmentDispatchPanel({
               발급/발송 처리 중 오류가 발생했습니다: {pendingIssueError} — 상담코드 목록에서 실제 발송 여부를 확인해 주세요.
             </span>
           ) : null}
-          <CounselorListBackLink href={backHref} label={backButtonLabel} />
-          <AuthLink
-            href={backHref}
-            className="inline-flex shrink-0 items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1.5 text-sm text-slate-300 transition-colors hover:bg-white/5"
-          >
-            {backButtonLabel}
-          </AuthLink>
           <span className="inline-flex items-center rounded-md border border-emerald-500/20 bg-emerald-950/25 px-2 py-1 text-sm">
             <CounselorProgressMetricsInline
               totalClients={totalRecipientCount}
@@ -1203,48 +1239,47 @@ export default function AssessmentDispatchPanel({
             placeholder="이름 · 이메일 · 휴대폰 · 나의코드 검색"
             className="sm:max-w-xs"
           />
+          {showBulkToolbar ? (
+            <span className="ml-auto inline-flex shrink-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
+              <button
+                type="button"
+                onClick={toggleAll}
+                disabled={displayData.recipients.length === 0}
+                className="rounded-md border border-white/10 bg-[#101f38]/90 px-2.5 py-1.5 text-xs text-slate-300 transition-colors hover:bg-white/5 disabled:opacity-50 sm:text-sm"
+              >
+                {allSelected ? '전체 해제' : '전체 선택'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setNotifyConfirmKind('remind')}
+                disabled={
+                  remindLoading ||
+                  resendLoading ||
+                  deleteLoading ||
+                  remindEligibleSelected.length === 0
+                }
+                className="rounded-md bg-amber-600/90 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-amber-500 disabled:opacity-50 sm:text-sm"
+                title="미실시 검사자에게 현황·검사 링크 발송 (비밀번호 유지)"
+              >
+                {remindLoading
+                  ? '발송 중…'
+                  : `미실시 알림 (${remindEligibleSelected.length})`}
+              </button>
+              <button
+                type="button"
+                onClick={() => setNotifyConfirmKind('resend')}
+                disabled={resendLoading || deleteLoading || credentialTargetSelected.length === 0}
+                className="rounded-md bg-sky-600/90 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-sky-500 disabled:opacity-50 sm:text-sm"
+              >
+                {resendLoading
+                  ? '발송 중…'
+                  : `${credentialSendModeLabel(credentialSendMode)} (${credentialTargetSelected.length})`}
+              </button>
+            </span>
+          ) : null}
         </span>
       }
-      toolbar={
-        adminUser ? undefined : (
-        <div className="flex w-full flex-wrap items-center gap-1.5 sm:gap-2">
-          <button
-            type="button"
-            onClick={toggleAll}
-            disabled={displayData.recipients.length === 0}
-            className="rounded-md border border-white/10 bg-[#101f38]/90 px-2.5 py-1.5 text-xs text-slate-300 transition-colors hover:bg-white/5 disabled:opacity-50 sm:text-sm"
-          >
-            {allSelected ? '전체 해제' : '전체 선택'}
-          </button>
-          <button
-            type="button"
-            onClick={() => setConfirmAction('remind')}
-            disabled={
-              remindLoading ||
-              resendLoading ||
-              deleteLoading ||
-              remindEligibleSelected.length === 0
-            }
-            className="rounded-md bg-amber-600/90 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-amber-500 disabled:opacity-50 sm:text-sm"
-            title="미실시 검사자에게 현황·검사 링크 발송 (비밀번호 유지)"
-          >
-            {remindLoading
-              ? '발송 중…'
-              : `미실시 알림 (${remindEligibleSelected.length})`}
-          </button>
-          <button
-            type="button"
-            onClick={() => setConfirmAction('resend')}
-            disabled={resendLoading || deleteLoading || credentialTargetSelected.length === 0}
-            className="rounded-md bg-sky-600/90 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-sky-500 disabled:opacity-50 sm:text-sm"
-          >
-            {resendLoading
-              ? '발송 중…'
-              : `${credentialSendModeLabel(credentialSendMode)} (${credentialTargetSelected.length})`}
-          </button>
-        </div>
-        )
-      }
+      toolbar={undefined}
     >
       <div className="flex min-h-0 flex-1 flex-col p-2.5 text-sm sm:p-3">
         {displayData.recipients.length === 0 ? (
@@ -1264,7 +1299,7 @@ export default function AssessmentDispatchPanel({
               <table className="w-max min-w-full table-fixed text-sm">
                 <colgroup>
                   <col className="w-10" />
-                  {!adminClientProgressView ? <col className="w-10" /> : null}
+                  {showTableCheckbox ? <col className="w-10" /> : null}
                   <col className="w-36" />
                   <col className="w-36" />
                   {clientsMergedContact ? (
@@ -1277,12 +1312,12 @@ export default function AssessmentDispatchPanel({
                   )}
                   <col className="w-28" />
                   <col className="w-36" />
-                  {!adminClientProgressView ? <col className="w-16" /> : null}
+                  {!adminClientProgressView ? <col className="w-[4.5rem]" /> : null}
                 </colgroup>
                 <thead className={counselorListTheadClass}>
               <tr className={counselorListHeaderRowGrayClass}>
                 <th className={counselorListNoThGrayClass}>No.</th>
-                {!adminClientProgressView ? (
+                {showTableCheckbox ? (
                   <th className={counselorListSelectThGrayClass}>
                     <input
                       type="checkbox"
@@ -1293,31 +1328,43 @@ export default function AssessmentDispatchPanel({
                     />
                   </th>
                 ) : null}
-                <DualFieldSortHeader
-                  leftLabel="이름"
-                  rightLabel="나의코드"
-                  activeKey="displayName"
-                  sortKey={sortKey}
-                  phase={nameSortPhase}
-                  leftPhases={['name-asc', 'name-desc']}
-                  rightPhases={['code-asc', 'code-desc']}
-                  onSortLeft={() => toggleNameFieldSort('name')}
-                  onSortRight={() => toggleNameFieldSort('code')}
-                  className="w-36"
-                />
-                <SortableColumnHeader
-                  label="진행 현황"
-                  sortKey="testStatus"
-                  activeKey={sortKey}
-                  direction={sortDir}
-                  onSort={toggleSort}
-                  className="w-36"
-                />
+                {showTableSort ? (
+                  <DualFieldSortHeader
+                    leftLabel="이름"
+                    rightLabel="나의코드"
+                    activeKey="displayName"
+                    sortKey={sortKey}
+                    phase={nameSortPhase}
+                    leftPhases={['name-asc', 'name-desc']}
+                    rightPhases={['code-asc', 'code-desc']}
+                    onSortLeft={() => toggleNameFieldSort('name')}
+                    onSortRight={() => toggleNameFieldSort('code')}
+                    className="w-36"
+                  />
+                ) : (
+                  <th scope="col" className={`${counselorListThGrayClass} w-36 whitespace-nowrap`}>
+                    이름 / 나의코드
+                  </th>
+                )}
+                {showTableSort ? (
+                  <SortableColumnHeader
+                    label="진행 현황"
+                    sortKey="testStatus"
+                    activeKey={sortKey}
+                    direction={sortDir}
+                    onSort={toggleSort}
+                    className="w-36"
+                  />
+                ) : (
+                  <th scope="col" className={`${counselorListThGrayClass} w-36 whitespace-nowrap`}>
+                    진행 현황
+                  </th>
+                )}
                 {clientsMergedContact ? (
                   <th scope="col" className={`${counselorListThGrayClass} w-52 whitespace-nowrap`}>
                     연락처
                   </th>
-                ) : (
+                ) : showTableSort ? (
                   <>
                     <SortableColumnHeader
                       label="휴대폰"
@@ -1336,26 +1383,47 @@ export default function AssessmentDispatchPanel({
                       className="w-52"
                     />
                   </>
+                ) : (
+                  <>
+                    <th scope="col" className={`${counselorListThGrayClass} w-32 whitespace-nowrap`}>
+                      휴대폰
+                    </th>
+                    <th scope="col" className={`${counselorListThGrayClass} w-52 whitespace-nowrap`}>
+                      이메일
+                    </th>
+                  </>
                 )}
-                <SortableColumnHeader
-                  label="발송현황"
-                  sortKey="notifyStatus"
-                  activeKey={sortKey}
-                  direction={sortDir}
-                  onSort={toggleSort}
-                  className="w-28"
-                />
-                <SortableColumnHeader
-                  label="발송일시"
-                  sortKey="notifyAt"
-                  activeKey={sortKey}
-                  direction={sortDir}
-                  onSort={toggleSort}
-                  className="w-36"
-                />
+                {showTableSort ? (
+                  <SortableColumnHeader
+                    label="발송현황"
+                    sortKey="notifyStatus"
+                    activeKey={sortKey}
+                    direction={sortDir}
+                    onSort={toggleSort}
+                    className="w-28"
+                  />
+                ) : (
+                  <th scope="col" className={`${counselorListThGrayClass} w-28 whitespace-nowrap`}>
+                    발송현황
+                  </th>
+                )}
+                {showTableSort ? (
+                  <SortableColumnHeader
+                    label="발송일시"
+                    sortKey="notifyAt"
+                    activeKey={sortKey}
+                    direction={sortDir}
+                    onSort={toggleSort}
+                    className="w-36"
+                  />
+                ) : (
+                  <th scope="col" className={`${counselorListThGrayClass} w-36 whitespace-nowrap`}>
+                    발송일시
+                  </th>
+                )}
                 {!adminClientProgressView ? (
-                  <th className={`${counselorListTdClass} w-16 text-center text-xs font-medium text-slate-400`}>
-                    수정
+                  <th className={`${counselorListTdClass} w-[4.5rem] text-center text-xs font-medium text-slate-400`}>
+                    연락처 수정
                   </th>
                 ) : null}
               </tr>
@@ -1390,13 +1458,14 @@ export default function AssessmentDispatchPanel({
                       className={`cursor-pointer ${counselorListBodyRowClass} ${isOpen ? 'bg-white/[0.04]' : ''}`}
                     >
                       <td className={`${counselorListTdClass} tabular-nums text-slate-400`}>{rowIndex + 1}</td>
-                      {!adminClientProgressView ? (
+                      {showTableCheckbox ? (
                         <td className={counselorListSelectTdClass} onClick={(e) => e.stopPropagation()}>
                           <input
                             type="checkbox"
                             checked={selected.has(r.portalId)}
                             onChange={() => toggleOne(r.portalId)}
-                            className="rounded text-blue-500"
+                            disabled={isMovedOutRecipient(r)}
+                            className="rounded text-blue-500 disabled:opacity-40"
                           />
                         </td>
                       ) : null}
@@ -1416,8 +1485,8 @@ export default function AssessmentDispatchPanel({
                         <span>{summary.text}</span>
                       </td>
                       {clientsMergedContact ? (
-                        <td className="px-3 py-2 text-slate-300 align-top whitespace-nowrap tabular-nums">
-                          {recipientContactDisplay(r, contactRevealed)}
+                        <td className={`${counselorListTdClass} align-top`}>
+                          <RecipientContactCell phone={r.phone} email={r.email} />
                         </td>
                       ) : (
                         <>
@@ -1455,7 +1524,7 @@ export default function AssessmentDispatchPanel({
                             onClick={() => openEditContact(r)}
                             className="rounded-md border border-white/15 bg-white/[0.04] px-2 py-1 text-xs text-sky-200 transition-colors hover:border-sky-400/40 hover:bg-sky-500/10"
                           >
-                            수정
+                            연락처 수정
                           </button>
                         </td>
                       ) : null}
@@ -1463,7 +1532,7 @@ export default function AssessmentDispatchPanel({
                     {isOpen ? (
                       <tr>
                         <td
-                          colSpan={adminClientProgressView ? 1 : 2}
+                          colSpan={leadingDetailSpacerColSpan}
                           className="border-b border-slate-700/60 bg-slate-900/20 p-0"
                           aria-hidden="true"
                         />
@@ -1471,6 +1540,40 @@ export default function AssessmentDispatchPanel({
                           colSpan={expandedDetailColSpan}
                           className="border-b border-slate-700/60 bg-slate-900/20 px-3 py-3 pb-4 align-top"
                         >
+                          {isMovedOutRecipient(r) ? (
+                            <div className="mb-3 rounded-lg border border-slate-600/80 bg-slate-950/55 px-4 py-3 text-sm">
+                              <p className="font-medium text-slate-300">나의코드 이동 완료</p>
+                              <p className="mt-1 text-slate-400">
+                                {r.movedToAssessmentTitle || '다른 상담코드'}(
+                                {formatAccessCodeDisplay(r.movedToJoinAccessCode || '') || '—'})로
+                                이동했습니다.
+                              </p>
+                              <div className="mt-3 flex flex-wrap gap-2">
+                                {r.movedToAssessmentId ? (
+                                  <Link
+                                    href={buildAssessmentProgressHref(r.movedToAssessmentId, searchQuery)}
+                                    className="rounded-md border border-sky-500/40 bg-sky-950/40 px-3 py-1.5 text-xs text-sky-200 hover:bg-sky-900/50"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    이동한 코드 현황 보기
+                                  </Link>
+                                ) : null}
+                                {r.tombstoneId ? (
+                                  <button
+                                    type="button"
+                                    disabled={restoreLoading}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setRestoreTombstoneId(r.tombstoneId || null);
+                                    }}
+                                    className="rounded-md border border-amber-500/40 bg-amber-950/30 px-3 py-1.5 text-xs text-amber-200 hover:bg-amber-900/40 disabled:opacity-50"
+                                  >
+                                    이전 코드로 복구
+                                  </button>
+                                ) : null}
+                              </div>
+                            </div>
+                          ) : null}
                           {tests.length === 0 ? (
                             <p className="text-slate-500 text-sm rounded-lg border border-slate-700/60 bg-slate-950/40 px-3 py-2">
                               등록된 검사 항목이 없습니다.
@@ -1536,7 +1639,7 @@ export default function AssessmentDispatchPanel({
                               </table>
                             </div>
                           )}
-                          {!adminClientProgressView ? (
+                          {!adminClientProgressView && !isMovedOutRecipient(r) ? (
                             <>
                             <CounselorNextTestRecommendCard
                               assessmentId={assessmentId}
@@ -1559,7 +1662,7 @@ export default function AssessmentDispatchPanel({
               </table>
             </div>
 
-            {!adminClientProgressView ? (
+            {showFooterActions ? (
             <div className="mt-2 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-3">
               <p className="text-xs text-slate-500">
                 선택 <span className="font-semibold text-slate-300 tabular-nums">{selected.size}</span>명 · 전체{' '}
@@ -1704,7 +1807,7 @@ export default function AssessmentDispatchPanel({
         </div>
       ) : null}
 
-      {confirmAction ? (
+      {confirmAction === 'delete' ? (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
           onClick={closeConfirm}
@@ -1714,27 +1817,13 @@ export default function AssessmentDispatchPanel({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="px-4 py-3 border-b border-slate-600">
-              <h3 className="text-lg font-semibold text-white">
-                {confirmAction === 'remind'
-                  ? '미실시 알림통보 확인'
-                  : confirmAction === 'delete'
-                    ? '검사자 삭제 확인'
-                    : `${credentialSendModeLabel(credentialSendMode)} 확인`}
-              </h3>
+              <h3 className="text-lg font-semibold text-white">검사자 삭제 확인</h3>
               <p className="text-sm text-slate-400 mt-1">
-                {confirmAction === 'remind'
-                  ? '아래 내용으로 이메일·SMS 알림을 발송합니다. 비밀번호는 변경되지 않습니다.'
-                  : confirmAction === 'delete'
-                    ? '선택한 검사자를 상담진행 현황에서 제거합니다.'
-                    : credentialSendMode === 'initial'
-                      ? '선택한 내담자에게 접속 정보를 발송합니다. 비밀번호가 새로 발급됩니다.'
-                      : credentialSendMode === 'resend'
-                        ? '아래 내용으로 접속 정보를 재발송합니다. 비밀번호가 새로 발급되며, 이전에 안내된 비밀번호는 더 이상 사용할 수 없습니다.'
-                        : '선택 내담자 중 발송·재발송이 함께 포함됩니다. 비밀번호가 새로 발급됩니다.'}
+                선택한 검사자를 상담진행 현황에서 제거합니다.
               </p>
             </div>
             <div className="p-4 overflow-y-auto flex-1 space-y-4 text-sm">
-                  <div className="rounded-lg border border-slate-600 bg-slate-900/50 p-3 space-y-1">
+              <div className="rounded-lg border border-slate-600 bg-slate-900/50 p-3 space-y-1">
                 <p>
                   <span className="text-slate-500">상담코드 </span>
                   <span className="font-mono text-cyan-300">
@@ -1746,152 +1835,29 @@ export default function AssessmentDispatchPanel({
                   <span className="text-white">{displayData.title || '—'}</span>
                 </p>
               </div>
-
-              {confirmAction === 'remind' ? (
-                <>
-                  <div>
-                    <p className="text-slate-300 font-medium mb-2">
-                      발송 대상 {remindEligibleSelected.length}명
-                    </p>
-                    <ul className="space-y-2 max-h-40 overflow-y-auto">
-                      {remindEligibleSelected.map((r) => (
-                        <li
-                          key={r.portalId}
-                          className="rounded-lg border border-slate-700 bg-slate-900/40 px-3 py-2"
-                        >
-                          <RecipientTargetLine recipient={r} />
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  {remindSkippedSelected.length > 0 ? (
-                    <p className="text-slate-500 text-xs">
-                      선택했으나 제외 {remindSkippedSelected.length}명:{' '}
-                      {remindSkippedSelected
-                        .map((r) => `${r.displayName || '—'}(${skipRemindReason(r)})`)
-                        .join(', ')}
-                    </p>
-                  ) : null}
-                  <div className="rounded-lg border border-slate-600 bg-[#0a1018] p-4 space-y-3 text-sm">
-                    <p className="text-slate-400 text-xs font-medium uppercase tracking-wide">발송 내용 미리보기</p>
-                    <p className="text-slate-200">안녕하세요, ○○님</p>
-                    <p className="text-slate-400 leading-relaxed">
-                      WizCoCo 검사 접속 정보입니다. 아직 완료하지 않은 검사가 있으니 아래 정보로 검사를 진행해
-                      주세요.
-                    </p>
-                    <div className="rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2.5 space-y-1">
-                      <p className="text-slate-300">
-                        나의코드{' '}
-                        <span className="font-mono font-semibold text-cyan-300">(개인별)</span>
-                      </p>
-                      <p className="text-slate-300">
-                        비밀번호 <span className="text-amber-200/90">(최초 발송 안내 참고)</span>
-                      </p>
-                    </div>
-                    <p className="text-xs text-slate-500 leading-relaxed">
-                      검사시작 URL · 바로 시작 링크(72시간)가 이메일·문자로 함께 전달됩니다.
-                    </p>
-                  </div>
-                </>
-              ) : confirmAction === 'delete' ? (
-                <>
-                  <div>
-                    <p className="text-slate-300 font-medium mb-2">삭제 대상 {selectedRecipients.length}명</p>
-                    <ul className="space-y-2 max-h-48 overflow-y-auto">
-                      {selectedRecipients.map((r) => (
-                        <li
-                          key={r.portalId}
-                          className="rounded-lg border border-slate-700 bg-slate-900/40 px-3 py-2"
-                        >
-                          <RecipientTargetLine recipient={r} />
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <p className="text-red-300/90 text-xs">
-                    삭제 후 검사 결과 데이터는 보관되며, 내담자는 내 검사실 로그인이 제한됩니다.
-                    「삭제된 목록」에서 복구할 수 있습니다.
-                  </p>
-                </>
-              ) : (
-                <>
-                  <div>
-                    <p className="text-slate-300 font-medium mb-2">
-                      발송 대상 {credentialTargetSelected.length}명
-                      {credentialSkippedSelected.length > 0
-                        ? ` · 제외 ${credentialSkippedSelected.length}명`
-                        : ''}
-                      {resendSkippedSelected.length > 0
-                        ? ` · 연락처 없음 ${resendSkippedSelected.length}명`
-                        : ''}
-                    </p>
-                    <ul className="space-y-2 max-h-48 overflow-y-auto">
-                      {credentialTargetSelected.map((r) => (
-                        <li
-                          key={r.portalId}
-                          className="rounded-lg border border-slate-700 bg-slate-900/40 px-3 py-2"
-                        >
-                          <RecipientTargetLine recipient={r} />
-                          <p className="mt-1 text-xs text-slate-500">
-                            {hasCredentialBeenSent(r)
-                              ? '접속 정보 재발송 (비밀번호 재발급)'
-                              : '최초 접속 정보 발송 (미발송)'}
-                          </p>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  {credentialSkippedSelected.length > 0 ? (
-                    <p className="text-slate-500 text-xs">
-                      선택했으나 제외 {credentialSkippedSelected.length}명:{' '}
-                      {credentialSkippedSelected
-                        .map((r) => `${r.displayName || '—'}(${skipCredentialReason(r, credentialSendMode)})`)
-                        .join(', ')}
-                    </p>
-                  ) : null}
-                  {credentialSendMode === 'mixed' ? (
-                    <div className="rounded-lg border border-blue-700/40 bg-blue-950/30 p-3 text-xs text-slate-400 space-y-1">
-                      <p>
-                        <span className="text-sky-300">최초 발송 {resendInitialSelected.length}명</span>
-                        {' · '}
-                        <span className="text-sky-300">재발송 {resendResendOnlySelected.length}명</span>
-                      </p>
-                      <p>미발송 내담자는 접속 정보(나의코드·비밀번호)를, 이미 발송된 내담자는 재발송 메시지를 받습니다.</p>
-                    </div>
-                  ) : null}
-                  <div className="rounded-lg border border-slate-600 bg-[#0a1018] p-4 space-y-3 text-sm">
-                    <p className="text-slate-400 text-xs font-medium uppercase tracking-wide">발송 내용 미리보기</p>
-                    <p className="text-slate-200">안녕하세요, ○○님</p>
-                    <p className="text-slate-400 leading-relaxed">
-                      WizCoCo 검사 접속 정보입니다. 아래 나의코드·비밀번호 또는 바로 시작 링크로 검사를 진행해
-                      주세요.
-                      {credentialSendMode === 'resend' ? (
-                        <span className="block mt-1 text-amber-200/80">
-                          재발송 시 비밀번호가 새로 발급됩니다.
-                        </span>
-                      ) : null}
-                    </p>
-                    <div className="rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2.5 space-y-1">
-                      <p className="text-slate-300">
-                        나의코드{' '}
-                        <span className="font-mono font-semibold text-cyan-300">(개인별)</span>
-                      </p>
-                      <p className="text-slate-300">
-                        비밀번호 <span className="font-mono font-semibold text-amber-200">(새로 발급)</span>
-                      </p>
-                    </div>
-                    <p className="text-xs text-slate-500 leading-relaxed">
-                      검사시작 URL · 바로 시작 링크(72시간)가 이메일·문자로 함께 전달됩니다.
-                    </p>
-                  </div>
-                </>
-              )}
+              <div>
+                <p className="text-slate-300 font-medium mb-2">삭제 대상 {selectedRecipients.length}명</p>
+                <ul className="space-y-2 max-h-48 overflow-y-auto">
+                  {selectedRecipients.map((r) => (
+                    <li
+                      key={r.portalId}
+                      className="rounded-lg border border-slate-700 bg-slate-900/40 px-3 py-2"
+                    >
+                      <RecipientTargetLine recipient={r} />
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <p className="text-red-300/90 text-xs">
+                삭제 후 검사 결과 데이터는 보관되며, 내담자는 내 검사실 로그인이 제한됩니다.
+                「삭제된 목록」에서 복구할 수 있습니다.
+              </p>
             </div>
             <div className="px-4 py-3 border-t border-slate-600 flex justify-end gap-2">
               <button
                 type="button"
                 onClick={closeConfirm}
-                disabled={remindLoading || resendLoading || deleteLoading}
+                disabled={deleteLoading}
                 className="px-4 py-2 rounded-lg text-sm text-slate-300 bg-slate-700 hover:bg-slate-600 disabled:opacity-50"
               >
                 취소
@@ -1899,29 +1865,61 @@ export default function AssessmentDispatchPanel({
               <button
                 type="button"
                 onClick={() => void confirmBulkAction()}
-                disabled={
-                  remindLoading ||
-                  resendLoading ||
-                  deleteLoading ||
-                  (confirmAction === 'remind' && remindEligibleSelected.length === 0) ||
-                  (confirmAction === 'resend' && credentialTargetSelected.length === 0) ||
-                  (confirmAction === 'delete' && selectedRecipients.length === 0)
-                }
-                className={`px-4 py-2 rounded-lg text-sm font-medium text-white disabled:opacity-50 ${
-                  confirmAction === 'remind'
-                    ? 'bg-amber-600 hover:bg-amber-700'
-                    : confirmAction === 'delete'
-                      ? 'bg-red-600 hover:bg-red-700'
-                      : 'bg-blue-600 hover:bg-blue-700'
-                }`}
+                disabled={deleteLoading || selectedRecipients.length === 0}
+                className="px-4 py-2 rounded-lg text-sm font-medium text-white disabled:opacity-50 bg-red-600 hover:bg-red-700"
               >
-                {confirmAction === 'remind'
-                  ? '알림 발송'
-                  : confirmAction === 'delete'
-                    ? '삭제'
-                    : credentialSendMode === 'resend'
-                      ? '나의코드 전달'
-                      : '발송'}
+                삭제
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      <CounselorNotifyConfirmDialog
+        open={notifyConfirmKind !== null}
+        kind={notifyConfirmKind === 'remind' ? 'remind' : 'resend'}
+        recipients={notifyConfirmRecipients}
+        loading={remindLoading || resendLoading}
+        confirmLabel={
+          notifyConfirmKind === 'remind'
+            ? '알림 발송'
+            : credentialSendMode === 'resend'
+              ? '나의코드 전달'
+              : '발송'
+        }
+        onConfirm={(channels) => void handleNotifyConfirm(channels)}
+        onCancel={() => setNotifyConfirmKind(null)}
+      />
+
+      {restoreTombstoneId ? (
+        <div
+          className="fixed inset-0 z-[135] flex items-center justify-center bg-black/70 p-4"
+          onClick={() => !restoreLoading && setRestoreTombstoneId(null)}
+        >
+          <div
+            className="w-full max-w-md rounded-xl border border-slate-600 bg-slate-800 p-5 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-semibold text-white">이전 코드로 복구</h3>
+            <p className="mt-2 text-sm text-slate-300">
+              이동한 내담자를 이 상담코드로 되돌립니다. 검사 결과 분류가 다시 조정될 수 있습니다.
+            </p>
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                disabled={restoreLoading}
+                onClick={() => setRestoreTombstoneId(null)}
+                className="rounded-lg bg-slate-700 px-4 py-2 text-sm text-slate-200 hover:bg-slate-600 disabled:opacity-50"
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                disabled={restoreLoading}
+                onClick={() => void handleRestoreMove(restoreTombstoneId)}
+                className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-500 disabled:opacity-50"
+              >
+                {restoreLoading ? '복구 중…' : '복구'}
               </button>
             </div>
           </div>

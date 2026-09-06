@@ -284,12 +284,13 @@ export async function bulkCreateClientPortals(body: {
   usageEndDate?: string;
   testList: { testId: string; name: string }[];
   codeCategory?: string;
-  publicClaimChannel?: 'phone' | 'email';
+  publicClaimChannel?: 'phone' | 'email' | 'phone_email';
   publicClaimOnly?: boolean;
   queueNotify?: boolean;
   scheduledAt?: string;
   /** 기존 그룹코드(개별 발급) 검사 세트 재사용 */
   assessmentId?: string;
+  notifyChannels?: ('email' | 'phone')[];
 }): Promise<ClientPortalBulkCreateResult> {
   const token = await getCounselorToken();
   if (!token) throw new Error('전문가·상담사 로그인이 필요합니다.');
@@ -362,6 +363,13 @@ export type DispatchRecipient = {
   completedCount: number;
   requiredCount: number;
   tests: DispatchTestResult[];
+  moveStatus?: 'moved_out';
+  tombstoneId?: string;
+  movedToAssessmentId?: string;
+  movedToMyCode?: string;
+  movedToJoinAccessCode?: string;
+  movedToAssessmentTitle?: string;
+  movedAt?: string | null;
 };
 
 export type AssessmentDispatchStatus = {
@@ -391,7 +399,8 @@ export async function fetchAssessmentDispatchStatus(
 
 export async function resendDispatchCredentials(
   assessmentId: string,
-  portalIds: string[]
+  portalIds: string[],
+  notifyChannels?: ('email' | 'phone')[],
 ): Promise<{
   sent: number;
   failed: number;
@@ -409,7 +418,7 @@ export async function resendDispatchCredentials(
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ portalIds }),
+      body: JSON.stringify({ portalIds, notifyChannels }),
     }
   );
   const data = await res.json().catch(() => ({}));
@@ -452,7 +461,8 @@ export async function updateDispatchRecipientContact(
 
 export async function sendDispatchTestReminders(
   assessmentId: string,
-  portalIds: string[]
+  portalIds: string[],
+  notifyChannels?: ('email' | 'phone')[],
 ): Promise<{
   sent: number;
   failed: number;
@@ -469,7 +479,7 @@ export async function sendDispatchTestReminders(
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ portalIds }),
+      body: JSON.stringify({ portalIds, notifyChannels }),
     }
   );
   const data = await res.json().catch(() => ({}));
@@ -765,6 +775,7 @@ export async function pushAssessmentsToPortals(body: {
   usageEndDate?: string;
   testList?: { testId: string; name: string }[];
   notify?: boolean;
+  notifyChannels?: ('email' | 'phone')[];
 }): Promise<CounselorPushAssessmentResult> {
   const token = await getCounselorToken();
   if (!token) throw new Error('전문가·상담사 로그인이 필요합니다.');
@@ -782,6 +793,36 @@ export async function pushAssessmentsToPortals(body: {
     throw new Error(typeof data?.message === 'string' ? data.message : '추가 검사 push에 실패했습니다.');
   }
   return data as CounselorPushAssessmentResult;
+}
+
+export async function restoreAssessmentMove(tombstoneId: string): Promise<{
+  restored: number;
+  portalId: string;
+  fromAssessmentId: string;
+  toAssessmentId: string;
+  tombstoneId: string;
+}> {
+  const token = await getCounselorToken();
+  if (!token) throw new Error('전문가·상담사 로그인이 필요합니다.');
+  const res = await fetch(`${getBaseUrl()}/api/client-portals/restore-assessment-move`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ tombstoneId }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(typeof data?.message === 'string' ? data.message : '이전 코드 복구에 실패했습니다.');
+  }
+  return data as {
+    restored: number;
+    portalId: string;
+    fromAssessmentId: string;
+    toAssessmentId: string;
+    tombstoneId: string;
+  };
 }
 
 async function counselorGetJson<T>(path: string, fallbackMessage: string): Promise<T> {

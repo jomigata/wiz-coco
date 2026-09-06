@@ -520,7 +520,8 @@ export async function updateAssessment(
     welcomeMessage?: string;
     usageEndDate?: string;
     codeCategory?: string;
-    publicClaimChannel?: 'phone' | 'email';
+    cohortName?: string;
+    publicClaimChannel?: 'phone' | 'email' | 'phone_email';
     testList: { testId: string; name: string }[];
   }
 ): Promise<{ assessmentId: string; message: string }> {
@@ -538,6 +539,7 @@ export async function updateAssessment(
       welcomeMessage: (body.welcomeMessage || '').trim(),
       usageEndDate: (body.usageEndDate || '').trim(),
       codeCategory: (body.codeCategory || '').trim(),
+      cohortName: (body.cohortName || '').trim(),
       publicClaimChannel: body.publicClaimChannel,
       testList: body.testList || [],
     }),

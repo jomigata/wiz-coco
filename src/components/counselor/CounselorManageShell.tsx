@@ -27,6 +27,10 @@ type Props = {
   children: React.ReactNode;
 };
 
+/** 좌측 메뉴 — 대분류 타이틀과 중분류 첫 글자 정렬 */
+const MENU_MIDDLE_ALIGN = 'pl-8';
+const MENU_NESTED_ALIGN = 'pl-12';
+
 export default function CounselorManageShell({ children }: Props) {
   const pathname = usePathname() || '';
   const searchParams = useSearchParams();
@@ -102,7 +106,7 @@ export default function CounselorManageShell({ children }: Props) {
                     </AuthLink>
 
                     {expanded ? (
-                      <div className="mt-0.5 space-y-1 pl-6">
+                      <div className="mt-0.5 space-y-1">
                     {category.subcategories.map((sub) => {
                       if (sub.adminOnly && !adminUser) return null;
                       const visibleItems = sub.items.filter((item) => !item.adminOnly || adminUser);
@@ -175,7 +179,7 @@ export default function CounselorManageShell({ children }: Props) {
                                         clearAssessmentListSearch();
                                       }
                                     }}
-                                    className={`block truncate rounded-md py-1 pl-0 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${
+                                    className={`block truncate rounded-md py-1 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${MENU_MIDDLE_ALIGN} ${
                                       active
                                         ? 'bg-sky-600/30 font-semibold text-sky-100'
                                         : 'text-slate-300 hover:bg-white/[0.06] hover:text-white'
@@ -207,7 +211,7 @@ export default function CounselorManageShell({ children }: Props) {
                                           clearAssessmentListSearch();
                                         }
                                       }}
-                                      className={`block truncate rounded-md py-1 pl-5 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${
+                                      className={`block truncate rounded-md py-1 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${MENU_NESTED_ALIGN} ${
                                         nestedActive
                                           ? 'bg-sky-600/30 font-semibold text-sky-100'
                                           : 'text-slate-300 hover:bg-white/[0.06] hover:text-white'
@@ -244,7 +248,7 @@ export default function CounselorManageShell({ children }: Props) {
                                             );
                                           }
                                         }}
-                                        className={`block truncate rounded-md py-1 pl-5 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${
+                                        className={`block truncate rounded-md py-1 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${MENU_NESTED_ALIGN} ${
                                           ctxActive
                                             ? 'bg-sky-600/30 font-semibold text-sky-100'
                                             : 'text-slate-400 hover:bg-white/[0.06] hover:text-white'
@@ -268,7 +272,7 @@ export default function CounselorManageShell({ children }: Props) {
                                   <li key={`${item.href}-${nested.label}`}>
                                     <AuthLink
                                       href={href}
-                                      className={`block truncate rounded-md py-1 pl-5 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${
+                                      className={`block truncate rounded-md py-1 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${MENU_NESTED_ALIGN} ${
                                         nestedActive
                                           ? 'bg-sky-600/30 font-semibold text-sky-100'
                                           : 'text-slate-300 hover:bg-white/[0.06] hover:text-white'

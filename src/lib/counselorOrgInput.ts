@@ -3,12 +3,13 @@
 export const ASSESSMENT_GROUP_NAME_LABEL = '그룹명';
 export const ASSESSMENT_AFFILIATION_LABEL = '소속';
 
-export const CUSTOM_ORG_GROUP_PREFIX = '1.그룹명 :';
-export const CUSTOM_ORG_AFFILIATION_PREFIX = '2.소속 :';
+export const CUSTOM_ORG_GROUP_PREFIX = '* 그룹/기관명 :';
+export const CUSTOM_ORG_AFFILIATION_PREFIX = '* 소속 :';
 
 export const CUSTOM_ORG_INPUT_DRAFT = `${CUSTOM_ORG_GROUP_PREFIX} \n${CUSTOM_ORG_AFFILIATION_PREFIX} `;
 
 export const CUSTOM_ORG_GROUP_CURSOR = `${CUSTOM_ORG_GROUP_PREFIX} `.length;
+export const CUSTOM_ORG_AFFILIATION_CURSOR = `${CUSTOM_ORG_AFFILIATION_PREFIX} `.length;
 
 export type ParsedCustomOrgInput = {
   groupName: string;
@@ -62,10 +63,22 @@ export function isCustomOrgDraft(value: string): boolean {
   return !trimmed || trimmed === CUSTOM_ORG_INPUT_DRAFT.trim();
 }
 
-export function parseCustomOrgInput(raw: string): ParsedCustomOrgInput {
-  const text = raw.replace(/\r\n/g, '\n');
+function parseLegacyCustomOrgInput(text: string): ParsedCustomOrgInput | null {
   const groupMatch = text.match(/1\.그룹명\s*:\s*([\s\S]*?)(?:\n\s*2\.소속\s*:|$)/);
   const affiliationMatch = text.match(/2\.소속\s*:\s*([\s\S]*)$/);
+  if (!groupMatch && !affiliationMatch) return null;
+  return {
+    groupName: (groupMatch?.[1] || '').trim(),
+    affiliation: (affiliationMatch?.[1] || '').trim(),
+  };
+}
+
+export function parseCustomOrgInput(raw: string): ParsedCustomOrgInput {
+  const text = raw.replace(/\r\n/g, '\n');
+  const groupMatch = text.match(
+    /\*?\s*그룹\/기관명\s*:\s*([\s\S]*?)(?:\n\s*\*?\s*소속\s*:|$)/,
+  );
+  const affiliationMatch = text.match(/\*?\s*소속\s*:\s*([\s\S]*)$/);
 
   if (groupMatch || affiliationMatch) {
     return {
@@ -73,6 +86,9 @@ export function parseCustomOrgInput(raw: string): ParsedCustomOrgInput {
       affiliation: (affiliationMatch?.[1] || '').trim(),
     };
   }
+
+  const legacy = parseLegacyCustomOrgInput(text);
+  if (legacy) return legacy;
 
   return {
     groupName: text.trim(),
@@ -89,10 +105,13 @@ export function formatCustomOrgDisplay(parsed: ParsedCustomOrgInput): string {
   return '';
 }
 
+export type CustomOrgFocusTarget = 'group' | 'affiliation';
+
 export function focusCustomOrgTextarea(
   textarea: HTMLTextAreaElement | null,
   currentValue: string,
   setValue: (next: string) => void,
+  target: CustomOrgFocusTarget = 'group',
 ): void {
   if (!textarea) return;
   const nextValue = currentValue.trim() ? currentValue : CUSTOM_ORG_INPUT_DRAFT;
@@ -101,9 +120,30 @@ export function focusCustomOrgTextarea(
   }
   requestAnimationFrame(() => {
     textarea.focus();
+    if (target === 'affiliation') {
+      const affIndex = nextValue.indexOf(CUSTOM_ORG_AFFILIATION_PREFIX);
+      const cursor =
+        affIndex >= 0 ? affIndex + CUSTOM_ORG_AFFILIATION_CURSOR : nextValue.length;
+      textarea.setSelectionRange(cursor, cursor);
+      return;
+    }
     const groupIndex = nextValue.indexOf(CUSTOM_ORG_GROUP_PREFIX);
     const cursor =
       groupIndex >= 0 ? groupIndex + CUSTOM_ORG_GROUP_CURSOR : CUSTOM_ORG_GROUP_CURSOR;
     textarea.setSelectionRange(cursor, cursor);
   });
+}
+
+/** textarea 클릭 Y좌표로 그룹명·소속 입력 줄 판별 */
+export function resolveCustomOrgFocusFromClick(
+  textarea: HTMLTextAreaElement,
+  clientY: number,
+): CustomOrgFocusTarget {
+  const rect = textarea.getBoundingClientRect();
+  const relativeY = clientY - rect.top + textarea.scrollTop;
+  const lineHeight =
+    parseFloat(getComputedStyle(textarea).lineHeight || '') ||
+    parseFloat(getComputedStyle(textarea).fontSize || '14') * 1.4;
+  const lineIndex = Math.floor(relativeY / Math.max(lineHeight, 12));
+  return lineIndex >= 1 ? 'affiliation' : 'group';
 }

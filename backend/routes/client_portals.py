@@ -275,6 +275,9 @@ def push_assessments():
     usage_end_date = (body.get("usageEndDate") or "").strip()
     test_list = body.get("testList") or []
     notify = bool(body.get("notify", True))
+    from utils.assessment_dispatch import _normalize_notify_channels
+
+    notify_channels = _normalize_notify_channels(body.get("notifyChannels"))
 
     if not assessment_id:
         if not title:
@@ -294,6 +297,7 @@ def push_assessments():
             usage_end_date=usage_end_date,
             test_list=test_list if isinstance(test_list, list) else [],
             notify=notify,
+            notify_channels=notify_channels,
         )
     except PermissionError as exc:
         return jsonify({"error": "Forbidden", "message": str(exc)}), 403
@@ -751,6 +755,13 @@ def bulk_create():
     ]
 
     any_notify = any(bool(r.get("queueNotify")) for r in normalized_rows)
+    from utils.assessment_dispatch import (
+        _apply_notify_channels_to_contact,
+        _normalize_notify_channels,
+        _will_use_phone_channel,
+    )
+
+    notify_channels = _normalize_notify_channels(body.get("notifyChannels"))
 
     if scheduled_at_raw and any_notify:
         try:
@@ -766,7 +777,20 @@ def bulk_create():
         except ValueError:
             return jsonify({"error": "Bad Request", "message": "예약 발송 시각 형식이 올바르지 않습니다."}), 400
 
-    credit_required = len(normalized_rows)
+    credit_required = 0
+    if any_notify:
+        for row in normalized_rows:
+            if not row.get("queueNotify"):
+                continue
+            email, phone = _apply_notify_channels_to_contact(
+                row.get("email") or "",
+                row.get("phone") or "",
+                notify_channels,
+            )
+            if _will_use_phone_channel(email, phone, notify_channels):
+                credit_required += 1
+        if credit_required == 0 and notify_channels is None:
+            credit_required = len(normalized_rows)
     trial_eligible = len(normalized_rows) == 1 and is_first_send_trial_eligible(db, counselor_uid)
     if trial_eligible:
         credit_required = 0
@@ -806,6 +830,7 @@ def bulk_create():
             scheduled_at_iso=scheduled_at_iso,
             assessment_title=title,
             welcome_message=welcome_message,
+            notify_channels=notify_channels,
         )
         process_bulk_job_batch(
             db,
@@ -829,7 +854,7 @@ def bulk_create():
             credit_info = consume_credits(
                 db,
                 counselor_uid,
-                len(normalized_rows),
+                credit_required,
                 reason="bulk_portal_async",
                 actor_uid=counselor_uid,
                 metadata={"jobId": job_id, "cohortId": cohort_id},
@@ -874,6 +899,7 @@ def bulk_create():
             immediate_notify=row_notify and immediate_batch,
             assessment_title=title,
             welcome_message=welcome_message,
+            notify_channels=notify_channels,
         )
         created.append(created_row)
         if queued:
@@ -903,7 +929,7 @@ def bulk_create():
         credit_info = consume_credits(
             db,
             counselor_uid,
-            len(created),
+            credit_required,
             reason="bulk_portal_sync",
             actor_uid=counselor_uid,
             metadata={"cohortId": cohort_id, "assessmentId": assessment_ref_id},
@@ -1007,6 +1033,32 @@ def resend_bulk_notifications():
     return jsonify(result)
 
 
+@bp.route("/restore-assessment-move", methods=["POST"])
+@require_counselor
+def restore_assessment_move():
+    """이동된 내담자·검사를 이전 상담코드로 복구."""
+    from utils.portal_assessment_move_tombstone import restore_portal_from_move
+
+    body = request.get_json(silent=True) or {}
+    tombstone_id = (body.get("tombstoneId") or "").strip()
+    if not tombstone_id:
+        return jsonify({"error": "Bad Request", "message": "tombstoneId가 필요합니다."}), 400
+
+    db = get_firestore()
+    try:
+        result = restore_portal_from_move(
+            db,
+            counselor_uid=g.counselor_uid,
+            tombstone_id=tombstone_id,
+        )
+    except PermissionError as exc:
+        return jsonify({"error": "Forbidden", "message": str(exc)}), 403
+    except ValueError as exc:
+        return jsonify({"error": "Bad Request", "message": str(exc)}), 400
+
+    return jsonify(result)
+
+
 @bp.route("/assessments/<assessment_id>/dispatch", methods=["GET"])
 @require_counselor
 def get_dispatch_status(assessment_id):
@@ -1026,6 +1078,9 @@ def resend_dispatch(assessment_id):
     portal_ids = body.get("portalIds") or []
     if not isinstance(portal_ids, list) or not portal_ids:
         return jsonify({"error": "Bad Request", "message": "portalIds가 필요합니다."}), 400
+    from utils.assessment_dispatch import _normalize_notify_channels
+
+    notify_channels = _normalize_notify_channels(body.get("notifyChannels"))
     db = get_firestore()
     try:
         result = resend_portal_credentials(
@@ -1033,11 +1088,15 @@ def resend_dispatch(assessment_id):
             assessment_id=assessment_id,
             counselor_uid=scope_counselor_uid(),
             portal_ids=[str(x).strip() for x in portal_ids if str(x).strip()],
+            notify_channels=notify_channels,
         )
     except PermissionError as exc:
         return jsonify({"error": "Forbidden", "message": str(exc)}), 403
     except ValueError as exc:
-        return jsonify({"error": "Not Found", "message": str(exc)}), 404
+        msg = str(exc)
+        if "포인트" in msg:
+            return jsonify({"error": "Payment Required", "message": msg}), 402
+        return jsonify({"error": "Not Found", "message": msg}), 404
     return jsonify(result)
 
 
@@ -1075,6 +1134,9 @@ def remind_dispatch(assessment_id):
     portal_ids = body.get("portalIds") or []
     if not isinstance(portal_ids, list) or not portal_ids:
         return jsonify({"error": "Bad Request", "message": "portalIds가 필요합니다."}), 400
+    from utils.assessment_dispatch import _normalize_notify_channels
+
+    notify_channels = _normalize_notify_channels(body.get("notifyChannels"))
     db = get_firestore()
     try:
         result = send_test_reminders(
@@ -1082,11 +1144,15 @@ def remind_dispatch(assessment_id):
             assessment_id=assessment_id,
             counselor_uid=scope_counselor_uid(),
             portal_ids=[str(x).strip() for x in portal_ids if str(x).strip()],
+            notify_channels=notify_channels,
         )
     except PermissionError as exc:
         return jsonify({"error": "Forbidden", "message": str(exc)}), 403
     except ValueError as exc:
-        return jsonify({"error": "Not Found", "message": str(exc)}), 404
+        msg = str(exc)
+        if "포인트" in msg:
+            return jsonify({"error": "Payment Required", "message": msg}), 402
+        return jsonify({"error": "Not Found", "message": msg}), 404
     return jsonify(result)
 
 

@@ -100,6 +100,20 @@ def validate_create_care_assignment_payload(body: dict | None) -> dict:
 
     notify = body.get("notify")
     notify_on_assign = True if notify is None else bool(notify)
+    notify_channels_raw = body.get("notifyChannels")
+    notify_channels = None
+    if notify_channels_raw is not None:
+        if not isinstance(notify_channels_raw, list):
+            raise CareAssignmentValidationError("notifyChannels는 배열이어야 합니다.")
+        notify_channels = [
+            str(x).strip()
+            for x in notify_channels_raw
+            if str(x).strip() in ("email", "phone")
+        ]
+        if notify_on_assign and not notify_channels:
+            raise CareAssignmentValidationError(
+                "notifyChannels에 email 또는 phone이 최소 1개 필요합니다."
+            )
 
     metadata = body.get("metadata")
     if metadata is not None and not isinstance(metadata, dict):
@@ -118,6 +132,7 @@ def validate_create_care_assignment_payload(body: dict | None) -> dict:
         "startAt": _strip(body.get("startAt")) or None,
         "dueAt": _strip(body.get("dueAt")) or None,
         "notifyOnAssign": notify_on_assign,
+        "notifyChannels": notify_channels,
         "source": source,
         "sourceRefId": _strip(body.get("sourceRefId")) or None,
         "metadata": metadata,

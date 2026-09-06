@@ -88,7 +88,17 @@ def _notify_portal_push(
     portal_id: str,
     pdata: dict,
     assessment: dict,
+    notify_channels: list[str] | None = None,
 ) -> dict:
+    from utils.assessment_dispatch import (
+        _apply_notify_channels_to_contact,
+        _normalize_notify_channels,
+        _will_use_phone_channel,
+        _ensure_notify_phone_credits,
+        _consume_notify_phone_credit,
+    )
+
+    channels = _normalize_notify_channels(notify_channels)
     aid = assessment["assessmentId"]
     test_list = assessment.get("testList") or []
     required = {
@@ -103,8 +113,13 @@ def _notify_portal_push(
 
     email = (pdata.get("email") or "").strip().lower()
     phone = (pdata.get("phone") or "").strip()
+    email, phone = _apply_notify_channels_to_contact(email, phone, channels)
     if not email and not phone:
         return {"status": "skipped", "message": "no_contact"}
+
+    counselor_uid = (pdata.get("counselorId") or "").strip()
+    if _will_use_phone_channel(email, phone, channels):
+        _ensure_notify_phone_credits(db, counselor_uid, 1)
 
     portal_access_code = (pdata.get("accessCode") or "").strip()
     magic = create_portal_magic_link_token(portal_id, portal_access_code)
@@ -122,8 +137,17 @@ def _notify_portal_push(
         completed_count=completed_count,
         required_count=len(required),
         magic_path=magic_path,
+        allowed_channels=channels,
     )
     status = result.get("status") or "failed"
+    if status == "sent" and _will_use_phone_channel(email, phone, channels):
+        _consume_notify_phone_credit(
+            db,
+            counselor_uid=counselor_uid,
+            portal_id=portal_id,
+            assessment_id=aid,
+            reason="portal_push_phone",
+        )
     db.collection(CLIENT_PORTALS_COLLECTION).document(portal_id).update(
         {
             "lastPushNotifyStatus": status,
@@ -153,6 +177,7 @@ def push_assessments_to_portals(
     usage_end_date: str = "",
     test_list: list | None = None,
     notify: bool = True,
+    notify_channels: list[str] | None = None,
 ) -> dict:
     """
     기존 내담자 포털에 상담(코드)를 추가 배정하고 선택적으로 알림을 발송합니다.
@@ -222,6 +247,32 @@ def push_assessments_to_portals(
                 "assessmentId": aid,
             }
 
+    if notify and notify_channels is not None:
+        from utils.assessment_dispatch import (
+            _apply_notify_channels_to_contact,
+            _ensure_notify_phone_credits,
+            _normalize_notify_channels,
+            _will_use_phone_channel,
+        )
+
+        channels = _normalize_notify_channels(notify_channels)
+        phone_send_count = 0
+        for _pid, pdata in eligible:
+            email = (pdata.get("email") or "").strip().lower()
+            phone = (pdata.get("phone") or "").strip()
+            email, phone = _apply_notify_channels_to_contact(email, phone, channels)
+            if email or phone:
+                if _will_use_phone_channel(email, phone, channels):
+                    phone_send_count += 1
+        try:
+            _ensure_notify_phone_credits(db, counselor_uid, phone_send_count)
+        except ValueError as exc:
+            return {
+                "error": "insufficient_credits",
+                "message": str(exc),
+                "assessmentId": aid,
+            }
+
     assigned_count = 0
     notify_sent = 0
     notify_failed = 0
@@ -245,6 +296,7 @@ def push_assessments_to_portals(
                 portal_id=pid,
                 pdata=pdata,
                 assessment=assessment,
+                notify_channels=notify_channels,
             )
             detail["notify"] = notify_result
             nstatus = notify_result.get("status")

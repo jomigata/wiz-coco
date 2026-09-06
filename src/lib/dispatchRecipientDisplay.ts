@@ -173,7 +173,7 @@ function anyChannelSucceeded(parts: ChannelDetailPart[]): boolean {
 }
 
 function dispatchSuccessLabel(kindPrefix: string): string {
-  const label = kindPrefix ? `${kindPrefix}발송성공` : '발송성공';
+  const label = kindPrefix ? `${kindPrefix}성공` : '성공';
   return label.trim();
 }
 

@@ -84,6 +84,7 @@ export type CreateCareAssignmentInput = {
   startAt?: string;
   dueAt?: string;
   notify?: boolean;
+  notifyChannels?: ('email' | 'phone')[];
   source?: CareAssignmentSource;
   sourceRefId?: string;
   metadata?: Record<string, unknown>;

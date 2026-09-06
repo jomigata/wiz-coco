@@ -272,29 +272,25 @@ export function getAssessmentsParentSubmenuItems(options?: {
     href: ASSESSMENTS_NEW_HREF,
     isActive: (p) => p.startsWith(ASSESSMENTS_NEW_HREF),
   });
-  if (options?.admin) {
-    items.push({
-      order: 55,
-      label: '삭제된 상담코드',
-      href: DELETED_ASSESSMENTS_HREF,
-      isActive: isDeletedAssessmentsPath,
-    });
-  }
+  items.push({
+    order: 90,
+    label: '삭제된 상담코드',
+    href: DELETED_ASSESSMENTS_HREF,
+    isActive: isDeletedAssessmentsPath,
+  });
   return items;
 }
 
 /** 검사발송 목록 메뉴 선택 시 고정 소분류 */
-export function getClientsParentSubmenuItems(options?: { admin?: boolean }): CounselorParentSubmenuItem[] {
-  const items: CounselorParentSubmenuItem[] = [];
-  if (options?.admin) {
-    items.push({
-      order: 55,
+export function getClientsParentSubmenuItems(_options?: { admin?: boolean }): CounselorParentSubmenuItem[] {
+  return [
+    {
+      order: 90,
       label: '삭제된 내담자',
       href: DELETED_RECIPIENTS_HREF,
       isActive: isDeletedRecipientsPath,
-    });
-  }
-  return items;
+    },
+  ];
 }
 
 export function resolveActiveNestedNavItem(

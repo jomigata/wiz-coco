@@ -62,6 +62,11 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // SMS 단축 go 링크 — shortLinks (백엔드 API 전용)
+    match /shortLinks/{code} {
+      allow read, write: if false;
+    }
+
     // 검사 참여자 프로필 — joinParticipants (백엔드 API 전용)
     match /joinParticipants/{participantId} {
       allow read, write: if false;

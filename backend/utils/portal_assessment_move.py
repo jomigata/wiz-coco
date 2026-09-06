@@ -223,6 +223,7 @@ def move_portals_to_assessment(
     portal_ids: list[str],
     target_assessment_id: str,
     source_assessment_id: str | None = None,
+    skip_tombstone: bool = False,
 ) -> dict:
     """내담자를 source 상담(코드)에서 target으로 완전 이동 (알림 없음)."""
     target = _verify_move_target(db, target_assessment_id.strip(), counselor_uid)
@@ -305,6 +306,27 @@ def move_portals_to_assessment(
             from_assessment_id=from_aid,
             origin_title=from_meta["title"],
         )
+        if not skip_tombstone:
+            from utils.assessment_dispatch import _test_detail_rows
+
+            source_ass = _load_source_meta(db, from_aid)
+            source_ass_doc = db.collection(ASSESSMENTS_COLLECTION).document(from_aid).get()
+            source_test_list = (source_ass_doc.to_dict() or {}).get("testList") or []
+            test_snapshot = _test_detail_rows(db, pid, from_aid, source_test_list)
+            from utils.portal_assessment_move_tombstone import create_move_tombstone
+
+            create_move_tombstone(
+                db,
+                counselor_uid=counselor_uid,
+                portal_id=pid,
+                from_assessment_id=from_aid,
+                to_assessment_id=to_aid,
+                display_name=pdata.get("displayName") or "",
+                source_my_code=(pdata.get("accessCode") or "").strip(),
+                target_my_code=(pdata.get("accessCode") or "").strip(),
+                target_join_access_code=target.get("accessCode") or "",
+                tests=test_snapshot,
+            )
         results_updated += n_updated
         results_deleted += n_deleted
         moved += 1

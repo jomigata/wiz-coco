@@ -858,10 +858,17 @@ def deliver_portal_credentials(
     portal_ref=None,
     queue_ref=None,
     notify_kind: str = "initial",
+    allowed_channels: list[str] | None = None,
 ) -> dict:
     """나의코드·PIN 등 포털 접속 정보를 이메일·문자로 즉시 발송."""
     email = (email or "").strip().lower()
     phone = (phone or "").strip()
+    if allowed_channels is not None:
+        allowed = set(allowed_channels)
+        if "email" not in allowed:
+            email = ""
+        if "phone" not in allowed:
+            phone = ""
     long_magic_url = f"{PUBLIC_SITE_URL.rstrip('/')}{magic_path}" if magic_path else PUBLIC_SITE_URL
     portal_id_str = portal_ref.id if portal_ref is not None else ""
     magic_url = _apply_short_go_url(
@@ -1072,10 +1079,17 @@ def deliver_test_reminder(
     portal_ref=None,
     queue_ref=None,
     notify_kind: str = "remind",
+    allowed_channels: list[str] | None = None,
 ) -> dict:
     """미실시·미완료 검사 현황과 검사 연결 링크를 이메일·문자로 즉시 발송."""
     email = (email or "").strip().lower()
     phone = (phone or "").strip()
+    if allowed_channels is not None:
+        allowed = set(allowed_channels)
+        if "email" not in allowed:
+            email = ""
+        if "phone" not in allowed:
+            phone = ""
     long_magic_url = f"{PUBLIC_SITE_URL.rstrip('/')}{magic_path}" if magic_path else PUBLIC_SITE_URL
     portal_id_str = portal_ref.id if portal_ref is not None else ""
     magic_url = _apply_short_go_url(
@@ -1250,10 +1264,17 @@ def deliver_care_assignment(
     assignment_title: str = "",
     portal_access_code: str = "",
     magic_path: str = "",
+    allowed_channels: list[str] | None = None,
 ) -> dict:
     """치료·과제 할당 안내를 이메일·문자로 즉시 발송."""
     email = (email or "").strip().lower()
     phone = (phone or "").strip()
+    if allowed_channels is not None:
+        allowed = set(allowed_channels)
+        if "email" not in allowed:
+            email = ""
+        if "phone" not in allowed:
+            phone = ""
     long_magic_url = f"{PUBLIC_SITE_URL.rstrip('/')}{magic_path}" if magic_path else PUBLIC_SITE_URL
     magic_url = _apply_short_go_url(
         magic_path=magic_path,
@@ -1360,6 +1381,7 @@ def process_notification_queue(*, limit: int = 50) -> dict:
                     else None
                 )
                 notify_kind = (data.get("notifyKind") or "initial").strip()
+                notify_channels = data.get("notifyChannels")
                 result = deliver_portal_credentials(
                     email=email,
                     phone=phone,
@@ -1374,6 +1396,7 @@ def process_notification_queue(*, limit: int = 50) -> dict:
                     portal_ref=portal_ref,
                     queue_ref=doc.reference,
                     notify_kind=notify_kind,
+                    allowed_channels=notify_channels,
                 )
                 status = result["status"]
                 errors = result["errors"]
@@ -1402,6 +1425,7 @@ def process_notification_queue(*, limit: int = 50) -> dict:
                     magic = create_portal_magic_link_token(portal_id, portal_access_code)
                     magic_path = f"/go?t={magic}&tab=care"
 
+                notify_channels = data.get("notifyChannels")
                 result = deliver_care_assignment(
                     email=email,
                     phone=phone,
@@ -1409,6 +1433,7 @@ def process_notification_queue(*, limit: int = 50) -> dict:
                     assignment_title=assignment_title,
                     portal_access_code=portal_access_code,
                     magic_path=magic_path,
+                    allowed_channels=notify_channels,
                 )
                 status = result["status"]
                 errors = result["errors"]

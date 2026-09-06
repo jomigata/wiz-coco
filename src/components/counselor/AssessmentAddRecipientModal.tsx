@@ -20,6 +20,8 @@ import {
 } from '@/lib/recipientImport';
 import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
 import CounselorActionCompleteModal from '@/components/counselor/CounselorActionCompleteModal';
+import CounselorNotifyConfirmDialog from '@/components/counselor/CounselorNotifyConfirmDialog';
+import type { NotifyRecipientContact } from '@/lib/counselorNotifyChannels';
 
 export type AssessmentAddRecipientContext = {
   assessmentId: string;
@@ -92,6 +94,7 @@ export default function AssessmentAddRecipientModal({
   const [addFileLabel, setAddFileLabel] = useState('');
   const [showAddFilePreview, setShowAddFilePreview] = useState(false);
   const [samplePreviewKind, setSamplePreviewKind] = useState<'txt' | 'csv' | null>(null);
+  const [notifyConfirmOpen, setNotifyConfirmOpen] = useState(false);
 
   const samplePreviewText = useMemo(() => getGroupRecipientSamplePreviewText(), []);
   const samplePreviewLayout = useMemo(() => {
@@ -103,6 +106,16 @@ export default function AssessmentAddRecipientModal({
   const combinedRows = useMemo(
     () => mergeRecipients(pendingRows, addFileRows),
     [pendingRows, addFileRows],
+  );
+
+  const notifyRecipients = useMemo<NotifyRecipientContact[]>(
+    () =>
+      combinedRows.map((r) => ({
+        displayName: r.displayName,
+        email: r.email,
+        phone: r.phone,
+      })),
+    [combinedRows],
   );
 
   const resetForm = () => {
@@ -167,7 +180,7 @@ export default function AssessmentAddRecipientModal({
     setShowAddFilePreview(false);
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!context) return;
     const rows = combinedRows;
     if (rows.length === 0) {
@@ -179,9 +192,21 @@ export default function AssessmentAddRecipientModal({
       setAddError(`「${invalid.displayName}」님의 이메일 또는 휴대폰 번호가 필요합니다.`);
       return;
     }
+    setAddError('');
+    if (addSendNow) {
+      setNotifyConfirmOpen(true);
+      return;
+    }
+    void executeSubmit(undefined);
+  };
+
+  const executeSubmit = async (notifyChannels: ('email' | 'phone')[] | undefined) => {
+    if (!context) return;
+    const rows = combinedRows;
     const cohortName = (context.cohortName || context.title || '내담자').trim();
     setAddLoading(true);
     setAddError('');
+    setNotifyConfirmOpen(false);
     try {
       await bulkCreateClientPortals({
         assessmentId: context.assessmentId,
@@ -195,6 +220,7 @@ export default function AssessmentAddRecipientModal({
           queueNotify: addSendNow,
         })),
         queueNotify: addSendNow,
+        notifyChannels: addSendNow ? notifyChannels : undefined,
       });
       setAddComplete({
         title: addSendNow ? '발송 완료' : '추가 완료',
@@ -532,6 +558,15 @@ export default function AssessmentAddRecipientModal({
         error={addComplete?.error}
         onConfirm={handleCompleteConfirm}
         zIndexClass="z-[130]"
+      />
+      <CounselorNotifyConfirmDialog
+        open={notifyConfirmOpen}
+        kind="add_recipient"
+        recipients={notifyRecipients}
+        loading={addLoading}
+        confirmLabel="추가·발송"
+        onConfirm={(channels) => void executeSubmit(channels)}
+        onCancel={() => setNotifyConfirmOpen(false)}
       />
     </div>
   );

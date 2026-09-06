@@ -119,6 +119,7 @@ def _enqueue_portal_notification(
     cohort_name: str = "",
     assessment_title: str = "",
     welcome_message: str = "",
+    notify_channels: list[str] | None = None,
 ) -> None:
     payload = {
         "type": "portal_credentials",
@@ -147,6 +148,8 @@ def _enqueue_portal_notification(
         payload["assessmentTitle"] = assessment_title
     if welcome_message:
         payload["welcomeMessage"] = welcome_message
+    if notify_channels is not None:
+        payload["notifyChannels"] = list(notify_channels)
     notify_queue.add(payload)
 
 
@@ -167,11 +170,15 @@ def create_portal_for_row(
     organization_id: str = "",
     assessment_title: str = "",
     welcome_message: str = "",
+    notify_channels: list[str] | None = None,
 ) -> tuple[dict, bool, int, int]:
     """Returns (created_row_dict, notify_queued, notify_sent, notify_failed)."""
+    from utils.assessment_dispatch import _apply_notify_channels_to_contact
+
     display_name = (row.get("displayName") or row.get("name") or "").strip() or "내담자"
     email = (row.get("email") or "").strip().lower()
     phone = normalize_recipient_phone((row.get("phone") or "").strip())
+    email, phone = _apply_notify_channels_to_contact(email, phone, notify_channels)
 
     portal_access_code = generate_unique_portal_access_code()
     pin = generate_four_digit_password()
@@ -228,6 +235,7 @@ def create_portal_for_row(
                 welcome_message=welcome_message,
                 portal_ref=portal_ref,
                 notify_kind="initial",
+                allowed_channels=notify_channels,
             )
             status = result.get("status") or "failed"
             notify_errors = list(result.get("errors") or [])
@@ -255,6 +263,7 @@ def create_portal_for_row(
                 cohort_name=cohort_name,
                 assessment_title=assessment_title,
                 welcome_message=welcome_message,
+                notify_channels=notify_channels,
             )
             notify_queued = True
 
@@ -296,6 +305,7 @@ def create_bulk_job(
     organization_id: str = "",
     assessment_title: str = "",
     welcome_message: str = "",
+    notify_channels: list[str] | None = None,
 ) -> str:
     job_ref = db.collection(BULK_PORTAL_JOBS_COLLECTION).document()
     payload = {
@@ -312,6 +322,7 @@ def create_bulk_job(
         "welcomeMessage": (welcome_message or "").strip(),
         "joinAccessCode": join_access_code,
         "queueNotify": queue_notify,
+        "notifyChannels": notify_channels,
         "scheduledAt": scheduled_at_iso or None,
         "inputRows": rows,
         "error": None,
@@ -417,6 +428,7 @@ def process_bulk_job_batch(
     queue_notify = bool(data.get("queueNotify"))
     scheduled_at_iso = (data.get("scheduledAt") or "").strip()
     organization_id = (data.get("organizationId") or "").strip()
+    notify_channels = data.get("notifyChannels")
 
     processed_now = 0
     notify_queued_now = 0
@@ -448,6 +460,7 @@ def process_bulk_job_batch(
                 organization_id=organization_id,
                 assessment_title=assessment_title,
                 welcome_message=welcome_message,
+                notify_channels=notify_channels,
             )
             _job_created_rows_ref(db, job_id).document(created["portalId"]).set(created)
             processed_now += 1

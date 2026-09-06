@@ -9,6 +9,8 @@ import {
   isQuickCareRecommendationDismissed,
   resolveCounselorQuickCareRecommendation,
 } from '@/lib/counselorQuickCareRecommendation';
+import CounselorNotifyConfirmDialog from '@/components/counselor/CounselorNotifyConfirmDialog';
+import type { NotifyRecipientContact } from '@/lib/counselorNotifyChannels';
 
 type Props = {
   recipient: DispatchRecipient;
@@ -29,16 +31,30 @@ export default function CounselorQuickCareRecommendCard({ recipient, onAssigned 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [sent, setSent] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const notifyRecipients = useMemo<NotifyRecipientContact[]>(
+    () => [
+      {
+        displayName: recipient.displayName,
+        email: recipient.email,
+        phone: recipient.phone,
+      },
+    ],
+    [recipient.displayName, recipient.email, recipient.phone],
+  );
 
   if (!recommendation || dismissed || sent) return null;
 
-  const handleSend = async () => {
+  const handleSend = async (notifyChannels: ('email' | 'phone')[]) => {
     setBusy(true);
     setError('');
+    setConfirmOpen(false);
     try {
-      await createCareAssignments(
-        buildQuickCareAssignmentInput([recipient.portalId], recommendation),
-      );
+      await createCareAssignments({
+        ...buildQuickCareAssignmentInput([recipient.portalId], recommendation),
+        notifyChannels,
+      });
       setSent(true);
       onAssigned?.();
     } catch (err) {
@@ -54,30 +70,43 @@ export default function CounselorQuickCareRecommendCard({ recipient, onAssigned 
   };
 
   return (
-    <div className="mt-3 rounded-xl border border-teal-500/30 bg-teal-950/25 p-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-teal-200/90">짧은 숙제 1개</p>
-      <p className="mt-1 text-sm font-medium text-white">{recommendation.title}</p>
-      <p className="mt-2 text-sm text-slate-300">{recommendation.pitch}</p>
-      <p className="mt-1 text-xs text-slate-500">{recommendation.rationale}</p>
-      {error ? <p className="mt-2 text-xs text-red-300">{error}</p> : null}
-      <div className="mt-3 flex flex-wrap gap-2">
-        <button
-          type="button"
-          disabled={busy}
-          onClick={() => void handleSend()}
-          className="rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-500 disabled:opacity-50"
-        >
-          {busy ? '보내는 중…' : '이 숙제 보내기'}
-        </button>
-        <button
-          type="button"
-          disabled={busy}
-          onClick={handleDismiss}
-          className="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-slate-300 hover:bg-white/5 disabled:opacity-50"
-        >
-          나중에
-        </button>
+    <>
+      <div className="mt-3 rounded-xl border border-teal-500/30 bg-teal-950/25 p-4">
+        <p className="text-xs font-semibold uppercase tracking-wide text-teal-200/90">짧은 숙제 1개</p>
+        <p className="mt-1 text-sm font-medium text-white">{recommendation.title}</p>
+        <p className="mt-2 text-sm text-slate-300">{recommendation.pitch}</p>
+        <p className="mt-1 text-xs text-slate-500">{recommendation.rationale}</p>
+        {error ? <p className="mt-2 text-xs text-red-300">{error}</p> : null}
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => setConfirmOpen(true)}
+            className="rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-500 disabled:opacity-50"
+          >
+            {busy ? '보내는 중…' : '이 숙제 보내기'}
+          </button>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={handleDismiss}
+            className="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-slate-300 hover:bg-white/5 disabled:opacity-50"
+          >
+            나중에
+          </button>
+        </div>
       </div>
-    </div>
+      <CounselorNotifyConfirmDialog
+        open={confirmOpen}
+        kind="care"
+        title="이 숙제 보내기 확인"
+        description={`「${recommendation.title}」 숙제를 안내합니다. 발송 채널을 선택해 주세요.`}
+        recipients={notifyRecipients}
+        loading={busy}
+        confirmLabel="보내기"
+        onConfirm={(channels) => void handleSend(channels)}
+        onCancel={() => setConfirmOpen(false)}
+      />
+    </>
   );
 }

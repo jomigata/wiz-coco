@@ -413,6 +413,7 @@ def update_assessment(assessment_id):
     welcome_message = (body.get("welcomeMessage") or "").strip()
     usage_end_date = _normalize_usage_end_date(body.get("usageEndDate"))
     code_category = (body.get("codeCategory") or body.get("code_category") or "").strip()
+    cohort_name = (body.get("cohortName") or body.get("cohort_name") or "").strip()
     public_claim_channel_raw = (body.get("publicClaimChannel") or body.get("public_claim_channel") or "").strip()
     test_list = body.get("testList") or []
     if not isinstance(test_list, list):
@@ -426,10 +427,6 @@ def update_assessment(assessment_id):
         return jsonify({"error": "Bad Request", "message": "title required"}), 400
     if usage_end_date is None:
         return jsonify({"error": "Bad Request", "message": "usageEndDate must be YYYY-MM-DD"}), 400
-    if not code_category:
-        return jsonify({"error": "Bad Request", "message": "codeCategory required"}), 400
-    if code_category not in VALID_CODE_CATEGORIES:
-        return jsonify({"error": "Bad Request", "message": "invalid codeCategory"}), 400
 
     db = get_firestore()
     access_code_hint = (body.get("accessCode") or request.args.get("accessCode") or "").strip()
@@ -438,6 +435,13 @@ def update_assessment(assessment_id):
         return jsonify({"error": "Not Found", "message": "Assessment not found"}), 404
 
     existing = doc.to_dict() or {}
+    if not code_category:
+        code_category = (existing.get("codeCategory") or "group").strip()
+    if code_category not in VALID_CODE_CATEGORIES:
+        return jsonify({"error": "Bad Request", "message": "invalid codeCategory"}), 400
+    if cohort_name and len(cohort_name) > 120:
+        return jsonify({"error": "Bad Request", "message": "cohortName too long"}), 400
+
     search_source = {
         **existing,
         "title": title,
@@ -446,23 +450,23 @@ def update_assessment(assessment_id):
         "codeCategory": code_category,
         "testList": test_list,
     }
-    ref.update(
-        {
-            "title": title,
-            "targetAudience": target_audience,
-            "welcomeMessage": welcome_message,
-            "usageEndDate": usage_end_date or "",
-            "codeCategory": code_category,
-            "testList": test_list,
-            "updatedAt": SERVER_TIMESTAMP,
-            "searchTokens": build_assessment_search_tokens(search_source),
-            **(
-                {"publicClaimChannel": normalize_public_claim_channel(public_claim_channel_raw)}
-                if public_claim_channel_raw
-                else {}
-            ),
-        }
-    )
+    if cohort_name:
+        search_source["cohortName"] = cohort_name[:120]
+    update_payload: dict = {
+        "title": title,
+        "targetAudience": target_audience,
+        "welcomeMessage": welcome_message,
+        "usageEndDate": usage_end_date or "",
+        "codeCategory": code_category,
+        "testList": test_list,
+        "updatedAt": SERVER_TIMESTAMP,
+        "searchTokens": build_assessment_search_tokens(search_source),
+    }
+    if cohort_name:
+        update_payload["cohortName"] = cohort_name[:120]
+    if public_claim_channel_raw:
+        update_payload["publicClaimChannel"] = normalize_public_claim_channel(public_claim_channel_raw)
+    ref.update(update_payload)
     touch_assessment_list_stats(db, assessment_id)
     return jsonify({"assessmentId": assessment_id, "message": "updated"})
 

@@ -35,7 +35,9 @@ import {
   isCustomOrgDraft,
   parseCustomOrgInput,
   resolveCounselorAffiliationTitle,
+  resolveCustomOrgFocusFromClick,
 } from '@/lib/counselorOrgInput';
+import UsageEndDateField from '@/components/counselor/UsageEndDateField';
 import { loadCounselorOperationAffiliation } from '@/lib/firestore/counselorRegistration';
 import { fetchMyCredits } from '@/lib/commerceApi';
 import { GROUP_RECIPIENT_MAX } from '@/lib/groupRecipientLimits';
@@ -88,6 +90,7 @@ export default function CounselorQuickSendForm({
   const [customCohortName, setCustomCohortName] = useState('');
   const [customCohortFocused, setCustomCohortFocused] = useState(false);
   const [welcomeMessage, setWelcomeMessage] = useState(DEFAULT_WELCOME_MESSAGE);
+  const [usageEndDate, setUsageEndDate] = useState('');
   const [customTestIds, setCustomTestIds] = useState<Set<string>>(() => new Set(['generic']));
   const [testPickerOpen, setTestPickerOpen] = useState(false);
   const [manualRows, setManualRows] = useState<RecipientRow[]>([{ ...EMPTY_ROW }]);
@@ -292,12 +295,12 @@ export default function CounselorQuickSendForm({
 
     if (templateId === 'custom') {
       const parsed = parseCustomOrgInput(customCohortName);
-      if (!parsed.groupName) {
-        setError('1.그룹명을 입력해 주세요.');
+      if (!parsed.groupName.trim()) {
+        setError('그룹/기관명을 1자 이상 입력해 주세요.');
         return;
       }
-      if (!parsed.affiliation) {
-        setError('2.소속을 입력해 주세요.');
+      if (!parsed.affiliation.trim()) {
+        setError('소속을 입력해 주세요.');
         return;
       }
     }
@@ -380,6 +383,7 @@ export default function CounselorQuickSendForm({
         cohortName,
         title,
         welcomeMessage: message,
+        usageEndDate: usageEndDate.trim() || undefined,
         testList,
         codeCategory: templateId === 'custom' ? 'group' : 'individual',
         publicClaimChannel,
@@ -485,7 +489,7 @@ export default function CounselorQuickSendForm({
 
   return (
     <CounselorPageSection
-      title="검사 보내기"
+      title="상담코드 생성"
       dense
       className="flex min-h-0 flex-1"
       description={
@@ -500,7 +504,7 @@ export default function CounselorQuickSendForm({
           첫 검사 보내기는 무료입니다. 「무료검사」로 상담코드를 만들면 내담자가 직접 나의코드를 받을 수 있습니다.
         </p>
       ) : null}
-      <form onSubmit={handleSend} className="mx-auto flex max-w-2xl flex-col gap-3 p-1">
+      <form onSubmit={handleSend} className="mx-auto flex max-w-2xl flex-col gap-2.5 p-1">
         <CounselorSendStepBlock
           step={1}
           title="어떤 검사인가요?"
@@ -526,18 +530,24 @@ export default function CounselorQuickSendForm({
                     key={item.id}
                     className={`flex aspect-square flex-col rounded-xl border px-3 py-3 text-center transition-colors ${templateCardBorder(active)}`}
                   >
-                    <span className="shrink-0 text-[10px] font-semibold tabular-nums text-slate-500">
-                      {templateOrder}
+                    <span className="flex h-7 shrink-0 flex-col items-center justify-end">
+                      <span className="text-[10px] font-semibold tabular-nums text-slate-500">
+                        {templateOrder}
+                      </span>
+                      <span className="mt-1 block h-px w-full bg-white/15" aria-hidden />
                     </span>
                     <div
                       className="relative min-h-0 flex-1 cursor-text text-left"
                       onClick={() => {
                         setTemplateId('custom');
-                        focusCustomOrgTextarea(
-                          customCohortTextareaRef.current,
-                          customCohortName,
-                          setCustomCohortName,
-                        );
+                        if (!customCohortName.trim()) {
+                          focusCustomOrgTextarea(
+                            customCohortTextareaRef.current,
+                            customCohortName,
+                            setCustomCohortName,
+                            'group',
+                          );
+                        }
                       }}
                     >
                       {showCustomPlaceholder ? (
@@ -568,13 +578,37 @@ export default function CounselorQuickSendForm({
                         onFocus={() => {
                           setCustomCohortFocused(true);
                           setTemplateId('custom');
+                          if (!customCohortName.trim()) {
+                            focusCustomOrgTextarea(
+                              customCohortTextareaRef.current,
+                              customCohortName,
+                              setCustomCohortName,
+                              'group',
+                            );
+                          }
+                        }}
+                        onBlur={() => setCustomCohortFocused(false)}
+                        onClick={(e) => {
+                          const target = resolveCustomOrgFocusFromClick(e.currentTarget, e.clientY);
+                          focusCustomOrgTextarea(
+                            e.currentTarget,
+                            customCohortName,
+                            setCustomCohortName,
+                            target,
+                          );
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key !== 'Enter' || e.shiftKey) return;
+                          const parsed = parseCustomOrgInput(customCohortName);
+                          if (!parsed.groupName.trim()) return;
+                          e.preventDefault();
                           focusCustomOrgTextarea(
                             customCohortTextareaRef.current,
                             customCohortName,
                             setCustomCohortName,
+                            'affiliation',
                           );
                         }}
-                        onBlur={() => setCustomCohortFocused(false)}
                         maxLength={320}
                         rows={4}
                         disabled={sendLocked}
@@ -638,8 +672,11 @@ export default function CounselorQuickSendForm({
                     active ? 'text-white' : 'text-slate-200'
                   }`}
                 >
-                  <span className="mb-1 text-[10px] font-semibold tabular-nums text-slate-500">
-                    {templateOrder}
+                  <span className="flex h-7 shrink-0 flex-col items-center justify-end">
+                    <span className="mb-0 text-[10px] font-semibold tabular-nums text-slate-500">
+                      {templateOrder}
+                    </span>
+                    <span className="mt-1 block h-px w-full bg-white/15" aria-hidden />
                   </span>
                   <span className="block text-base font-bold leading-snug">
                     {item.name}
@@ -884,9 +921,15 @@ export default function CounselorQuickSendForm({
               value={publicClaimChannel}
               onChange={setPublicClaimChannel}
               disabled={sendLocked}
-              className="mb-4"
+              className="mb-3"
             />
           ) : null}
+          <UsageEndDateField
+            value={usageEndDate}
+            onChange={setUsageEndDate}
+            disabled={sendLocked}
+            className="mb-3"
+          />
           <div className="overflow-visible">
             <div className="mb-1.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 overflow-visible">
               <label htmlFor="quick-send-welcome" className="text-xs font-medium text-slate-400">
@@ -921,7 +964,7 @@ export default function CounselorQuickSendForm({
             disabled={sendLocked}
             className="mt-3 w-full rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-950/40 transition hover:from-emerald-500 hover:via-teal-500 hover:to-cyan-500 disabled:opacity-50"
           >
-            {isFreeTemplate ? '상담코드 만들기' : '검사 보내기'}
+            {isFreeTemplate ? '상담코드 만들기' : '상담코드 생성'}
           </button>
         </CounselorSendStepBlock>
       </form>

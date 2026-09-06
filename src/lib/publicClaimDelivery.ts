@@ -16,10 +16,11 @@ export {
   type AiPointFeature,
 } from '@/lib/pointsCatalog';
 
-export type PublicClaimChannel = 'phone' | 'email';
+export type PublicClaimChannel = 'phone' | 'email' | 'phone_email';
 
 export const PUBLIC_CLAIM_CHANNEL_PHONE: PublicClaimChannel = 'phone';
 export const PUBLIC_CLAIM_CHANNEL_EMAIL: PublicClaimChannel = 'email';
+export const PUBLIC_CLAIM_CHANNEL_PHONE_EMAIL: PublicClaimChannel = 'phone_email';
 
 import {
   POINT_COST_PUBLIC_CLAIM_PHONE,
@@ -30,7 +31,11 @@ import {
 
 export function normalizePublicClaimChannel(raw: unknown): PublicClaimChannel {
   const value = String(raw || '').trim().toLowerCase();
-  return value === PUBLIC_CLAIM_CHANNEL_EMAIL ? PUBLIC_CLAIM_CHANNEL_EMAIL : PUBLIC_CLAIM_CHANNEL_PHONE;
+  if (value === PUBLIC_CLAIM_CHANNEL_EMAIL) return PUBLIC_CLAIM_CHANNEL_EMAIL;
+  if (value === PUBLIC_CLAIM_CHANNEL_PHONE_EMAIL || value === 'phone+email') {
+    return PUBLIC_CLAIM_CHANNEL_PHONE_EMAIL;
+  }
+  return PUBLIC_CLAIM_CHANNEL_PHONE;
 }
 
 export function phoneChannelAffordable(creditBalance: number): boolean {
@@ -64,14 +69,25 @@ export const PUBLIC_CLAIM_CHANNEL_OPTIONS: {
     label: '이메일',
     priceNote: '무료',
   },
+  {
+    value: PUBLIC_CLAIM_CHANNEL_PHONE_EMAIL,
+    label: '휴대폰+이메일',
+    priceNote: `휴대폰 ${formatPoints(POINT_COST_PUBLIC_CLAIM_PHONE)} · 이메일 무료`,
+  },
 ];
 
 export function publicClaimContactLabel(channel: PublicClaimChannel): string {
-  return channel === PUBLIC_CLAIM_CHANNEL_EMAIL ? '이메일' : '휴대폰번호';
+  if (channel === PUBLIC_CLAIM_CHANNEL_EMAIL) return '이메일';
+  if (channel === PUBLIC_CLAIM_CHANNEL_PHONE_EMAIL) return '휴대폰·이메일';
+  return '휴대폰번호';
 }
 
 export function publicClaimSuccessHint(channel: PublicClaimChannel): string {
-  return channel === PUBLIC_CLAIM_CHANNEL_EMAIL
-    ? '이메일로 코드/비밀번호 발송하였습니다.'
-    : '휴대폰 문자(알림톡)으로 코드/비밀번호 발송하였습니다.';
+  if (channel === PUBLIC_CLAIM_CHANNEL_EMAIL) {
+    return '이메일로 코드/비밀번호 발송하였습니다.';
+  }
+  if (channel === PUBLIC_CLAIM_CHANNEL_PHONE_EMAIL) {
+    return '휴대폰·이메일로 코드/비밀번호를 발송하였습니다.';
+  }
+  return '휴대폰 문자(알림톡)으로 코드/비밀번호 발송하였습니다.';
 }

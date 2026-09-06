@@ -5,6 +5,7 @@ import { fetchMyCredits } from '@/lib/commerceApi';
 import {
   PUBLIC_CLAIM_CHANNEL_OPTIONS,
   PUBLIC_CLAIM_PHONE_MIN_BALANCE_POINTS,
+  POINT_COST_PUBLIC_CLAIM_PHONE,
   creditsToPoints,
   formatPoints,
   type PublicClaimChannel,
@@ -54,7 +55,7 @@ export default function PublicClaimChannelField({
     if (hintOverride !== undefined) return hintOverride;
     if (balance === null) return null;
     return (
-      `1포인트 = 10원 · 보유 ${formatPoints(creditsToPoints(balance))}. ` +
+      `1포인트 = 1원 · 보유 ${formatPoints(creditsToPoints(balance))}. ` +
       `휴대폰을 선택해도 보유 포인트가 ${formatPoints(PUBLIC_CLAIM_PHONE_MIN_BALANCE_POINTS)} 미만이면 ` +
       `내담자가 코드를 받을 때 이메일(무료)로 자동 전환됩니다.`
     );
@@ -85,8 +86,28 @@ export default function PublicClaimChannelField({
                 className="mt-1 accent-sky-500"
               />
               <span className="min-w-0">
-                <span className="block text-sm font-semibold text-white">{opt.label}</span>
-                <span className="mt-0.5 block text-xs text-slate-400">{opt.priceNote}</span>
+                <span className="block text-sm font-semibold text-white">
+                  {opt.label}
+                  {opt.value === 'phone' || opt.value === 'phone_email' ? (
+                    <>
+                      {' '}
+                      {opt.value === 'phone' ? (
+                        <span className="text-amber-300">({formatPoints(POINT_COST_PUBLIC_CLAIM_PHONE)})</span>
+                      ) : (
+                        <span className="text-amber-300">(휴대폰 {formatPoints(POINT_COST_PUBLIC_CLAIM_PHONE)})</span>
+                      )}
+                    </>
+                  ) : opt.value === 'email' ? (
+                    <span className="text-slate-400 font-normal"> (무료)</span>
+                  ) : null}
+                </span>
+                <span className="mt-0.5 block text-xs text-slate-400">
+                  {opt.value === 'phone' || opt.value === 'phone_email' ? (
+                    <span className="text-amber-300/90">{opt.priceNote}</span>
+                  ) : (
+                    opt.priceNote
+                  )}
+                </span>
               </span>
             </label>
           );
