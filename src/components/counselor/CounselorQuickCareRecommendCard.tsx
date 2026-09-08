@@ -10,6 +10,7 @@ import {
   resolveCounselorQuickCareRecommendation,
 } from '@/lib/counselorQuickCareRecommendation';
 import CounselorNotifyConfirmDialog from '@/components/counselor/CounselorNotifyConfirmDialog';
+import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
 import type { NotifyRecipientContact } from '@/lib/counselorNotifyChannels';
 
 type Props = {
@@ -105,7 +106,15 @@ export default function CounselorQuickCareRecommendCard({ recipient, onAssigned 
         loading={busy}
         confirmLabel="보내기"
         onConfirm={(channels) => void handleSend(channels)}
-        onCancel={() => setConfirmOpen(false)}
+        onCancel={() => {
+          if (busy) return;
+          setConfirmOpen(false);
+        }}
+      />
+      <CounselorActionProgressOverlay
+        open={busy}
+        title="숙제 보내기 진행 중…"
+        message="잠시만 기다려 주세요."
       />
     </>
   );

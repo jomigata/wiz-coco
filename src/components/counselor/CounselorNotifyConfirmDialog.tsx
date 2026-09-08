@@ -76,8 +76,11 @@ export default function CounselorNotifyConfirmDialog({
   );
 
   const pointSummary = useMemo(
-    () => formatNotifyPointSummary(recipients, channels, balancePoints),
-    [recipients, channels, balancePoints],
+    () =>
+      formatNotifyPointSummary(recipients, channels, balancePoints, {
+        perRecipient: kind === 'add_recipient',
+      }),
+    [recipients, channels, balancePoints, kind],
   );
 
   const insufficient = pointSummary.usePoints > balancePoints;
@@ -99,6 +102,11 @@ export default function CounselorNotifyConfirmDialog({
           <h3 className="text-base font-semibold text-white">{title || KIND_LABELS[kind]}</h3>
           {description ? (
             <p className="mt-1 text-sm text-slate-400">{description}</p>
+          ) : kind === 'add_recipient' ? (
+            <p className="mt-1 text-sm text-slate-400">
+              내담자 1명 추가 시 {formatPoints(POINT_COST_PORTAL_RECIPIENT)}가 차감됩니다. 발송 채널을 선택해
+              주세요.
+            </p>
           ) : (
             <p className="mt-1 text-sm text-slate-400">
               발송 채널을 선택한 뒤 확인해 주세요. 이메일(무료) 또는 휴대폰(

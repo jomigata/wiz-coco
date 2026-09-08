@@ -48,7 +48,8 @@ import {
 } from '@/lib/groupRecipientSampleDownload';
 import PublicClaimChannelField from '@/components/counselor/PublicClaimChannelField';
 import {
-  PUBLIC_CLAIM_CHANNEL_PHONE,
+  PUBLIC_CLAIM_CHANNEL_EMAIL,
+  PUBLIC_CLAIM_CHANNEL_PHONE_EMAIL,
   type PublicClaimChannel,
 } from '@/lib/publicClaimDelivery';
 import {
@@ -109,7 +110,7 @@ export default function CounselorQuickSendForm({
   const [firstSendTrialEligible, setFirstSendTrialEligible] = useState(false);
   const [counselorAffiliation, setCounselorAffiliation] = useState('');
   const [publicClaimChannel, setPublicClaimChannel] = useState<PublicClaimChannel>(
-    PUBLIC_CLAIM_CHANNEL_PHONE,
+    PUBLIC_CLAIM_CHANNEL_EMAIL,
   );
   const fileInputRef = useRef<HTMLInputElement>(null);
   const welcomeTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -315,32 +316,6 @@ export default function CounselorQuickSendForm({
         return;
       }
     }
-    if (!isFreeTemplate && recipients.length === 0) {
-      setError('내담자 1명 이상(이름·이메일 또는 휴대폰)을 입력하거나 명단을 첨부해 주세요.');
-      return;
-    }
-    if (!isFreeTemplate && recipients.length > GROUP_RECIPIENT_MAX) {
-      setError(`한 번에 최대 ${GROUP_RECIPIENT_MAX.toLocaleString('ko-KR')}명까지 보낼 수 있습니다.`);
-      return;
-    }
-
-    const invalid = isFreeTemplate
-      ? null
-      : recipients.find((r) => {
-          const emailNorm = r.email.trim();
-          const phoneNorm = normalizeRecipientPhone(r.phone);
-          if (emailNorm && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailNorm)) return true;
-          return !phoneNorm && !emailNorm;
-        });
-    if (invalid) {
-      if (invalid.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(invalid.email.trim())) {
-        setError(`「${invalid.displayName}」님의 이메일 형식을 확인해 주세요.`);
-      } else {
-        setError(`「${invalid.displayName}」님의 휴대폰 또는 이메일을 입력해 주세요.`);
-      }
-      return;
-    }
-
     const message = welcomeMessage.trim() || DEFAULT_WELCOME_MESSAGE;
 
     let cohortName = '';
@@ -358,23 +333,6 @@ export default function CounselorQuickSendForm({
     const pendingId = createPendingDispatchAssessmentId();
     pendingAssessmentIdRef.current = pendingId;
     resolvedAssessmentIdRef.current = '';
-    if (!isFreeTemplate) {
-      seedDispatchStatusBeforeIssue(
-        pendingId,
-        {
-          title,
-          cohortName,
-          testList,
-          recipients: recipients.map((row) => ({
-            displayName: row.displayName.trim(),
-            email: row.email.trim() || undefined,
-            phone: normalizeRecipientPhone(row.phone) || undefined,
-          })),
-          queueNotify: true,
-        },
-        user?.uid,
-      );
-    }
     setSendOverlay({ kind: 'pending' });
     setError('');
 
@@ -387,21 +345,13 @@ export default function CounselorQuickSendForm({
         testList,
         codeCategory: templateId === 'custom' ? 'group' : 'individual',
         publicClaimChannel,
-        publicClaimOnly: isFreeTemplate,
-        rows: isFreeTemplate
-          ? []
-          : recipients.map((r) => ({
-              displayName: r.displayName.trim(),
-              phone: normalizeRecipientPhone(r.phone) || undefined,
-              email: r.email.trim() || undefined,
-              queueNotify: true,
-            })),
-        queueNotify: !isFreeTemplate,
+        publicClaimOnly: true,
+        rows: [],
+        queueNotify: false,
       });
 
       const assessmentId = result.assessmentId || '';
       const accessCode = result.joinAccessCode || result.created?.[0]?.joinAccessCode || '';
-      const createdCount = result.created?.length ?? (isFreeTemplate ? 0 : recipients.length);
       if (assessmentId && accessCode) {
         const optimistic: CounselorAssessment = {
           id: assessmentId,
@@ -415,42 +365,16 @@ export default function CounselorQuickSendForm({
           createdAt: new Date().toISOString(),
           cohortName,
           codeCategory: templateId === 'custom' ? 'group' : 'individual',
-          dispatchSentCount: createdCount,
+          dispatchSentCount: 0,
           dispatchFailedCount: 0,
           testCompleteCount: 0,
-          testIncompleteCount: createdCount,
+          testIncompleteCount: 0,
+          publicClaimChannel,
         };
         prependCounselorAssessmentToListCache(optimistic);
       }
       if (result.credits?.trial) {
         setFirstSendTrialEligible(false);
-      }
-      if (!isFreeTemplate) {
-        finalizePendingDispatchIssue(
-          pendingId,
-          {
-            assessmentId,
-            title,
-            cohortName,
-            joinAccessCode: accessCode,
-            testList,
-            recipients: (result.created || []).length
-              ? (result.created || []).map((row) => ({
-                  portalId: row.portalId,
-                  displayName: row.displayName,
-                  email: row.email,
-                  phone: row.phone,
-                  myCode: row.myCode || row.accessCode,
-                }))
-              : recipients.map((row) => ({
-                  displayName: row.displayName.trim(),
-                  email: row.email.trim() || undefined,
-                  phone: normalizeRecipientPhone(row.phone) || undefined,
-                })),
-            queueNotify: true,
-          },
-          user?.uid,
-        );
       }
       resolvedAssessmentIdRef.current = assessmentId;
       setSendOverlay({ kind: 'done', assessmentId: pendingId });
@@ -492,11 +416,7 @@ export default function CounselorQuickSendForm({
       title="상담코드 생성"
       dense
       className="flex min-h-0 flex-1"
-      description={
-        firstSendTrialEligible
-          ? '첫 1명 보내기는 검사 포인트를 차감하지 않습니다. 1. 검사 선택 → 2. 이름·연락처 입력 → 3. 보내기'
-          : '1. 검사 선택 → 2. 이름·연락처 입력 → 3. 보내기'
-      }
+      description="1. 검사 선택 → 2. 코드전송 방법·안내 → 3. 상담코드 생성"
       toolbar={fullLink}
     >
       {firstSendTrialEligible ? (
@@ -695,241 +615,38 @@ export default function CounselorQuickSendForm({
 
         <CounselorSendStepBlock
           step={2}
-          title="누구에게 보낼까요?"
-          subtitle={
-            isFreeTemplate
-              ? '무료 내담자용 — 상담코드만 공유하면 내담자가 직접 나의코드를 받습니다'
-              : '이름·연락처를 입력하거나 파일로 여러 명을 추가하세요'
-          }
-          compact
-        >
-          {isFreeTemplate ? (
-            <div className="space-y-4">
-              <div className="rounded-xl border border-emerald-400/25 bg-emerald-500/10 px-4 py-4">
-                <p className="text-sm font-semibold text-emerald-100">무료 내담자용</p>
-                <p className="mt-2 text-sm leading-relaxed text-slate-300">
-                  상담코드를 내담자에게 알려 주면, 홈페이지의{' '}
-                  <span className="font-medium text-white">무료 검사코드 받기</span>에서 상담코드·이름(가명)·연락처만
-                  입력해 나의코드와 비밀번호를 자동으로 받을 수 있습니다.
-                </p>
-              </div>
-              <PublicClaimChannelField
-                value={publicClaimChannel}
-                onChange={setPublicClaimChannel}
-                disabled={sendLocked}
-                label="나의코드/비밀번호 전송방법"
-                hintOverride={`내담자가 무료 검사코드 받기에서 연락처를 입력하면 선택한 방법으로 나의코드·비밀번호가 발송됩니다. 보유 포인트가 10포인트 미만이면 휴대폰 선택 시에도 내담자 화면에서는 이메일(무료)로 자동 전환됩니다.`}
-              />
-            </div>
-          ) : (
-            <>
-          <div className="mb-1.5 hidden gap-3 text-xs text-slate-400 sm:grid sm:grid-cols-3">
-            <span>이름</span>
-            <span>휴대폰</span>
-            <span>이메일</span>
-          </div>
-          <div className="space-y-2">
-            {manualRows.map((row, idx) => (
-              <div key={idx} className="grid gap-3 sm:grid-cols-3">
-                <label className="block">
-                  <span className="mb-1.5 block text-xs text-slate-400 sm:hidden">이름</span>
-                  <div className="relative">
-                    <input
-                      ref={(el) => {
-                        recipientNameRefs.current[idx] = el;
-                      }}
-                      className={`${INPUT} pr-9`}
-                      value={row.displayName}
-                      onChange={(e) => updateRow(idx, 'displayName', e.target.value)}
-                      onBlur={(e) => handleNameBlur(idx, e.target.value)}
-                      onKeyDown={handleRecipientFieldKeyDown}
-                      placeholder="이름"
-                      autoComplete="name"
-                      disabled={sendLocked}
-                      aria-label="이름"
-                    />
-                    {manualRows.length > 1 || row.displayName.trim() ? (
-                      <button
-                        type="button"
-                        onClick={() => removeRow(idx)}
-                        disabled={sendLocked}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-slate-400 transition hover:bg-white/10 hover:text-red-300 disabled:opacity-50"
-                        aria-label="이름 줄 삭제"
-                      >
-                        ×
-                      </button>
-                    ) : null}
-                  </div>
-                </label>
-                <label className="block">
-                  <span className="mb-1.5 block text-xs text-slate-400 sm:hidden">휴대폰</span>
-                  <input
-                    className={INPUT}
-                    value={row.phone}
-                    onChange={(e) => updateRow(idx, 'phone', e.target.value)}
-                    onKeyDown={handleRecipientFieldKeyDown}
-                    placeholder="010-0000-0000"
-                    inputMode="tel"
-                    autoComplete="tel"
-                    disabled={sendLocked}
-                  />
-                </label>
-                <label className="block">
-                  <span className="mb-1.5 block text-xs text-slate-400 sm:hidden">이메일</span>
-                  <input
-                    className={INPUT}
-                    type="email"
-                    value={row.email}
-                    onChange={(e) => updateRow(idx, 'email', e.target.value)}
-                    onKeyDown={handleRecipientFieldKeyDown}
-                    placeholder="name@example.com"
-                    autoComplete="email"
-                    disabled={sendLocked}
-                  />
-                </label>
-              </div>
-            ))}
-          </div>
-
-          <div className="relative z-20 mt-3 flex flex-col gap-1.5 overflow-visible border-t border-white/10 pt-2.5">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".csv,.txt,.tsv,.xlsx,.xls,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
-              className="hidden"
-              onChange={handleFileChange}
-            />
-            <div className="relative flex flex-wrap items-center justify-between gap-2">
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="rounded-lg border border-white/10 bg-[#101f38]/80 px-3.5 py-1.5 text-sm font-medium text-slate-200 transition hover:border-violet-400/30 hover:bg-violet-950/30"
-                disabled={sendLocked}
-              >
-                텍스트/엑셀 파일 첨부하기
-              </button>
-              <div
-                className="relative ml-auto flex flex-wrap items-center justify-end gap-2"
-                onMouseLeave={() => setSamplePreviewKind(null)}
-              >
-                <span className="text-sm text-slate-400">샘플받기</span>
-                <button
-                  type="button"
-                  onClick={downloadGroupRecipientSampleTxt}
-                  onMouseEnter={() => setSamplePreviewKind('txt')}
-                  onFocus={() => setSamplePreviewKind('txt')}
-                  onBlur={() => setSamplePreviewKind(null)}
-                  className="text-sm text-sky-300 transition hover:text-sky-200"
-                  disabled={sendLocked}
-                >
-                  (텍스트파일)
-                </button>
-                <button
-                  type="button"
-                  onClick={downloadGroupRecipientSampleCsv}
-                  onMouseEnter={() => setSamplePreviewKind('csv')}
-                  onFocus={() => setSamplePreviewKind('csv')}
-                  onBlur={() => setSamplePreviewKind(null)}
-                  className="text-sm text-sky-300 transition hover:text-sky-200"
-                  disabled={sendLocked}
-                >
-                  (엑셀파일)
-                </button>
-                {samplePreviewKind && samplePreviewText && samplePreviewLayout ? (
-                  <div
-                    className="pointer-events-none absolute bottom-full right-0 z-[120] mb-1.5 w-full min-w-[16rem] rounded-lg border border-sky-500/40 bg-slate-950 p-3 text-left shadow-2xl sm:w-max"
-                    role="tooltip"
-                    style={{
-                      width: `min(100%, ${samplePreviewLayout.widthCh}ch)`,
-                    }}
-                  >
-                    <p className="mb-2 text-xs font-semibold text-sky-300">
-                      {samplePreviewKind === 'txt' ? '샘플 텍스트 미리보기' : '샘플 엑셀(CSV) 미리보기'}
-                    </p>
-                    <pre className="max-h-48 overflow-y-auto whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-slate-200">
-                      {samplePreviewText}
-                    </pre>
-                  </div>
-                ) : null}
-              </div>
-            </div>
-            <p className="text-xs leading-relaxed text-slate-500">
-              첨부파일은 1개만 가능합니다. 최대 {GROUP_RECIPIENT_MAX.toLocaleString('ko-KR')}명
-            </p>
-            {fileLabel ? (
-              <div
-                className="rounded-lg border border-violet-500/25 bg-violet-950/20 px-3 py-2.5"
-                role="status"
-                aria-live="polite"
-              >
-                <p className="text-xs font-medium text-violet-300/90">첨부된 파일</p>
-                <div className="relative mt-1 max-w-full">
-                  <p
-                    className="inline cursor-help break-all text-sm font-medium leading-snug text-white underline decoration-dotted decoration-violet-400/60 underline-offset-4"
-                    onMouseEnter={() => setShowFilePreview(true)}
-                    onMouseLeave={() => setShowFilePreview(false)}
-                    onFocus={() => setShowFilePreview(true)}
-                    onBlur={() => setShowFilePreview(false)}
-                    tabIndex={0}
-                    role="button"
-                    aria-label={`${fileLabel} 파일 내용 미리보기`}
-                  >
-                    {fileLabel}
-                  </p>
-                  {showFilePreview && filePreviewText && filePreviewLayout ? (
-                    <div
-                      className="pointer-events-none absolute bottom-full left-0 z-[120] mb-2 w-max max-w-full rounded-lg border border-violet-500/40 bg-slate-950 p-3 text-left shadow-2xl"
-                      role="tooltip"
-                      style={{
-                        width: `min(100%, ${filePreviewLayout.widthCh}ch)`,
-                      }}
-                    >
-                      <p className="mb-2 text-xs font-semibold text-violet-300">파일 내용 미리보기</p>
-                      <pre className="max-h-56 overflow-y-auto whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-slate-200">
-                        {filePreviewText}
-                        {filePreviewText.length >= 4000 ? '\n… (일부만 표시)' : ''}
-                      </pre>
-                    </div>
-                  ) : null}
-                </div>
-                <p className="mt-1 text-xs text-slate-400">
-                  파일에서{' '}
-                  <span className="font-semibold tabular-nums text-emerald-300">
-                    {fileRows.length.toLocaleString('ko-KR')}
-                  </span>
-                  명 인식
-                  {fileRows.length === 0 ? (
-                    <span className="text-amber-300/90"> · 유효한 행이 없습니다</span>
-                  ) : null}
-                </p>
-              </div>
-            ) : null}
-          </div>
-            </>
-          )}
-        </CounselorSendStepBlock>
-
-        <CounselorSendStepBlock
-          step={3}
-          title="보내기"
-          subtitle="안내 문구를 확인한 뒤 검사 링크를 발송합니다"
+          title="상담코드 설정"
+          subtitle="코드전송 방법과 안내를 확인한 뒤 상담코드를 생성합니다"
           compact
           allowOverflow
         >
-          {!isFreeTemplate ? (
-            <PublicClaimChannelField
-              value={publicClaimChannel}
-              onChange={setPublicClaimChannel}
-              disabled={sendLocked}
-              className="mb-3"
-            />
-          ) : null}
-          <UsageEndDateField
-            value={usageEndDate}
-            onChange={setUsageEndDate}
+          <div className="rounded-xl border border-emerald-400/25 bg-emerald-500/10 px-4 py-4">
+            <p className="text-sm font-semibold text-emerald-100">내담자 없이 상담코드만 생성</p>
+            <p className="mt-2 text-sm leading-relaxed text-slate-300">
+              생성된 상담코드를 내담자에게 알려 주면, 홈페이지{' '}
+              <span className="font-medium text-white">무료 검사코드 받기</span>에서 이름(가명)·연락처를 입력해
+              나의코드와 비밀번호를 받을 수 있습니다.
+            </p>
+          </div>
+          <PublicClaimChannelField
+            value={publicClaimChannel}
+            onChange={setPublicClaimChannel}
             disabled={sendLocked}
-            className="mb-3"
+            className="mb-3 mt-4"
+            allowedChannels={[PUBLIC_CLAIM_CHANNEL_EMAIL, PUBLIC_CLAIM_CHANNEL_PHONE_EMAIL]}
           />
+          <div className="mb-3">
+            <label htmlFor="quick-send-usage-end" className="mb-1.5 block text-sm font-semibold text-slate-200">
+              사용종료일 (선택)
+            </label>
+            <UsageEndDateField
+              id="quick-send-usage-end"
+              value={usageEndDate}
+              onChange={setUsageEndDate}
+              disabled={sendLocked}
+            />
+            <p className="mt-1.5 text-xs text-slate-500">비워두면 무기한 사용 가능합니다.</p>
+          </div>
           <div className="overflow-visible">
             <div className="mb-1.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 overflow-visible">
               <label htmlFor="quick-send-welcome" className="text-xs font-medium text-slate-400">
@@ -964,26 +681,20 @@ export default function CounselorQuickSendForm({
             disabled={sendLocked}
             className="mt-3 w-full rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-950/40 transition hover:from-emerald-500 hover:via-teal-500 hover:to-cyan-500 disabled:opacity-50"
           >
-            {isFreeTemplate ? '상담코드 만들기' : '상담코드 생성'}
+            상담코드 생성
           </button>
         </CounselorSendStepBlock>
       </form>
       <CounselorActionProgressOverlay
         open={Boolean(sendOverlay)}
         phase={sendOverlay?.kind === 'done' ? 'success' : 'loading'}
-        title={sendOverlay?.kind === 'done' ? (isFreeTemplate ? '생성 완료' : '발송 완료') : isFreeTemplate ? '생성 중…' : '발송 중…'}
+        title={sendOverlay?.kind === 'done' ? '생성 완료' : '생성 중…'}
         message={
           sendOverlay?.kind === 'done'
-            ? isFreeTemplate
-              ? '무료 내담자용 상담코드가 생성되었습니다.'
-              : '완료되었습니다.'
+            ? '상담코드가 생성되었습니다.'
             : '잠시만 기다려 주세요.'
         }
-        hint={
-          sendOverlay?.kind !== 'done'
-            ? '발송 인원이 많을수록 시간이 더 걸릴 수 있습니다.'
-            : undefined
-        }
+        hint={sendOverlay?.kind !== 'done' ? undefined : undefined}
         onConfirm={sendOverlay?.kind === 'done' ? handleSendConfirm : undefined}
       />
       <CounselorQuickSendTestPickerModal

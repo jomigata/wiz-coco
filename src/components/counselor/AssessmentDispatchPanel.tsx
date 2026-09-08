@@ -230,7 +230,8 @@ function testStatusLabel(status: DispatchTestResult['status']): { text: string; 
 
 function progressStatusForRow(recipient: DispatchRecipient): { text: string; className: string } {
   if (recipient.moveStatus === 'moved_out') {
-    return { text: '이동완료 (나의코드)', className: 'text-slate-500' };
+    const movedCode = formatAccessCodeDisplay(recipient.movedToJoinAccessCode || '') || '—';
+    return { text: `이동완료 (${movedCode})`, className: 'text-slate-500' };
   }
   return testSummary(recipient);
 }
@@ -1542,7 +1543,10 @@ export default function AssessmentDispatchPanel({
                         >
                           {isMovedOutRecipient(r) ? (
                             <div className="mb-3 rounded-lg border border-slate-600/80 bg-slate-950/55 px-4 py-3 text-sm">
-                              <p className="font-medium text-slate-300">나의코드 이동 완료</p>
+                              <p className="font-medium text-slate-300">
+                                상담코드 ({formatAccessCodeDisplay(r.movedToJoinAccessCode || '') || '—'}) 로
+                                이동 완료
+                              </p>
                               <p className="mt-1 text-slate-400">
                                 {r.movedToAssessmentTitle || '다른 상담코드'}(
                                 {formatAccessCodeDisplay(r.movedToJoinAccessCode || '') || '—'})로
@@ -1555,7 +1559,7 @@ export default function AssessmentDispatchPanel({
                                     className="rounded-md border border-sky-500/40 bg-sky-950/40 px-3 py-1.5 text-xs text-sky-200 hover:bg-sky-900/50"
                                     onClick={(e) => e.stopPropagation()}
                                   >
-                                    이동한 코드 현황 보기
+                                    이동한 상담코드로 가기
                                   </Link>
                                 ) : null}
                                 {r.tombstoneId ? (

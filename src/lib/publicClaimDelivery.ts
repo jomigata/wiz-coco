@@ -23,10 +23,8 @@ export const PUBLIC_CLAIM_CHANNEL_EMAIL: PublicClaimChannel = 'email';
 export const PUBLIC_CLAIM_CHANNEL_PHONE_EMAIL: PublicClaimChannel = 'phone_email';
 
 import {
-  POINT_COST_PUBLIC_CLAIM_PHONE,
   PUBLIC_CLAIM_PHONE_MIN_BALANCE_POINTS,
   assessmentCreditsToPoints,
-  formatPoints,
 } from '@/lib/pointsCatalog';
 
 export function normalizePublicClaimChannel(raw: unknown): PublicClaimChannel {
@@ -60,19 +58,14 @@ export const PUBLIC_CLAIM_CHANNEL_OPTIONS: {
   priceNote: string;
 }[] = [
   {
-    value: PUBLIC_CLAIM_CHANNEL_PHONE,
-    label: '휴대폰(카톡/문자)',
-    priceNote: `${formatPoints(POINT_COST_PUBLIC_CLAIM_PHONE)} 차감`,
-  },
-  {
     value: PUBLIC_CLAIM_CHANNEL_EMAIL,
     label: '이메일',
-    priceNote: '무료',
+    priceNote: '내담자가 이메일을 입력하면 자동 발송',
   },
   {
     value: PUBLIC_CLAIM_CHANNEL_PHONE_EMAIL,
     label: '휴대폰+이메일',
-    priceNote: `휴대폰 ${formatPoints(POINT_COST_PUBLIC_CLAIM_PHONE)} · 이메일 무료`,
+    priceNote: '휴대폰·이메일 모두 있으면 둘 다 자동 발송 (휴대폰 1포인트/명)',
   },
 ];
 

@@ -67,7 +67,7 @@ export function rememberCounselorProgressFrom(source: 'clients' | 'assessments' 
   if (typeof window === 'undefined') return;
   try {
     sessionStorage.setItem(PROGRESS_FROM_KEY, source);
-    if (source === 'clients' || source === 'assessments') {
+    if (source === 'clients' || source === 'assessments' || source === 'deleted-recipients') {
       markCounselorListSkipReload(source);
     }
   } catch {
@@ -170,35 +170,13 @@ export function getAssessmentListContextNestedItems(
   return items;
 }
 
-/** 내담자 메뉴 — 삭제된 내담자 화면 하위 메뉴 */
+/** 내담자 메뉴 — 컨텍스트 소분류(현재 없음, parentSubmenu 사용) */
 export function getClientsListContextNestedItems(
-  pathname: string,
-  search: string,
-  options?: { admin?: boolean },
+  _pathname: string,
+  _search: string,
+  _options?: { admin?: boolean },
 ): AssessmentListNestedNavItem[] {
-  const path = normalizeCounselorPath(pathname);
-  const items: AssessmentListNestedNavItem[] = [];
-
-  if (!options?.admin && isDeletedRecipientsPath(path)) {
-    items.push({
-      order: 10,
-      label: '삭제된 내담자',
-      href: DELETED_RECIPIENTS_HREF,
-      isActive: isDeletedRecipientsPath,
-    });
-  }
-
-  if (path.startsWith('/counselor/assessments/progress') && resolveCounselorProgressFrom(pathname, search) === 'clients') {
-    const assessmentId = resolveAssessmentContextId(pathname, search);
-    items.push({
-      order: 50,
-      label: '검사발송 현황',
-      href: buildProgressHref(assessmentId, search),
-      isActive: (p) => p.startsWith('/counselor/assessments/progress'),
-    });
-  }
-
-  return items;
+  return [];
 }
 
 /** 영구삭제 상담코드·내담자 (데이터 관리 > 복구 관리) */
@@ -253,11 +231,7 @@ export function getAssessmentsParentSubmenuItems(options?: {
 
   const items: CounselorParentSubmenuItem[] = [];
 
-  if (
-    assessmentId &&
-    progressFrom !== 'clients' &&
-    path.startsWith('/counselor/assessments/progress')
-  ) {
+  if (progressFrom !== 'clients') {
     items.push({
       order: 0,
       label: '상담진행 현황',
@@ -282,8 +256,28 @@ export function getAssessmentsParentSubmenuItems(options?: {
 }
 
 /** 검사발송 목록 메뉴 선택 시 고정 소분류 */
-export function getClientsParentSubmenuItems(_options?: { admin?: boolean }): CounselorParentSubmenuItem[] {
-  return [
+export function getClientsParentSubmenuItems(options?: {
+  admin?: boolean;
+  pathname?: string;
+  search?: string;
+}): CounselorParentSubmenuItem[] {
+  const assessmentId =
+    options?.pathname != null
+      ? resolveAssessmentContextId(options.pathname, options.search || '')
+      : null;
+  const progressHref = buildProgressHref(assessmentId, options?.search || '?from=clients');
+
+  const items: CounselorParentSubmenuItem[] = [
+    {
+      order: 2,
+      label: '검사발송 현황',
+      href: progressHref,
+      isActive: (p) =>
+        p.startsWith('/counselor/assessments/progress') &&
+        (options?.pathname
+          ? resolveCounselorProgressFrom(options.pathname, options.search || '') === 'clients'
+          : true),
+    },
     {
       order: 90,
       label: '삭제된 내담자',
@@ -291,6 +285,7 @@ export function getClientsParentSubmenuItems(_options?: { admin?: boolean }): Co
       isActive: isDeletedRecipientsPath,
     },
   ];
+  return items;
 }
 
 export function resolveActiveNestedNavItem(

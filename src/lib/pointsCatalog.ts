@@ -1,6 +1,6 @@
 /**
  * WizCoCo 포인트 단가표 — DB는 검사/AI 크레딧(정수) 유지, UI·API는 포인트 표기
- * 1포인트 = 1원 · 휴대폰 알림 1건 = 100포인트
+ * 1포인트 = 1원 · 내담자 1명 = 1포인트
  */
 
 export const WON_PER_POINT = 1;
@@ -12,11 +12,11 @@ export const POINTS_PER_AI_CREDIT = 100;
 export const POINTS_PER_CREDIT = POINTS_PER_ASSESSMENT_CREDIT;
 
 // --- 검사(포털) ---
-export const POINT_COST_PORTAL_RECIPIENT = 100;
-export const POINT_COST_PUBLIC_CLAIM_PHONE = 100;
+export const POINT_COST_PORTAL_RECIPIENT = 1;
+export const POINT_COST_PUBLIC_CLAIM_PHONE = 1;
 export const POINT_COST_PUBLIC_CLAIM_EMAIL = 0;
 /** 휴대폰(알림톡/문자) 허용 최소 보유 포인트 — 미만이면 내담자 claim 시 이메일로 전환 */
-export const PUBLIC_CLAIM_PHONE_MIN_BALANCE_POINTS = 100;
+export const PUBLIC_CLAIM_PHONE_MIN_BALANCE_POINTS = 1;
 
 export const PUBLIC_CLAIM_PHONE_POINT_COST = POINT_COST_PUBLIC_CLAIM_PHONE;
 export const PUBLIC_CLAIM_PHONE_CREDIT_COST = 1;

@@ -293,14 +293,6 @@ export default function CounselorHomeDashboard() {
           ) : null}
         </>
       }
-      toolbar={
-        <AuthLink
-          href="/counselor/assessments/new"
-          className="rounded-md bg-sky-600/90 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-sky-500 sm:text-sm"
-        >
-          + 상담코드 보내기
-        </AuthLink>
-      }
     >
       <motion.div
         className="grid min-h-0 flex-1 grid-cols-1 gap-3 p-2.5 text-sm sm:p-3 lg:grid-cols-2"

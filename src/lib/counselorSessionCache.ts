@@ -16,6 +16,7 @@ const DISPATCH_PREFIX = `${COUNSELOR_SWR_PREFIX}Dispatch:`;
 const CLIENT_PORTALS_PREFIX = `${COUNSELOR_SWR_PREFIX}ClientPortals:`;
 const TEST_RESULTS_PREFIX = `${COUNSELOR_SWR_PREFIX}TestResults:`;
 const ARCHIVED_PREFIX = `${COUNSELOR_SWR_PREFIX}ArchivedAssessments:`;
+const DELETED_RECIPIENTS_PREFIX = `${COUNSELOR_SWR_PREFIX}DeletedRecipients:`;
 const CREDITS_PREFIX = `${COUNSELOR_SWR_PREFIX}Credits:`;
 const MONITORING_HUB_PREFIX = `${COUNSELOR_SWR_PREFIX}MonitoringHub:`;
 
@@ -184,6 +185,25 @@ export function writeCachedArchivedAssessments<T>(
   const key = scopedKey(ARCHIVED_PREFIX, counselorUid);
   if (!key) return;
   writeSWRCache(key, { items }, { scope: COUNSELOR_CACHE_SCOPE });
+}
+
+export function buildDeletedRecipientsCacheKey(params: {
+  counselorUid?: string | null;
+  assessmentId?: string;
+}): string | null {
+  const base = scopedKey(DELETED_RECIPIENTS_PREFIX, params.counselorUid);
+  if (!base) return null;
+  return `${base}|${params.assessmentId || ''}`;
+}
+
+export function readCachedDeletedRecipients<T>(cacheKey: string | null): T[] | null {
+  const cached = readFreshCounselorCache<{ items: T[] }>(cacheKey);
+  return cached?.items ?? null;
+}
+
+export function writeCachedDeletedRecipients<T>(cacheKey: string | null, items: T[]): void {
+  if (typeof window === 'undefined' || !cacheKey) return;
+  writeSWRCache(cacheKey, { items }, { scope: COUNSELOR_CACHE_SCOPE });
 }
 
 export function readCachedCredits<T>(uid: string): T | null {

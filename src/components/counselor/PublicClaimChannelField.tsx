@@ -1,13 +1,8 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
-import { fetchMyCredits } from '@/lib/commerceApi';
+import React, { useMemo } from 'react';
 import {
   PUBLIC_CLAIM_CHANNEL_OPTIONS,
-  PUBLIC_CLAIM_PHONE_MIN_BALANCE_POINTS,
-  POINT_COST_PUBLIC_CLAIM_PHONE,
-  creditsToPoints,
-  formatPoints,
   type PublicClaimChannel,
   normalizePublicClaimChannel,
 } from '@/lib/publicClaimDelivery';
@@ -25,6 +20,7 @@ type Props = {
   className?: string;
   label?: string;
   hintOverride?: string | null;
+  allowedChannels?: PublicClaimChannel[];
 };
 
 export default function PublicClaimChannelField({
@@ -34,32 +30,18 @@ export default function PublicClaimChannelField({
   className = '',
   label = '코드전송 방법',
   hintOverride,
+  allowedChannels,
 }: Props) {
-  const [balance, setBalance] = useState<number | null>(null);
+  const options = useMemo(() => {
+    if (!allowedChannels?.length) return PUBLIC_CLAIM_CHANNEL_OPTIONS;
+    const allowed = new Set(allowedChannels);
+    return PUBLIC_CLAIM_CHANNEL_OPTIONS.filter((opt) => allowed.has(opt.value));
+  }, [allowedChannels]);
 
-  useEffect(() => {
-    let cancelled = false;
-    fetchMyCredits(5)
-      .then((data) => {
-        if (!cancelled) setBalance(typeof data.balance === 'number' ? data.balance : 0);
-      })
-      .catch(() => {
-        if (!cancelled) setBalance(0);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const hint = useMemo(() => {
-    if (hintOverride !== undefined) return hintOverride;
-    if (balance === null) return null;
-    return (
-      `1포인트 = 1원 · 보유 ${formatPoints(creditsToPoints(balance))}. ` +
-      `휴대폰을 선택해도 보유 포인트가 ${formatPoints(PUBLIC_CLAIM_PHONE_MIN_BALANCE_POINTS)} 미만이면 ` +
-      `내담자가 코드를 받을 때 이메일(무료)로 자동 전환됩니다.`
-    );
-  }, [balance, hintOverride]);
+  const hint =
+    hintOverride !== undefined
+      ? hintOverride
+      : '내담자가 무료 검사코드 받기에서 연락처를 입력하면 선택한 방법으로 나의코드·비밀번호가 발송됩니다.';
 
   return (
     <div className={className}>
@@ -67,7 +49,7 @@ export default function PublicClaimChannelField({
         {label} <span className="text-red-400">*</span>
       </p>
       <div className="space-y-2">
-        {PUBLIC_CLAIM_CHANNEL_OPTIONS.map((opt) => {
+        {options.map((opt) => {
           const active = normalizePublicClaimChannel(value) === opt.value;
           return (
             <label
@@ -86,28 +68,8 @@ export default function PublicClaimChannelField({
                 className="mt-1 accent-sky-500"
               />
               <span className="min-w-0">
-                <span className="block text-sm font-semibold text-white">
-                  {opt.label}
-                  {opt.value === 'phone' || opt.value === 'phone_email' ? (
-                    <>
-                      {' '}
-                      {opt.value === 'phone' ? (
-                        <span className="text-amber-300">({formatPoints(POINT_COST_PUBLIC_CLAIM_PHONE)})</span>
-                      ) : (
-                        <span className="text-amber-300">(휴대폰 {formatPoints(POINT_COST_PUBLIC_CLAIM_PHONE)})</span>
-                      )}
-                    </>
-                  ) : opt.value === 'email' ? (
-                    <span className="text-slate-400 font-normal"> (무료)</span>
-                  ) : null}
-                </span>
-                <span className="mt-0.5 block text-xs text-slate-400">
-                  {opt.value === 'phone' || opt.value === 'phone_email' ? (
-                    <span className="text-amber-300/90">{opt.priceNote}</span>
-                  ) : (
-                    opt.priceNote
-                  )}
-                </span>
+                <span className="block text-sm font-semibold text-white">{opt.label}</span>
+                <span className="mt-0.5 block text-xs text-slate-400">{opt.priceNote}</span>
               </span>
             </label>
           );

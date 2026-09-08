@@ -58,7 +58,7 @@ import { stripAssessmentTitleDispatchCountSuffix } from '@/lib/counselorAssessme
 import { counselorClientProgressHref } from '@/lib/counselorClientRoutes';
 import { exportClientPortalItems } from '@/lib/clientPortalListExport';
 import RecipientContactCell from '@/components/counselor/RecipientContactCell';
-import { dispatchStatusDisplay, formatNotifyDate, recipientProgressDisplay } from '@/lib/dispatchRecipientDisplay';
+import { dispatchStatusDisplay, formatNotifyDate } from '@/lib/dispatchRecipientDisplay';
 import { INDIVIDUAL_COHORT_KEY } from '@/lib/monitoringRealtime';
 import { rememberCounselorAssessmentContext, rememberCounselorProgressFrom } from '@/lib/counselorNestedNav';
 import { consumeCounselorListSkipReload } from '@/lib/counselorListNavigationCache';
@@ -75,8 +75,11 @@ import {
 } from '@/lib/adminDeletionsApi';
 import {
   buildClientPortalsCacheKey,
+  buildDeletedRecipientsCacheKey,
   readCachedClientPortals,
+  readCachedDeletedRecipients,
   writeCachedClientPortals,
+  writeCachedDeletedRecipients,
 } from '@/lib/counselorSessionCache';
 import type { ClientPortalProgressLabel, CounselorClientPortalListItem } from '@/types/clientPortal';
 
@@ -156,24 +159,16 @@ function progressLabel(item: CounselorClientPortalListItem): { text: string; cla
   if (item.progress.label === 'no_tests') {
     return { text: '검사 없음', className: 'font-medium text-slate-400' };
   }
+  if (item.progress.label === 'completed') {
+    return { text: '완료', className: 'font-medium text-emerald-300' };
+  }
   if (item.progress.label === 'in_progress') {
-    const base = recipientProgressDisplay({
-      testStatus: 'in_progress',
-      completedCount: item.progress.completedTests,
-      requiredCount: item.progress.totalTests,
-    });
     return {
-      text: `진행 ${item.progress.percent}% (${item.progress.completedTests}/${item.progress.totalTests})`,
-      className: base.className,
+      text: `진행 ${item.progress.percent}%`,
+      className: 'font-medium text-amber-300',
     };
   }
-  const testStatus =
-    item.progress.label === 'completed' ? 'completed' : 'not_started';
-  return recipientProgressDisplay({
-    testStatus,
-    completedCount: item.progress.completedTests,
-    requiredCount: item.progress.totalTests,
-  });
+  return { text: '미시작', className: 'font-medium text-slate-500' };
 }
 
 function progressSortValue(item: CounselorClientPortalListItem): number {
@@ -621,25 +616,45 @@ export default function CounselorClientList({
     }
 
     if (deletedMode) {
-      setLoading(true);
-      setItems([]);
+      const filterAssessmentId = (searchParams.get('assessmentId') || '').trim();
+      const deletedCacheKey = buildDeletedRecipientsCacheKey({
+        counselorUid: user?.uid,
+        assessmentId: filterAssessmentId,
+      });
+      const cachedRaw = readCachedDeletedRecipients<ArchivedDispatchRecipient>(deletedCacheKey);
+      const skipReload = consumeCounselorListSkipReload();
+      if (skipReload === 'deleted-recipients' && cachedRaw?.length) {
+        setArchivedRaw(cachedRaw);
+        setItems(cachedRaw.map(mapArchivedToClientItem));
+        setLoading(false);
+        return;
+      }
+      if (cachedRaw?.length) {
+        setArchivedRaw(cachedRaw);
+        setItems(cachedRaw.map(mapArchivedToClientItem));
+      } else {
+        setLoading(true);
+        setItems([]);
+      }
       setError('');
       try {
-        const filterAssessmentId = (searchParams.get('assessmentId') || '').trim();
         const data = await fetchArchivedDispatchRecipients(filterAssessmentId || undefined, {
           ownOnly: adminUser,
         });
         const raw = data.items || [];
         setArchivedRaw(raw);
         setItems(raw.map(mapArchivedToClientItem));
+        writeCachedDeletedRecipients(deletedCacheKey, raw);
         setCohorts([]);
         setTags([]);
         setAssessmentMeta({});
         setSelected(new Set());
       } catch (err) {
-        setError(err instanceof Error ? err.message : '목록을 불러오지 못했습니다.');
-        setItems([]);
-        setArchivedRaw([]);
+        if (!cachedRaw?.length) {
+          setError(err instanceof Error ? err.message : '목록을 불러오지 못했습니다.');
+          setItems([]);
+          setArchivedRaw([]);
+        }
       } finally {
         setLoading(false);
       }
@@ -1509,13 +1524,13 @@ export default function CounselorClientList({
                         {clientDeleteLoading ? '삭제 중…' : `삭제 (${selected.size})`}
                       </button>
                     ) : null}
-                    {selected.size >= 2 && !adminUser ? (
+                    {selected.size >= 1 && !adminUser ? (
                       <button
                         type="button"
                         onClick={() => setMoveOpen(true)}
                         className="inline-flex shrink-0 items-center justify-center rounded-md border border-sky-500/40 bg-sky-900/40 px-2.5 py-1 text-sm font-medium text-sky-100 transition-colors hover:bg-sky-800/50"
                       >
-                        나의코드 이동 ({selected.size})
+                        다른 상담코드로 이동 ({selected.size})
                       </button>
                     ) : null}
                   </div>

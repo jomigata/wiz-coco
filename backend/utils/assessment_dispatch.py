@@ -805,15 +805,14 @@ def _apply_notify_channels_to_contact(
 
 def _ensure_notify_phone_credits(db, counselor_uid: str | None, phone_send_count: int) -> None:
     from config import COMMERCE_CREDITS_ENFORCE
-    from utils.counselor_credits import get_balance
-    from utils.points_display import assessment_credits_to_points
+    from utils.counselor_credits import get_points_available
+    from utils.points_display import POINT_COST_PORTAL_RECIPIENT
 
     if not COMMERCE_CREDITS_ENFORCE or phone_send_count <= 0 or not counselor_uid:
         return
-    balance = get_balance(db, counselor_uid)
-    if balance < phone_send_count:
-        points_balance = assessment_credits_to_points(balance)
-        points_required = assessment_credits_to_points(phone_send_count)
+    points_required = phone_send_count * POINT_COST_PORTAL_RECIPIENT
+    points_balance = get_points_available(db, counselor_uid)
+    if points_balance < points_required:
         raise ValueError(
             f"검사 포인트가 부족합니다. (보유 {points_balance}포인트, 필요 {points_required}포인트)"
         )
@@ -828,14 +827,15 @@ def _consume_notify_phone_credit(
     reason: str,
 ) -> None:
     from config import COMMERCE_CREDITS_ENFORCE
-    from utils.counselor_credits import consume_credits
+    from utils.counselor_credits import consume_portal_points
+    from utils.points_display import POINT_COST_PORTAL_RECIPIENT
 
     if not COMMERCE_CREDITS_ENFORCE or not counselor_uid:
         return
-    consume_credits(
+    consume_portal_points(
         db,
         counselor_uid,
-        1,
+        POINT_COST_PORTAL_RECIPIENT,
         reason=reason,
         actor_uid=counselor_uid,
         metadata={"portalId": portal_id, "assessmentId": assessment_id},

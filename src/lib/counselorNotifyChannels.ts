@@ -41,7 +41,7 @@ export function validateNotifyChannelSelection(
   recipients: NotifyRecipientContact[],
 ): string | null {
   if (!selection.email && !selection.phone) {
-    return '이메일(무료) 또는 휴대폰(100포인트) 중 최소 1개를 선택해 주세요.';
+    return '이메일(무료) 또는 휴대폰(1포인트) 중 최소 1개를 선택해 주세요.';
   }
   if (selection.email) {
     const emailCount = recipients.filter((r) => (r.email || '').trim()).length;
@@ -75,11 +75,15 @@ export function countNotifyTargets(
   };
 }
 
-/** 휴대폰 채널 1건당 100포인트 (이메일 0) */
+/** 휴대폰 채널 1건당 1포인트 (이메일 0) */
 export function estimateNotifyPointCost(
   recipients: NotifyRecipientContact[],
   selection: NotifyChannelSelection,
+  options?: { perRecipient?: boolean },
 ): number {
+  if (options?.perRecipient) {
+    return recipients.length * POINT_COST_PORTAL_RECIPIENT;
+  }
   const { phoneCount } = countNotifyTargets(recipients, selection);
   return phoneCount * POINT_COST_PORTAL_RECIPIENT;
 }
@@ -88,13 +92,14 @@ export function formatNotifyPointSummary(
   recipients: NotifyRecipientContact[],
   selection: NotifyChannelSelection,
   balancePoints: number,
+  options?: { perRecipient?: boolean },
 ): {
   usePoints: number;
   balanceAfter: number;
   summaryLines: string[];
 } {
   const { emailCount, phoneCount, recipientCount } = countNotifyTargets(recipients, selection);
-  const usePoints = estimateNotifyPointCost(recipients, selection);
+  const usePoints = estimateNotifyPointCost(recipients, selection, options);
   const balanceAfter = Math.max(0, balancePoints - usePoints);
   const summaryLines = [
     `대상 ${recipientCount}명`,
@@ -102,7 +107,9 @@ export function formatNotifyPointSummary(
     selection.phone
       ? `휴대폰 ${phoneCount}건 (${formatPoints(POINT_COST_PORTAL_RECIPIENT)}/건)`
       : null,
-    `사용 포인트 ${formatPoints(usePoints)} · 잔여 ${formatPoints(balanceAfter)}`,
+    options?.perRecipient
+      ? `추가 ${recipientCount}명 · ${formatPoints(usePoints)} · 잔여 ${formatPoints(balanceAfter)}`
+      : `사용 ${formatPoints(usePoints)} · 잔여 ${formatPoints(balanceAfter)}`,
   ].filter(Boolean) as string[];
   return { usePoints, balanceAfter, summaryLines };
 }

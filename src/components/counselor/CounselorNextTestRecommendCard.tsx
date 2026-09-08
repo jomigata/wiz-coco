@@ -10,6 +10,7 @@ import {
 } from '@/lib/counselorNextTestRecommendation';
 import type { DispatchRecipient } from '@/lib/clientPortalApi';
 import CounselorNotifyConfirmDialog from '@/components/counselor/CounselorNotifyConfirmDialog';
+import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
 import type { NotifyRecipientContact } from '@/lib/counselorNotifyChannels';
 
 type Props = {
@@ -121,7 +122,15 @@ export default function CounselorNextTestRecommendCard({
         loading={busy}
         confirmLabel="보내기"
         onConfirm={(channels) => void handleSend(recommendation, channels)}
-        onCancel={() => setConfirmOpen(false)}
+        onCancel={() => {
+          if (busy) return;
+          setConfirmOpen(false);
+        }}
+      />
+      <CounselorActionProgressOverlay
+        open={busy}
+        title="검사 보내기 진행 중…"
+        message="잠시만 기다려 주세요."
       />
     </>
   );

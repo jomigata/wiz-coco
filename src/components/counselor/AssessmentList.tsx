@@ -23,6 +23,7 @@ import {
 import {
   normalizePublicClaimChannel,
   PUBLIC_CLAIM_CHANNEL_EMAIL,
+  PUBLIC_CLAIM_CHANNEL_PHONE_EMAIL,
 } from '@/lib/publicClaimDelivery';
 import AssessmentAddRecipientModal, {
   buildContextFromAssessment,
@@ -79,7 +80,9 @@ function assessmentInfoLabel(a: CounselorAssessment): string {
 
 function formatAssessmentDeliveryMethod(a: CounselorAssessment): string {
   const channel = normalizePublicClaimChannel(a.publicClaimChannel);
-  return channel === PUBLIC_CLAIM_CHANNEL_EMAIL ? '이메일' : '휴대폰';
+  if (channel === PUBLIC_CLAIM_CHANNEL_EMAIL) return '이메일';
+  if (channel === PUBLIC_CLAIM_CHANNEL_PHONE_EMAIL) return '휴대폰+이메일';
+  return '휴대폰';
 }
 
 function assessmentHasPendingDispatch(a: CounselorAssessment): boolean {

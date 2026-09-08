@@ -9,6 +9,7 @@ from config import (
     COMMERCE_CREDITS_ENFORCE,
     FIRST_SEND_TRIAL_ENABLED,
 )
+from utils.points_display import POINTS_PER_ASSESSMENT_CREDIT
 
 
 class InsufficientCreditsError(Exception):
@@ -99,6 +100,110 @@ def get_balance(db, counselor_uid: str) -> int:
         return max(0, int(data.get("balance") or 0))
     except (TypeError, ValueError):
         return 0
+
+
+def _get_point_reserve(db, counselor_uid: str) -> int:
+    doc = _credits_ref(db, counselor_uid).get()
+    if not doc.exists:
+        return 0
+    data = doc.to_dict() or {}
+    try:
+        reserve = int(data.get("pointReserve") or 0)
+    except (TypeError, ValueError):
+        reserve = 0
+    return max(0, min(POINTS_PER_ASSESSMENT_CREDIT - 1, reserve))
+
+
+def get_points_available(db, counselor_uid: str) -> int:
+    balance = get_balance(db, counselor_uid)
+    reserve = _get_point_reserve(db, counselor_uid)
+    return max(0, balance * POINTS_PER_ASSESSMENT_CREDIT - reserve)
+
+
+def consume_portal_points(
+    db,
+    counselor_uid: str,
+    points: int,
+    *,
+    reason: str,
+    actor_uid: str | None = None,
+    metadata: dict | None = None,
+    enforce: bool | None = None,
+) -> dict:
+    """포털 1포인트 단위 차감 — 100포인트마다 크레딧 1건 ledger 반영."""
+    if points <= 0:
+        balance = get_balance(db, counselor_uid)
+        return {
+            "counselorUid": counselor_uid,
+            "balance": balance,
+            "consumed": 0,
+            "pointsConsumed": 0,
+            "pointsAvailable": get_points_available(db, counselor_uid),
+        }
+
+    should_enforce = COMMERCE_CREDITS_ENFORCE if enforce is None else enforce
+    balance = get_balance(db, counselor_uid)
+    reserve = _get_point_reserve(db, counselor_uid)
+    available = balance * POINTS_PER_ASSESSMENT_CREDIT - reserve
+    if available < points:
+        if should_enforce:
+            required_credits = (reserve + points + POINTS_PER_ASSESSMENT_CREDIT - 1) // POINTS_PER_ASSESSMENT_CREDIT
+            raise InsufficientCreditsError(balance, required_credits)
+        return {
+            "counselorUid": counselor_uid,
+            "balance": balance,
+            "consumed": 0,
+            "pointsConsumed": 0,
+            "warning": "insufficient_credits",
+            "requiredPoints": points,
+            "pointsAvailable": available,
+        }
+
+    new_reserve = reserve + points
+    credit_delta = 0
+    while new_reserve >= POINTS_PER_ASSESSMENT_CREDIT:
+        new_reserve -= POINTS_PER_ASSESSMENT_CREDIT
+        credit_delta += 1
+    new_balance = balance - credit_delta
+    ref = _credits_ref(db, counselor_uid)
+    ref.set(
+        {
+            "counselorUid": counselor_uid,
+            "balance": new_balance,
+            "pointReserve": new_reserve,
+            "updatedAt": SERVER_TIMESTAMP,
+        },
+        merge=True,
+    )
+    ledger_meta = dict(metadata or {})
+    ledger_meta["pointsCharged"] = points
+    if credit_delta > 0:
+        _append_ledger(
+            db,
+            counselor_uid=counselor_uid,
+            delta=-credit_delta,
+            balance_after=new_balance,
+            reason=reason,
+            actor_uid=actor_uid,
+            metadata=ledger_meta,
+        )
+    else:
+        _append_ledger(
+            db,
+            counselor_uid=counselor_uid,
+            delta=0,
+            balance_after=new_balance,
+            reason=reason,
+            actor_uid=actor_uid,
+            metadata=ledger_meta,
+        )
+    return {
+        "counselorUid": counselor_uid,
+        "balance": new_balance,
+        "consumed": credit_delta,
+        "pointsConsumed": points,
+        "pointsAvailable": get_points_available(db, counselor_uid),
+    }
 
 
 def _append_ledger(

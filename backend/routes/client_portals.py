@@ -55,12 +55,17 @@ from utils.bulk_portal_worker import (
     resend_cohort_notifications,
 )
 from utils.counselor_credits import (
-    consume_credits,
+    consume_portal_points,
     get_balance,
+    get_points_available,
     is_first_send_trial_eligible,
     mark_first_send_trial_used,
 )
-from utils.points_display import assessment_credits_to_points, format_points_ko
+from utils.points_display import (
+    POINT_COST_PORTAL_RECIPIENT,
+    assessment_credits_to_points,
+    format_points_ko,
+)
 from utils.assessment_dispatch import (
     get_assessment_dispatch_status,
     resend_portal_credentials,
@@ -777,29 +782,16 @@ def bulk_create():
         except ValueError:
             return jsonify({"error": "Bad Request", "message": "예약 발송 시각 형식이 올바르지 않습니다."}), 400
 
-    credit_required = 0
-    if any_notify:
-        for row in normalized_rows:
-            if not row.get("queueNotify"):
-                continue
-            email, phone = _apply_notify_channels_to_contact(
-                row.get("email") or "",
-                row.get("phone") or "",
-                notify_channels,
-            )
-            if _will_use_phone_channel(email, phone, notify_channels):
-                credit_required += 1
-        if credit_required == 0 and notify_channels is None:
-            credit_required = len(normalized_rows)
+    points_required = 0
+    if normalized_rows:
+        points_required = len(normalized_rows) * POINT_COST_PORTAL_RECIPIENT
     trial_eligible = len(normalized_rows) == 1 and is_first_send_trial_eligible(db, counselor_uid)
     if trial_eligible:
-        credit_required = 0
+        points_required = 0
 
-    if COMMERCE_CREDITS_ENFORCE and not trial_eligible:
-        balance = get_balance(db, counselor_uid)
-        if balance < credit_required:
-            points_balance = assessment_credits_to_points(balance)
-            points_required = assessment_credits_to_points(credit_required)
+    if COMMERCE_CREDITS_ENFORCE and not trial_eligible and points_required > 0:
+        points_balance = get_points_available(db, counselor_uid)
+        if points_balance < points_required:
             return (
                 jsonify(
                     {
@@ -808,9 +800,9 @@ def bulk_create():
                             f"검사 포인트가 부족합니다. "
                             f"(보유 {format_points_ko(points_balance)}, 필요 {format_points_ko(points_required)})"
                         ),
-                        "balance": balance,
+                        "balance": get_balance(db, counselor_uid),
                         "pointsBalance": points_balance,
-                        "required": credit_required,
+                        "required": points_required,
                         "pointsRequired": points_required,
                     }
                 ),
@@ -851,10 +843,10 @@ def bulk_create():
                 actor_uid=counselor_uid,
             )
         else:
-            credit_info = consume_credits(
+            credit_info = consume_portal_points(
                 db,
                 counselor_uid,
-                credit_required,
+                points_required,
                 reason="bulk_portal_async",
                 actor_uid=counselor_uid,
                 metadata={"jobId": job_id, "cohortId": cohort_id},
@@ -926,10 +918,10 @@ def bulk_create():
             actor_uid=counselor_uid,
         )
     else:
-        credit_info = consume_credits(
+        credit_info = consume_portal_points(
             db,
             counselor_uid,
-            credit_required,
+            points_required,
             reason="bulk_portal_sync",
             actor_uid=counselor_uid,
             metadata={"cohortId": cohort_id, "assessmentId": assessment_ref_id},

@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import AuthLink from '@/components/auth/AuthLink';
-import { counselorMenuCategories, getCounselorCategoryEntryHref } from '@/data/counselorMenu';
+import { counselorMenuCategories, getCounselorCategoryEntryHref, COUNSELOR_DISPATCH_MGMT_SLUG, COUNSELOR_ASSESSMENT_CODE_SLUG } from '@/data/counselorMenu';
 import {
   getAssessmentListContextNestedItems,
   getAssessmentsParentSubmenuItems,
@@ -17,7 +17,6 @@ import {
 import { clearAssessmentListSearch } from '@/lib/counselorAssessmentListSearch';
 import { getAppRoleSync, isAdmin } from '@/utils/roleUtils';
 import {
-  COUNSELOR_ASSESSMENT_CODE_SLUG,
   isMenuItemActive,
   resolveCounselorCategorySlugForPath,
 } from '@/lib/counselorManageShell';
@@ -97,10 +96,20 @@ export default function CounselorManageShell({ children }: Props) {
                     >
                       <span className="inline-flex min-w-0 items-center">
                         <span className="mr-1 w-5 shrink-0 text-center" aria-hidden>
-                          {category.icon}
+                          {(category.slug === COUNSELOR_DISPATCH_MGMT_SLUG ||
+                          category.slug === COUNSELOR_ASSESSMENT_CODE_SLUG) &&
+                          category.subcategories[0]?.icon
+                            ? category.subcategories[0].icon
+                            : category.icon}
                         </span>
                         <span className="text-xs leading-tight sm:text-[13px]">
-                          {stripCategoryNumber(category.category)}
+                          {stripCategoryNumber(
+                            (category.slug === COUNSELOR_DISPATCH_MGMT_SLUG ||
+                            category.slug === COUNSELOR_ASSESSMENT_CODE_SLUG) &&
+                              category.subcategories[0]?.items[0]?.name
+                              ? category.subcategories[0].items[0].name
+                              : category.category,
+                          )}
                         </span>
                       </span>
                     </AuthLink>
@@ -136,8 +145,15 @@ export default function CounselorManageShell({ children }: Props) {
                                       search,
                                     })
                                   : normalizedItemHref === '/counselor/clients'
-                                    ? getClientsParentSubmenuItems({ admin: adminUser })
+                                    ? getClientsParentSubmenuItems({
+                                        admin: adminUser,
+                                        pathname,
+                                        search,
+                                      })
                                     : [];
+                              const flattenNav =
+                                category.slug === COUNSELOR_DISPATCH_MGMT_SLUG ||
+                                category.slug === COUNSELOR_ASSESSMENT_CODE_SLUG;
                               const contextNested =
                                 normalizedItemHref === '/counselor/assessments'
                                   ? getAssessmentListContextNestedItems(pathname, search, {
@@ -164,32 +180,39 @@ export default function CounselorManageShell({ children }: Props) {
                                     ? pathNorm === '/counselor/clients'
                                     : isMenuItemActive(pathname, item.href);
                               const active = !activeNested && !hasActiveNested && parentExactActive;
-                              const rows: React.ReactNode[] = [
-                                <li
-                                  key={item.href}
-                                  onMouseEnter={() => setHoveredMenuHref(item.href)}
-                                  onMouseLeave={() =>
-                                    setHoveredMenuHref((prev) => (prev === item.href ? null : prev))
-                                  }
-                                >
-                                  <AuthLink
-                                    href={item.href}
-                                    onClick={() => {
-                                      if (item.href.replace(/\/+$/, '') === '/counselor/assessments') {
-                                        clearAssessmentListSearch();
-                                      }
-                                    }}
-                                    className={`block truncate rounded-md py-1 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${MENU_MIDDLE_ALIGN} ${
-                                      active
-                                        ? 'bg-sky-600/30 font-semibold text-sky-100'
-                                        : 'text-slate-300 hover:bg-white/[0.06] hover:text-white'
-                                    }`}
-                                    title={item.description}
+                              const rows: React.ReactNode[] = [];
+                              const nestedAlign = flattenNav ? MENU_MIDDLE_ALIGN : MENU_NESTED_ALIGN;
+                              const nestedPrefix = flattenNav ? '' : '\u00A0- ';
+
+                              if (!flattenNav) {
+                                rows.push(
+                                  <li
+                                    key={item.href}
+                                    onMouseEnter={() => setHoveredMenuHref(item.href)}
+                                    onMouseLeave={() =>
+                                      setHoveredMenuHref((prev) => (prev === item.href ? null : prev))
+                                    }
                                   >
-                                    {item.name}
-                                  </AuthLink>
-                                </li>,
-                              ];
+                                    <AuthLink
+                                      href={item.href}
+                                      onClick={() => {
+                                        if (item.href.replace(/\/+$/, '') === '/counselor/assessments') {
+                                          clearAssessmentListSearch();
+                                        }
+                                      }}
+                                      className={`block truncate rounded-md py-1 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${MENU_MIDDLE_ALIGN} ${
+                                        active
+                                          ? 'bg-sky-600/30 font-semibold text-sky-100'
+                                          : 'text-slate-300 hover:bg-white/[0.06] hover:text-white'
+                                      }`}
+                                      title={item.description}
+                                    >
+                                      {item.name}
+                                    </AuthLink>
+                                  </li>,
+                                );
+                              }
+
                               for (const nested of parentSubmenu.sort((a, b) => a.order - b.order)) {
                                 const nestedActive = nested.isActive(pathNorm);
                                 rows.push(
@@ -211,13 +234,13 @@ export default function CounselorManageShell({ children }: Props) {
                                           clearAssessmentListSearch();
                                         }
                                       }}
-                                      className={`block truncate rounded-md py-1 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${MENU_NESTED_ALIGN} ${
+                                      className={`block truncate rounded-md py-1 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${nestedAlign} ${
                                         nestedActive
                                           ? 'bg-sky-600/30 font-semibold text-sky-100'
                                           : 'text-slate-300 hover:bg-white/[0.06] hover:text-white'
                                       }`}
                                     >
-                                      {'\u00A0- '}
+                                      {nestedPrefix}
                                       {nested.label}
                                     </AuthLink>
                                   </li>,
@@ -248,13 +271,13 @@ export default function CounselorManageShell({ children }: Props) {
                                             );
                                           }
                                         }}
-                                        className={`block truncate rounded-md py-1 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${MENU_NESTED_ALIGN} ${
+                                        className={`block truncate rounded-md py-1 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${nestedAlign} ${
                                           ctxActive
                                             ? 'bg-sky-600/30 font-semibold text-sky-100'
                                             : 'text-slate-400 hover:bg-white/[0.06] hover:text-white'
                                         }`}
                                       >
-                                        {'\u00A0- '}
+                                        {nestedPrefix}
                                         {ctx.label}
                                       </AuthLink>
                                     </li>,

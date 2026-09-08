@@ -47,11 +47,10 @@ ALIMTALK_TEMPLATE_SPECS = {
     },
     "portalCredentials": {
         "templateIdEnv": "SOLAPI_KAKAO_TEMPLATE_PORTAL_CREDENTIALS",
-        "variables": ["#{name}", "#{mycode}", "#{pin}", "#{joincode}", "#{link}"],
+        "variables": ["#{name}", "#{mycode}", "#{pin}", "#{link}"],
         "sampleBody": (
             "안녕하세요 #{name}님,\n"
             "고객님께서 접수하신 WizCoCo 심리검사 참여에 대한 접속 정보입니다.\n\n"
-            "상담(코드): #{joincode}\n"
             "나의코드: #{mycode}\n"
             "비밀번호: #{pin}\n\n"
             "바로 시작: #{link}"
@@ -210,14 +209,12 @@ def send_portal_credentials_alimtalk(
 ) -> tuple[bool, str, str]:
     name = (display_name or "").strip() or "내담자"
     my_code = (access_code or "").strip().upper()
-    join_code = (join_access_code or "").strip().upper() or "-"
     pin_display = _format_pin_display(pin)
     link = magic_url or f"{PUBLIC_SITE_URL.rstrip('/')}/portal/login/"
     variables = {
         "#{name}": name[:20],
         "#{mycode}": my_code or "-",
         "#{pin}": pin_display,
-        "#{joincode}": join_code,
         "#{link}": link,
     }
     fallback = f"[WizCoCo] {name}님, 접수하신 검사 접속 정보. 나의코드 {my_code} 비밀번호 {pin_display} {link}"

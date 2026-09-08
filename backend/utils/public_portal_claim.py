@@ -6,15 +6,19 @@ import re
 from config import ASSESSMENTS_COLLECTION, COMMERCE_CREDITS_ENFORCE
 from utils.access_code import is_valid_access_code, normalize_access_code
 from utils.bulk_portal_worker import create_portal_for_row
-from utils.counselor_credits import InsufficientCreditsError, consume_credits, get_balance
+from utils.counselor_credits import (
+    InsufficientCreditsError,
+    consume_portal_points,
+    get_balance,
+    get_points_available,
+)
+from utils.points_display import POINT_COST_PUBLIC_CLAIM_PHONE
 from utils.phone_format import normalize_recipient_phone
 from utils.portal_magic import create_portal_magic_link_token
 from utils.public_claim_delivery import (
     PUBLIC_CLAIM_CHANNEL_EMAIL,
     PUBLIC_CLAIM_CHANNEL_PHONE,
     PUBLIC_CLAIM_CHANNEL_PHONE_EMAIL,
-    PUBLIC_CLAIM_EMAIL_CREDIT_COST,
-    PUBLIC_CLAIM_PHONE_CREDIT_COST,
     normalize_public_claim_channel,
     resolve_effective_public_claim_channel,
 )
@@ -212,18 +216,18 @@ def claim_my_code_public(
             }
         email_norm = ""
 
-    credit_cost = (
-        PUBLIC_CLAIM_PHONE_CREDIT_COST
-        if channel in (PUBLIC_CLAIM_CHANNEL_PHONE, PUBLIC_CLAIM_CHANNEL_PHONE_EMAIL)
-        else PUBLIC_CLAIM_EMAIL_CREDIT_COST
-    )
+    point_cost = 0
+    if channel in (PUBLIC_CLAIM_CHANNEL_PHONE, PUBLIC_CLAIM_CHANNEL_PHONE_EMAIL) and len(phone_norm) >= 10:
+        point_cost = POINT_COST_PUBLIC_CLAIM_PHONE
 
-    if COMMERCE_CREDITS_ENFORCE and credit_cost > 0 and balance < credit_cost:
-        return {
-            "ok": False,
-            "error": "credits_exhausted",
-            "message": "현재 코드 발급이 일시 중단되었습니다. 담당 상담사에게 문의해 주세요.",
-        }
+    if COMMERCE_CREDITS_ENFORCE and point_cost > 0:
+        points_available = get_points_available(db, counselor_uid)
+        if points_available < point_cost:
+            return {
+                "ok": False,
+                "error": "credits_exhausted",
+                "message": "현재 코드 발급이 일시 중단되었습니다. 담당 상담사에게 문의해 주세요.",
+            }
 
     cohort_id = ass_data.get("clientPortalCohortId") or ""
     cohort_name = (ass_data.get("cohortName") or ass_data.get("title") or "내담자").strip()
@@ -257,12 +261,12 @@ def claim_my_code_public(
             "notifyErrors": notify_errors,
         }
 
-    if credit_cost > 0:
+    if point_cost > 0:
         try:
-            consume_credits(
+            consume_portal_points(
                 db,
                 counselor_uid,
-                credit_cost,
+                point_cost,
                 reason="public_portal_claim",
                 actor_uid=None,
                 metadata={

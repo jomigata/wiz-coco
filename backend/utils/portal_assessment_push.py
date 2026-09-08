@@ -230,22 +230,11 @@ def push_assessments_to_portals(
             continue
         eligible.append((pid, pdata))
 
-    credit_required = len(eligible)
     credit_info: dict = {
         "counselorUid": counselor_uid,
         "balance": get_balance(db, counselor_uid),
         "consumed": 0,
     }
-    if credit_required > 0 and COMMERCE_CREDITS_ENFORCE:
-        balance = get_balance(db, counselor_uid)
-        if balance < credit_required:
-            return {
-                "error": "insufficient_credits",
-                "message": f"검사 크레딧이 부족합니다. (보유 {balance}, 필요 {credit_required})",
-                "balance": balance,
-                "required": credit_required,
-                "assessmentId": aid,
-            }
 
     if notify and notify_channels is not None:
         from utils.assessment_dispatch import (
@@ -310,16 +299,6 @@ def push_assessments_to_portals(
             detail["notify"] = {"status": "skipped", "message": "notify_disabled"}
 
         details.append(detail)
-
-    if credit_required > 0:
-        credit_info = consume_credits(
-            db,
-            counselor_uid,
-            credit_required,
-            reason="portal_assessment_push",
-            actor_uid=counselor_uid,
-            metadata={"assessmentId": aid, "portalCount": credit_required},
-        )
 
     try:
         from utils.assessment_list_stats import touch_assessment_list_stats
