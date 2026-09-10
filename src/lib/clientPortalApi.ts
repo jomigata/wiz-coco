@@ -19,6 +19,7 @@ import type { PortalCareAssignmentsResult, SubmitPortalCareProgressInput, Submit
 import { getCounselorToken } from '@/lib/assessmentApi';
 import { isCounselorRoleRequiredMessage, syncCounselorRoleViaApi } from '@/lib/counselorAuth';
 import { normalizeAccessCodeInput, normalizeMyCodeInput, normalizeJoinPinDigits } from '@/lib/accessCodeFormat';
+import { normalizeRecipientPhone } from '@/lib/phoneFormat';
 
 const getBaseUrl = (): string => {
   if (process.env.NEXT_PUBLIC_FLASK_API_URL) {
@@ -194,14 +195,14 @@ export async function changeClientPortalPin(
 
 export async function requestPortalPinReset(body: {
   accessCode: string;
-  email: string;
+  phone: string;
 }): Promise<{ message: string }> {
   const res = await fetch(`${getBaseUrl()}/api/client-portals/forgot-pin`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       accessCode: normalizeMyCodeInput(body.accessCode),
-      email: body.email.trim().toLowerCase(),
+      phone: normalizeRecipientPhone(body.phone),
     }),
   });
   const data = await res.json().catch(() => ({}));

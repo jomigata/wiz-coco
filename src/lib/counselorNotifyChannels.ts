@@ -5,55 +5,38 @@ import {
   formatPoints,
 } from '@/lib/pointsCatalog';
 
-export type NotifyChannelKey = 'email' | 'phone';
+export type NotifyChannelKey = 'phone';
 
 export type NotifyChannelSelection = {
-  email: boolean;
   phone: boolean;
 };
 
 export type NotifyRecipientContact = {
   displayName?: string | null;
-  email?: string | null;
   phone?: string | null;
 };
 
 export function defaultNotifyChannelSelection(
   recipients: NotifyRecipientContact[],
 ): NotifyChannelSelection {
-  const hasEmail = recipients.some((r) => Boolean((r.email || '').trim()));
   const hasPhone = recipients.some((r) => Boolean(normalizeRecipientPhone(r.phone || '')));
-  return {
-    email: hasEmail,
-    phone: hasPhone,
-  };
+  return { phone: hasPhone };
 }
 
 export function notifyChannelsToPayload(selection: NotifyChannelSelection): NotifyChannelKey[] {
-  const out: NotifyChannelKey[] = [];
-  if (selection.email) out.push('email');
-  if (selection.phone) out.push('phone');
-  return out;
+  return selection.phone ? ['phone'] : [];
 }
 
 export function validateNotifyChannelSelection(
   selection: NotifyChannelSelection,
   recipients: NotifyRecipientContact[],
 ): string | null {
-  if (!selection.email && !selection.phone) {
-    return '이메일 또는 휴대폰(1포인트) 중 최소 1개를 선택해 주세요.';
+  if (!selection.phone) {
+    return '휴대폰 발송을 선택해 주세요.';
   }
-  if (selection.email) {
-    const emailCount = recipients.filter((r) => (r.email || '').trim()).length;
-    if (emailCount === 0) {
-      return '선택한 내담자 중 이메일 주소가 있는 대상이 없습니다.';
-    }
-  }
-  if (selection.phone) {
-    const phoneCount = recipients.filter((r) => normalizeRecipientPhone(r.phone || '')).length;
-    if (phoneCount === 0) {
-      return '선택한 내담자 중 휴대폰 번호가 있는 대상이 없습니다.';
-    }
+  const phoneCount = recipients.filter((r) => normalizeRecipientPhone(r.phone || '')).length;
+  if (phoneCount === 0) {
+    return '선택한 내담자 중 휴대폰 번호가 있는 대상이 없습니다.';
   }
   return null;
 }
@@ -61,21 +44,14 @@ export function validateNotifyChannelSelection(
 export function countNotifyTargets(
   recipients: NotifyRecipientContact[],
   selection: NotifyChannelSelection,
-): { emailCount: number; phoneCount: number; recipientCount: number } {
-  const emailCount = selection.email
-    ? recipients.filter((r) => (r.email || '').trim()).length
-    : 0;
+): { phoneCount: number; recipientCount: number } {
   const phoneCount = selection.phone
     ? recipients.filter((r) => normalizeRecipientPhone(r.phone || '')).length
     : 0;
-  return {
-    emailCount,
-    phoneCount,
-    recipientCount: recipients.length,
-  };
+  return { phoneCount, recipientCount: recipients.length };
 }
 
-/** 휴대폰 채널 1건당 1포인트 (이메일 0) */
+/** 휴대폰 채널 1건당 1포인트 */
 export function estimateNotifyPointCost(
   recipients: NotifyRecipientContact[],
   selection: NotifyChannelSelection,
@@ -92,23 +68,24 @@ export function formatNotifyPointSummary(
   recipients: NotifyRecipientContact[],
   selection: NotifyChannelSelection,
   balancePoints: number,
-  options?: { perRecipient?: boolean },
+  options?: { perRecipient?: boolean; targetOnly?: boolean },
 ): {
   usePoints: number;
   balanceAfter: number;
   detailLines: string[];
   footerLine: string;
 } {
-  const { emailCount, phoneCount, recipientCount } = countNotifyTargets(recipients, selection);
+  const { phoneCount, recipientCount } = countNotifyTargets(recipients, selection);
   const usePoints = estimateNotifyPointCost(recipients, selection, options);
   const balanceAfter = Math.max(0, balancePoints - usePoints);
-  const detailLines = [
-    `대상 ${recipientCount}명`,
-    selection.email ? `이메일 ${emailCount}건` : null,
-    selection.phone
-      ? `휴대폰 ${phoneCount}건 (${formatPoints(POINT_COST_PORTAL_RECIPIENT)}/건)`
-      : null,
-  ].filter(Boolean) as string[];
+  const detailLines = options?.targetOnly
+    ? [`대상 ${recipientCount}명`]
+    : [
+        `대상 ${recipientCount}명`,
+        selection.phone
+          ? `휴대폰 ${phoneCount}건 (${formatPoints(POINT_COST_PORTAL_RECIPIENT)}/건)`
+          : null,
+      ].filter(Boolean) as string[];
   const footerLine = options?.perRecipient
     ? `총 추가 ${recipientCount}명 / ${formatPoints(usePoints)} 차감 / 잔여 ${formatPoints(balanceAfter)}`
     : `사용 ${formatPoints(usePoints)} / 잔여 ${formatPoints(balanceAfter)}`;

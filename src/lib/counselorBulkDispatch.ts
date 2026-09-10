@@ -28,7 +28,6 @@ export function buildDispatchGroupsFromSelections(
       existing.portalIds.push(item.portalId);
       existing.recipients.push({
         displayName: item.displayName,
-        email: item.email,
         phone: item.phone,
       });
     }

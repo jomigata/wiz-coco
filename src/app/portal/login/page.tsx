@@ -26,6 +26,7 @@ import {
   PortalAuthScreenLayout,
   usePortalAuthTheme,
 } from '@/components/portal/PortalAuthScreenLayout';
+import PortalAuthTopBar from '@/components/portal/PortalAuthTopBar';
 
 function PortalLoginContent() {
   const router = useRouter();
@@ -131,22 +132,14 @@ function PortalLoginContent() {
   return (
     <PortalAuthScreenLayout theme={theme}>
       <PortalAuthCard theme={theme}>
-        <div className="mb-6 relative">
-          <Link href="/" className={`text-xs underline-offset-2 hover:underline ${t.link}`}>
-            ← 홈으로
-          </Link>
-          <Link
-            href="/portal/forgot-pin/"
-            className={`absolute -top-1 right-0 text-xs underline-offset-2 hover:underline ${t.link}`}
-          >
-            (비밀번호 찾기)
-          </Link>
-          <span className={`inline-block text-[11px] uppercase tracking-[0.16em] mb-3 ${t.accent}`}>
+        <PortalAuthTopBar linkClassName={t.link} />
+        <div className="text-center">
+          <span className={`inline-block text-[11px] uppercase tracking-[0.16em] ${t.accent}`}>
             {theme === 'results' ? 'Result Check' : 'Assessment Start'}
           </span>
-          <h1 className="text-2xl font-semibold text-white mb-2 tracking-tight pr-24">{copy.title}</h1>
-          <p className="text-slate-400 text-sm leading-relaxed">{copy.description}</p>
         </div>
+        <h1 className="mt-3 text-center text-2xl font-semibold text-white mb-2 tracking-tight">{copy.title}</h1>
+        <p className="text-slate-400 text-sm leading-relaxed text-center">{copy.description}</p>
 
         <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
           <input type="text" name="prevent_autofill_username" tabIndex={-1} autoComplete="username" className="sr-only" aria-hidden readOnly />

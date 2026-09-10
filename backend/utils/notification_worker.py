@@ -903,39 +903,8 @@ def deliver_portal_credentials(
         )
 
     if email:
-        if is_email_configured():
-            email_ok = send_portal_credentials_email(
-                to_email=email,
-                access_code=access_code,
-                pin=pin,
-                magic_url=magic_url,
-                display_name=display_name,
-                join_access_code=join_access_code,
-                cohort_name=cohort_name,
-                assessment_title=assessment_title,
-                welcome_message=welcome_message,
-            )
-            email_channel = _notify_channel_state(True, ok=email_ok)
-            if not email_ok:
-                errors.append("email_send_failed")
-        else:
-            email_channel = _notify_channel_state(True, ok=False)
-            errors.append("smtp_not_configured")
-
-        if portal_ref is not None:
-            _apply_notify_snapshot(
-                portal_ref=portal_ref,
-                queue_ref=queue_ref,
-                email=email,
-                phone=phone,
-                email_channel=email_channel,
-                phone_channel=phone_channel,
-                status="sending",
-                errors=errors,
-                sent_via="email" if email_ok else None,
-                notify_kind=notify_kind,
-                solapi_group_id="",
-            )
+        email_channel = _notify_channel_state(True, ok=False)
+        errors.append("email_disabled")
 
     if phone:
         phone_channel = _notify_channel_state(True, sending=True)

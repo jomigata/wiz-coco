@@ -20,11 +20,6 @@ import {
   assessmentGroupTitleParts,
   resultStatusCounts,
 } from '@/lib/counselorAssessmentResultDisplay';
-import {
-  normalizePublicClaimChannel,
-  PUBLIC_CLAIM_CHANNEL_EMAIL,
-  PUBLIC_CLAIM_CHANNEL_PHONE_EMAIL,
-} from '@/lib/publicClaimDelivery';
 import AssessmentAddRecipientModal, {
   buildContextFromAssessment,
 } from '@/components/counselor/AssessmentAddRecipientModal';
@@ -78,10 +73,7 @@ function assessmentInfoLabel(a: CounselorAssessment): string {
   return `${getAssessmentOrgLabel(a)} / ${(a.title || '—').trim()}`;
 }
 
-function formatAssessmentDeliveryMethod(a: CounselorAssessment): string {
-  const channel = normalizePublicClaimChannel(a.publicClaimChannel);
-  if (channel === PUBLIC_CLAIM_CHANNEL_EMAIL) return '이메일';
-  if (channel === PUBLIC_CLAIM_CHANNEL_PHONE_EMAIL) return '휴대폰+이메일';
+function formatAssessmentDeliveryMethod(_a: CounselorAssessment): string {
   return '휴대폰';
 }
 
@@ -260,6 +252,7 @@ interface AssessmentListProps {
   moveInfo?: PortalMoveBannerInfo | null;
   autoLivePollId?: string | null;
   autoAddRecipientId?: string | null;
+  listReady?: boolean;
   onAssessmentsRefresh?: (items: CounselorAssessment[]) => void;
   initialSearchQuery?: string;
 }
@@ -273,6 +266,7 @@ export default function AssessmentList({
   moveInfo,
   autoLivePollId,
   autoAddRecipientId,
+  listReady = true,
   onAssessmentsRefresh,
   initialSearchQuery = '',
 }: AssessmentListProps) {
@@ -481,15 +475,18 @@ export default function AssessmentList({
 
   useEffect(() => {
     const id = (autoAddRecipientId || '').trim();
-    if (!id) return;
+    if (!id || !listReady) return;
     const target = listItems.find((a) => a.id === id);
     if (!target) return;
-    openAddRecipient(target);
-    const params = new URLSearchParams(window.location.search);
-    params.delete('addRecipient');
-    const qs = params.toString();
-    router.replace(qs ? `/counselor/assessments?${qs}` : '/counselor/assessments');
-  }, [autoAddRecipientId, listItems, router]);
+    const timer = window.setTimeout(() => {
+      openAddRecipient(target);
+      const params = new URLSearchParams(window.location.search);
+      params.delete('addRecipient');
+      const qs = params.toString();
+      router.replace(qs ? `/counselor/assessments?${qs}` : '/counselor/assessments');
+    }, 150);
+    return () => window.clearTimeout(timer);
+  }, [autoAddRecipientId, listReady, listItems, router]);
 
   const openEdit = (assessment: CounselorAssessment) => {
     rememberCounselorAssessmentContext(assessment.id);

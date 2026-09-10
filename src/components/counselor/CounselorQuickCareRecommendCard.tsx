@@ -38,18 +38,17 @@ export default function CounselorQuickCareRecommendCard({ recipient, onAssigned 
     () => [
       {
         displayName: recipient.displayName,
-        email: recipient.email,
         phone: recipient.phone,
       },
     ],
-    [recipient.displayName, recipient.email, recipient.phone],
+    [recipient.displayName, recipient.phone],
   );
 
   if (!recommendation || dismissed || sent) return null;
 
   const busy = progressPhase !== 'idle';
 
-  const handleSend = async (notifyChannels: ('email' | 'phone')[]) => {
+  const handleSend = async (notifyChannels: ('phone')[]) => {
     setError('');
     setConfirmOpen(false);
     setProgressPhase('loading');

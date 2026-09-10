@@ -41,7 +41,7 @@ export default function PublicClaimChannelField({
   const hint =
     hintOverride !== undefined
       ? hintOverride
-      : '내담자가 검사코드 받기에서 연락처를 입력하면 입력한 방법으로 나의코드·비밀번호가 발송됩니다.';
+      : '내담자가 검사코드 받기에서 휴대폰 번호를 입력하면 문자(알림톡)으로 나의코드·비밀번호가 발송됩니다.';
 
   return (
     <div className={className}>

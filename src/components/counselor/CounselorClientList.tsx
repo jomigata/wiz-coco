@@ -12,6 +12,7 @@ import CounselorListSearchInput from '@/components/counselor/CounselorListSearch
 import CounselorSlashInfoCell from '@/components/counselor/CounselorSlashInfoCell';
 import DispatchStatusText from '@/components/counselor/DispatchStatusText';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
+import { normalizeRecipientPhone } from '@/lib/phoneFormat';
 import { counselingCodeTypeLabel } from '@/data/counselingCodeTypes';
 import {
   counselorListBodyRowClass,
@@ -58,7 +59,7 @@ import { stripAssessmentTitleDispatchCountSuffix } from '@/lib/counselorAssessme
 import { counselorClientProgressHref } from '@/lib/counselorClientRoutes';
 import { exportClientPortalItems } from '@/lib/clientPortalListExport';
 import RecipientContactCell from '@/components/counselor/RecipientContactCell';
-import { dispatchStatusDisplay, formatNotifyDate } from '@/lib/dispatchRecipientDisplay';
+import { dispatchStatusDisplay, formatNotifyDate, compareDispatchStatusSort } from '@/lib/dispatchRecipientDisplay';
 import { INDIVIDUAL_COHORT_KEY } from '@/lib/monitoringRealtime';
 import { rememberCounselorAssessmentContext, rememberCounselorProgressFrom } from '@/lib/counselorNestedNav';
 import { consumeCounselorListSkipReload } from '@/lib/counselorListNavigationCache';
@@ -165,10 +166,10 @@ function progressLabel(item: CounselorClientPortalListItem): { text: string; cla
   if (item.progress.label === 'in_progress') {
     return {
       text: `진행 ${item.progress.percent}%`,
-      className: 'font-medium text-amber-300',
+      className: 'font-medium text-sky-200',
     };
   }
-  return { text: '미시작', className: 'font-medium text-slate-500' };
+  return { text: '미시작', className: 'font-medium text-red-400' };
 }
 
 function progressSortValue(item: CounselorClientPortalListItem): number {
@@ -246,7 +247,13 @@ function compareRows(
     case 'accessCode':
       return mult * (a.accessCode || '').localeCompare(b.accessCode || '', 'ko');
     case 'phone':
-      return mult * (a.phone || '').localeCompare(b.phone || '', 'ko');
+      return (
+        mult *
+        normalizeRecipientPhone(a.phone || '').localeCompare(
+          normalizeRecipientPhone(b.phone || ''),
+          'ko',
+        )
+      );
     case 'counselInfo': {
       const phaseMult = (p: CounselSortPhase) => (p.endsWith('-asc') ? 1 : -1);
       const m = phaseMult(counselSortPhase);
@@ -260,8 +267,30 @@ function compareRows(
     case 'notifyStatus':
       return (
         mult *
-        (notifyStatusSortValue(a.notifyStatus || 'not_sent') -
-          notifyStatusSortValue(b.notifyStatus || 'not_sent'))
+        compareDispatchStatusSort(
+          {
+            email: a.email,
+            phone: a.phone,
+            notifyStatus: a.notifyStatus,
+            notifyError: a.notifyError,
+            notifyKind: a.notifyKind,
+            notifySentVia: a.notifySentVia,
+            notifyEmailChannel: a.notifyEmailChannel,
+            notifyPhoneChannel: a.notifyPhoneChannel,
+            notifyAt: a.notifyAt,
+          },
+          {
+            email: b.email,
+            phone: b.phone,
+            notifyStatus: b.notifyStatus,
+            notifyError: b.notifyError,
+            notifyKind: b.notifyKind,
+            notifySentVia: b.notifySentVia,
+            notifyEmailChannel: b.notifyEmailChannel,
+            notifyPhoneChannel: b.notifyPhoneChannel,
+            notifyAt: b.notifyAt,
+          },
+        )
       );
     case 'notifyAt': {
       const diff = mult * (parseDate(a.notifyAt) - parseDate(b.notifyAt));
@@ -991,7 +1020,7 @@ export default function CounselorClientList({
     setNotifyConfirmKind(kind);
   };
 
-  const handleBulkNotifyConfirm = async (notifyChannels: ('email' | 'phone')[]) => {
+  const handleBulkNotifyConfirm = async (notifyChannels: ('phone')[]) => {
     if (!notifyConfirmKind || notifyDispatchGroups.length === 0) return;
     setNotifyDispatchLoading(true);
     setError('');
@@ -1087,8 +1116,8 @@ export default function CounselorClientList({
       ? '삭제일'
       : '발송일시';
   const searchPlaceholder = adminUser
-    ? '이름 · 이메일 · 연락처 · 상담유형 · 상담정보 · 태그 · 상담사 이메일'
-    : '이름 · 이메일 · 연락처 · 상담유형 · 상담정보 · 태그';
+    ? '이름 · 연락처 · 상담유형 · 상담정보 · 태그 · 상담사 이메일'
+    : '이름 · 연락처 · 상담유형 · 상담정보 · 태그';
 
   return (
     <CounselorPageSection
@@ -1262,9 +1291,14 @@ export default function CounselorClientList({
                       onSort={toggleSort}
                       className="whitespace-nowrap"
                     />
-                    <th scope="col" className={`${counselorListThClass} whitespace-nowrap`}>
-                      <span className="block">연락처</span>
-                    </th>
+                    <SortableColumnHeader
+                      label="연락처"
+                      sortKey="phone"
+                      activeKey={sortKey}
+                      direction={sortDir}
+                      onSort={toggleSort}
+                      className="whitespace-nowrap"
+                    />
                     <SortableColumnHeader
                       label="발송현황"
                       sortKey="notifyStatus"
@@ -1406,7 +1440,7 @@ export default function CounselorClientList({
                           className={`max-w-[14rem] ${counselorListTdClass} ${rowClickable ? 'cursor-pointer' : ''}`}
                           onClick={rowClickable ? () => goToProgress(item) : undefined}
                         >
-                          <RecipientContactCell phone={item.phone} email={item.email} />
+                          <RecipientContactCell phone={item.phone} />
                         </td>
                         <td
                           className={`max-w-[10rem] ${counselorListTdClass} ${rowClickable ? 'cursor-pointer' : ''}`}

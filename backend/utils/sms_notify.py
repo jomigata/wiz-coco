@@ -152,6 +152,20 @@ def send_care_assignment_sms(
     return _send_sms_body(to_phone=phone, body=body)
 
 
+def send_portal_pin_reset_sms(*, to_phone: str, reset_url: str, access_code: str) -> tuple[bool, str, str]:
+    phone = (to_phone or "").strip()
+    if not phone:
+        return False, "no_phone", ""
+    if not is_sms_configured():
+        logger.info("SMS skipped (no provider configured) for %s", phone[:4] + "****")
+        return False, "sms_not_configured", ""
+
+    my_code = (access_code or "").strip().upper()
+    link = (reset_url or "").strip()
+    body = f"[WizCoCo] 비밀번호 재설정\n나의코드 {my_code}\n{link}"
+    return _send_sms_body(to_phone=phone, body=body)
+
+
 def send_portal_invite_sms(*, to_phone: str, access_code: str, magic_url: str) -> tuple[bool, str, str]:
     phone = (to_phone or "").strip()
     if not phone:

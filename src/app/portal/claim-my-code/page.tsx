@@ -19,15 +19,13 @@ import {
   publicClaimSuccessHint,
 } from '@/lib/joinFlowApi';
 import {
-  PUBLIC_CLAIM_CHANNEL_EMAIL,
-  PUBLIC_CLAIM_PHONE_MIN_BALANCE_POINTS,
-  formatPoints,
   type PublicClaimChannel,
 } from '@/lib/publicClaimDelivery';
 import { portalLoginHref } from '@/lib/portalLoginIntent';
 import { navigateToClientPortalLogin } from '@/lib/portalLoginNavigation';
 import { resetAllSessionsBeforePortalLinkEntry } from '@/lib/portalLinkEntryReset';
 import { setPortalReturnPath } from '@/lib/portalReturnPath';
+import PortalAuthTopBar from '@/components/portal/PortalAuthTopBar';
 import {
   PortalAuthCard,
   PortalAuthScreenLayout,
@@ -53,9 +51,7 @@ export default function ClaimMyCodePage() {
   const [joinCode, setJoinCode] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
   const [deliveryChannel, setDeliveryChannel] = useState<PublicClaimChannel | null>(null);
-  const [forcedEmail, setForcedEmail] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [enteringPortal, setEnteringPortal] = useState(false);
@@ -64,16 +60,10 @@ export default function ClaimMyCodePage() {
 
   const normalizedJoinCode = normalizeAccessCodeInput(joinCode);
   const phoneNorm = normalizeRecipientPhone(phone);
-  const emailNorm = email.trim().toLowerCase();
   const canProceedCode =
     isValidAccessCodeInput(normalizedJoinCode) && !loading && step === 'code';
   const canSendContact =
-    displayName.trim().length > 0 &&
-    !loading &&
-    step === 'contact' &&
-    (forcedEmail || deliveryChannel === PUBLIC_CLAIM_CHANNEL_EMAIL
-      ? emailNorm.includes('@')
-      : phoneNorm.length >= 10 || emailNorm.includes('@'));
+    displayName.trim().length > 0 && phoneNorm.length >= 10 && !loading && step === 'contact';
 
   const handleCodeNext = useCallback(
     async (e: React.FormEvent) => {
@@ -84,7 +74,6 @@ export default function ClaimMyCodePage() {
       try {
         const preview = await previewClaimMyCode(normalizedJoinCode);
         setDeliveryChannel(preview.deliveryChannel);
-        setForcedEmail(Boolean(preview.forcedEmail));
         setStep('contact');
       } catch (err) {
         setError(err instanceof Error ? err.message : '상담코드 확인에 실패했습니다.');
@@ -105,11 +94,7 @@ export default function ClaimMyCodePage() {
         const data = await claimJoinMyCode({
           accessCode: normalizedJoinCode,
           displayName: displayName.trim(),
-          phone:
-            forcedEmail || deliveryChannel === PUBLIC_CLAIM_CHANNEL_EMAIL
-              ? undefined
-              : phoneNorm || undefined,
-          email: emailNorm.includes('@') ? emailNorm : undefined,
+          phone: phoneNorm,
         });
         setResult({
           magicPath: data.magicPath || '',
@@ -122,7 +107,7 @@ export default function ClaimMyCodePage() {
         setLoading(false);
       }
     },
-    [canSendContact, deliveryChannel, displayName, emailNorm, normalizedJoinCode, phoneNorm],
+    [canSendContact, deliveryChannel, displayName, normalizedJoinCode, phoneNorm],
   );
 
   const startHref = portalLoginHref('start');
@@ -154,25 +139,21 @@ export default function ClaimMyCodePage() {
     setStep('code');
     setError('');
     setDeliveryChannel(null);
-    setForcedEmail(false);
   };
 
   return (
     <PortalAuthScreenLayout theme="start">
       <PortalAuthCard theme="start">
-        <div className="mb-6">
-          <Link href="/" className={`text-xs underline-offset-2 hover:underline ${t.link}`}>
-            ← 홈으로
-          </Link>
-          <h1 className="mt-4 text-2xl font-semibold tracking-tight text-white">검사코드 받기</h1>
-          {step === 'code' ? (
-            <p className="mt-2 text-sm text-slate-400">상담사에게 받은 상담코드를 입력해 주세요.</p>
-          ) : step === 'contact' ? (
-            <p className="mt-2 text-sm text-slate-400">
-              이름(가명)과 연락처를 입력해 주세요. 휴대폰·이메일 중 최소 1개는 필수입니다.
-            </p>
-          ) : null}
+        <PortalAuthTopBar linkClassName={t.link} />
+        <div className="text-center">
+          <span className={`inline-block text-[11px] uppercase tracking-[0.16em] ${t.accent}`}>
+            Get My Code
+          </span>
         </div>
+        <h1 className="mt-3 text-center text-2xl font-semibold tracking-tight text-white">검사코드 받기</h1>
+        {step === 'code' ? (
+          <p className="mt-2 text-center text-sm text-slate-400">상담사에게 받은 상담코드를 입력해 주세요.</p>
+        ) : null}
 
         {step === 'done' && result ? (
           <div className="space-y-4">
@@ -198,14 +179,9 @@ export default function ClaimMyCodePage() {
                 {normalizedJoinCode || joinCode}
               </p>
             </div>
-            {forcedEmail ? (
-              <p className="text-xs text-amber-200/90">
-                담당 상담사 보유 포인트가 {formatPoints(PUBLIC_CLAIM_PHONE_MIN_BALANCE_POINTS)} 미만이어서 이메일로만 코드를 받을 수 있습니다.
-              </p>
-            ) : null}
             <div>
               <label htmlFor="claim-display-name" className={`mb-2 block text-sm font-medium ${t.label}`}>
-                이름(가명)
+                이름
               </label>
               <input
                 id="claim-display-name"
@@ -215,78 +191,41 @@ export default function ClaimMyCodePage() {
                 autoFocus
                 lang="ko"
                 inputMode="text"
-                placeholder="사용자 이름(가명) 입력"
+                placeholder="이름 입력"
                 className={`w-full rounded-xl px-4 py-3 text-center focus:outline-none focus:ring-2 ${t.input}`}
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 disabled={loading}
               />
             </div>
-            {forcedEmail || deliveryChannel === PUBLIC_CLAIM_CHANNEL_EMAIL ? (
-              <div>
-                <label htmlFor="claim-email" className={`mb-2 block text-sm font-medium ${t.label}`}>
-                  이메일
-                </label>
-                <input
-                  id="claim-email"
-                  name="claim_email"
-                  type="email"
-                  autoComplete="email"
-                  placeholder="이메일 입력"
-                  className={`w-full rounded-xl px-4 py-3 text-center focus:outline-none focus:ring-2 ${t.input}`}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={loading}
-                />
-              </div>
-            ) : (
-              <>
-                <div>
-                  <label htmlFor="claim-phone" className={`mb-2 block text-sm font-medium ${t.label}`}>
-                    휴대폰번호
-                  </label>
-                  <input
-                    ref={phoneInputRef}
-                    id="claim-phone"
-                    name="claim_phone"
-                    type="tel"
-                    inputMode="numeric"
-                    autoComplete="tel"
-                    lang="ko"
-                    placeholder={PHONE_INPUT_MASK_PLACEHOLDER}
-                    className={`w-full rounded-xl px-4 py-3 text-center tracking-wider focus:outline-none focus:ring-2 ${t.input}`}
-                    value={phone}
-                    onChange={(e) => {
-                      const formatted = formatPhoneWhileTyping(e.target.value);
-                      setPhone(formatted);
-                      requestAnimationFrame(() => {
-                        const el = phoneInputRef.current;
-                        if (!el) return;
-                        const pos = phoneInputCaretIndex(formatted);
-                        el.setSelectionRange(pos, pos);
-                      });
-                    }}
-                    disabled={loading}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="claim-email" className={`mb-2 block text-sm font-medium ${t.label}`}>
-                    이메일
-                  </label>
-                  <input
-                    id="claim-email"
-                    name="claim_email"
-                    type="email"
-                    autoComplete="email"
-                    placeholder="이메일 입력 (선택)"
-                    className={`w-full rounded-xl px-4 py-3 text-center focus:outline-none focus:ring-2 ${t.input}`}
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    disabled={loading}
-                  />
-                </div>
-              </>
-            )}
+            <div>
+              <label htmlFor="claim-phone" className={`mb-2 block text-sm font-medium ${t.label}`}>
+                휴대폰번호
+              </label>
+              <input
+                ref={phoneInputRef}
+                id="claim-phone"
+                name="claim_phone"
+                type="tel"
+                inputMode="numeric"
+                autoComplete="tel"
+                lang="ko"
+                placeholder={PHONE_INPUT_MASK_PLACEHOLDER}
+                className={`w-full rounded-xl px-4 py-3 text-center tracking-wider focus:outline-none focus:ring-2 ${t.input}`}
+                value={phone}
+                onChange={(e) => {
+                  const formatted = formatPhoneWhileTyping(e.target.value);
+                  setPhone(formatted);
+                  requestAnimationFrame(() => {
+                    const el = phoneInputRef.current;
+                    if (!el) return;
+                    const pos = phoneInputCaretIndex(formatted);
+                    el.setSelectionRange(pos, pos);
+                  });
+                }}
+                disabled={loading}
+              />
+            </div>
             {error ? <p className="text-sm text-red-400">{error}</p> : null}
             <button
               type="submit"

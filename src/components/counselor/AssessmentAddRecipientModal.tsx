@@ -78,7 +78,6 @@ export default function AssessmentAddRecipientModal({
   onSuccess,
 }: Props) {
   const [draftName, setDraftName] = useState('');
-  const [draftEmail, setDraftEmail] = useState('');
   const [draftPhone, setDraftPhone] = useState('');
   const [pendingRows, setPendingRows] = useState<RecipientRow[]>([]);
   const [addSendNow, setAddSendNow] = useState(true);
@@ -112,7 +111,6 @@ export default function AssessmentAddRecipientModal({
     () =>
       combinedRows.map((r) => ({
         displayName: r.displayName,
-        email: r.email,
         phone: r.phone,
       })),
     [combinedRows],
@@ -120,7 +118,6 @@ export default function AssessmentAddRecipientModal({
 
   const resetForm = () => {
     setDraftName('');
-    setDraftEmail('');
     setDraftPhone('');
     setPendingRows([]);
     setAddSendNow(true);
@@ -139,20 +136,18 @@ export default function AssessmentAddRecipientModal({
 
   const handleAddDraftRow = () => {
     const name = draftName.trim();
-    const email = draftEmail.trim().toLowerCase();
     const phone = normalizeRecipientPhone(draftPhone);
     if (!name) {
       setAddError('이름을 입력해 주세요.');
       return;
     }
-    if (!email && !phone) {
-      setAddError('이메일 또는 휴대폰 번호가 필요합니다.');
+    if (!phone) {
+      setAddError('휴대폰 번호를 입력해 주세요.');
       return;
     }
     setAddError('');
-    setPendingRows((prev) => [...prev, { displayName: name, email, phone }]);
+    setPendingRows((prev) => [...prev, { displayName: name, phone, email: '' }]);
     setDraftName('');
-    setDraftEmail('');
     setDraftPhone('');
   };
 
@@ -187,9 +182,9 @@ export default function AssessmentAddRecipientModal({
       setAddError('개별 입력 또는 파일에서 내담자 1명 이상을 추가해 주세요.');
       return;
     }
-    const invalid = rows.find((r) => !r.email.trim() && !r.phone.trim());
+    const invalid = rows.find((r) => !normalizeRecipientPhone(r.phone));
     if (invalid) {
-      setAddError(`「${invalid.displayName}」님의 이메일 또는 휴대폰 번호가 필요합니다.`);
+      setAddError(`「${invalid.displayName}」님의 휴대폰 번호가 필요합니다.`);
       return;
     }
     setAddError('');
@@ -200,7 +195,7 @@ export default function AssessmentAddRecipientModal({
     void executeSubmit(undefined);
   };
 
-  const executeSubmit = async (notifyChannels: ('email' | 'phone')[] | undefined) => {
+  const executeSubmit = async (notifyChannels: ('phone')[] | undefined) => {
     if (!context) return;
     const rows = combinedRows;
     const cohortName = (context.cohortName || context.title || '내담자').trim();
@@ -215,7 +210,6 @@ export default function AssessmentAddRecipientModal({
         testList: context.testList,
         rows: rows.map((r) => ({
           displayName: r.displayName.trim(),
-          email: r.email.trim() || undefined,
           phone: normalizeRecipientPhone(r.phone) || undefined,
           queueNotify: addSendNow,
         })),
@@ -293,7 +287,7 @@ export default function AssessmentAddRecipientModal({
           <div className="grid gap-3 md:grid-cols-2">
             <section className="overflow-visible rounded-xl border border-white/[0.1] bg-[#101f38]/55 p-3 sm:p-3.5">
               <h4 className={FORM_LABEL}>개별 입력</h4>
-              <p className="mt-0.5 text-sm text-slate-400">이메일 또는 휴대폰 중 하나 필수</p>
+              <p className="mt-0.5 text-sm text-slate-400">이름·휴대폰 모두 필수</p>
               <div className="mt-2.5 grid grid-cols-2 gap-2">
                 <div>
                   <label htmlFor="add-recipient-name" className={FORM_LABEL}>
@@ -325,22 +319,7 @@ export default function AssessmentAddRecipientModal({
                     placeholder="010-0000-0000"
                   />
                 </div>
-                <div className="col-span-2 flex items-end gap-2">
-                  <div className="min-w-0 flex-1">
-                    <label htmlFor="add-recipient-email" className={FORM_LABEL}>
-                      이메일
-                    </label>
-                    <input
-                      id="add-recipient-email"
-                      type="email"
-                      className={FORM_INPUT}
-                      value={draftEmail}
-                      onChange={(e) => setDraftEmail(e.target.value)}
-                      onKeyDown={handleDraftKeyDown}
-                      disabled={addLoading}
-                      placeholder="email@..."
-                    />
-                  </div>
+                <div className="col-span-2 flex justify-end">
                   <button
                     type="button"
                     onClick={handleAddDraftRow}
@@ -355,9 +334,7 @@ export default function AssessmentAddRecipientModal({
 
             <section className="overflow-visible rounded-xl border border-white/[0.1] bg-[#101f38]/55 p-3 sm:p-3.5">
               <h4 className={FORM_LABEL}>파일 일괄 등록</h4>
-              <p className="mt-0.5 text-sm leading-relaxed text-slate-400">
-                CSV·Excel — 이름, 이메일, 휴대폰
-              </p>
+              <p className="mt-0.5 text-sm leading-relaxed text-slate-400">CSV·Excel — 이름, 휴대폰</p>
               <div className="mt-2.5 flex flex-wrap items-center gap-2">
                 <input
                   type="file"
@@ -445,10 +422,10 @@ export default function AssessmentAddRecipientModal({
                         <div className="max-h-32 space-y-0.5 overflow-y-auto">
                           {addFileRows.slice(0, 50).map((row, idx) => (
                             <p
-                              key={`${row.displayName}-${row.email}-${row.phone}-${idx}`}
+                              key={`${row.displayName}-${row.phone}-${idx}`}
                               className="whitespace-nowrap font-mono text-xs leading-snug text-slate-200"
                             >
-                              {[row.displayName, row.email, row.phone].filter(Boolean).join(' · ')}
+                              {[row.displayName, row.phone].filter(Boolean).join(' · ')}
                             </p>
                           ))}
                           {addFileRows.length > 50 ? (
@@ -483,7 +460,6 @@ export default function AssessmentAddRecipientModal({
                   >
                     <span className="min-w-0 truncate text-slate-200">
                       <span className="font-medium text-white">{row.displayName}</span>
-                      {row.email ? <span className="text-slate-500"> · {row.email}</span> : null}
                       {row.phone ? <span className="text-slate-500"> · {row.phone}</span> : null}
                     </span>
                     <button
@@ -513,25 +489,27 @@ export default function AssessmentAddRecipientModal({
           ) : null}
         </div>
 
-        <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-white/[0.08] bg-black/20 px-4 py-3 sm:px-5">
-          <p className="text-sm font-normal text-white">나의코드·비밀번호가 자동 발급됩니다.</p>
-          <div className="flex shrink-0 gap-2">
-            <button
-              type="button"
-              onClick={handleClose}
-              disabled={addLoading}
-              className="rounded-lg border border-white/10 bg-slate-700/80 px-4 py-2 text-sm text-slate-300 transition-colors hover:bg-slate-600 disabled:opacity-50"
-            >
-              취소
-            </button>
-            <button
-              type="button"
-              onClick={() => void handleSubmit()}
-              disabled={addLoading}
-              className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-emerald-900/25 transition-colors hover:bg-emerald-500 disabled:opacity-50"
-            >
-              {addLoading ? '추가 중…' : '추가 후 발송'}
-            </button>
+        <div className="shrink-0 border-t border-sky-400/20 bg-gradient-to-r from-sky-600/25 via-sky-500/15 to-transparent px-4 py-3 sm:px-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm font-normal text-white">나의코드·비밀번호가 자동 발급됩니다.</p>
+            <div className="flex shrink-0 gap-2">
+              <button
+                type="button"
+                onClick={handleClose}
+                disabled={addLoading}
+                className="rounded-lg border border-white/10 bg-slate-700/80 px-4 py-2 text-sm text-slate-300 transition-colors hover:bg-slate-600 disabled:opacity-50"
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleSubmit()}
+                disabled={addLoading}
+                className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-emerald-900/25 transition-colors hover:bg-emerald-500 disabled:opacity-50"
+              >
+                {addLoading ? '추가 중…' : '추가 후 발송'}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -547,7 +525,7 @@ export default function AssessmentAddRecipientModal({
         hint="창을 닫지 말고 잠시만 기다려 주세요."
         notice={
           addSendNow
-            ? '코드 발송량에 따라 발송에 1~2분 이상 걸릴 수 있습니다.'
+            ? '코드 발송량에 따라,  1~2분 이상 걸릴 수 있습니다.'
             : undefined
         }
       />

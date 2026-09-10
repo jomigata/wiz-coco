@@ -11,6 +11,12 @@ import {
   normalizeMyCodeInput,
 } from '@/lib/accessCodeFormat';
 import {
+  formatPhoneWhileTyping,
+  normalizeRecipientPhone,
+  PHONE_INPUT_MASK_PLACEHOLDER,
+} from '@/lib/phoneFormat';
+import PortalAuthTopBar from '@/components/portal/PortalAuthTopBar';
+import {
   PortalAuthCard,
   PortalAuthScreenLayout,
   usePortalAuthTheme,
@@ -20,13 +26,14 @@ function ForgotPinContent() {
   const searchParams = useSearchParams();
   const t = usePortalAuthTheme('recovery');
   const [code, setCode] = useState(() => formatMyCodeWhileTyping(searchParams.get('accessCode') || ''));
-  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
   const normalizedCode = normalizeMyCodeInput(code);
-  const canSubmit = isValidMyCodeInput(normalizedCode) && email.trim().includes('@') && !loading;
+  const phoneNorm = normalizeRecipientPhone(phone);
+  const canSubmit = isValidMyCodeInput(normalizedCode) && phoneNorm.length >= 10 && !loading;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,9 +43,9 @@ function ForgotPinContent() {
     try {
       const result = await requestPortalPinReset({
         accessCode: normalizedCode,
-        email: email.trim(),
+        phone: phoneNorm,
       });
-      setSuccess(result.message || '등록된 이메일로 재설정 안내를 보냈습니다.');
+      setSuccess(result.message || '등록된 휴대폰으로 재설정 안내를 보냈습니다.');
     } catch (err) {
       setError(err instanceof Error ? err.message : '재설정 요청 처리 중 오류가 발생했습니다.');
     } finally {
@@ -49,19 +56,17 @@ function ForgotPinContent() {
   return (
     <PortalAuthScreenLayout theme="recovery">
       <PortalAuthCard theme="recovery">
-        <div className="mb-6">
-          <Link href="/" className={`text-xs underline-offset-2 hover:underline ${t.link}`}>
-            ← 홈으로
-          </Link>
-          <span className={`inline-block text-[11px] uppercase tracking-[0.16em] mb-3 mt-4 ${t.accent}`}>
+        <PortalAuthTopBar showForgotPin={false} linkClassName={t.link} />
+        <div className="text-center">
+          <span className={`inline-block text-[11px] uppercase tracking-[0.16em] ${t.accent}`}>
             Password Recovery
           </span>
-          <h1 className="text-2xl font-semibold text-white tracking-tight">비밀번호 찾기</h1>
         </div>
+        <h1 className="mt-3 text-center text-2xl font-semibold tracking-tight text-white">비밀번호 찾기</h1>
 
-        <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
+        <form onSubmit={handleSubmit} className="mt-6 space-y-4" autoComplete="off">
           <div>
-            <label htmlFor="portal-forgot-my-code" className={`block text-sm font-medium mb-2 ${t.label}`}>
+            <label htmlFor="portal-forgot-my-code" className={`mb-2 block text-sm font-medium ${t.label}`}>
               나의코드
             </label>
             <input
@@ -71,40 +76,41 @@ function ForgotPinContent() {
               maxLength={20}
               autoComplete="off"
               placeholder={getMyCodeInputPlaceholder()}
-              className={`w-full px-4 py-3 rounded-xl text-center text-lg tracking-wider focus:outline-none focus:ring-2 ${t.input}`}
+              className={`w-full rounded-xl px-4 py-3 text-center text-lg tracking-wider focus:outline-none focus:ring-2 ${t.input}`}
               value={code}
               onChange={(e) => setCode(formatMyCodeWhileTyping(e.target.value))}
               disabled={loading}
             />
           </div>
           <div>
-            <label htmlFor="portal-forgot-email" className={`block text-sm font-medium mb-2 ${t.label}`}>
-              이메일
+            <label htmlFor="portal-forgot-phone" className={`mb-2 block text-sm font-medium ${t.label}`}>
+              휴대폰번호
             </label>
             <input
-              id="portal-forgot-email"
-              type="email"
-              autoComplete="email"
-              placeholder="등록된 이메일 주소"
-              className={`w-full px-4 py-3 rounded-xl focus:outline-none focus:ring-2 ${t.input}`}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              id="portal-forgot-phone"
+              type="tel"
+              inputMode="numeric"
+              autoComplete="tel"
+              placeholder={PHONE_INPUT_MASK_PLACEHOLDER}
+              className={`w-full rounded-xl px-4 py-3 text-center tracking-wider focus:outline-none focus:ring-2 ${t.input}`}
+              value={phone}
+              onChange={(e) => setPhone(formatPhoneWhileTyping(e.target.value))}
               disabled={loading}
             />
           </div>
-          {error ? <p className="text-red-400 text-sm font-medium">{error}</p> : null}
-          {success ? <p className="text-emerald-300 text-sm">{success}</p> : null}
+          {error ? <p className="text-sm font-medium text-red-400">{error}</p> : null}
+          {success ? <p className="text-sm text-emerald-300">{success}</p> : null}
           <button
             type="submit"
             disabled={!canSubmit}
-            className={`w-full py-3.5 px-4 rounded-xl font-semibold disabled:opacity-50 transition-colors ${t.button}`}
+            className={`w-full rounded-xl px-4 py-3.5 font-semibold disabled:opacity-50 ${t.button}`}
           >
             {loading ? '발송 중…' : '재설정 링크 받기'}
           </button>
         </form>
 
         <div className={`mt-5 rounded-xl px-4 py-3 text-sm leading-relaxed ${t.infoBox}`}>
-          나의코드나 등록한 이메일을 모를 경우, 담당 상담사·기관 담당자에게 문의해 주세요.
+          나의코드나 등록한 휴대폰 번호를 모를 경우, 담당 상담사·기관 담당자에게 문의해 주세요.
         </div>
 
         <p className="mt-6 text-center text-sm text-slate-300">

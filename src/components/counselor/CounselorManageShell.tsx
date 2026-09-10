@@ -26,9 +26,9 @@ type Props = {
   children: React.ReactNode;
 };
 
-/** 좌측 메뉴 — 대분류 타이틀과 중분류 첫 글자 정렬 */
-const MENU_MIDDLE_ALIGN = 'pl-8';
-const MENU_NESTED_ALIGN = 'pl-12';
+/** 좌측 메뉴 — 대분류 타이틀 첫 글자 + 1ch 에서 중분류 시작 */
+const MENU_MIDDLE_ALIGN = 'pl-[calc(1.75rem+1.25rem+0.75rem+1ch)]';
+const MENU_NESTED_ALIGN = 'pl-[calc(1.75rem+1.25rem+0.75rem+2ch)]';
 
 export default function CounselorManageShell({ children }: Props) {
   const pathname = usePathname() || '';
@@ -72,8 +72,17 @@ export default function CounselorManageShell({ children }: Props) {
             const expanded = expandedSlug === category.slug;
             const categoryEntryHref = getCategoryEntryHref(category, adminUser);
 
+            const categorySelected = activeCategorySlug === category.slug;
+
             return (
-              <div key={category.slug} className="mb-1 rounded-lg border border-white/10">
+              <div
+                key={category.slug}
+                className={`mb-1 rounded-lg border ${
+                  categorySelected
+                    ? 'border-sky-400/45 ring-1 ring-inset ring-sky-400/20'
+                    : 'border-white/10'
+                }`}
+              >
                 <div className="flex items-stretch gap-0.5">
                   <button
                     type="button"

@@ -202,6 +202,7 @@ function AssessmentListPageContent() {
             moveInfo={moveInfo}
             autoLivePollId={autoLivePollId}
             autoAddRecipientId={autoAddRecipientId}
+            listReady={!loading && assessments.length > 0}
             onAssessmentsRefresh={setAssessments}
             initialSearchQuery={initialSearchQuery}
           />

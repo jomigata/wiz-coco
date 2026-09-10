@@ -43,11 +43,10 @@ export default function CounselorNextTestRecommendCard({
     () => [
       {
         displayName: recipient.displayName,
-        email: recipient.email,
         phone: recipient.phone,
       },
     ],
-    [recipient.displayName, recipient.email, recipient.phone],
+    [recipient.displayName, recipient.phone],
   );
 
   if (!recommendation || dismissed || sent) return null;
@@ -56,7 +55,7 @@ export default function CounselorNextTestRecommendCard({
 
   const handleSend = async (
     item: CounselorNextTestRecommendation,
-    notifyChannels: ('email' | 'phone')[],
+    notifyChannels: ('phone')[],
   ) => {
     setError('');
     setConfirmOpen(false);

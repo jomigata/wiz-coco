@@ -186,29 +186,14 @@ def claim_my_code_public(
         credits_enforce=COMMERCE_CREDITS_ENFORCE,
     )
 
-    if channel == PUBLIC_CLAIM_CHANNEL_EMAIL:
-        if not email_norm:
-            return {
-                "ok": False,
-                "error": "invalid_email",
-                "message": "이메일을 입력해 주세요.",
-            }
-        phone_norm = ""
-    elif channel == PUBLIC_CLAIM_CHANNEL_PHONE_EMAIL:
-        if not email_norm and len(phone_norm) < 10:
-            return {
-                "ok": False,
-                "error": "invalid_contact",
-                "message": "휴대폰 또는 이메일 중 최소 1개를 입력해 주세요.",
-            }
-    else:
-        if len(phone_norm) < 10:
-            return {
-                "ok": False,
-                "error": "invalid_phone",
-                "message": "휴대폰 번호를 입력해 주세요.",
-            }
-        email_norm = ""
+    if len(phone_norm) < 10:
+        return {
+            "ok": False,
+            "error": "invalid_phone",
+            "message": "휴대폰 번호를 입력해 주세요.",
+        }
+    email_norm = ""
+    channel = PUBLIC_CLAIM_CHANNEL_PHONE
 
     point_cost = 0
     if channel in (PUBLIC_CLAIM_CHANNEL_PHONE, PUBLIC_CLAIM_CHANNEL_PHONE_EMAIL) and len(phone_norm) >= 10:

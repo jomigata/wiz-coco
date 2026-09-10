@@ -499,43 +499,43 @@ def portal_change_pin():
     return jsonify({"ok": True})
 
 
-MSG_PIN_RESET_SENT = "등록된 이메일로 재설정 안내를 보냈습니다."
-MSG_PIN_RESET_MISMATCH = "나의코드와 이메일이 일치하지 않습니다."
+MSG_PIN_RESET_SENT = "등록된 휴대폰으로 재설정 안내를 보냈습니다."
+MSG_PIN_RESET_MISMATCH = "나의코드와 휴대폰 번호가 일치하지 않습니다."
 MSG_PIN_NOT_FOUND = "나의코드를 확인해 주세요."
-MSG_PIN_NO_EMAIL = "등록된 이메일이 없습니다. 담당자에게 문의해 주세요."
+MSG_PIN_NO_PHONE = "등록된 휴대폰이 없습니다. 담당자에게 문의해 주세요."
 
 
 @bp.route("/forgot-pin", methods=["POST"])
 @limit_access_code
 def portal_forgot_pin():
-    """나의코드 + 이메일로 비밀번호(PIN) 재설정 링크 발송."""
+    """나의코드 + 휴대폰으로 비밀번호(PIN) 재설정 링크 발송."""
     body = request.get_json(silent=True) or {}
     code = normalize_my_code(body.get("accessCode") or "")
-    email = (body.get("email") or "").strip().lower()
+    phone = normalize_recipient_phone(body.get("phone") or "")
 
     if not is_valid_my_code(code):
         return jsonify({"error": "Bad Request", "message": MSG_PIN_NOT_FOUND}), 400
-    if not email or "@" not in email:
-        return jsonify({"error": "Bad Request", "message": "올바른 이메일 주소를 입력해 주세요."}), 400
+    if len(phone) < 10:
+        return jsonify({"error": "Bad Request", "message": "올바른 휴대폰 번호를 입력해 주세요."}), 400
 
     db = get_firestore()
     portal_doc = _find_portal_by_access_code(db, code)
     if not portal_doc:
         return jsonify({"error": "Bad Request", "message": MSG_PIN_NOT_FOUND}), 400
 
-    portal_email = ((portal_doc.to_dict() or {}).get("email") or "").strip().lower()
-    if not portal_email:
-        return jsonify({"error": "Bad Request", "message": MSG_PIN_NO_EMAIL}), 400
-    if portal_email != email:
+    portal_phone = normalize_recipient_phone((portal_doc.to_dict() or {}).get("phone") or "")
+    if not portal_phone:
+        return jsonify({"error": "Bad Request", "message": MSG_PIN_NO_PHONE}), 400
+    if portal_phone != phone:
         return jsonify({"error": "Bad Request", "message": MSG_PIN_RESET_MISMATCH}), 400
 
     token = _serializer("portal-pin-reset").dumps({"portalId": portal_doc.id})
     reset_url = f"{PUBLIC_SITE_URL}/portal/reset-pin/?t={token}"
-    send_portal_pin_reset_email(
-        to_email=email,
-        reset_url=reset_url,
-        access_code=code,
-    )
+    from utils.sms_notify import send_portal_pin_reset_sms
+
+    ok, err, _ = send_portal_pin_reset_sms(to_phone=phone, reset_url=reset_url, access_code=code)
+    if not ok:
+        return jsonify({"error": "Bad Request", "message": "문자 발송에 실패했습니다. 잠시 후 다시 시도해 주세요."}), 400
 
     return jsonify({"message": MSG_PIN_RESET_SENT}), 200
 

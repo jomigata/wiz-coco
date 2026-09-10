@@ -108,16 +108,53 @@ function phoneChannelLabel(flags: ReturnType<typeof parseSentViaFlags>): string 
   return '휴대폰';
 }
 
-export function formatRecipientContactLine(
-  phone?: string | null,
-  email?: string | null,
-): string {
-  const parts: string[] = [];
+export function formatRecipientContactLine(phone?: string | null, _email?: string | null): string {
   const phoneText = formatPhoneDisplay((phone || '').trim());
-  const emailText = (email || '').trim();
-  if (phoneText) parts.push(phoneText);
-  if (emailText) parts.push(emailText);
-  return parts.length ? parts.join(' / ') : '—';
+  return phoneText || '—';
+}
+
+/** 발송현황 정렬 — 1차: 성공·재발송·실패·진행 등, 2·3차: 채널·성공/실패 */
+export function compareDispatchStatusSort(
+  a: DispatchDisplayRecipient,
+  b: DispatchDisplayRecipient,
+): number {
+  return dispatchStatusSortKey(a).localeCompare(dispatchStatusSortKey(b), 'ko');
+}
+
+function dispatchStatusSortKey(r: DispatchDisplayRecipient): string {
+  const view = dispatchStatusDisplay(r);
+  const status = resolveEffectiveNotifyStatus(r);
+  const kind = (r.notifyKind || '').trim();
+
+  let tier1 = 50;
+  if (status === 'sent' || status === 'partial') {
+    const succeeded =
+      view.className.includes('emerald') || anyChannelSucceeded(view.detailParts);
+    if (succeeded) tier1 = kind === 'resend' ? 90 : 80;
+    else tier1 = 35;
+  } else if (status === 'failed') tier1 = 30;
+  else if (status === 'sending' || status === 'pending') tier1 = 20;
+  else if (status === 'not_sent') tier1 = 10;
+  else if (status === 'skipped') tier1 = 5;
+
+  const channelRank = (label: string): number => {
+    if (label.startsWith('알림톡')) return 0;
+    if (label.startsWith('문자') || label.startsWith('휴대폰')) return 1;
+    if (label.startsWith('이메일')) return 2;
+    return 9;
+  };
+
+  const tier23 = view.detailParts
+    .map((part) => {
+      const label = part.text.replace(/[✓✗…·]/g, '');
+      const rank = String(channelRank(label)).padStart(2, '0');
+      const outcome = part.text.includes('✗') ? '2' : part.text.includes('✓') ? '0' : '1';
+      return `${rank}${outcome}${label}`;
+    })
+    .sort()
+    .join('|');
+
+  return `${String(tier1).padStart(3, '0')}|${tier23}|${view.mainText}`;
 }
 
 function emailChannelOutcome(
@@ -247,10 +284,7 @@ function buildChannelDetailParts(r: DispatchDisplayRecipient): ChannelDetailPart
   const parts: ChannelDetailPart[] = [];
 
   if (hasEmail) {
-    const legacy = emailChannelOutcome(status, via, failed);
-    let channelState = r.notifyEmailChannel;
-    if (terminal && channelState === 'sending') channelState = undefined;
-    pushChannelFromExplicitState(parts, '이메일', channelState, legacy);
+    // 이메일 발송 비활성 — 휴대폰 전용
   }
 
   if (hasPhone) {
@@ -304,12 +338,12 @@ export function dispatchStatusDisplay(r: DispatchDisplayRecipient): DispatchStat
   const hasEmail = Boolean(r.email?.trim());
   const hasPhone = Boolean(r.phone?.trim());
 
-  if (!hasEmail && !hasPhone) {
+  if (!hasPhone) {
     return statusView(
       '연락처 없음',
       [],
       'text-red-400',
-      '이메일·휴대폰 정보가 없어 발송할 수 없습니다.',
+      '휴대폰 번호가 없어 발송할 수 없습니다.',
     );
   }
 
@@ -322,7 +356,7 @@ export function dispatchStatusDisplay(r: DispatchDisplayRecipient): DispatchStat
       `${kindPrefix}발송중`.trim(),
       detailParts,
       'text-amber-300',
-      notifyErrorHint(r.notifyError) || 'Solapi·이메일 발송 결과를 확인하는 중입니다.',
+      notifyErrorHint(r.notifyError) || 'Solapi 발송 결과를 확인하는 중입니다.',
     );
   }
 

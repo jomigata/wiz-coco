@@ -222,7 +222,11 @@ export function getAssessmentsParentSubmenuItems(options?: {
 
   const items: CounselorParentSubmenuItem[] = [];
 
-  if (progressFrom !== 'clients') {
+  const showProgressMenu =
+    path.startsWith('/counselor/assessments/progress') &&
+    resolveCounselorProgressFrom(options?.pathname || '', options?.search || '') === 'assessments';
+
+  if (showProgressMenu) {
     items.push({
       order: 0,
       label: '상담진행 현황',

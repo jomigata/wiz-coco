@@ -231,7 +231,7 @@ function testStatusLabel(status: DispatchTestResult['status']): { text: string; 
 function progressStatusForRow(recipient: DispatchRecipient): { text: string; className: string } {
   if (recipient.moveStatus === 'moved_out') {
     const movedCode = formatAccessCodeDisplay(recipient.movedToJoinAccessCode || '') || '—';
-    return { text: `이동완료 (-> ${movedCode})`, className: 'font-medium text-red-400' };
+    return { text: `이동완료 (> ${movedCode})`, className: 'font-medium text-white' };
   }
   return testSummary(recipient);
 }
@@ -1487,7 +1487,7 @@ export default function AssessmentDispatchPanel({
                       </td>
                       {clientsMergedContact ? (
                         <td className={`${counselorListTdClass} align-top`}>
-                          <RecipientContactCell phone={r.phone} email={r.email} />
+                          <RecipientContactCell phone={r.phone} />
                         </td>
                       ) : (
                         <>

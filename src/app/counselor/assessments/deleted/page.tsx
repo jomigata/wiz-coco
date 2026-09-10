@@ -471,8 +471,8 @@ export default function DeletedAssessmentsPage() {
             상담코드
           </AuthLink>
           <span className="shrink-0">
-            전체 <span className="font-semibold text-white">{totalParticipants}</span>명 · 완료{' '}
-            <span className="font-semibold text-emerald-300">{totalCompleted}</span>명
+            전체 삭제된 상담코드{' '}
+            <span className="font-semibold text-white">{items.length}</span>건
           </span>
           <CounselorListSearchInput
             value={searchQuery}
