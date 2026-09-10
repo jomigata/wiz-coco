@@ -46,9 +46,7 @@ import {
   downloadGroupRecipientSampleTxt,
   getGroupRecipientSamplePreviewText,
 } from '@/lib/groupRecipientSampleDownload';
-import PublicClaimChannelField from '@/components/counselor/PublicClaimChannelField';
 import {
-  PUBLIC_CLAIM_CHANNEL_EMAIL,
   PUBLIC_CLAIM_CHANNEL_PHONE_EMAIL,
   type PublicClaimChannel,
 } from '@/lib/publicClaimDelivery';
@@ -109,9 +107,7 @@ export default function CounselorQuickSendForm({
   const resolvedAssessmentIdRef = useRef('');
   const [firstSendTrialEligible, setFirstSendTrialEligible] = useState(false);
   const [counselorAffiliation, setCounselorAffiliation] = useState('');
-  const [publicClaimChannel, setPublicClaimChannel] = useState<PublicClaimChannel>(
-    PUBLIC_CLAIM_CHANNEL_EMAIL,
-  );
+  const [publicClaimChannel] = useState<PublicClaimChannel>(PUBLIC_CLAIM_CHANNEL_PHONE_EMAIL);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const welcomeTextareaRef = useRef<HTMLTextAreaElement>(null);
   const customCohortTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -152,7 +148,6 @@ export default function CounselorQuickSendForm({
   }, [user?.uid, user?.displayName]);
 
   const template = COUNSELOR_SEND_TEMPLATES.find((t) => t.id === templateId) ?? null;
-  const isFreeTemplate = templateId === 'free';
   const customSelectedTests = useMemo(
     () => counselorAssessmentTestOptions.filter((t) => customTestIds.has(t.testId)),
     [customTestIds],
@@ -196,11 +191,11 @@ export default function CounselorQuickSendForm({
   }, [samplePreviewText]);
 
   const finish = (assessmentId: string) => {
-    const href = isFreeTemplate
-      ? '/counselor/assessments'
-      : assessmentId
-        ? `/counselor/assessments/progress?assessmentId=${encodeURIComponent(assessmentId)}`
-        : '/counselor/assessments';
+    const params = new URLSearchParams();
+    if (assessmentId) params.set('addRecipient', assessmentId);
+    const href = params.toString()
+      ? `/counselor/assessments?${params.toString()}`
+      : '/counselor/assessments';
     replaceWithAuthSession(router, href);
     if (variant === 'modal') {
       onIssued?.();
@@ -431,7 +426,7 @@ export default function CounselorQuickSendForm({
           subtitle="보낼 검사 유형을 선택하세요"
           compact
         >
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <div className="space-y-2">
             {COUNSELOR_SEND_TEMPLATES.map((item, templateIndex) => {
               const active = templateId === item.id;
               const recommend = firstSendTrialEligible && item.id === 'free';
@@ -448,16 +443,14 @@ export default function CounselorQuickSendForm({
                 return (
                   <div
                     key={item.id}
-                    className={`flex aspect-square flex-col rounded-xl border px-3 py-3 text-center transition-colors ${templateCardBorder(active)}`}
+                    className={`flex w-full flex-col rounded-lg border px-3 py-2.5 transition-colors ${templateCardBorder(active)}`}
                   >
-                    <span className="flex h-7 shrink-0 flex-col items-center justify-end">
-                      <span className="text-[10px] font-semibold tabular-nums text-slate-500">
+                    <div className="flex items-start gap-3">
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/10 text-[10px] font-semibold tabular-nums text-slate-400">
                         {templateOrder}
                       </span>
-                      <span className="mt-1 block h-px w-full bg-white/15" aria-hidden />
-                    </span>
-                    <div
-                      className="relative min-h-0 flex-1 cursor-text text-left"
+                      <div
+                        className="relative min-h-[2.5rem] min-w-0 flex-1 cursor-text text-left"
                       onClick={() => {
                         setTemplateId('custom');
                         if (!customCohortName.trim()) {
@@ -542,6 +535,7 @@ export default function CounselorQuickSendForm({
                         aria-label="그룹명 및 소속"
                       />
                     </div>
+                    </div>
                     <button
                       type="button"
                       disabled={sendLocked}
@@ -588,25 +582,22 @@ export default function CounselorQuickSendForm({
                   type="button"
                   disabled={sendLocked}
                   onClick={() => setTemplateId(item.id)}
-                  className={`flex aspect-square flex-col items-center justify-center rounded-xl border px-3 py-4 text-center transition-colors ${templateCardBorder(active)} ${
+                  className={`flex w-full items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors ${templateCardBorder(active)} ${
                     active ? 'text-white' : 'text-slate-200'
                   }`}
                 >
-                  <span className="flex h-7 shrink-0 flex-col items-center justify-end">
-                    <span className="mb-0 text-[10px] font-semibold tabular-nums text-slate-500">
-                      {templateOrder}
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/10 text-[10px] font-semibold tabular-nums text-slate-400">
+                    {templateOrder}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-semibold leading-snug">
+                      {item.name}
+                      {recommend ? (
+                        <span className="ml-1 text-[10px] font-medium text-emerald-300">추천</span>
+                      ) : null}
                     </span>
-                    <span className="mt-1 block h-px w-full bg-white/15" aria-hidden />
+                    <span className="mt-0.5 block truncate text-xs text-slate-400">{item.description}</span>
                   </span>
-                  <span className="block text-base font-bold leading-snug">
-                    {item.name}
-                    {recommend ? (
-                      <span className="ml-1 block text-[10px] font-medium text-emerald-300 sm:inline">
-                        첫 보내기 추천
-                      </span>
-                    ) : null}
-                  </span>
-                  <span className="mt-1 block text-xs text-slate-400">{item.description}</span>
                 </button>
               );
             })}
@@ -621,20 +612,20 @@ export default function CounselorQuickSendForm({
           allowOverflow
         >
           <div className="rounded-xl border border-emerald-400/25 bg-emerald-500/10 px-4 py-4">
-            <p className="text-sm font-semibold text-emerald-100">내담자 없이 상담코드만 생성</p>
+            <p className="text-sm font-semibold text-emerald-100">상담코드 생성 + 내담자 추가</p>
             <p className="mt-2 text-sm leading-relaxed text-slate-300">
-              생성된 상담코드를 내담자에게 알려 주면, 홈페이지{' '}
-              <span className="font-medium text-white">무료 검사코드 받기</span>에서 이름(가명)·연락처를 입력해
+              상담코드 생성 후 내담자 추가로 즉시 코드를 발송하거나, 각 개인이 홈페이지의{' '}
+              <span className="font-medium text-white">검사코드 받기</span>에서 이름·연락처를 입력해
               나의코드와 비밀번호를 받을 수 있습니다.
             </p>
           </div>
-          <PublicClaimChannelField
-            value={publicClaimChannel}
-            onChange={setPublicClaimChannel}
-            disabled={sendLocked}
-            className="mb-3 mt-4"
-            allowedChannels={[PUBLIC_CLAIM_CHANNEL_EMAIL, PUBLIC_CLAIM_CHANNEL_PHONE_EMAIL]}
-          />
+          <div className="mb-3 mt-4 rounded-xl border border-white/10 bg-[#121f38]/80 px-3 py-3">
+            <p className="text-xs font-semibold text-slate-300">코드 발송 안내</p>
+            <p className="mt-1.5 text-xs leading-relaxed text-slate-400">
+              휴대폰 또는 이메일로 나의코드·비밀번호가 발송됩니다. 연락처는 최소 1개 이상 입력해야 하며,
+              두 가지 모두 입력하면 모두 발송됩니다.
+            </p>
+          </div>
           <div className="mb-3">
             <label htmlFor="quick-send-usage-end" className="mb-1.5 block text-sm font-semibold text-slate-200">
               사용종료일 (선택)

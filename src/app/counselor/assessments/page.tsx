@@ -28,6 +28,7 @@ import { getAppRoleSync, isAdmin } from '@/utils/roleUtils';
 function AssessmentListPageContent() {
   const searchParams = useSearchParams();
   const initialSearchQuery = parseAssessmentListSearchFromUrl(searchParams.get('search'));
+  const autoAddRecipientId = (searchParams.get('addRecipient') || '').trim() || null;
   const { user, authPending, showLoginRequired } = useAuthResolved();
   const { refreshAuthRole } = useFirebaseAuth();
   const counselorUid = user?.uid;
@@ -200,6 +201,7 @@ function AssessmentListPageContent() {
             createdInfo={createdInfo}
             moveInfo={moveInfo}
             autoLivePollId={autoLivePollId}
+            autoAddRecipientId={autoAddRecipientId}
             onAssessmentsRefresh={setAssessments}
             initialSearchQuery={initialSearchQuery}
           />

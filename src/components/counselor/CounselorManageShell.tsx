@@ -73,7 +73,7 @@ export default function CounselorManageShell({ children }: Props) {
             const categoryEntryHref = getCategoryEntryHref(category, adminUser);
 
             return (
-              <div key={category.slug} className="mb-1">
+              <div key={category.slug} className="mb-1 rounded-lg border border-white/10">
                 <div className="flex items-stretch gap-0.5">
                   <button
                     type="button"

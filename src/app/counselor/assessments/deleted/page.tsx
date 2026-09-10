@@ -244,7 +244,9 @@ export default function DeletedAssessmentsPage() {
   );
   const [error, setError] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [restoring, setRestoring] = useState(false);
+  const [restoreOverlay, setRestoreOverlay] = useState<
+    null | { phase: 'loading' } | { phase: 'success' | 'error'; title: string; message: string }
+  >(null);
   const [deleting, setDeleting] = useState(false);
   const [permanentDeleteConfirmOpen, setPermanentDeleteConfirmOpen] = useState(false);
   const [message, setMessage] = useState('');
@@ -376,24 +378,24 @@ export default function DeletedAssessmentsPage() {
 
   const handleRestore = async () => {
     if (selected.size === 0 || adminUser) return;
-    setRestoring(true);
+    setRestoreOverlay({ phase: 'loading' });
     setMessage('');
     try {
       const result = await restoreArchivedAssessments(Array.from(selected));
       clearCounselorAssessmentsListCache(counselorUid);
-      setActionComplete({
+      await load();
+      setRestoreOverlay({
+        phase: 'success',
         title: '복구 완료',
         message: `복구 ${result.restored}건${result.failed ? `, 실패 ${result.failed}건` : ''}`,
       });
-      await load();
     } catch (err) {
+      setRestoreOverlay(null);
       setActionComplete({
         title: '복구 실패',
         message: err instanceof Error ? err.message : '복구에 실패했습니다.',
         error: true,
       });
-    } finally {
-      setRestoring(false);
     }
   };
 
@@ -607,7 +609,7 @@ export default function DeletedAssessmentsPage() {
                         <td className={`whitespace-nowrap ${counselorListTdCompactClass} text-center`}>
                           <CounselorProgressMetricsInline
                             totalClients={dispatchTotal}
-                            showTotalClients={false}
+                            showTotalClients
                             items={[{ label: '검사완료', value: testComplete }]}
                           />
                         </td>
@@ -661,10 +663,10 @@ export default function DeletedAssessmentsPage() {
                     <button
                       type="button"
                       onClick={() => void handleRestore()}
-                      disabled={restoring || selected.size === 0}
+                      disabled={Boolean(restoreOverlay) || selected.size === 0}
                       className="rounded-md bg-emerald-600/90 px-2.5 py-1 text-sm font-medium text-white transition-colors hover:bg-emerald-500 disabled:opacity-50"
                     >
-                      {restoring ? '복구 중…' : `복구 (${selected.size})`}
+                      {restoreOverlay?.phase === 'loading' ? '복구 중…' : `복구 (${selected.size})`}
                     </button>
                   ) : null}
                   {!adminUser ? (
@@ -684,9 +686,16 @@ export default function DeletedAssessmentsPage() {
         )}
       </motion.div>
       <CounselorActionProgressOverlay
-        open={restoring}
+        open={restoreOverlay?.phase === 'loading'}
         title="복구 진행 중…"
         message="선택한 상담코드를 복구하고 있습니다."
+      />
+      <CounselorActionProgressOverlay
+        open={restoreOverlay?.phase === 'success'}
+        phase="success"
+        title={restoreOverlay?.phase === 'success' ? restoreOverlay.title : '복구 완료'}
+        message={restoreOverlay?.phase === 'success' ? restoreOverlay.message : undefined}
+        onConfirm={() => setRestoreOverlay(null)}
       />
       <CounselorActionProgressOverlay
         open={deleting}

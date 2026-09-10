@@ -34,10 +34,10 @@ export default function CounselorNextTestRecommendCard({
       ? isNextTestRecommendationDismissed(recipient.portalId, assessmentId, recommendation.testId)
       : false,
   );
-  const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [sent, setSent] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [progressPhase, setProgressPhase] = useState<'idle' | 'loading' | 'success'>('idle');
 
   const notifyRecipients = useMemo<NotifyRecipientContact[]>(
     () => [
@@ -52,13 +52,15 @@ export default function CounselorNextTestRecommendCard({
 
   if (!recommendation || dismissed || sent) return null;
 
+  const busy = progressPhase !== 'idle';
+
   const handleSend = async (
     item: CounselorNextTestRecommendation,
     notifyChannels: ('email' | 'phone')[],
   ) => {
-    setBusy(true);
     setError('');
     setConfirmOpen(false);
+    setProgressPhase('loading');
     try {
       await pushAssessmentsToPortals({
         portalIds: [recipient.portalId],
@@ -68,18 +70,22 @@ export default function CounselorNextTestRecommendCard({
         notify: true,
         notifyChannels,
       });
-      setSent(true);
-      onAssigned?.();
+      setProgressPhase('success');
     } catch (err) {
+      setProgressPhase('idle');
       setError(err instanceof Error ? err.message : '검사 보내기에 실패했습니다.');
-    } finally {
-      setBusy(false);
     }
   };
 
   const handleDismiss = () => {
     dismissNextTestRecommendation(recipient.portalId, assessmentId, recommendation.testId);
     setDismissed(true);
+  };
+
+  const handleProgressConfirm = () => {
+    setProgressPhase('idle');
+    setSent(true);
+    onAssigned?.();
   };
 
   return (
@@ -116,10 +122,10 @@ export default function CounselorNextTestRecommendCard({
       <CounselorNotifyConfirmDialog
         open={confirmOpen}
         kind="push"
+        hideChannels
         title="이 검사 보내기 확인"
-        description={`「${recommendation.name}」 검사를 안내합니다. 발송 채널을 선택해 주세요.`}
+        description={`「${recommendation.name}」 검사를 안내합니다.`}
         recipients={notifyRecipients}
-        loading={busy}
         confirmLabel="보내기"
         onConfirm={(channels) => void handleSend(recommendation, channels)}
         onCancel={() => {
@@ -128,9 +134,16 @@ export default function CounselorNextTestRecommendCard({
         }}
       />
       <CounselorActionProgressOverlay
-        open={busy}
+        open={progressPhase === 'loading'}
         title="검사 보내기 진행 중…"
         message="잠시만 기다려 주세요."
+      />
+      <CounselorActionProgressOverlay
+        open={progressPhase === 'success'}
+        phase="success"
+        title="검사 보내기 완료"
+        message="내담자에게 검사 안내가 발송되었습니다."
+        onConfirm={handleProgressConfirm}
       />
     </>
   );

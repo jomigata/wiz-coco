@@ -41,7 +41,7 @@ export function validateNotifyChannelSelection(
   recipients: NotifyRecipientContact[],
 ): string | null {
   if (!selection.email && !selection.phone) {
-    return '이메일(무료) 또는 휴대폰(1포인트) 중 최소 1개를 선택해 주세요.';
+    return '이메일 또는 휴대폰(1포인트) 중 최소 1개를 선택해 주세요.';
   }
   if (selection.email) {
     const emailCount = recipients.filter((r) => (r.email || '').trim()).length;
@@ -96,22 +96,23 @@ export function formatNotifyPointSummary(
 ): {
   usePoints: number;
   balanceAfter: number;
-  summaryLines: string[];
+  detailLines: string[];
+  footerLine: string;
 } {
   const { emailCount, phoneCount, recipientCount } = countNotifyTargets(recipients, selection);
   const usePoints = estimateNotifyPointCost(recipients, selection, options);
   const balanceAfter = Math.max(0, balancePoints - usePoints);
-  const summaryLines = [
+  const detailLines = [
     `대상 ${recipientCount}명`,
-    selection.email ? `이메일 ${emailCount}건 (무료)` : null,
+    selection.email ? `이메일 ${emailCount}건` : null,
     selection.phone
       ? `휴대폰 ${phoneCount}건 (${formatPoints(POINT_COST_PORTAL_RECIPIENT)}/건)`
       : null,
-    options?.perRecipient
-      ? `추가 ${recipientCount}명 · ${formatPoints(usePoints)} · 잔여 ${formatPoints(balanceAfter)}`
-      : `사용 ${formatPoints(usePoints)} · 잔여 ${formatPoints(balanceAfter)}`,
   ].filter(Boolean) as string[];
-  return { usePoints, balanceAfter, summaryLines };
+  const footerLine = options?.perRecipient
+    ? `총 추가 ${recipientCount}명 / ${formatPoints(usePoints)} 차감 / 잔여 ${formatPoints(balanceAfter)}`
+    : `사용 ${formatPoints(usePoints)} / 잔여 ${formatPoints(balanceAfter)}`;
+  return { usePoints, balanceAfter, detailLines, footerLine };
 }
 
 export function creditsRequiredForNotify(

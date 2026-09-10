@@ -132,6 +132,9 @@ function PortalLoginContent() {
     <PortalAuthScreenLayout theme={theme}>
       <PortalAuthCard theme={theme}>
         <div className="mb-6 relative">
+          <Link href="/" className={`text-xs underline-offset-2 hover:underline ${t.link}`}>
+            ← 홈으로
+          </Link>
           <Link
             href="/portal/forgot-pin/"
             className={`absolute -top-1 right-0 text-xs underline-offset-2 hover:underline ${t.link}`}

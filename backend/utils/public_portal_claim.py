@@ -195,17 +195,11 @@ def claim_my_code_public(
             }
         phone_norm = ""
     elif channel == PUBLIC_CLAIM_CHANNEL_PHONE_EMAIL:
-        if not email_norm:
+        if not email_norm and len(phone_norm) < 10:
             return {
                 "ok": False,
-                "error": "invalid_email",
-                "message": "이메일을 입력해 주세요.",
-            }
-        if len(phone_norm) < 10:
-            return {
-                "ok": False,
-                "error": "invalid_phone",
-                "message": "휴대폰 번호를 입력해 주세요.",
+                "error": "invalid_contact",
+                "message": "휴대폰 또는 이메일 중 최소 1개를 입력해 주세요.",
             }
     else:
         if len(phone_norm) < 10:

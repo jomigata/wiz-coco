@@ -1,4 +1,4 @@
-/** 무료 검사코드(공개 claim) — @/lib/pointsCatalog 재export */
+/** 공개 claim(검사코드 받기) — @/lib/pointsCatalog 재export */
 export {
   WON_PER_POINT,
   POINTS_PER_ASSESSMENT_CREDIT,

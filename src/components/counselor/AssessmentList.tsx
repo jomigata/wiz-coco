@@ -259,6 +259,7 @@ interface AssessmentListProps {
   createdInfo?: CreatedAssessmentBannerInfo | null;
   moveInfo?: PortalMoveBannerInfo | null;
   autoLivePollId?: string | null;
+  autoAddRecipientId?: string | null;
   onAssessmentsRefresh?: (items: CounselorAssessment[]) => void;
   initialSearchQuery?: string;
 }
@@ -271,6 +272,7 @@ export default function AssessmentList({
   createdInfo,
   moveInfo,
   autoLivePollId,
+  autoAddRecipientId,
   onAssessmentsRefresh,
   initialSearchQuery = '',
 }: AssessmentListProps) {
@@ -476,6 +478,18 @@ export default function AssessmentList({
     rememberCounselorAssessmentContext(assessment.id);
     setAddTarget(assessment);
   };
+
+  useEffect(() => {
+    const id = (autoAddRecipientId || '').trim();
+    if (!id) return;
+    const target = listItems.find((a) => a.id === id);
+    if (!target) return;
+    openAddRecipient(target);
+    const params = new URLSearchParams(window.location.search);
+    params.delete('addRecipient');
+    const qs = params.toString();
+    router.replace(qs ? `/counselor/assessments?${qs}` : '/counselor/assessments');
+  }, [autoAddRecipientId, listItems, router]);
 
   const openEdit = (assessment: CounselorAssessment) => {
     rememberCounselorAssessmentContext(assessment.id);

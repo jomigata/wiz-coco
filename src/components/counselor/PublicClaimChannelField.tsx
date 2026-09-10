@@ -41,7 +41,7 @@ export default function PublicClaimChannelField({
   const hint =
     hintOverride !== undefined
       ? hintOverride
-      : '내담자가 무료 검사코드 받기에서 연락처를 입력하면 선택한 방법으로 나의코드·비밀번호가 발송됩니다.';
+      : '내담자가 검사코드 받기에서 연락처를 입력하면 입력한 방법으로 나의코드·비밀번호가 발송됩니다.';
 
   return (
     <div className={className}>

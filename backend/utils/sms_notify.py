@@ -68,21 +68,17 @@ def send_portal_credentials_sms(
         logger.info("SMS skipped (no provider configured) for %s", phone[:4] + "****")
         return False, "sms_not_configured", ""
 
-    join_code = (join_access_code or "").strip().upper()
     my_code = (access_code or "").strip().upper()
     pin_display = _format_pin_display(pin)
     link = (magic_url or "").strip()
 
     if compact:
         # 알림톡 실패 fallback — magic URL 1개만, SMS(단문) 구간 유지
-        code_part = f"{join_code}/{my_code}" if join_code else my_code
-        body = f"[WizCoCo]{code_part}/{pin_display} {link}".strip()
+        body = f"[WizCoCo]{my_code}/{pin_display} {link}".strip()
     else:
         name = (display_name or "").strip() or "내담자"
         login_url = f"{PUBLIC_SITE_URL.rstrip('/')}/portal/login/"
         parts = [f"[WizCoCo] {name}님 검사시작"]
-        if join_code:
-            parts.append(f"상담(코드) {join_code}")
         parts.append(f"나의코드 {my_code} 비밀번호 {pin_display}")
         parts.append(login_url)
         parts.append(link)
@@ -111,14 +107,11 @@ def send_test_reminder_sms(
         return False, "sms_not_configured"
 
     name = (display_name or "").strip() or "내담자"
-    join_code = (join_access_code or "").strip().upper()
     portal_code = (my_code or "").strip().upper()
     login_url = f"{PUBLIC_SITE_URL.rstrip('/')}/portal/login/"
 
     parts = [f"[WizCoCo] {name}님 검사시작"]
     parts.append("아직 완료하지 않은 검사가 있습니다. 검사를 진행해 주세요.")
-    if join_code:
-        parts.append(f"상담(코드) {join_code}")
     if portal_code:
         parts.append(f"나의코드 {portal_code} 비밀번호 (최초 발송 안내 참고)")
     parts.append(login_url)

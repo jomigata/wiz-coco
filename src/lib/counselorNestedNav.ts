@@ -147,15 +147,6 @@ export function getAssessmentListContextNestedItems(
   const progressFrom = resolveCounselorProgressFrom(pathname, search);
   const items: AssessmentListNestedNavItem[] = [];
 
-  if (!options?.admin && isDeletedAssessmentsPath(path)) {
-    items.push({
-      order: 10,
-      label: '삭제된 상담코드',
-      href: DELETED_ASSESSMENTS_HREF,
-      isActive: isDeletedAssessmentsPath,
-    });
-  }
-
   if (path.startsWith('/counselor/assessments/edit')) {
     items.push({
       order: 51,
@@ -261,30 +252,33 @@ export function getClientsParentSubmenuItems(options?: {
   pathname?: string;
   search?: string;
 }): CounselorParentSubmenuItem[] {
+  const path = options?.pathname ? normalizeCounselorPath(options.pathname) : '';
+  const showProgressMenu =
+    path.startsWith('/counselor/assessments/progress') &&
+    resolveCounselorProgressFrom(options?.pathname || '', options?.search || '') === 'clients';
   const assessmentId =
     options?.pathname != null
       ? resolveAssessmentContextId(options.pathname, options.search || '')
       : null;
   const progressHref = buildProgressHref(assessmentId, options?.search || '?from=clients');
 
-  const items: CounselorParentSubmenuItem[] = [
-    {
+  const items: CounselorParentSubmenuItem[] = [];
+  if (showProgressMenu) {
+    items.push({
       order: 2,
       label: '검사발송 현황',
       href: progressHref,
       isActive: (p) =>
         p.startsWith('/counselor/assessments/progress') &&
-        (options?.pathname
-          ? resolveCounselorProgressFrom(options.pathname, options.search || '') === 'clients'
-          : true),
-    },
-    {
-      order: 90,
-      label: '삭제된 내담자',
-      href: DELETED_RECIPIENTS_HREF,
-      isActive: isDeletedRecipientsPath,
-    },
-  ];
+        resolveCounselorProgressFrom(options?.pathname || '', options?.search || '') === 'clients',
+    });
+  }
+  items.push({
+    order: 90,
+    label: '삭제된 내담자',
+    href: DELETED_RECIPIENTS_HREF,
+    isActive: isDeletedRecipientsPath,
+  });
   return items;
 }
 

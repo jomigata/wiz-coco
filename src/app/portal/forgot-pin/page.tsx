@@ -50,7 +50,10 @@ function ForgotPinContent() {
     <PortalAuthScreenLayout theme="recovery">
       <PortalAuthCard theme="recovery">
         <div className="mb-6">
-          <span className={`inline-block text-[11px] uppercase tracking-[0.16em] mb-3 ${t.accent}`}>
+          <Link href="/" className={`text-xs underline-offset-2 hover:underline ${t.link}`}>
+            ← 홈으로
+          </Link>
+          <span className={`inline-block text-[11px] uppercase tracking-[0.16em] mb-3 mt-4 ${t.accent}`}>
             Password Recovery
           </span>
           <h1 className="text-2xl font-semibold text-white tracking-tight">비밀번호 찾기</h1>

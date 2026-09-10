@@ -231,7 +231,7 @@ function testStatusLabel(status: DispatchTestResult['status']): { text: string; 
 function progressStatusForRow(recipient: DispatchRecipient): { text: string; className: string } {
   if (recipient.moveStatus === 'moved_out') {
     const movedCode = formatAccessCodeDisplay(recipient.movedToJoinAccessCode || '') || '—';
-    return { text: `이동완료 (${movedCode})`, className: 'text-slate-500' };
+    return { text: `이동완료 (-> ${movedCode})`, className: 'font-medium text-red-400' };
   }
   return testSummary(recipient);
 }

@@ -22,7 +22,6 @@ import {
   PUBLIC_CLAIM_CHANNEL_EMAIL,
   PUBLIC_CLAIM_PHONE_MIN_BALANCE_POINTS,
   formatPoints,
-  publicClaimContactLabel,
   type PublicClaimChannel,
 } from '@/lib/publicClaimDelivery';
 import { portalLoginHref } from '@/lib/portalLoginIntent';
@@ -72,9 +71,9 @@ export default function ClaimMyCodePage() {
     displayName.trim().length > 0 &&
     !loading &&
     step === 'contact' &&
-    (deliveryChannel === PUBLIC_CLAIM_CHANNEL_EMAIL
+    (forcedEmail || deliveryChannel === PUBLIC_CLAIM_CHANNEL_EMAIL
       ? emailNorm.includes('@')
-      : phoneNorm.length >= 10);
+      : phoneNorm.length >= 10 || emailNorm.includes('@'));
 
   const handleCodeNext = useCallback(
     async (e: React.FormEvent) => {
@@ -106,8 +105,11 @@ export default function ClaimMyCodePage() {
         const data = await claimJoinMyCode({
           accessCode: normalizedJoinCode,
           displayName: displayName.trim(),
-          phone: deliveryChannel === PUBLIC_CLAIM_CHANNEL_EMAIL ? undefined : phoneNorm,
-          email: deliveryChannel === PUBLIC_CLAIM_CHANNEL_EMAIL ? emailNorm : undefined,
+          phone:
+            forcedEmail || deliveryChannel === PUBLIC_CLAIM_CHANNEL_EMAIL
+              ? undefined
+              : phoneNorm || undefined,
+          email: emailNorm.includes('@') ? emailNorm : undefined,
         });
         setResult({
           magicPath: data.magicPath || '',
@@ -162,12 +164,12 @@ export default function ClaimMyCodePage() {
           <Link href="/" className={`text-xs underline-offset-2 hover:underline ${t.link}`}>
             ← 홈으로
           </Link>
-          <h1 className="mt-4 text-2xl font-semibold tracking-tight text-white">무료 검사코드 받기</h1>
+          <h1 className="mt-4 text-2xl font-semibold tracking-tight text-white">검사코드 받기</h1>
           {step === 'code' ? (
             <p className="mt-2 text-sm text-slate-400">상담사에게 받은 상담코드를 입력해 주세요.</p>
           ) : step === 'contact' ? (
             <p className="mt-2 text-sm text-slate-400">
-              이름(가명)과 {publicClaimContactLabel(deliveryChannel || PUBLIC_CLAIM_CHANNEL_EMAIL)}를 입력해 주세요.
+              이름(가명)과 연락처를 입력해 주세요. 휴대폰·이메일 중 최소 1개는 필수입니다.
             </p>
           ) : null}
         </div>
@@ -190,9 +192,9 @@ export default function ClaimMyCodePage() {
           </div>
         ) : step === 'contact' ? (
           <form onSubmit={handleSendCode} className="space-y-4" autoComplete="off" lang="ko">
-            <div className="rounded-xl border border-sky-400/25 bg-sky-500/10 px-4 py-5 text-center">
-              <p className="text-xs font-medium tracking-widest text-sky-300/80">상담코드</p>
-              <p className="mt-2 font-mono text-3xl font-bold tracking-[0.18em] text-sky-50 sm:text-4xl">
+            <div className="rounded-lg border border-sky-400/25 bg-sky-500/10 px-3 py-2.5 text-center">
+              <p className="text-[10px] font-medium tracking-widest text-sky-300/80">상담코드</p>
+              <p className="mt-1 font-mono text-lg font-bold tracking-[0.14em] text-sky-50 sm:text-xl">
                 {normalizedJoinCode || joinCode}
               </p>
             </div>
@@ -220,7 +222,7 @@ export default function ClaimMyCodePage() {
                 disabled={loading}
               />
             </div>
-            {deliveryChannel === PUBLIC_CLAIM_CHANNEL_EMAIL ? (
+            {forcedEmail || deliveryChannel === PUBLIC_CLAIM_CHANNEL_EMAIL ? (
               <div>
                 <label htmlFor="claim-email" className={`mb-2 block text-sm font-medium ${t.label}`}>
                   이메일
@@ -238,34 +240,52 @@ export default function ClaimMyCodePage() {
                 />
               </div>
             ) : (
-              <div>
-                <label htmlFor="claim-phone" className={`mb-2 block text-sm font-medium ${t.label}`}>
-                  휴대폰번호
-                </label>
-                <input
-                  ref={phoneInputRef}
-                  id="claim-phone"
-                  name="claim_phone"
-                  type="tel"
-                  inputMode="numeric"
-                  autoComplete="tel"
-                  lang="ko"
-                  placeholder={PHONE_INPUT_MASK_PLACEHOLDER}
-                  className={`w-full rounded-xl px-4 py-3 text-center tracking-wider focus:outline-none focus:ring-2 ${t.input}`}
-                  value={phone}
-                  onChange={(e) => {
-                    const formatted = formatPhoneWhileTyping(e.target.value);
-                    setPhone(formatted);
-                    requestAnimationFrame(() => {
-                      const el = phoneInputRef.current;
-                      if (!el) return;
-                      const pos = phoneInputCaretIndex(formatted);
-                      el.setSelectionRange(pos, pos);
-                    });
-                  }}
-                  disabled={loading}
-                />
-              </div>
+              <>
+                <div>
+                  <label htmlFor="claim-phone" className={`mb-2 block text-sm font-medium ${t.label}`}>
+                    휴대폰번호
+                  </label>
+                  <input
+                    ref={phoneInputRef}
+                    id="claim-phone"
+                    name="claim_phone"
+                    type="tel"
+                    inputMode="numeric"
+                    autoComplete="tel"
+                    lang="ko"
+                    placeholder={PHONE_INPUT_MASK_PLACEHOLDER}
+                    className={`w-full rounded-xl px-4 py-3 text-center tracking-wider focus:outline-none focus:ring-2 ${t.input}`}
+                    value={phone}
+                    onChange={(e) => {
+                      const formatted = formatPhoneWhileTyping(e.target.value);
+                      setPhone(formatted);
+                      requestAnimationFrame(() => {
+                        const el = phoneInputRef.current;
+                        if (!el) return;
+                        const pos = phoneInputCaretIndex(formatted);
+                        el.setSelectionRange(pos, pos);
+                      });
+                    }}
+                    disabled={loading}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="claim-email" className={`mb-2 block text-sm font-medium ${t.label}`}>
+                    이메일
+                  </label>
+                  <input
+                    id="claim-email"
+                    name="claim_email"
+                    type="email"
+                    autoComplete="email"
+                    placeholder="이메일 입력 (선택)"
+                    className={`w-full rounded-xl px-4 py-3 text-center focus:outline-none focus:ring-2 ${t.input}`}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={loading}
+                  />
+                </div>
+              </>
             )}
             {error ? <p className="text-sm text-red-400">{error}</p> : null}
             <button

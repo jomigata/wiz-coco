@@ -31,6 +31,8 @@ type Props = {
   recipients: NotifyRecipientContact[];
   confirmLabel?: string;
   loading?: boolean;
+  /** true면 발송 채널 선택 UI 숨김 — 연락처 기준 자동 선택 */
+  hideChannels?: boolean;
   onConfirm: (channels: ('email' | 'phone')[]) => void;
   onCancel: () => void;
 };
@@ -51,6 +53,7 @@ export default function CounselorNotifyConfirmDialog({
   recipients,
   confirmLabel = '발송',
   loading = false,
+  hideChannels = false,
   onConfirm,
   onCancel,
 }: Props) {
@@ -70,17 +73,19 @@ export default function CounselorNotifyConfirmDialog({
       .finally(() => setBalanceLoading(false));
   }, [open, recipients]);
 
+  const effectiveChannels = hideChannels ? defaultNotifyChannelSelection(recipients) : channels;
+
   const validationError = useMemo(
-    () => validateNotifyChannelSelection(channels, recipients),
-    [channels, recipients],
+    () => validateNotifyChannelSelection(effectiveChannels, recipients),
+    [effectiveChannels, recipients],
   );
 
   const pointSummary = useMemo(
     () =>
-      formatNotifyPointSummary(recipients, channels, balancePoints, {
+      formatNotifyPointSummary(recipients, effectiveChannels, balancePoints, {
         perRecipient: kind === 'add_recipient',
       }),
-    [recipients, channels, balancePoints, kind],
+    [recipients, effectiveChannels, balancePoints, kind],
   );
 
   const insufficient = pointSummary.usePoints > balancePoints;
@@ -107,9 +112,13 @@ export default function CounselorNotifyConfirmDialog({
               내담자 1명 추가 시 {formatPoints(POINT_COST_PORTAL_RECIPIENT)}가 차감됩니다. 발송 채널을 선택해
               주세요.
             </p>
+          ) : hideChannels ? (
+            <p className="mt-1 text-sm text-slate-400">
+              등록된 연락처로 나의코드·안내가 발송됩니다. 휴대폰·이메일 중 입력된 채널로 전송됩니다.
+            </p>
           ) : (
             <p className="mt-1 text-sm text-slate-400">
-              발송 채널을 선택한 뒤 확인해 주세요. 이메일(무료) 또는 휴대폰(
+              발송 채널을 선택한 뒤 확인해 주세요. 이메일 또는 휴대폰(
               <span className="text-amber-300">{formatPoints(POINT_COST_PORTAL_RECIPIENT)}</span>
               ) 중 최소 1개 이상 선택해야 합니다.
             </p>
@@ -117,46 +126,50 @@ export default function CounselorNotifyConfirmDialog({
         </div>
 
         <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4 text-sm">
-          <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">발송 채널</p>
-            <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-[#121f38]/80 px-3 py-3">
-              <input
-                type="checkbox"
-                className="mt-1 rounded accent-sky-500"
-                checked={channels.email}
-                onChange={(e) => setChannels((prev) => ({ ...prev, email: e.target.checked }))}
-                disabled={loading}
-              />
-              <span>
-                <span className="font-semibold text-white">이메일</span>
-                <span className="text-slate-400"> (무료)</span>
-              </span>
-            </label>
-            <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-[#121f38]/80 px-3 py-3">
-              <input
-                type="checkbox"
-                className="mt-1 rounded accent-amber-400"
-                checked={channels.phone}
-                onChange={(e) => setChannels((prev) => ({ ...prev, phone: e.target.checked }))}
-                disabled={loading}
-              />
-              <span>
-                <span className="font-semibold text-white">휴대폰</span>
-                <span className="text-amber-300">
-                  {' '}
-                  ({formatPoints(POINT_COST_PORTAL_RECIPIENT)}/건)
+          {!hideChannels ? (
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">발송 채널</p>
+              <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-[#121f38]/80 px-3 py-3">
+                <input
+                  type="checkbox"
+                  className="mt-1 rounded accent-sky-500"
+                  checked={channels.email}
+                  onChange={(e) => setChannels((prev) => ({ ...prev, email: e.target.checked }))}
+                  disabled={loading}
+                />
+                <span>
+                  <span className="font-semibold text-white">이메일</span>
                 </span>
-              </span>
-            </label>
-          </div>
+              </label>
+              <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-[#121f38]/80 px-3 py-3">
+                <input
+                  type="checkbox"
+                  className="mt-1 rounded accent-amber-400"
+                  checked={channels.phone}
+                  onChange={(e) => setChannels((prev) => ({ ...prev, phone: e.target.checked }))}
+                  disabled={loading}
+                />
+                <span>
+                  <span className="font-semibold text-white">휴대폰</span>
+                  <span className="text-amber-300">
+                    {' '}
+                    ({formatPoints(POINT_COST_PORTAL_RECIPIENT)}/건)
+                  </span>
+                </span>
+              </label>
+            </div>
+          ) : null}
 
           <div className="rounded-xl border border-sky-500/20 bg-sky-950/25 px-3 py-3">
             <p className="text-xs font-semibold text-sky-200/90">발송 요약</p>
             <ul className="mt-2 space-y-1 text-sm text-slate-300">
-              {pointSummary.summaryLines.map((line) => (
+              {pointSummary.detailLines.map((line) => (
                 <li key={line}>{line}</li>
               ))}
             </ul>
+            <p className="mt-3 border-t border-white/10 pt-3 text-sm font-semibold tabular-nums text-amber-100">
+              {pointSummary.footerLine}
+            </p>
             {balanceLoading ? (
               <p className="mt-2 text-xs text-slate-500">포인트 잔액 확인 중…</p>
             ) : insufficient ? (
@@ -202,7 +215,7 @@ export default function CounselorNotifyConfirmDialog({
           <button
             type="button"
             disabled={loading || Boolean(validationError) || insufficient || balanceLoading}
-            onClick={() => onConfirm(notifyChannelsToPayload(channels))}
+            onClick={() => onConfirm(notifyChannelsToPayload(effectiveChannels))}
             className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-50"
           >
             {loading ? '처리 중…' : confirmLabel}

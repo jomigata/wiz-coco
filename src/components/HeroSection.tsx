@@ -60,7 +60,7 @@ export default function HeroSection() {
               ? isApprovedCounselor
                 ? '배정된 검사를 진행하거나, 상담관리 → 영업 · 파트너에서 Discover·요금·포인트 도구를 이용할 수 있습니다.'
                 : '배정된 검사를 진행하거나, 상담사 승인 후 전문가 기능을 이용할 수 있습니다.'
-              : '안내 받으신 상담(코드)와 비밀번호만 입력하면, 별도 가입 없이 배정된 검사를 바로 진행할 수 있습니다.'}
+              : '안내 받으신 상담코드를 입력하면, 별도 가입 없이 배정된 검사를 바로 진행할 수 있습니다.'}
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-stretch sm:items-center max-w-lg mx-auto">
@@ -94,7 +94,7 @@ export default function HeroSection() {
               href="/portal/claim-my-code/"
               className="inline-flex items-center justify-center rounded-full border border-violet-400/25 bg-violet-500/[0.08] px-4 py-2 text-sm font-medium text-violet-200/90 transition hover:border-violet-300/35 hover:bg-violet-500/[0.12] hover:text-violet-100"
             >
-              무료 검사코드 받기
+              검사코드 받기
             </Link>
           </p>
 

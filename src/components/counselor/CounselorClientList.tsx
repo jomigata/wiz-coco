@@ -1524,13 +1524,14 @@ export default function CounselorClientList({
                         {clientDeleteLoading ? '삭제 중…' : `삭제 (${selected.size})`}
                       </button>
                     ) : null}
-                    {selected.size >= 1 && !adminUser ? (
+                    {!adminUser ? (
                       <button
                         type="button"
                         onClick={() => setMoveOpen(true)}
-                        className="inline-flex shrink-0 items-center justify-center rounded-md border border-sky-500/40 bg-sky-900/40 px-2.5 py-1 text-sm font-medium text-sky-100 transition-colors hover:bg-sky-800/50"
+                        disabled={selected.size === 0}
+                        className="inline-flex shrink-0 items-center justify-center rounded-md border border-sky-500/40 bg-sky-900/40 px-2.5 py-1 text-sm font-medium text-sky-100 transition-colors hover:bg-sky-800/50 disabled:opacity-50"
                       >
-                        다른 상담코드로 이동 ({selected.size})
+                        다른 상담코드로 이동{selected.size > 0 ? ` (${selected.size})` : ''}
                       </button>
                     ) : null}
                   </div>

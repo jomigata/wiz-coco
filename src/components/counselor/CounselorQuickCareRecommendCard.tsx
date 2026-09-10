@@ -29,10 +29,10 @@ export default function CounselorQuickCareRecommendCard({ recipient, onAssigned 
       ? isQuickCareRecommendationDismissed(recipient.portalId, recommendation.presetId)
       : false,
   );
-  const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [sent, setSent] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [progressPhase, setProgressPhase] = useState<'idle' | 'loading' | 'success'>('idle');
 
   const notifyRecipients = useMemo<NotifyRecipientContact[]>(
     () => [
@@ -47,27 +47,33 @@ export default function CounselorQuickCareRecommendCard({ recipient, onAssigned 
 
   if (!recommendation || dismissed || sent) return null;
 
+  const busy = progressPhase !== 'idle';
+
   const handleSend = async (notifyChannels: ('email' | 'phone')[]) => {
-    setBusy(true);
     setError('');
     setConfirmOpen(false);
+    setProgressPhase('loading');
     try {
       await createCareAssignments({
         ...buildQuickCareAssignmentInput([recipient.portalId], recommendation),
         notifyChannels,
       });
-      setSent(true);
-      onAssigned?.();
+      setProgressPhase('success');
     } catch (err) {
+      setProgressPhase('idle');
       setError(err instanceof Error ? err.message : '숙제 보내기에 실패했습니다.');
-    } finally {
-      setBusy(false);
     }
   };
 
   const handleDismiss = () => {
     dismissQuickCareRecommendation(recipient.portalId, recommendation.presetId);
     setDismissed(true);
+  };
+
+  const handleProgressConfirm = () => {
+    setProgressPhase('idle');
+    setSent(true);
+    onAssigned?.();
   };
 
   return (
@@ -100,10 +106,10 @@ export default function CounselorQuickCareRecommendCard({ recipient, onAssigned 
       <CounselorNotifyConfirmDialog
         open={confirmOpen}
         kind="care"
+        hideChannels
         title="이 숙제 보내기 확인"
-        description={`「${recommendation.title}」 숙제를 안내합니다. 발송 채널을 선택해 주세요.`}
+        description={`「${recommendation.title}」 숙제를 안내합니다.`}
         recipients={notifyRecipients}
-        loading={busy}
         confirmLabel="보내기"
         onConfirm={(channels) => void handleSend(channels)}
         onCancel={() => {
@@ -112,9 +118,16 @@ export default function CounselorQuickCareRecommendCard({ recipient, onAssigned 
         }}
       />
       <CounselorActionProgressOverlay
-        open={busy}
+        open={progressPhase === 'loading'}
         title="숙제 보내기 진행 중…"
         message="잠시만 기다려 주세요."
+      />
+      <CounselorActionProgressOverlay
+        open={progressPhase === 'success'}
+        phase="success"
+        title="숙제 보내기 완료"
+        message="내담자에게 숙제 안내가 발송되었습니다."
+        onConfirm={handleProgressConfirm}
       />
     </>
   );
