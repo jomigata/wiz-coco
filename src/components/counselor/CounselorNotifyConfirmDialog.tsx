@@ -15,6 +15,7 @@ import {
   formatPoints,
   resolvePointsBalance,
 } from '@/lib/pointsCatalog';
+import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 
 export type CounselorNotifyConfirmKind =
   | 'remind'
@@ -63,7 +64,8 @@ export default function CounselorNotifyConfirmDialog({
   const [balancePoints, setBalancePoints] = useState(0);
   const [balanceLoading, setBalanceLoading] = useState(false);
 
-  const summaryTargetOnly = hideChannels && (kind === 'push' || kind === 'care');
+  const channelUiHidden = hideChannels || kind === 'add_recipient';
+  const pushCareSummary = kind === 'push' || kind === 'care';
 
   useEffect(() => {
     if (!open) return;
@@ -75,7 +77,7 @@ export default function CounselorNotifyConfirmDialog({
       .finally(() => setBalanceLoading(false));
   }, [open, recipients]);
 
-  const effectiveChannels = hideChannels ? defaultNotifyChannelSelection(recipients) : channels;
+  const effectiveChannels = channelUiHidden ? defaultNotifyChannelSelection(recipients) : channels;
 
   const validationError = useMemo(
     () => validateNotifyChannelSelection(effectiveChannels, recipients),
@@ -86,10 +88,29 @@ export default function CounselorNotifyConfirmDialog({
     () =>
       formatNotifyPointSummary(recipients, effectiveChannels, balancePoints, {
         perRecipient: kind === 'add_recipient',
-        targetOnly: summaryTargetOnly,
+        targetOnly: kind === 'add_recipient',
       }),
-    [recipients, effectiveChannels, balancePoints, kind, summaryTargetOnly],
+    [recipients, effectiveChannels, balancePoints, kind],
   );
+
+  const summaryLines = useMemo(() => {
+    if (kind === 'add_recipient') {
+      return [`대상 ${recipients.length}명`];
+    }
+    if (pushCareSummary) {
+      const lines: string[] = [`대상 ${recipients.length}명`];
+      for (const r of recipients) {
+        const name = (r.displayName || '내담자').trim();
+        lines.push(`이름 ${name}`);
+        const code = formatAccessCodeDisplay(r.myCode || '');
+        if (code && code !== '—') lines.push(`나의코드 ${code}`);
+      }
+      return lines;
+    }
+    return pointSummary.detailLines;
+  }, [kind, pushCareSummary, recipients, pointSummary.detailLines]);
+
+  const showPointFooter = pushCareSummary || kind === 'add_recipient' || !channelUiHidden;
 
   const insufficient = pointSummary.usePoints > balancePoints;
 
@@ -115,7 +136,7 @@ export default function CounselorNotifyConfirmDialog({
               내담자 1명 추가 시 {formatPoints(POINT_COST_PORTAL_RECIPIENT)}가 차감됩니다. 휴대폰으로
               발송됩니다.
             </p>
-          ) : hideChannels ? (
+          ) : channelUiHidden ? (
             <p className="mt-1 text-sm text-slate-400">
               등록된 휴대폰 번호로 나의코드·안내가 발송됩니다.
             </p>
@@ -129,7 +150,7 @@ export default function CounselorNotifyConfirmDialog({
         </div>
 
         <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4 text-sm">
-          {!hideChannels ? (
+          {!channelUiHidden ? (
             <div className="space-y-2">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">발송 채널</p>
               <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-[#121f38]/80 px-3 py-3">
@@ -154,11 +175,11 @@ export default function CounselorNotifyConfirmDialog({
           <div className="rounded-xl border border-sky-500/20 bg-sky-950/25 px-3 py-3">
             <p className="text-xs font-semibold text-sky-200/90">발송 요약</p>
             <ul className="mt-2 space-y-1 text-sm text-slate-300">
-              {pointSummary.detailLines.map((line) => (
+              {summaryLines.map((line) => (
                 <li key={line}>{line}</li>
               ))}
             </ul>
-            {!summaryTargetOnly ? (
+            {showPointFooter ? (
               <p className="mt-3 border-t border-white/10 pt-3 text-sm font-semibold tabular-nums text-amber-100">
                 {pointSummary.footerLine}
               </p>
@@ -171,22 +192,6 @@ export default function CounselorNotifyConfirmDialog({
               </p>
             ) : null}
           </div>
-
-          {!summaryTargetOnly && recipients.length > 0 && recipients.length <= 8 ? (
-            <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                대상 ({recipients.length}명)
-              </p>
-              <ul className="max-h-32 space-y-1 overflow-y-auto rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-xs text-slate-300">
-                {recipients.map((r, idx) => (
-                  <li key={`${r.displayName}-${idx}`} className="truncate">
-                    {r.displayName || '내담자'}
-                    {r.phone?.trim() ? ` · ${r.phone.trim()}` : ''}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
 
           {validationError ? (
             <p className="text-sm text-amber-300" role="alert">

@@ -14,6 +14,7 @@ export type NotifyChannelSelection = {
 export type NotifyRecipientContact = {
   displayName?: string | null;
   phone?: string | null;
+  myCode?: string | null;
 };
 
 export function defaultNotifyChannelSelection(

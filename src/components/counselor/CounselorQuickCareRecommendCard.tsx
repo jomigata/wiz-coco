@@ -38,6 +38,7 @@ export default function CounselorQuickCareRecommendCard({ recipient, onAssigned 
     () => [
       {
         displayName: recipient.displayName,
+        myCode: recipient.myCode,
         phone: recipient.phone,
       },
     ],

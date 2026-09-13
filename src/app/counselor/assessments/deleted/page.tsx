@@ -577,7 +577,7 @@ export default function DeletedAssessmentsPage() {
                     return (
                       <tr
                         key={row.id}
-                        className={`${counselorListBodyRowStaticClass} ${isSelected ? 'bg-white/[0.04]' : ''}`}
+                        className={`${counselorListBodyRowStaticClass}${idx % 2 === 1 ? ' bg-white/[0.035]' : ''} ${isSelected ? 'bg-white/[0.04]' : ''}`}
                       >
                         <td className={`${counselorListTdCompactClass} tabular-nums text-slate-500`}>
                           {startIndex + idx + 1}

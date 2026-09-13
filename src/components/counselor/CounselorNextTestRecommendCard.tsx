@@ -43,6 +43,7 @@ export default function CounselorNextTestRecommendCard({
     () => [
       {
         displayName: recipient.displayName,
+        myCode: recipient.myCode,
         phone: recipient.phone,
       },
     ],

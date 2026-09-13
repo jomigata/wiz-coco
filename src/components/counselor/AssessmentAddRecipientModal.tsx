@@ -540,6 +540,7 @@ export default function AssessmentAddRecipientModal({
       <CounselorNotifyConfirmDialog
         open={notifyConfirmOpen}
         kind="add_recipient"
+        hideChannels
         recipients={notifyRecipients}
         loading={addLoading}
         confirmLabel="추가·발송"

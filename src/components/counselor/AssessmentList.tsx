@@ -35,6 +35,7 @@ import { getAssessmentOrgLabel } from '@/lib/assessmentSortOptions';
 import {
   counselorListActionBtnClass,
   counselorListBodyRowClass,
+  counselorListBodyRowClassAt,
   counselorListHeaderRowClass,
   counselorListNoThClass,
   counselorListSelectTdClass,
@@ -813,7 +814,7 @@ export default function AssessmentList({
                   const isSelected = selected.has(a.id);
 
                   return (
-                    <tr key={a.id} className={`${counselorListBodyRowClass} ${isSelected ? 'bg-white/[0.04]' : ''}`}>
+                    <tr key={a.id} className={`${counselorListBodyRowClassAt(idx)} ${isSelected ? 'bg-white/[0.04]' : ''}`}>
                       <td className={`${counselorListTdCompactClass} tabular-nums text-slate-500`}>
                         {startIndex + idx + 1}
                       </td>

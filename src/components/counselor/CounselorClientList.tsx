@@ -16,6 +16,7 @@ import { normalizeRecipientPhone } from '@/lib/phoneFormat';
 import { counselingCodeTypeLabel } from '@/data/counselingCodeTypes';
 import {
   counselorListBodyRowClass,
+  counselorListBodyRowClassAt,
   counselorListBodyRowStaticClass,
   counselorListHeaderRowClass,
   counselorListNoThClass,
@@ -166,10 +167,10 @@ function progressLabel(item: CounselorClientPortalListItem): { text: string; cla
   if (item.progress.label === 'in_progress') {
     return {
       text: `진행 ${item.progress.percent}%`,
-      className: 'font-medium text-sky-200',
+      className: 'font-medium text-amber-300',
     };
   }
-  return { text: '미시작', className: 'font-medium text-red-400' };
+  return { text: '미시작', className: 'font-normal text-red-400' };
 }
 
 function progressSortValue(item: CounselorClientPortalListItem): number {
@@ -656,9 +657,7 @@ export default function CounselorClientList({
         setArchivedRaw(cachedRaw);
         setItems(cachedRaw.map(mapArchivedToClientItem));
         setLoading(false);
-        return;
-      }
-      if (cachedRaw?.length) {
+      } else if (cachedRaw?.length) {
         setArchivedRaw(cachedRaw);
         setItems(cachedRaw.map(mapArchivedToClientItem));
       } else {
@@ -698,10 +697,7 @@ export default function CounselorClientList({
       setTags(cached.tags || []);
       setAssessmentMeta(cached.assessmentMeta || {});
       setLoading(false);
-      return;
-    }
-
-    if (cached?.items?.length) {
+    } else if (cached?.items?.length) {
       setItems(cached.items);
       setCohorts(cached.cohorts || []);
       setTags(cached.tags || []);
@@ -1130,15 +1126,7 @@ export default function CounselorClientList({
       description={
         <span className="inline-flex w-full flex-wrap items-center gap-x-3 gap-y-2">
           {deletedMode && !permanentlyDeletedMode ? (
-            <>
-              <CounselorListBackLink href="/counselor/clients" label="검사발송 목록" />
-              <AuthLink
-                href="/counselor/clients"
-                className="inline-flex shrink-0 items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1.5 text-sm text-slate-300 transition-colors hover:bg-white/5"
-              >
-                내담자
-              </AuthLink>
-            </>
+            <CounselorListBackLink href="/counselor/clients" label="검사발송 목록" />
           ) : null}
           {permanentlyDeletedMode ? (
             <span className="shrink-0">
@@ -1346,8 +1334,8 @@ export default function CounselorClientList({
                     const rowClickable = !deletedMode && !permanentlyDeletedMode && !locked;
                     const rowClass =
                       deletedMode || permanentlyDeletedMode
-                        ? counselorListBodyRowStaticClass
-                        : counselorListBodyRowClass;
+                        ? `${counselorListBodyRowStaticClass}${idx % 2 === 1 ? ' bg-white/[0.035]' : ''}`
+                        : counselorListBodyRowClassAt(idx);
                     const cellInteractionClass =
                       deletedMode || permanentlyDeletedMode ? '' : cellLinkClass;
                     const dispatchViewForRow =

@@ -88,22 +88,25 @@ function AssessmentListPageContent() {
       return;
     }
     let cancelled = false;
-    setLoading(true);
     setError('');
 
     const searchQ = initialSearchQuery.trim() || undefined;
 
     const skipReload = consumeCounselorListSkipReload();
+    let restoredFromCache = false;
     if (skipReload === 'assessments' && !searchQ) {
       const cached = readCachedAssessmentsList(counselorUid);
       if (cached?.length) {
         silentCacheRestoreRef.current = true;
         setAssessments(cached);
         setLoading(false);
-        return;
+        restoredFromCache = true;
       }
     }
-    silentCacheRestoreRef.current = false;
+    if (!restoredFromCache) {
+      silentCacheRestoreRef.current = false;
+      setLoading(true);
+    }
 
     listAssessmentsPage({ limit: 50, q: searchQ, includeStats: true, ownOnly: adminUser })
       .then(async (firstPage) => {
@@ -202,7 +205,7 @@ function AssessmentListPageContent() {
             moveInfo={moveInfo}
             autoLivePollId={autoLivePollId}
             autoAddRecipientId={autoAddRecipientId}
-            listReady={!loading && assessments.length > 0}
+            listReady={!loading}
             onAssessmentsRefresh={setAssessments}
             initialSearchQuery={initialSearchQuery}
           />

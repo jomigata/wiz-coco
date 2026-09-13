@@ -22,6 +22,8 @@ interface MbtiProClientInfoProps {
   editMode?: boolean;
   onEditComplete?: (clientInfo: ClientInfo) => void;
   editCompleteLoading?: boolean;
+  /** 기본정보 — 이름 필드 라벨 (기본: 이름(가명)) */
+  clientNameFieldLabel?: string;
   /** 수정 화면 — 문항 단계로 이동 */
   onEditNext?: (clientInfo: ClientInfo) => void;
 }
@@ -48,6 +50,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
   onEditComplete,
   editCompleteLoading = false,
   onEditNext,
+  clientNameFieldLabel = '이름(가명)',
 }) => {
   const th = getMbtiProClientInfoTheme(uiTheme);
   const router = useRouter();
@@ -295,7 +298,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
     }
 
     if (!name || !name.trim()) {
-      newErrors.name = '이름(가명)을 입력해주세요.';
+      newErrors.name = `${clientNameFieldLabel}을 입력해주세요.`;
     }
 
     if (!privacyAgreed) {
@@ -448,7 +451,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
               <div>
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <label htmlFor="name-field" className={th.label}>
-                    이름(가명) <span className="text-red-400">*</span>
+                    {clientNameFieldLabel} <span className="text-red-400">*</span>
                   </label>
                   <button
                     type="button"
@@ -473,7 +476,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
                     onKeyDown={handleNameKeyDown}
                     onBlur={commitNameComposer}
                     className={th.input}
-                    placeholder="이름(가명)을 입력하세요"
+                    placeholder={`${clientNameFieldLabel}을 입력하세요`}
                     lang="ko"
                     inputMode="text"
                     autoComplete="off"

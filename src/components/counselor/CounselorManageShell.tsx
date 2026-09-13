@@ -26,8 +26,8 @@ type Props = {
   children: React.ReactNode;
 };
 
-/** 좌측 메뉴 — 대분류 타이틀 첫 글자 + 1ch 에서 중분류 시작 */
-const MENU_MIDDLE_ALIGN = 'pl-[calc(1.75rem+1.25rem+0.75rem+1ch)]';
+/** 좌측 메뉴 — 중분류는 대분류 아이콘·타이틀 시작선에 맞춤 */
+const MENU_MIDDLE_ALIGN = 'pl-[calc(1.75rem+1.25rem+0.75rem)]';
 const MENU_NESTED_ALIGN = 'pl-[calc(1.75rem+1.25rem+0.75rem+2ch)]';
 
 export default function CounselorManageShell({ children }: Props) {
@@ -73,12 +73,13 @@ export default function CounselorManageShell({ children }: Props) {
             const categoryEntryHref = getCategoryEntryHref(category, adminUser);
 
             const categorySelected = activeCategorySlug === category.slug;
+            const categoryEntryActive = categorySelected && !activeNested;
 
             return (
               <div
                 key={category.slug}
                 className={`mb-1 rounded-lg border ${
-                  categorySelected
+                  categoryEntryActive
                     ? 'border-sky-400/45 ring-1 ring-inset ring-sky-400/20'
                     : 'border-white/10'
                 }`}
@@ -98,8 +99,8 @@ export default function CounselorManageShell({ children }: Props) {
                       href={categoryEntryHref}
                       onClick={() => setExpandedSlug(category.slug)}
                       className={`block rounded-md px-2 py-1.5 font-normal transition-colors hover:bg-white/[0.06] ${
-                        activeCategorySlug === category.slug && !activeNested
-                          ? 'bg-sky-500/15 text-sky-100'
+                        categoryEntryActive
+                          ? 'bg-sky-500/15 font-semibold text-sky-100'
                           : 'text-slate-200'
                       }`}
                     >

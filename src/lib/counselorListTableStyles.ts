@@ -36,6 +36,11 @@ export const counselorListTdCompactClass = 'py-3 px-4 text-left text-sm text-gra
 export const counselorListBodyRowClass =
   'border-b border-white/10 hover:bg-white/5 transition-colors';
 
+export function counselorListBodyRowClassAt(index: number): string {
+  const stripe = index % 2 === 1 ? ' bg-white/[0.035]' : '';
+  return `${counselorListBodyRowClass}${stripe}`;
+}
+
 /** hover·pointer 없이 표시만 (삭제된 목록 등) */
 export const counselorListBodyRowStaticClass = 'border-b border-white/10';
 

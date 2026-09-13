@@ -132,7 +132,7 @@ function PortalLoginContent() {
   return (
     <PortalAuthScreenLayout theme={theme}>
       <PortalAuthCard theme={theme}>
-        <PortalAuthTopBar linkClassName={t.link} />
+        <PortalAuthTopBar showForgotPin={false} linkClassName={t.link} />
         <div className="text-center">
           <span className={`inline-block text-[11px] uppercase tracking-[0.16em] ${t.accent}`}>
             {theme === 'results' ? 'Result Check' : 'Assessment Start'}

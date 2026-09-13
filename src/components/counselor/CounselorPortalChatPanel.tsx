@@ -456,7 +456,7 @@ export default function CounselorPortalChatPanel() {
         </div>
 
         <div
-          className={`grid h-full min-h-0 flex-1 gap-4 lg:grid-cols-[minmax(260px,340px)_1fr] ${
+          className={`grid min-h-[calc(100dvh-15rem)] h-full min-h-0 flex-1 gap-4 lg:grid-cols-[minmax(260px,340px)_1fr] ${
             selectedThread ? PORTAL_CHAT_LIST_BOTTOM_GAP_CLASS : ''
           }`}
         >

@@ -85,7 +85,7 @@ export default function CounselorQuickSendForm({
 }: Props) {
   const router = useRouter();
   const { user, authPending, showLoginRequired } = useAuthResolved();
-  const [templateId, setTemplateId] = useState<CounselorSendTemplateId | null>(null);
+  const [templateId, setTemplateId] = useState<CounselorSendTemplateId | null>('custom');
   const [customCohortName, setCustomCohortName] = useState('');
   const [customCohortFocused, setCustomCohortFocused] = useState(false);
   const [welcomeMessage, setWelcomeMessage] = useState(DEFAULT_WELCOME_MESSAGE);
@@ -426,32 +426,7 @@ export default function CounselorQuickSendForm({
           subtitle="보낼 검사 유형을 선택하세요"
           compact
         >
-          <div className="space-y-1.5">
-            <div className="grid grid-cols-3 gap-1.5">
-            {COUNSELOR_SEND_TEMPLATES.filter((t) => !t.customOrgInput).map((item, templateIndex) => {
-              const active = templateId === item.id;
-              const recommend = firstSendTrialEligible && item.id === 'free';
-              const templateOrder = templateIndex + 1;
-
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  disabled={sendLocked}
-                  onClick={() => setTemplateId(item.id)}
-                  className={`flex min-h-[4.5rem] w-full flex-col items-center justify-center gap-1 rounded-lg border px-2 py-2 text-center transition-colors ${templateCardBorder(active)} ${
-                    active ? 'text-white' : 'text-slate-200'
-                  }`}
-                >
-                  <span className="text-[10px] font-semibold tabular-nums text-slate-400">{templateOrder}</span>
-                  <span className="text-sm font-semibold leading-snug">{item.name}</span>
-                  {recommend ? (
-                    <span className="text-[10px] font-medium text-emerald-300">추천</span>
-                  ) : null}
-                </button>
-              );
-            })}
-            </div>
+          <div className="space-y-2">
             {COUNSELOR_SEND_TEMPLATES.filter((t) => t.customOrgInput).map((item) => {
               const active = templateId === item.id;
               const templateOrder = COUNSELOR_SEND_TEMPLATES.indexOf(item) + 1;
@@ -602,26 +577,28 @@ export default function CounselorQuickSendForm({
 
         <CounselorSendStepBlock
           step={2}
-          title="상담코드 설정"
-          subtitle="사용종료일·안내 문구를 확인한 뒤 상담코드를 생성합니다"
+          title="사용종료일 / 안내문구 설정"
+          subtitle="사용종료일·안내문구를 설정합니다."
           compact
           allowOverflow
         >
-          <div className="mb-2">
-            <label htmlFor="quick-send-usage-end" className="mb-1.5 block text-sm font-semibold text-slate-200">
-              사용종료일 (선택)
-            </label>
+          <div className="mb-4">
+            <div className="mb-1.5 flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
+              <label htmlFor="quick-send-usage-end" className="text-sm font-semibold text-slate-200">
+                사용종료일 (선택)
+              </label>
+              <span className="text-xs text-slate-500">비워두면 무기한 사용 가능합니다.</span>
+            </div>
             <UsageEndDateField
               id="quick-send-usage-end"
               value={usageEndDate}
               onChange={setUsageEndDate}
               disabled={sendLocked}
             />
-            <p className="mt-1.5 text-xs text-slate-500">비워두면 무기한 사용 가능합니다.</p>
           </div>
           <div className="overflow-visible">
             <div className="mb-1.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 overflow-visible">
-              <label htmlFor="quick-send-welcome" className="text-xs font-medium text-slate-400">
+              <label htmlFor="quick-send-welcome" className="text-sm font-semibold text-slate-200">
                 안내 문구
               </label>
               <WelcomeMessageSampleHoverPicker
@@ -647,39 +624,30 @@ export default function CounselorQuickSendForm({
               {error}
             </p>
           ) : null}
-
-          <button
-            type="submit"
-            disabled={sendLocked}
-            className="mt-2 w-full rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-950/40 transition hover:from-emerald-500 hover:via-teal-500 hover:to-cyan-500 disabled:opacity-50"
-          >
-            상담코드 생성
-          </button>
         </CounselorSendStepBlock>
 
         <CounselorSendStepBlock step={3} title="상담코드 안내" subtitle="코드 발송·수령 방법" compact>
-          <div className="space-y-2.5">
-            <div className="rounded-lg border border-emerald-400/25 bg-emerald-500/10 px-3 py-2.5">
-              <p className="text-sm font-semibold text-emerald-100">상담사 직접발송</p>
-              <p className="mt-1 text-sm leading-relaxed text-slate-300">
-                상담코드 생성 후 내담자 추가 화면에서 내담자의 정보를 입력하고 코드를 일괄 발송합니다.
-              </p>
-            </div>
-            <div className="rounded-lg border border-white/10 bg-[#121f38]/80 px-3 py-2.5">
-              <p className="text-sm font-semibold text-slate-200">개인이 직접발송</p>
-              <p className="mt-1 text-sm leading-relaxed text-slate-400">
-                상담사에게 받은 대표 상담코드를 각 개인이 홈페이지의{' '}
-                <span className="font-medium text-white">검사코드 받기</span>에 입력하여 코드를 직접
-                발송합니다.
-              </p>
-            </div>
-            <div className="rounded-lg border border-white/10 bg-[#121f38]/80 px-3 py-2.5">
-              <p className="text-xs font-semibold text-slate-300">코드 발송 안내</p>
-              <p className="mt-1 text-xs leading-relaxed text-slate-400">
-                휴대폰(알림톡·문자)으로 나의코드·비밀번호가 발송됩니다. 휴대폰 번호를 반드시 입력해 주세요.
-              </p>
-            </div>
-          </div>
+          <ul className="space-y-2 text-sm leading-relaxed text-slate-300">
+            <li>
+              <span className="font-semibold text-white">상담사 직접발송</span> — 생성 후 내담자 추가에서
+              일괄 발송
+            </li>
+            <li>
+              <span className="font-semibold text-white">개인 직접발송</span> — 홈페이지{' '}
+              <span className="text-sky-200">검사코드 받기</span>에 상담코드 입력
+            </li>
+            <li>
+              <span className="font-semibold text-white">휴대폰 발송</span> — 알림톡·문자로 나의코드·비밀번호
+              전달
+            </li>
+          </ul>
+          <button
+            type="submit"
+            disabled={sendLocked}
+            className="mt-4 w-full rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-950/40 transition hover:from-emerald-500 hover:via-teal-500 hover:to-cyan-500 disabled:opacity-50"
+          >
+            상담코드 생성
+          </button>
         </CounselorSendStepBlock>
       </form>
       <CounselorActionProgressOverlay

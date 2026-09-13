@@ -40,7 +40,7 @@ export function recipientProgressDisplay(input: {
     const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
     return {
       text: `진행 ${pct}% (${completed}/${total})`,
-      className: 'font-medium text-sky-200',
+      className: 'font-medium text-amber-300',
     };
   }
   if (total <= 0) {
@@ -48,7 +48,7 @@ export function recipientProgressDisplay(input: {
   }
   return {
     text: `미시작 (0/${total})`,
-    className: `font-medium ${RECIPIENT_PROGRESS_NOT_STARTED_CLASS}`,
+    className: `font-normal ${RECIPIENT_PROGRESS_NOT_STARTED_CLASS}`,
   };
 }
 
@@ -271,11 +271,9 @@ function pushChannelFromExplicitState(
   else pushChannelPart(parts, `${label}·`, false);
 }
 
-/** 이메일·휴대폰 채널별 간략 상태 (예: 이메일✓·문자…) */
 function buildChannelDetailParts(r: DispatchDisplayRecipient): ChannelDetailPart[] {
-  const hasEmail = Boolean(r.email?.trim());
   const hasPhone = Boolean(r.phone?.trim());
-  if (!hasEmail && !hasPhone) return [];
+  if (!hasPhone) return [];
 
   const status = resolveEffectiveNotifyStatus(r);
   const via = parseSentViaFlags(r.notifySentVia);
@@ -283,11 +281,27 @@ function buildChannelDetailParts(r: DispatchDisplayRecipient): ChannelDetailPart
   const terminal = isTerminalNotifyStatus(status);
   const parts: ChannelDetailPart[] = [];
 
-  if (hasEmail) {
-    // 이메일 발송 비활성 — 휴대폰 전용
-  }
+  const showAlimtalk =
+    via.alimtalkOk ||
+    (r.notifySentVia || '').toLowerCase().includes('kakao') ||
+    (r.notifySentVia || '').toLowerCase().includes('alimtalk') ||
+    (!via.smsOk && !failed.phoneFailed && status !== 'not_sent');
+  const showSms =
+    via.smsOk || (r.notifySentVia || '').toLowerCase().includes('sms') || failed.phoneFailed;
 
-  if (hasPhone) {
+  if (showAlimtalk) {
+    const legacy = phoneChannelOutcome(status, { ...via, smsOk: false, alimtalkOk: true }, failed);
+    let channelState = r.notifyPhoneChannel;
+    if (terminal && channelState === 'sending') channelState = undefined;
+    pushChannelFromExplicitState(parts, '알림톡', channelState, legacy);
+  }
+  if (showSms && (via.smsOk || failed.phoneFailed || status === 'partial')) {
+    const legacy = phoneChannelOutcome(status, { ...via, alimtalkOk: false, smsOk: true }, failed);
+    let channelState = r.notifyPhoneChannel;
+    if (terminal && channelState === 'sending') channelState = undefined;
+    pushChannelFromExplicitState(parts, '문자', channelState, legacy);
+  }
+  if (!parts.length && hasPhone) {
     const phoneLabel = phoneChannelLabel(via);
     const legacy = phoneChannelOutcome(status, via, failed);
     let channelState = r.notifyPhoneChannel;
@@ -303,7 +317,7 @@ function notifyLabel(status: string): { text: string; className: string } {
     case 'sent':
       return { text: '발송 성공', className: 'text-emerald-300' };
     case 'failed':
-      return { text: '발송 실패', className: 'text-red-400' };
+      return { text: '실패', className: 'text-red-400' };
     case 'partial':
       return { text: '일부 발송 실패', className: 'text-amber-300' };
     case 'pending':
@@ -393,7 +407,7 @@ export function dispatchStatusDisplay(r: DispatchDisplayRecipient): DispatchStat
     }
 
     return statusView(
-      `${kindPrefix}발송실패`.trim(),
+      `${kindPrefix}실패`.trim() || '실패',
       detailParts,
       'text-red-400',
       notifyErrorHint(r.notifyError) || '발송에 실패했습니다.',

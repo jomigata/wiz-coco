@@ -230,8 +230,7 @@ function testStatusLabel(status: DispatchTestResult['status']): { text: string; 
 
 function progressStatusForRow(recipient: DispatchRecipient): { text: string; className: string } {
   if (recipient.moveStatus === 'moved_out') {
-    const movedCode = formatAccessCodeDisplay(recipient.movedToJoinAccessCode || '') || '—';
-    return { text: `이동완료 (> ${movedCode})`, className: 'font-medium text-white' };
+    return { text: '상담코드 이동완료', className: 'font-medium text-white' };
   }
   return testSummary(recipient);
 }
@@ -614,9 +613,8 @@ export default function AssessmentDispatchPanel({
   const saveEditContact = useCallback(async () => {
     if (!editRecipient) return;
     const phone = normalizeRecipientPhone(editPhone);
-    const email = editEmail.trim().toLowerCase();
-    if (!phone && !email) {
-      setEditError('휴대폰 또는 이메일 중 하나는 입력해야 합니다.');
+    if (!phone) {
+      setEditError('휴대폰 번호를 입력해 주세요.');
       return;
     }
     setEditSaving(true);
@@ -624,7 +622,6 @@ export default function AssessmentDispatchPanel({
     try {
       const updated = await updateDispatchRecipientContact(assessmentId, editRecipient.portalId, {
         phone,
-        email,
       });
       setData((prev) => {
         if (!prev) return prev;
@@ -645,7 +642,7 @@ export default function AssessmentDispatchPanel({
     } finally {
       setEditSaving(false);
     }
-  }, [assessmentId, closeEditContact, editEmail, editPhone, editRecipient, user?.uid]);
+  }, [assessmentId, closeEditContact, editPhone, editRecipient, user?.uid]);
 
   useEffect(() => {
     if (authPending || !isAuthenticated) return;
@@ -1997,8 +1994,11 @@ export default function AssessmentDispatchPanel({
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-lg font-semibold text-white">연락처 수정</h3>
-            <p className="mt-1 text-sm text-slate-400">
-              {editRecipient.displayName || '내담자'} · {formatAccessCodeDisplay(editRecipient.myCode)}
+            <p className="mt-2 text-base font-semibold text-white">
+              {editRecipient.displayName || '내담자'}
+            </p>
+            <p className="mt-0.5 font-mono text-lg font-semibold tracking-wide text-cyan-200">
+              {formatAccessCodeDisplay(editRecipient.myCode)}
             </p>
             <div className="mt-4 space-y-3">
               <div>
@@ -2013,20 +2013,6 @@ export default function AssessmentDispatchPanel({
                   disabled={editSaving}
                   className="w-full rounded-lg border border-white/15 bg-slate-900/80 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500/40"
                   placeholder="010-0000-0000"
-                />
-              </div>
-              <div>
-                <label htmlFor="dispatch-edit-email" className="mb-1 block text-xs text-slate-400">
-                  이메일
-                </label>
-                <input
-                  id="dispatch-edit-email"
-                  type="email"
-                  value={editEmail}
-                  onChange={(e) => setEditEmail(e.target.value)}
-                  disabled={editSaving}
-                  className="w-full rounded-lg border border-white/15 bg-slate-900/80 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500/40"
-                  placeholder="email@example.com"
                 />
               </div>
               {editError ? <p className="text-sm text-red-400">{editError}</p> : null}

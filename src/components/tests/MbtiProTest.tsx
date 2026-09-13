@@ -607,6 +607,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
             initialData={clientInfo}
             uiTheme={uiTheme}
             screenTitle={flow.clientInfoScreenTitle ?? flow.testScreenTitle}
+            clientNameFieldLabel={flow.codePrefix === 'EGO_PROFESSIONAL' ? '이름' : undefined}
             editMode={Boolean(editResultId.trim())}
             editCompleteLoading={isLoading || editResultLoading}
             onEditComplete={(info) => {

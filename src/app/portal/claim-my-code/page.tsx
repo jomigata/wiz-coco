@@ -144,19 +144,16 @@ export default function ClaimMyCodePage() {
   return (
     <PortalAuthScreenLayout theme="start">
       <PortalAuthCard theme="start">
-        <PortalAuthTopBar linkClassName={t.link} />
+        <PortalAuthTopBar showForgotPin={false} linkClassName={t.link} />
         <div className="text-center">
           <span className={`inline-block text-[11px] uppercase tracking-[0.16em] ${t.accent}`}>
             Get My Code
           </span>
         </div>
         <h1 className="mt-3 text-center text-2xl font-semibold tracking-tight text-white">검사코드 받기</h1>
-        {step === 'code' ? (
-          <p className="mt-2 text-center text-sm text-slate-400">상담사에게 받은 상담코드를 입력해 주세요.</p>
-        ) : null}
 
         {step === 'done' && result ? (
-          <div className="space-y-4">
+          <div className="mt-6 space-y-4">
             <div className={`rounded-xl px-4 py-5 text-center ${t.infoBox}`}>
               <p className="text-sm font-medium text-white">발송이 완료되었습니다.</p>
               <p className="mt-1 text-xs text-slate-400">{publicClaimSuccessHint(result.deliveryChannel)}</p>
@@ -172,13 +169,13 @@ export default function ClaimMyCodePage() {
             </button>
           </div>
         ) : step === 'contact' ? (
-          <form onSubmit={handleSendCode} className="space-y-4" autoComplete="off" lang="ko">
-            <div className="rounded-lg border border-sky-400/25 bg-sky-500/10 px-3 py-2.5 text-center">
-              <p className="text-[10px] font-medium tracking-widest text-sky-300/80">상담코드</p>
-              <p className="mt-1 font-mono text-lg font-bold tracking-[0.14em] text-sky-50 sm:text-xl">
+          <form onSubmit={handleSendCode} className="mt-4 space-y-4" autoComplete="off" lang="ko">
+            <p className="text-center text-sm text-slate-400">
+              상담코드{' '}
+              <span className="font-mono font-medium tracking-wide text-slate-200">
                 {normalizedJoinCode || joinCode}
-              </p>
-            </div>
+              </span>
+            </p>
             <div>
               <label htmlFor="claim-display-name" className={`mb-2 block text-sm font-medium ${t.label}`}>
                 이름
@@ -244,35 +241,40 @@ export default function ClaimMyCodePage() {
             </button>
           </form>
         ) : (
-          <form onSubmit={handleCodeNext} className="space-y-4" autoComplete="off">
-            <div>
-              <label htmlFor="claim-join-code" className={`mb-2 block text-sm font-medium ${t.label}`}>
-                상담코드
-              </label>
-              <input
-                id="claim-join-code"
-                name="claim_join_code"
-                type="text"
-                inputMode="text"
-                autoComplete="off"
-                autoCapitalize="characters"
-                spellCheck={false}
-                placeholder="상담코드 입력"
-                className={`w-full rounded-xl px-4 py-3 text-center text-lg tracking-wider focus:outline-none focus:ring-2 ${t.input}`}
-                value={joinCode}
-                onChange={(e) => setJoinCode(formatAccessCodeWhileTyping(e.target.value))}
-                disabled={loading}
-              />
-            </div>
-            {error ? <p className="text-sm text-red-400">{error}</p> : null}
-            <button
-              type="submit"
-              disabled={!canProceedCode}
-              className={`w-full rounded-xl px-4 py-3.5 text-sm font-semibold disabled:opacity-50 ${t.button}`}
-            >
-              {loading ? '확인 중…' : '검사코드 받기'}
-            </button>
-          </form>
+          <>
+            <p className="mt-2 text-center text-sm text-slate-400">
+              상담사에게 받은 상담코드를 입력해 주세요.
+            </p>
+            <form onSubmit={handleCodeNext} className="mt-4 space-y-4" autoComplete="off">
+              <div>
+                <label htmlFor="claim-join-code" className={`mb-2 block text-sm font-medium ${t.label}`}>
+                  상담코드
+                </label>
+                <input
+                  id="claim-join-code"
+                  name="claim_join_code"
+                  type="text"
+                  inputMode="text"
+                  autoComplete="off"
+                  autoCapitalize="characters"
+                  spellCheck={false}
+                  placeholder="상담코드 입력"
+                  className={`w-full rounded-xl px-4 py-3 text-center text-lg tracking-wider focus:outline-none focus:ring-2 ${t.input}`}
+                  value={joinCode}
+                  onChange={(e) => setJoinCode(formatAccessCodeWhileTyping(e.target.value))}
+                  disabled={loading}
+                />
+              </div>
+              {error ? <p className="text-sm text-red-400">{error}</p> : null}
+              <button
+                type="submit"
+                disabled={!canProceedCode}
+                className={`w-full rounded-xl px-4 py-3.5 text-sm font-semibold disabled:opacity-50 ${t.button}`}
+              >
+                {loading ? '확인 중…' : '검사코드 받기'}
+              </button>
+            </form>
+          </>
         )}
 
         {step !== 'done' ? (
