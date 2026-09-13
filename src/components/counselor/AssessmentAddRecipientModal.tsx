@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { bulkCreateClientPortals } from '@/lib/clientPortalApi';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import { normalizeRecipientPhone } from '@/lib/phoneFormat';
@@ -79,6 +79,8 @@ export default function AssessmentAddRecipientModal({
 }: Props) {
   const [draftName, setDraftName] = useState('');
   const [draftPhone, setDraftPhone] = useState('');
+  const [draftEmail, setDraftEmail] = useState('');
+  const nameInputRef = useRef<HTMLInputElement>(null);
   const [pendingRows, setPendingRows] = useState<RecipientRow[]>([]);
   const [addSendNow, setAddSendNow] = useState(true);
   const [addLoading, setAddLoading] = useState(false);
@@ -112,13 +114,23 @@ export default function AssessmentAddRecipientModal({
       combinedRows.map((r) => ({
         displayName: r.displayName,
         phone: r.phone,
+        email: r.email,
+        groupName: context?.cohortName,
+        affiliation: context?.title,
       })),
-    [combinedRows],
+    [combinedRows, context?.cohortName, context?.title],
   );
+
+  useEffect(() => {
+    if (!open) return;
+    const t = window.setTimeout(() => nameInputRef.current?.focus(), 120);
+    return () => window.clearTimeout(t);
+  }, [open, context?.assessmentId]);
 
   const resetForm = () => {
     setDraftName('');
     setDraftPhone('');
+    setDraftEmail('');
     setPendingRows([]);
     setAddSendNow(true);
     setAddError('');
@@ -137,18 +149,20 @@ export default function AssessmentAddRecipientModal({
   const handleAddDraftRow = () => {
     const name = draftName.trim();
     const phone = normalizeRecipientPhone(draftPhone);
+    const email = draftEmail.trim().toLowerCase();
     if (!name) {
       setAddError('이름을 입력해 주세요.');
       return;
     }
-    if (!phone) {
-      setAddError('휴대폰 번호를 입력해 주세요.');
+    if (!phone && !email) {
+      setAddError('휴대폰 또는 이메일 중 하나 이상 입력해 주세요.');
       return;
     }
     setAddError('');
-    setPendingRows((prev) => [...prev, { displayName: name, phone, email: '' }]);
+    setPendingRows((prev) => [...prev, { displayName: name, phone, email }]);
     setDraftName('');
     setDraftPhone('');
+    setDraftEmail('');
   };
 
   const removePendingRow = (idx: number) => {
@@ -182,9 +196,11 @@ export default function AssessmentAddRecipientModal({
       setAddError('개별 입력 또는 파일에서 내담자 1명 이상을 추가해 주세요.');
       return;
     }
-    const invalid = rows.find((r) => !normalizeRecipientPhone(r.phone));
+    const invalid = rows.find(
+      (r) => !normalizeRecipientPhone(r.phone) && !(r.email || '').trim(),
+    );
     if (invalid) {
-      setAddError(`「${invalid.displayName}」님의 휴대폰 번호가 필요합니다.`);
+      setAddError(`「${invalid.displayName}」님의 휴대폰 또는 이메일이 필요합니다.`);
       return;
     }
     setAddError('');
@@ -195,7 +211,7 @@ export default function AssessmentAddRecipientModal({
     void executeSubmit(undefined);
   };
 
-  const executeSubmit = async (notifyChannels: ('phone')[] | undefined) => {
+  const executeSubmit = async (notifyChannels: ('email' | 'phone')[] | undefined) => {
     if (!context) return;
     const rows = combinedRows;
     const cohortName = (context.cohortName || context.title || '내담자').trim();
@@ -211,6 +227,7 @@ export default function AssessmentAddRecipientModal({
         rows: rows.map((r) => ({
           displayName: r.displayName.trim(),
           phone: normalizeRecipientPhone(r.phone) || undefined,
+          email: (r.email || '').trim().toLowerCase() || undefined,
           queueNotify: addSendNow,
         })),
         queueNotify: addSendNow,
@@ -287,13 +304,14 @@ export default function AssessmentAddRecipientModal({
           <div className="grid gap-3 md:grid-cols-2">
             <section className="overflow-visible rounded-xl border border-white/[0.1] bg-[#101f38]/55 p-3 sm:p-3.5">
               <h4 className={FORM_LABEL}>개별 입력</h4>
-              <p className="mt-0.5 text-sm text-slate-400">이름·휴대폰 모두 필수</p>
-              <div className="mt-2.5 grid grid-cols-2 gap-2">
+              <p className="mt-0.5 text-sm text-slate-400">이름 필수 · 휴대폰·이메일 중 1개 이상</p>
+              <div className="mt-2.5 grid grid-cols-2 gap-2 sm:grid-cols-3">
                 <div>
                   <label htmlFor="add-recipient-name" className={FORM_LABEL}>
                     이름
                   </label>
                   <input
+                    ref={nameInputRef}
                     id="add-recipient-name"
                     type="text"
                     className={FORM_INPUT}
@@ -319,7 +337,22 @@ export default function AssessmentAddRecipientModal({
                     placeholder="010-0000-0000"
                   />
                 </div>
-                <div className="col-span-2 flex justify-end">
+                <div className="col-span-2 sm:col-span-1">
+                  <label htmlFor="add-recipient-email" className={FORM_LABEL}>
+                    이메일
+                  </label>
+                  <input
+                    id="add-recipient-email"
+                    type="email"
+                    className={FORM_INPUT}
+                    value={draftEmail}
+                    onChange={(e) => setDraftEmail(e.target.value)}
+                    onKeyDown={handleDraftKeyDown}
+                    disabled={addLoading}
+                    placeholder="name@example.com"
+                  />
+                </div>
+                <div className="col-span-2 flex justify-end sm:col-span-3">
                   <button
                     type="button"
                     onClick={handleAddDraftRow}

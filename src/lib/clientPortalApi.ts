@@ -371,6 +371,10 @@ export type DispatchRecipient = {
   movedToJoinAccessCode?: string;
   movedToAssessmentTitle?: string;
   movedAt?: string | null;
+  originAssessmentId?: string;
+  originAccessCode?: string;
+  sourceJoinAccessCode?: string;
+  movedFromAssessmentId?: string;
 };
 
 export type AssessmentDispatchStatus = {

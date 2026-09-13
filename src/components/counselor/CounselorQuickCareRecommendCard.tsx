@@ -49,7 +49,7 @@ export default function CounselorQuickCareRecommendCard({ recipient, onAssigned 
 
   const busy = progressPhase !== 'idle';
 
-  const handleSend = async (notifyChannels: ('phone')[]) => {
+  const handleSend = async (notifyChannels: ('email' | 'phone')[]) => {
     setError('');
     setConfirmOpen(false);
     setProgressPhase('loading');

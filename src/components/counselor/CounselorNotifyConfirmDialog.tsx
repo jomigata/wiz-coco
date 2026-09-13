@@ -34,7 +34,7 @@ type Props = {
   loading?: boolean;
   /** true면 발송 채널 선택 UI 숨김 — 휴대폰 자동 선택 */
   hideChannels?: boolean;
-  onConfirm: (channels: ('phone')[]) => void;
+  onConfirm: (channels: ('email' | 'phone')[]) => void;
   onCancel: () => void;
 };
 
@@ -95,15 +95,22 @@ export default function CounselorNotifyConfirmDialog({
 
   const summaryLines = useMemo(() => {
     if (kind === 'add_recipient') {
-      return [`대상 ${recipients.length}명`];
+      const r = recipients[0];
+      const groupName = (r?.groupName || '').trim() || '—';
+      const affiliation = (r?.affiliation || '').trim() || '—';
+      return [
+        `대상: ${recipients.length}명`,
+        `그룹명: ${groupName}`,
+        `소속: ${affiliation}`,
+      ];
     }
     if (pushCareSummary) {
-      const lines: string[] = [`대상 ${recipients.length}명`];
+      const lines: string[] = [`대상: ${recipients.length}명`];
       for (const r of recipients) {
         const name = (r.displayName || '내담자').trim();
-        lines.push(`이름 ${name}`);
+        lines.push(`이름: ${name}`);
         const code = formatAccessCodeDisplay(r.myCode || '');
-        if (code && code !== '—') lines.push(`나의코드 ${code}`);
+        if (code && code !== '—') lines.push(`나의코드: ${code}`);
       }
       return lines;
     }
@@ -133,18 +140,18 @@ export default function CounselorNotifyConfirmDialog({
             <p className="mt-1 text-sm text-slate-400">{description}</p>
           ) : kind === 'add_recipient' ? (
             <p className="mt-1 text-sm text-slate-400">
-              내담자 1명 추가 시 {formatPoints(POINT_COST_PORTAL_RECIPIENT)}가 차감됩니다. 휴대폰으로
-              발송됩니다.
+              내담자 1명 추가 시 {formatPoints(POINT_COST_PORTAL_RECIPIENT)}가 차감됩니다. 선택한
+              채널로 발송됩니다.
             </p>
           ) : channelUiHidden ? (
             <p className="mt-1 text-sm text-slate-400">
-              등록된 휴대폰 번호로 나의코드·안내가 발송됩니다.
+              등록된 연락처로 나의코드·안내가 발송됩니다.
             </p>
           ) : (
             <p className="mt-1 text-sm text-slate-400">
-              휴대폰 발송(
+              이메일(무료) · 휴대폰(
               <span className="text-amber-300">{formatPoints(POINT_COST_PORTAL_RECIPIENT)}</span>
-              /건)을 확인해 주세요.
+              /건) 발송을 확인해 주세요.
             </p>
           )}
         </div>
@@ -156,9 +163,22 @@ export default function CounselorNotifyConfirmDialog({
               <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-[#121f38]/80 px-3 py-3">
                 <input
                   type="checkbox"
+                  className="mt-1 rounded accent-sky-400"
+                  checked={channels.email}
+                  onChange={(e) => setChannels((prev) => ({ ...prev, email: e.target.checked }))}
+                  disabled={loading}
+                />
+                <span>
+                  <span className="font-semibold text-white">이메일</span>
+                  <span className="text-slate-400"> (0포인트)</span>
+                </span>
+              </label>
+              <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-[#121f38]/80 px-3 py-3">
+                <input
+                  type="checkbox"
                   className="mt-1 rounded accent-amber-400"
                   checked={channels.phone}
-                  onChange={(e) => setChannels({ phone: e.target.checked })}
+                  onChange={(e) => setChannels((prev) => ({ ...prev, phone: e.target.checked }))}
                   disabled={loading}
                 />
                 <span>

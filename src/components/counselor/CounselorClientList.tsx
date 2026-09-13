@@ -170,7 +170,7 @@ function progressLabel(item: CounselorClientPortalListItem): { text: string; cla
       className: 'font-medium text-amber-300',
     };
   }
-  return { text: '미시작', className: 'font-normal text-red-400' };
+  return { text: '미완료', className: 'font-normal text-red-400' };
 }
 
 function progressSortValue(item: CounselorClientPortalListItem): number {
@@ -1016,7 +1016,7 @@ export default function CounselorClientList({
     setNotifyConfirmKind(kind);
   };
 
-  const handleBulkNotifyConfirm = async (notifyChannels: ('phone')[]) => {
+  const handleBulkNotifyConfirm = async (notifyChannels: ('email' | 'phone')[]) => {
     if (!notifyConfirmKind || notifyDispatchGroups.length === 0) return;
     setNotifyDispatchLoading(true);
     setError('');

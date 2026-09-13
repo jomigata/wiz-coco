@@ -38,6 +38,7 @@ import {
   resolveCustomOrgFocusFromClick,
 } from '@/lib/counselorOrgInput';
 import UsageEndDateField from '@/components/counselor/UsageEndDateField';
+import PublicClaimChannelField from '@/components/counselor/PublicClaimChannelField';
 import { loadCounselorOperationAffiliation } from '@/lib/firestore/counselorRegistration';
 import { fetchMyCredits } from '@/lib/commerceApi';
 import { GROUP_RECIPIENT_MAX } from '@/lib/groupRecipientLimits';
@@ -107,7 +108,9 @@ export default function CounselorQuickSendForm({
   const resolvedAssessmentIdRef = useRef('');
   const [firstSendTrialEligible, setFirstSendTrialEligible] = useState(false);
   const [counselorAffiliation, setCounselorAffiliation] = useState('');
-  const [publicClaimChannel] = useState<PublicClaimChannel>(PUBLIC_CLAIM_CHANNEL_PHONE);
+  const [publicClaimChannel, setPublicClaimChannel] = useState<PublicClaimChannel>(
+    PUBLIC_CLAIM_CHANNEL_PHONE,
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
   const welcomeTextareaRef = useRef<HTMLTextAreaElement>(null);
   const customCohortTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -411,7 +414,7 @@ export default function CounselorQuickSendForm({
       title="상담코드 생성"
       dense
       className="flex min-h-0 flex-1"
-      description="1. 검사 선택 → 2. 코드전송 방법·안내 → 3. 상담코드 생성"
+      description="그룹·소속과 검사를 정한 뒤 전송 방법·안내를 설정하고 상담코드를 생성합니다."
       toolbar={fullLink}
     >
       {firstSendTrialEligible ? (
@@ -577,11 +580,18 @@ export default function CounselorQuickSendForm({
 
         <CounselorSendStepBlock
           step={2}
-          title="사용종료일 / 안내문구 설정"
-          subtitle="사용종료일·안내문구를 설정합니다."
+          title="전송 방법 · 사용종료일 · 안내"
+          subtitle="코드 전송 채널과 안내 문구를 설정합니다."
           compact
           allowOverflow
         >
+          <PublicClaimChannelField
+            value={publicClaimChannel}
+            onChange={setPublicClaimChannel}
+            disabled={sendLocked}
+            className="mb-4"
+            hintOverride={null}
+          />
           <div className="mb-4">
             <div className="mb-1.5 flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
               <label htmlFor="quick-send-usage-end" className="text-sm font-semibold text-slate-200">
@@ -624,23 +634,7 @@ export default function CounselorQuickSendForm({
               {error}
             </p>
           ) : null}
-        </CounselorSendStepBlock>
 
-        <CounselorSendStepBlock step={3} title="상담코드 안내" subtitle="코드 발송·수령 방법" compact>
-          <ul className="space-y-2 text-sm leading-relaxed text-slate-300">
-            <li>
-              <span className="font-semibold text-white">상담사 직접발송</span> — 생성 후 내담자 추가에서
-              일괄 발송
-            </li>
-            <li>
-              <span className="font-semibold text-white">개인 직접발송</span> — 홈페이지{' '}
-              <span className="text-sky-200">검사코드 받기</span>에 상담코드 입력
-            </li>
-            <li>
-              <span className="font-semibold text-white">휴대폰 발송</span> — 알림톡·문자로 나의코드·비밀번호
-              전달
-            </li>
-          </ul>
           <button
             type="submit"
             disabled={sendLocked}

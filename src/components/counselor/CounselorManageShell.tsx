@@ -26,9 +26,9 @@ type Props = {
   children: React.ReactNode;
 };
 
-/** 좌측 메뉴 — 중분류는 대분류 아이콘·타이틀 시작선에 맞춤 */
-const MENU_MIDDLE_ALIGN = 'pl-[calc(1.75rem+1.25rem+0.75rem)]';
-const MENU_NESTED_ALIGN = 'pl-[calc(1.75rem+1.25rem+0.75rem+2ch)]';
+/** 좌측 메뉴 — 중분류는 대분류 아이콘·타이틀 시작선보다 2ch 왼쪽 */
+const MENU_MIDDLE_ALIGN = 'pl-[calc(1.75rem+1.25rem+0.75rem-2ch)]';
+const MENU_NESTED_ALIGN = 'pl-[calc(1.75rem+1.25rem+0.75rem+2ch-2ch)]';
 
 export default function CounselorManageShell({ children }: Props) {
   const pathname = usePathname() || '';
@@ -73,7 +73,16 @@ export default function CounselorManageShell({ children }: Props) {
             const categoryEntryHref = getCategoryEntryHref(category, adminUser);
 
             const categorySelected = activeCategorySlug === category.slug;
-            const categoryEntryActive = categorySelected && !activeNested;
+            const pathNorm = (pathname || '').split('?')[0].replace(/\/+$/, '') || '';
+            const middleTierActiveInCategory = isMiddleTierActiveInCategory(
+              category,
+              pathNorm,
+              pathname,
+              search,
+              adminUser,
+            );
+            const categoryEntryActive =
+              categorySelected && !activeNested && !middleTierActiveInCategory;
 
             return (
               <div
@@ -340,6 +349,45 @@ export default function CounselorManageShell({ children }: Props) {
       </div>
     </div>
   );
+}
+
+function isMiddleTierActiveInCategory(
+  category: (typeof counselorMenuCategories)[number],
+  pathNorm: string,
+  pathname: string,
+  search: string,
+  adminUser: boolean,
+): boolean {
+  for (const sub of category.subcategories) {
+    if (sub.adminOnly && !adminUser) continue;
+    const visibleItems = sub.items.filter((item) => !item.adminOnly || adminUser);
+    for (const item of visibleItems) {
+      const normalizedItemHref = item.href.replace(/\/+$/, '');
+      const parentSubmenu =
+        normalizedItemHref === '/counselor/assessments'
+          ? getAssessmentsParentSubmenuItems({ admin: adminUser, pathname, search })
+          : normalizedItemHref === '/counselor/clients'
+            ? getClientsParentSubmenuItems({ admin: adminUser, pathname, search })
+            : [];
+      const contextNested =
+        normalizedItemHref === '/counselor/assessments'
+          ? getAssessmentListContextNestedItems(pathname, search, { admin: adminUser })
+          : normalizedItemHref === '/counselor/clients'
+            ? getClientsListContextNestedItems(pathname, search, { admin: adminUser })
+            : [];
+      const flattenNav =
+        category.slug === COUNSELOR_DISPATCH_MGMT_SLUG ||
+        category.slug === COUNSELOR_ASSESSMENT_CODE_SLUG;
+
+      if (!flattenNav && isMenuItemActive(pathname, item.href)) {
+        return true;
+      }
+      if (parentSubmenu.some((n) => n.isActive(pathNorm))) return true;
+      if (contextNested.some((n) => n.isActive(pathNorm))) return true;
+      if (flattenNav && normalizedItemHref === pathNorm) return true;
+    }
+  }
+  return false;
 }
 
 function stripCategoryNumber(label: string): string {

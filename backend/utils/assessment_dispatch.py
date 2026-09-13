@@ -718,6 +718,8 @@ def get_assessment_dispatch_status(db, assessment_id: str, counselor_uid: str | 
                 "phone": phone,
                 "myCode": pdata.get("accessCode") or "",
                 "joinAccessCode": join_access_code,
+                "originAssessmentId": (pdata.get("originAssessmentId") or "").strip(),
+                "originAccessCode": (pdata.get("originAccessCode") or "").strip(),
                 "notifyStatus": notify_status,
                 "notifyError": notify_error,
                 "notifyAt": notify_at,

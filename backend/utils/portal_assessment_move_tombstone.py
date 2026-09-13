@@ -34,11 +34,14 @@ def create_move_tombstone(
     source_my_code: str,
     target_my_code: str,
     target_join_access_code: str,
+    source_join_access_code: str = "",
     tests: list[dict],
 ) -> str:
     """이동 완료 tombstone — source 현황 목록에 '이동완료' 표시용."""
     tombstone_id = f"{from_assessment_id}_{portal_id}_{to_assessment_id}"
     to_meta = _load_assessment_meta(db, to_assessment_id)
+    from_meta = _load_assessment_meta(db, from_assessment_id)
+    source_join = (source_join_access_code or from_meta.get("accessCode") or "").strip()
     ref = db.collection(ASSESSMENT_MOVE_TOMBSTONES_COLLECTION).document(tombstone_id)
     ref.set(
         {
@@ -50,6 +53,7 @@ def create_move_tombstone(
             "sourceMyCode": (source_my_code or "").strip(),
             "targetMyCode": (target_my_code or "").strip(),
             "targetJoinAccessCode": (target_join_access_code or to_meta.get("accessCode") or "").strip(),
+            "sourceJoinAccessCode": source_join,
             "targetAssessmentTitle": to_meta.get("title") or "",
             "tests": tests or [],
             "status": "active",
@@ -93,6 +97,7 @@ def list_move_tombstones_for_assessment(
                 "sourceMyCode": data.get("sourceMyCode") or "",
                 "targetMyCode": data.get("targetMyCode") or "",
                 "targetJoinAccessCode": data.get("targetJoinAccessCode") or "",
+                "sourceJoinAccessCode": data.get("sourceJoinAccessCode") or "",
                 "targetAssessmentId": data.get("toAssessmentId") or "",
                 "targetAssessmentTitle": data.get("targetAssessmentTitle") or "",
                 "tests": data.get("tests") or [],
@@ -151,6 +156,8 @@ def tombstones_to_dispatch_recipients(tombstones: list[dict]) -> list[dict]:
                 "movedToAssessmentId": t.get("targetAssessmentId") or "",
                 "movedToMyCode": t.get("targetMyCode") or "",
                 "movedToJoinAccessCode": t.get("targetJoinAccessCode") or "",
+                "sourceJoinAccessCode": t.get("sourceJoinAccessCode") or "",
+                "movedFromAssessmentId": t.get("fromAssessmentId") or "",
                 "movedToAssessmentTitle": t.get("targetAssessmentTitle") or "",
                 "movedAt": t.get("movedAt") or "",
             }

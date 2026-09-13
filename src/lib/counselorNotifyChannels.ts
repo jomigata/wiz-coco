@@ -5,39 +5,58 @@ import {
   formatPoints,
 } from '@/lib/pointsCatalog';
 
-export type NotifyChannelKey = 'phone';
+export type NotifyChannelKey = 'email' | 'phone';
 
 export type NotifyChannelSelection = {
+  email: boolean;
   phone: boolean;
 };
 
 export type NotifyRecipientContact = {
   displayName?: string | null;
+  email?: string | null;
   phone?: string | null;
   myCode?: string | null;
+  groupName?: string | null;
+  affiliation?: string | null;
 };
 
 export function defaultNotifyChannelSelection(
   recipients: NotifyRecipientContact[],
 ): NotifyChannelSelection {
+  const hasEmail = recipients.some((r) => Boolean((r.email || '').trim()));
   const hasPhone = recipients.some((r) => Boolean(normalizeRecipientPhone(r.phone || '')));
-  return { phone: hasPhone };
+  return {
+    email: hasEmail,
+    phone: hasPhone,
+  };
 }
 
 export function notifyChannelsToPayload(selection: NotifyChannelSelection): NotifyChannelKey[] {
-  return selection.phone ? ['phone'] : [];
+  const out: NotifyChannelKey[] = [];
+  if (selection.email) out.push('email');
+  if (selection.phone) out.push('phone');
+  return out;
 }
 
 export function validateNotifyChannelSelection(
   selection: NotifyChannelSelection,
   recipients: NotifyRecipientContact[],
 ): string | null {
-  if (!selection.phone) {
-    return '휴대폰 발송을 선택해 주세요.';
+  if (!selection.email && !selection.phone) {
+    return '이메일 또는 휴대폰(1포인트) 중 최소 1개를 선택해 주세요.';
   }
-  const phoneCount = recipients.filter((r) => normalizeRecipientPhone(r.phone || '')).length;
-  if (phoneCount === 0) {
-    return '선택한 내담자 중 휴대폰 번호가 있는 대상이 없습니다.';
+  if (selection.email) {
+    const emailCount = recipients.filter((r) => (r.email || '').trim()).length;
+    if (emailCount === 0) {
+      return '선택한 내담자 중 이메일 주소가 있는 대상이 없습니다.';
+    }
+  }
+  if (selection.phone) {
+    const phoneCount = recipients.filter((r) => normalizeRecipientPhone(r.phone || '')).length;
+    if (phoneCount === 0) {
+      return '선택한 내담자 중 휴대폰 번호가 있는 대상이 없습니다.';
+    }
   }
   return null;
 }
@@ -45,14 +64,21 @@ export function validateNotifyChannelSelection(
 export function countNotifyTargets(
   recipients: NotifyRecipientContact[],
   selection: NotifyChannelSelection,
-): { phoneCount: number; recipientCount: number } {
+): { emailCount: number; phoneCount: number; recipientCount: number } {
+  const emailCount = selection.email
+    ? recipients.filter((r) => (r.email || '').trim()).length
+    : 0;
   const phoneCount = selection.phone
     ? recipients.filter((r) => normalizeRecipientPhone(r.phone || '')).length
     : 0;
-  return { phoneCount, recipientCount: recipients.length };
+  return {
+    emailCount,
+    phoneCount,
+    recipientCount: recipients.length,
+  };
 }
 
-/** 휴대폰 채널 1건당 1포인트 */
+/** 휴대폰 채널 1건당 1포인트 (이메일 0) */
 export function estimateNotifyPointCost(
   recipients: NotifyRecipientContact[],
   selection: NotifyChannelSelection,
@@ -76,13 +102,14 @@ export function formatNotifyPointSummary(
   detailLines: string[];
   footerLine: string;
 } {
-  const { phoneCount, recipientCount } = countNotifyTargets(recipients, selection);
+  const { emailCount, phoneCount, recipientCount } = countNotifyTargets(recipients, selection);
   const usePoints = estimateNotifyPointCost(recipients, selection, options);
   const balanceAfter = Math.max(0, balancePoints - usePoints);
   const detailLines = options?.targetOnly
-    ? [`대상 ${recipientCount}명`]
+    ? [`대상: ${recipientCount}명`]
     : [
-        `대상 ${recipientCount}명`,
+        `대상: ${recipientCount}명`,
+        selection.email ? `이메일 ${emailCount}건` : null,
         selection.phone
           ? `휴대폰 ${phoneCount}건 (${formatPoints(POINT_COST_PORTAL_RECIPIENT)}/건)`
           : null,

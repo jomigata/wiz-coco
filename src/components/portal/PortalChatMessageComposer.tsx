@@ -10,7 +10,7 @@ export const PORTAL_CHAT_MAX_WIDTH_CLASS = 'max-w-3xl';
 
 /** 내 검사실 — 채팅 목록 하단·입력창 상단 동일 간격 */
 export const PORTAL_CHAT_LIST_BOTTOM_GAP_CLASS = 'mb-1';
-export const PORTAL_CHAT_COMPOSER_TOP_GAP_CLASS = 'pt-1';
+export const PORTAL_CHAT_COMPOSER_TOP_GAP_CLASS = 'pt-3';
 
 /** 고정 입력창 높이 예약 — 채팅 목록과 입력 블록 사이 여백(mb+pt) 포함 */
 export const PORTAL_CHAT_COMPOSER_RESERVE_CLASS = 'pb-[10rem]';

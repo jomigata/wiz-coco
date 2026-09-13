@@ -325,6 +325,7 @@ def move_portals_to_assessment(
                 source_my_code=(pdata.get("accessCode") or "").strip(),
                 target_my_code=(pdata.get("accessCode") or "").strip(),
                 target_join_access_code=target.get("accessCode") or "",
+                source_join_access_code=source_ass["accessCode"],
                 tests=test_snapshot,
             )
         results_updated += n_updated

@@ -91,6 +91,39 @@ import CounselorNotifyConfirmDialog from '@/components/counselor/CounselorNotify
 import type { NotifyRecipientContact } from '@/lib/counselorNotifyChannels';
 import { LoadingMessage } from '@/components/ui/LoadingMessage';
 
+function myCodeWithOriginSuffix(
+  r: DispatchRecipient,
+  assessmentId: string,
+  codeLabel: string,
+): React.ReactNode {
+  const originCode = (r.originAccessCode || r.sourceJoinAccessCode || '').trim();
+  const originId = (r.originAssessmentId || r.movedFromAssessmentId || '').trim();
+  if (!originCode) return codeLabel;
+  const href = buildAssessmentProgressHref(originId, '');
+  const sameAssessment = !originId || originId === assessmentId;
+  if (sameAssessment) {
+    return (
+      <>
+        {codeLabel}
+        <span className="ml-1 font-normal text-slate-400">({originCode})</span>
+      </>
+    );
+  }
+  return (
+    <>
+      {codeLabel}
+      <AuthLink
+        href={href}
+        onClick={(e) => e.stopPropagation()}
+        className="ml-1 font-normal text-slate-400 hover:text-sky-300"
+        title="이전 상담코드 진행 현황"
+      >
+        ({originCode})
+      </AuthLink>
+    </>
+  );
+}
+
 function formatCompletedAt(iso: string | null | undefined): string {
   return formatNotifyDate(iso);
 }
@@ -613,15 +646,17 @@ export default function AssessmentDispatchPanel({
   const saveEditContact = useCallback(async () => {
     if (!editRecipient) return;
     const phone = normalizeRecipientPhone(editPhone);
-    if (!phone) {
-      setEditError('휴대폰 번호를 입력해 주세요.');
+    const email = editEmail.trim().toLowerCase();
+    if (!phone && !email) {
+      setEditError('휴대폰 또는 이메일 중 하나 이상 입력해 주세요.');
       return;
     }
     setEditSaving(true);
     setEditError('');
     try {
       const updated = await updateDispatchRecipientContact(assessmentId, editRecipient.portalId, {
-        phone,
+        phone: phone || undefined,
+        email: email || undefined,
       });
       setData((prev) => {
         if (!prev) return prev;
@@ -642,7 +677,7 @@ export default function AssessmentDispatchPanel({
     } finally {
       setEditSaving(false);
     }
-  }, [assessmentId, closeEditContact, editPhone, editRecipient, user?.uid]);
+  }, [assessmentId, closeEditContact, editEmail, editPhone, editRecipient, user?.uid]);
 
   useEffect(() => {
     if (authPending || !isAuthenticated) return;
@@ -1467,14 +1502,13 @@ export default function AssessmentDispatchPanel({
                           />
                         </td>
                       ) : null}
-                      <td className={`max-w-[9rem] ${counselorListTdClass} align-top w-36`}>
-                        <CounselorSlashInfoCell
-                          primary={r.displayName || '—'}
-                          secondary={myCodeLabel}
-                          hoverTypeLabel="나의코드"
-                          normalSecondary
-                          showTooltip={false}
-                        />
+                      <td className={`max-w-[11rem] ${counselorListTdClass} align-top w-40`}>
+                        <div className="min-w-0 text-sm leading-snug">
+                          <p className="truncate font-semibold text-white">{r.displayName || '—'}</p>
+                          <p className="mt-0.5 truncate font-mono text-[13px] text-slate-200">
+                            {myCodeWithOriginSuffix(r, assessmentId, myCodeLabel)}
+                          </p>
+                        </div>
                       </td>
                       <td className={`px-3 py-2.5 align-top whitespace-nowrap text-sm ${summary.className}`}>
                         <span className="text-slate-400" aria-hidden="true">
@@ -1993,16 +2027,21 @@ export default function AssessmentDispatchPanel({
             className="w-full max-w-md rounded-xl border border-slate-600 bg-slate-800 p-4 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-lg font-semibold text-white">연락처 수정</h3>
-            <p className="mt-2 text-base font-semibold text-white">
-              {editRecipient.displayName || '내담자'}
-            </p>
-            <p className="mt-0.5 font-mono text-lg font-semibold tracking-wide text-cyan-200">
-              {formatAccessCodeDisplay(editRecipient.myCode)}
-            </p>
-            <div className="mt-4 space-y-3">
-              <div>
-                <label htmlFor="dispatch-edit-phone" className="mb-1 block text-xs text-slate-400">
+            <div className="rounded-lg border border-white/10 bg-slate-900/40 px-3 py-3">
+              <h3 className="text-lg font-semibold text-white">연락처 수정</h3>
+            </div>
+            <div className="mt-3 rounded-lg border border-white/10 bg-slate-900/30 px-3 py-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">내담자</p>
+              <p className="mt-1 text-base font-semibold text-white">
+                {editRecipient.displayName || '내담자'}
+              </p>
+              <p className="mt-0.5 font-mono text-lg font-semibold tracking-wide text-cyan-200">
+                {formatAccessCodeDisplay(editRecipient.myCode)}
+              </p>
+            </div>
+            <div className="mt-3 space-y-3">
+              <div className="rounded-lg border border-white/10 bg-slate-900/30 px-3 py-3">
+                <label htmlFor="dispatch-edit-phone" className="mb-1.5 block text-xs font-semibold text-slate-400">
                   휴대폰
                 </label>
                 <input
@@ -2013,6 +2052,20 @@ export default function AssessmentDispatchPanel({
                   disabled={editSaving}
                   className="w-full rounded-lg border border-white/15 bg-slate-900/80 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500/40"
                   placeholder="010-0000-0000"
+                />
+              </div>
+              <div className="rounded-lg border border-white/10 bg-slate-900/30 px-3 py-3">
+                <label htmlFor="dispatch-edit-email" className="mb-1.5 block text-xs font-semibold text-slate-400">
+                  이메일
+                </label>
+                <input
+                  id="dispatch-edit-email"
+                  type="email"
+                  value={editEmail}
+                  onChange={(e) => setEditEmail(e.target.value)}
+                  disabled={editSaving}
+                  className="w-full rounded-lg border border-white/15 bg-slate-900/80 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500/40"
+                  placeholder="name@example.com"
                 />
               </div>
               {editError ? <p className="text-sm text-red-400">{editError}</p> : null}

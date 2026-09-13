@@ -461,7 +461,7 @@ export default function CounselorPortalChatPanel() {
           }`}
         >
           <aside
-            className={`flex h-full min-h-0 flex-col overflow-hidden ${PORTAL_CHAT_INNER_SHELL_CLASS}`}
+            className={`flex h-full min-h-0 flex-col overflow-hidden border-b border-slate-700/70 lg:border-b-0 lg:border-r lg:border-slate-700/70 ${PORTAL_CHAT_INNER_SHELL_CLASS}`}
           >
             <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-slate-800/80 px-3 py-2">
               <span className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
@@ -532,7 +532,9 @@ export default function CounselorPortalChatPanel() {
             </ul>
           </aside>
 
-          <section className={`flex h-full min-h-0 flex-col overflow-hidden ${PORTAL_CHAT_INNER_SHELL_CLASS}`}>
+          <section
+            className={`flex h-full min-h-0 flex-col overflow-hidden border-b border-slate-700/70 ${PORTAL_CHAT_INNER_SHELL_CLASS}`}
+          >
             {selectedThread ? (
               <>
                 <div className="flex shrink-0 flex-wrap items-start justify-between gap-2 border-b border-slate-700/70 px-4 py-3">
@@ -560,7 +562,7 @@ export default function CounselorPortalChatPanel() {
 
                 <div
                   data-chat-scroll
-                  className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain p-4 pb-5"
+                  className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain p-4 pb-8"
                   onClick={handleMessageAreaReadAck}
                   onTouchStart={handleMessageAreaReadAck}
                   role="presentation"
@@ -579,7 +581,7 @@ export default function CounselorPortalChatPanel() {
                     onDeleteMessage={(id) => void handleDeleteMessage(id)}
                     theme="counselor"
                   />
-                  <div ref={latestAnchorRef} aria-hidden className="h-3 w-full shrink-0" />
+                  <div ref={latestAnchorRef} aria-hidden className="h-6 w-full shrink-0" />
                 </div>
               </>
             ) : (

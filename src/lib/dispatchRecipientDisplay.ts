@@ -273,7 +273,8 @@ function pushChannelFromExplicitState(
 
 function buildChannelDetailParts(r: DispatchDisplayRecipient): ChannelDetailPart[] {
   const hasPhone = Boolean(r.phone?.trim());
-  if (!hasPhone) return [];
+  const hasEmail = Boolean(r.email?.trim());
+  if (!hasPhone && !hasEmail) return [];
 
   const status = resolveEffectiveNotifyStatus(r);
   const via = parseSentViaFlags(r.notifySentVia);
@@ -281,13 +282,37 @@ function buildChannelDetailParts(r: DispatchDisplayRecipient): ChannelDetailPart
   const terminal = isTerminalNotifyStatus(status);
   const parts: ChannelDetailPart[] = [];
 
+  if (hasEmail) {
+    const emailLegacy =
+      via.emailOk && !failed.emailFailed
+        ? 'ok'
+        : failed.emailFailed
+          ? 'fail'
+          : status === 'sending' || r.notifyEmailChannel === 'sending'
+            ? 'pending'
+            : via.emailOk || r.notifyEmailChannel === 'sent'
+              ? 'ok'
+              : r.notifyEmailChannel === 'failed'
+                ? 'fail'
+                : status === 'sent' || status === 'partial'
+                  ? 'ok'
+                  : 'idle';
+    let emailState = r.notifyEmailChannel;
+    if (terminal && emailState === 'sending') emailState = undefined;
+    pushChannelFromExplicitState(parts, '이메일', emailState, emailLegacy);
+  }
+
+  if (!hasPhone) return parts;
+
   const showAlimtalk =
     via.alimtalkOk ||
     (r.notifySentVia || '').toLowerCase().includes('kakao') ||
-    (r.notifySentVia || '').toLowerCase().includes('alimtalk') ||
-    (!via.smsOk && !failed.phoneFailed && status !== 'not_sent');
+    (r.notifySentVia || '').toLowerCase().includes('alimtalk');
   const showSms =
-    via.smsOk || (r.notifySentVia || '').toLowerCase().includes('sms') || failed.phoneFailed;
+    via.smsOk ||
+    (r.notifySentVia || '').toLowerCase().includes('sms') ||
+    failed.phoneFailed ||
+    (status === 'partial' && !via.alimtalkOk);
 
   if (showAlimtalk) {
     const legacy = phoneChannelOutcome(status, { ...via, smsOk: false, alimtalkOk: true }, failed);
@@ -353,11 +378,21 @@ export function dispatchStatusDisplay(r: DispatchDisplayRecipient): DispatchStat
   const hasPhone = Boolean(r.phone?.trim());
 
   if (!hasPhone) {
+    if (hasEmail) {
+      const status = resolveEffectiveNotifyStatus(r);
+      const detailParts = buildChannelDetailParts(r);
+      if (status === 'sent' || status === 'partial') {
+        return statusView(dispatchSuccessLabel(''), detailParts, DISPATCH_SUCCESS_TEXT_CLASS);
+      }
+      if (status === 'failed') {
+        return statusView('실패', detailParts, 'text-red-400', notifyErrorHint(r.notifyError));
+      }
+    }
     return statusView(
       '연락처 없음',
       [],
       'text-red-400',
-      '휴대폰 번호가 없어 발송할 수 없습니다.',
+      '휴대폰·이메일 정보가 없어 발송할 수 없습니다.',
     );
   }
 

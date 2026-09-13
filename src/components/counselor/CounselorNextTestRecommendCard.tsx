@@ -56,7 +56,7 @@ export default function CounselorNextTestRecommendCard({
 
   const handleSend = async (
     item: CounselorNextTestRecommendation,
-    notifyChannels: ('phone')[],
+    notifyChannels: ('email' | 'phone')[],
   ) => {
     setError('');
     setConfirmOpen(false);
