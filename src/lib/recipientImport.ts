@@ -8,12 +8,28 @@ function recipientPhoneFromRaw(raw: unknown): string {
   return normalized ? formatPhoneDisplay(normalized) : '';
 }
 
-function isLegacyThreeColumnHeader(firstCell: string, secondCell: string): boolean {
+function isLegacyEmailPhoneColumnOrder(firstCell: string, secondCell: string): boolean {
   const first = firstCell.trim();
   const second = secondCell.trim();
-  if (first.includes('이메일') || second.includes('이메일')) return true;
+  if (first.includes('이메일') || second.includes('휴대') || second.includes('전화')) return false;
   if (second.includes('이메일') || second.toLowerCase().includes('email')) return true;
   return false;
+}
+
+function parseRowContacts(
+  parts: unknown[],
+  legacyEmailFirst: boolean,
+): { phone: string; email: string } {
+  if (legacyEmailFirst) {
+    return {
+      email: String(parts[1] ?? '').trim().toLowerCase(),
+      phone: recipientPhoneFromRaw(parts[2]),
+    };
+  }
+  return {
+    phone: recipientPhoneFromRaw(parts[1]),
+    email: String(parts[2] ?? '').trim().toLowerCase(),
+  };
 }
 
 export function parseRecipientSheetRows(rows: unknown[][]): RecipientRow[] {
@@ -23,7 +39,7 @@ export function parseRecipientSheetRows(rows: unknown[][]): RecipientRow[] {
   const secondCell = String(rows[0]?.[1] ?? '').trim();
   const hasHeader = firstCell.includes('이름') || firstCell.toLowerCase().includes('name');
   const startIdx = hasHeader ? 1 : 0;
-  const legacyThreeCol = hasHeader && isLegacyThreeColumnHeader(firstCell, secondCell);
+  const legacyEmailFirst = hasHeader && isLegacyEmailPhoneColumnOrder(firstCell, secondCell);
 
   const parsed: RecipientRow[] = [];
   for (let i = startIdx; i < rows.length; i += 1) {
@@ -31,13 +47,11 @@ export function parseRecipientSheetRows(rows: unknown[][]): RecipientRow[] {
     if (!row?.length) continue;
     const displayName = String(row[0] ?? '').trim();
     if (!displayName) continue;
-    const phone = legacyThreeCol
-      ? recipientPhoneFromRaw(row[2])
-      : recipientPhoneFromRaw(row[1]);
+    const { phone, email } = parseRowContacts(row, legacyEmailFirst);
     parsed.push({
       displayName,
       phone,
-      email: '',
+      email,
     });
   }
   return parsed;
@@ -55,21 +69,18 @@ export function parseRecipientText(text: string): RecipientRow[] {
   const hasHeader =
     lines[0].includes('이름') || lines[0].toLowerCase().includes('name');
   const startIdx = hasHeader ? 1 : 0;
-  const legacyThreeCol =
+  const legacyEmailFirst =
     hasHeader &&
-    (headerParts.some((p) => p.includes('이메일') || p.toLowerCase().includes('email')) ||
-      headerParts.length >= 3);
+    isLegacyEmailPhoneColumnOrder(headerParts[0] || '', headerParts[1] || '');
 
   for (let i = startIdx; i < lines.length; i += 1) {
     const parts = lines[i].split(/[,;\t]/).map((p) => p.trim());
     if (!parts[0]) continue;
-    const phone = legacyThreeCol
-      ? recipientPhoneFromRaw(parts[2] || '')
-      : recipientPhoneFromRaw(parts[1] || '');
+    const { phone, email } = parseRowContacts(parts, legacyEmailFirst);
     rows.push({
       displayName: parts[0],
       phone,
-      email: '',
+      email,
     });
   }
   return rows;
@@ -87,9 +98,9 @@ export function mergeRecipients(manual: RecipientRow[], fromFile: RecipientRow[]
 }
 
 export function formatRecipientRowsPreview(rows: RecipientRow[], maxRows = 50): string {
-  const header = '이름\t휴대폰';
+  const header = '이름\t휴대폰\t이메일';
   const lines = rows.slice(0, maxRows).map((row) =>
-    [row.displayName, row.phone].filter(Boolean).join('\t'),
+    [row.displayName, row.phone, row.email].filter(Boolean).join('\t'),
   );
   return [header, ...lines].join('\n');
 }
@@ -109,7 +120,7 @@ export async function parseRecipientFile(file: File): Promise<RecipientRow[]> {
 }
 
 const SAMPLE_ROWS: RecipientRow[] = [
-  { displayName: '홍길동', phone: '010-1234-5678', email: '' },
+  { displayName: '홍길동', phone: '010-1234-5678', email: 'hong@example.com' },
   { displayName: '김영희', phone: '010-9876-5432', email: '' },
 ];
 
@@ -123,15 +134,18 @@ function triggerBrowserDownload(blob: Blob, filename: string): void {
 }
 
 export function downloadRecipientSampleText(): void {
-  const lines = ['이름,휴대폰', ...SAMPLE_ROWS.map((r) => `${r.displayName},${r.phone}`)];
+  const lines = [
+    '이름,휴대폰,이메일',
+    ...SAMPLE_ROWS.map((r) => `${r.displayName},${r.phone},${r.email}`),
+  ];
   const blob = new Blob([`\uFEFF${lines.join('\n')}`], { type: 'text/csv;charset=utf-8' });
   triggerBrowserDownload(blob, 'wizcoco-recipient-sample.csv');
 }
 
 export function downloadRecipientSampleExcel(): void {
   const sheet = XLSX.utils.aoa_to_sheet([
-    ['이름', '휴대폰'],
-    ...SAMPLE_ROWS.map((r) => [r.displayName, r.phone]),
+    ['이름', '휴대폰', '이메일'],
+    ...SAMPLE_ROWS.map((r) => [r.displayName, r.phone, r.email]),
   ]);
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, sheet, '명단');

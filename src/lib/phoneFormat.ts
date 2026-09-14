@@ -42,7 +42,16 @@ export function normalizeRecipientPhone(raw: unknown): string {
   if (digits.length === 10 && digits.startsWith('10')) {
     digits = `0${digits}`;
   }
+  if (digits.startsWith('01') && digits.length > 11) {
+    digits = digits.slice(0, 11);
+  }
   return digits;
+}
+
+/** 국내 휴대폰(010 등) 11자리 여부 */
+export function isValidKrMobilePhone(raw: unknown): boolean {
+  const digits = normalizeRecipientPhone(raw);
+  return digits.length === 11 && digits.startsWith('01');
 }
 
 function formatDigitsWithDashes(digits: string): string | null {

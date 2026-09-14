@@ -131,6 +131,7 @@ function formatCompletedAt(iso: string | null | undefined): string {
 function notifyErrorHint(error: string | null | undefined): string | undefined {
   const err = (error || '').trim();
   if (!err) return undefined;
+  if (err.includes('invalid_phone')) return '휴대폰 번호 형식(11자리)을 확인해 주세요.';
   if (err.includes('no_recipient')) return '이메일·휴대폰 정보가 없습니다.';
   if (err.includes('email_send_failed')) return '이메일 발송에 실패했습니다.';
   if (err.includes('phone_send_failed')) return '문자·알림톡 발송에 실패했습니다.';
@@ -266,6 +267,24 @@ function progressStatusForRow(recipient: DispatchRecipient): { text: string; cla
     return { text: '상담코드 이동완료', className: 'font-medium text-white' };
   }
   return testSummary(recipient);
+}
+
+function progressMoveNote(
+  r: DispatchRecipient,
+  currentJoinCode: string,
+): React.ReactNode | null {
+  const origin = (r.originAccessCode || r.sourceJoinAccessCode || '').trim();
+  const current = (currentJoinCode || '').trim();
+  if (!origin || !current || origin === current) return null;
+  return (
+    <div className="mt-0.5 text-xs font-normal leading-snug text-slate-400">
+      상담코드 이동(
+      <span className="text-slate-500">{formatAccessCodeDisplay(origin)}</span>
+      <span className="text-slate-600"> → </span>
+      <span className="text-white">{formatAccessCodeDisplay(current)}</span>
+      )
+    </div>
+  );
 }
 
 function isMovedOutRecipient(r: DispatchRecipient): boolean {
@@ -1511,11 +1530,12 @@ export default function AssessmentDispatchPanel({
                           </span>
                         </p>
                       </td>
-                      <td className={`px-3 py-2.5 align-top whitespace-nowrap text-sm ${summary.className}`}>
+                      <td className={`px-3 py-2.5 align-top text-sm ${summary.className}`}>
                         <span className="text-slate-400" aria-hidden="true">
                           {isOpen ? '▼' : '▶'}{' '}
                         </span>
                         <span>{summary.text}</span>
+                        {progressMoveNote(r, displayData.joinAccessCode || '')}
                       </td>
                       {clientsMergedContact ? (
                         <td className={`${counselorListTdClass} align-top`}>

@@ -28,7 +28,14 @@ def normalize_recipient_phone(raw: str) -> str:
     digits = normalize_phone_digits(raw)
     if len(digits) == 10 and digits.startswith("10"):
         digits = f"0{digits}"
+    if digits.startswith("01") and len(digits) > 11:
+        digits = digits[:11]
     return digits
+
+
+def is_valid_kr_mobile_phone(raw: str) -> bool:
+    digits = normalize_recipient_phone(raw)
+    return len(digits) == 11 and digits.startswith("01")
 
 
 def format_phone_display(raw: str) -> str:

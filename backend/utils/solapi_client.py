@@ -34,6 +34,8 @@ def normalize_kr_phone(phone: str) -> str:
         return digits
     if len(digits) == 10 and digits.startswith("10"):
         return "0" + digits
+    if digits.startswith("01") and len(digits) > 11:
+        digits = digits[:11]
     return digits
 
 

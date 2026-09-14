@@ -488,7 +488,7 @@ export default function CounselorPortalChatPanel() {
                 />
               </div>
             </div>
-            <ul className="min-h-0 flex-1 divide-y divide-slate-800/80 overflow-y-auto overscroll-contain">
+            <ul className="min-h-0 flex-1 divide-y divide-slate-800/80 overflow-y-auto overscroll-contain pb-10">
               {sortedThreads.length === 0 ? (
                 <li className="px-4 py-6 text-sm text-slate-500">
                   {searchQuery.trim() ? '검색 결과가 없습니다.' : '등록된 내담자가 없습니다.'}
@@ -565,7 +565,7 @@ export default function CounselorPortalChatPanel() {
 
                 <div
                   data-chat-scroll
-                  className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain p-4 pb-8"
+                  className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain p-4 pb-14"
                   onClick={handleMessageAreaReadAck}
                   onTouchStart={handleMessageAreaReadAck}
                   role="presentation"

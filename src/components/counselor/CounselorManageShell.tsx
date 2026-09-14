@@ -75,8 +75,16 @@ export default function CounselorManageShell({ children }: Props) {
             const categorySelected = activeCategorySlug === category.slug;
             const pathNorm = (pathname || '').split('?')[0].replace(/\/+$/, '') || '';
             const categoryEntryHrefNorm = categoryEntryHref.replace(/\/+$/, '') || '';
+            const middleActive = isMiddleTierActiveInCategory(
+              category,
+              pathNorm,
+              pathname,
+              search,
+              adminUser,
+            );
             const categoryLinkActive =
-              categorySelected && !activeNested && pathNorm === categoryEntryHrefNorm;
+              categorySelected &&
+              (middleActive || (!activeNested && pathNorm === categoryEntryHrefNorm));
             const categoryEntryActive = categoryLinkActive;
 
             return (

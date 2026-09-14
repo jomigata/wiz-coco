@@ -12,7 +12,7 @@ from config import (
     is_email_configured,
 )
 from utils.kakao_alimtalk import get_alimtalk_setup_info, is_alimtalk_configured
-from utils.sms_notify import is_sms_configured
+from utils.sms_notify import is_sms_configured, is_twilio_configured
 from utils.solapi_sms import is_solapi_sms_configured
 
 
@@ -30,7 +30,7 @@ def get_notification_channel_status() -> dict:
             "providers": [
                 p
                 for p, ok in (
-                    ("twilio", is_sms_configured()),
+                    ("twilio", is_twilio_configured()),
                     ("solapi", solapi_sms),
                 )
                 if ok

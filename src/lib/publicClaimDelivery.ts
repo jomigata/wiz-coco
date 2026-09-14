@@ -96,3 +96,11 @@ export function formatPublicClaimChannelLabel(channel?: string | null): string {
   if (c === PUBLIC_CLAIM_CHANNEL_PHONE_EMAIL) return '휴대폰+이메일';
   return '휴대폰';
 }
+
+/** 상담코드 목록 — 전송방법 셀 색상 */
+export function publicClaimChannelTextClass(channel?: string | null): string {
+  const c = normalizePublicClaimChannel(channel);
+  if (c === PUBLIC_CLAIM_CHANNEL_EMAIL) return 'font-medium text-violet-300';
+  if (c === PUBLIC_CLAIM_CHANNEL_PHONE_EMAIL) return 'font-medium text-amber-200/95';
+  return 'font-medium text-emerald-300';
+}

@@ -11,6 +11,7 @@ from config import (
     SOLAPI_KAKAO_TEMPLATE_TEST_REMINDER,
     SOLAPI_SENDER,
 )
+from utils.phone_format import is_valid_kr_mobile_phone
 from utils.solapi_client import (
     is_solapi_configured,
     format_solapi_to_phone,
@@ -106,6 +107,8 @@ def _send_alimtalk(
     variables: dict[str, str],
     fallback_text: str,
 ) -> tuple[bool, str, str]:
+    if not is_valid_kr_mobile_phone(to_phone):
+        return False, "invalid_phone", ""
     phone = format_solapi_to_phone(to_phone)
     if not phone:
         return False, "no_phone", ""

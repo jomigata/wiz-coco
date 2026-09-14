@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 
 from config import SOLAPI_SENDER
+from utils.phone_format import is_valid_kr_mobile_phone
 from utils.solapi_client import (
     is_solapi_configured,
     format_solapi_to_phone,
@@ -20,6 +21,8 @@ def is_solapi_sms_configured() -> bool:
 
 
 def send_solapi_sms(*, to_phone: str, text: str) -> tuple[bool, str, str]:
+    if not is_valid_kr_mobile_phone(to_phone):
+        return False, "invalid_phone", ""
     phone = format_solapi_to_phone(to_phone)
     if not phone:
         return False, "no_phone", ""

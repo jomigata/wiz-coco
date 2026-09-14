@@ -28,15 +28,7 @@ import {
   type CounselorSendTemplateId,
 } from '@/data/counselorSendTemplates';
 import { DEFAULT_WELCOME_MESSAGE } from '@/lib/welcomeMessageSamples';
-import {
-  CUSTOM_ORG_INPUT_DRAFT,
-  focusCustomOrgTextarea,
-  formatCustomOrgDisplay,
-  isCustomOrgDraft,
-  parseCustomOrgInput,
-  resolveCounselorAffiliationTitle,
-  resolveCustomOrgFocusFromClick,
-} from '@/lib/counselorOrgInput';
+import { resolveCounselorAffiliationTitle } from '@/lib/counselorOrgInput';
 import UsageEndDateField from '@/components/counselor/UsageEndDateField';
 import PublicClaimChannelField from '@/components/counselor/PublicClaimChannelField';
 import { loadCounselorOperationAffiliation } from '@/lib/firestore/counselorRegistration';
@@ -49,6 +41,7 @@ import {
 } from '@/lib/groupRecipientSampleDownload';
 import {
   PUBLIC_CLAIM_CHANNEL_PHONE,
+  PUBLIC_CLAIM_CHANNEL_EMAIL,
   type PublicClaimChannel,
 } from '@/lib/publicClaimDelivery';
 import {
@@ -87,8 +80,8 @@ export default function CounselorQuickSendForm({
   const router = useRouter();
   const { user, authPending, showLoginRequired } = useAuthResolved();
   const [templateId, setTemplateId] = useState<CounselorSendTemplateId | null>('custom');
-  const [customCohortName, setCustomCohortName] = useState('');
-  const [customCohortFocused, setCustomCohortFocused] = useState(false);
+  const [groupName, setGroupName] = useState('');
+  const [affiliationTitle, setAffiliationTitle] = useState('');
   const [welcomeMessage, setWelcomeMessage] = useState(DEFAULT_WELCOME_MESSAGE);
   const [usageEndDate, setUsageEndDate] = useState('');
   const [customTestIds, setCustomTestIds] = useState<Set<string>>(() => new Set(['generic']));
@@ -113,7 +106,6 @@ export default function CounselorQuickSendForm({
   );
   const fileInputRef = useRef<HTMLInputElement>(null);
   const welcomeTextareaRef = useRef<HTMLTextAreaElement>(null);
-  const customCohortTextareaRef = useRef<HTMLTextAreaElement>(null);
   const recipientNameRefs = useRef<Array<HTMLInputElement | null>>([]);
 
   useEffect(() => {
@@ -137,6 +129,7 @@ export default function CounselorQuickSendForm({
       .then((affiliation) => {
         if (cancelled) return;
         setCounselorAffiliation(affiliation);
+        setAffiliationTitle((prev) => (prev.trim() ? prev : affiliation));
       })
       .catch(() => {
         if (!cancelled) {
@@ -149,6 +142,16 @@ export default function CounselorQuickSendForm({
       cancelled = true;
     };
   }, [user?.uid, user?.displayName]);
+
+  useEffect(() => {
+    if (sendOverlay?.kind !== 'done') return;
+    const navId =
+      resolvedAssessmentIdRef.current.trim() ||
+      (sendOverlay.assessmentId || '').trim();
+    if (!navId) return;
+    const timer = window.setTimeout(() => finish(navId), 400);
+    return () => window.clearTimeout(timer);
+  }, [sendOverlay]);
 
   const template = COUNSELOR_SEND_TEMPLATES.find((t) => t.id === templateId) ?? null;
   const customSelectedTests = useMemo(
@@ -293,12 +296,11 @@ export default function CounselorQuickSendForm({
     }
 
     if (templateId === 'custom') {
-      const parsed = parseCustomOrgInput(customCohortName);
-      if (!parsed.groupName.trim()) {
+      if (!groupName.trim()) {
         setError('그룹/기관명을 1자 이상 입력해 주세요.');
         return;
       }
-      if (!parsed.affiliation.trim()) {
+      if (!affiliationTitle.trim()) {
         setError('소속을 입력해 주세요.');
         return;
       }
@@ -319,9 +321,8 @@ export default function CounselorQuickSendForm({
     let cohortName = '';
     let title = '';
     if (templateId === 'custom') {
-      const parsed = parseCustomOrgInput(customCohortName);
-      cohortName = parsed.groupName.slice(0, 120);
-      title = parsed.affiliation.slice(0, 200);
+      cohortName = groupName.trim().slice(0, 120);
+      title = affiliationTitle.trim().slice(0, 200);
     } else {
       const org = resolveTemplateOrgFields(template, affiliationForSend);
       cohortName = org.cohortName;
@@ -375,7 +376,7 @@ export default function CounselorQuickSendForm({
         setFirstSendTrialEligible(false);
       }
       resolvedAssessmentIdRef.current = assessmentId;
-      setSendOverlay({ kind: 'done', assessmentId: pendingId });
+      setSendOverlay({ kind: 'done', assessmentId: assessmentId || pendingId });
       return assessmentId;
     })().catch((err) => {
       const message = err instanceof Error ? err.message : '보내기에 실패했습니다.';
@@ -430,65 +431,84 @@ export default function CounselorQuickSendForm({
           compact
           bodyClassName="!p-3"
         >
-          <button
-            type="button"
-            disabled={sendLocked}
-            onClick={() => {
-              setTemplateId('custom');
-              setTestPickerOpen(true);
-            }}
-            className="group flex w-full flex-col items-center gap-2 rounded-xl border border-sky-400/30 bg-gradient-to-br from-sky-600/25 via-indigo-600/15 to-slate-900/40 px-4 py-5 text-center shadow-lg shadow-sky-950/30 transition hover:border-sky-300/45 hover:from-sky-500/30"
-          >
-            <span className="text-base font-bold text-white">검사 선택</span>
-            <span className="text-sm text-sky-200/90">
-              {customTestIds.size > 0
-                ? `${customTestIds.size}개 검사 선택됨`
-                : '탭하여 검사 목록 열기'}
-            </span>
-          </button>
-          {customSelectedTests.length > 0 ? (
-            <ul className="mt-3 max-h-28 space-y-1 overflow-y-auto rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-xs text-slate-300">
-              {customSelectedTests.map((t, idx) => (
-                <li key={t.testId} className="truncate">
-                  {idx + 1}. {t.name}
-                </li>
-              ))}
-            </ul>
-          ) : null}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
+            <button
+              type="button"
+              disabled={sendLocked}
+              onClick={() => {
+                setTemplateId('custom');
+                setTestPickerOpen(true);
+              }}
+              className="group flex w-full shrink-0 flex-col items-center justify-center gap-2 self-stretch rounded-xl border border-sky-400/30 bg-gradient-to-br from-sky-600/25 via-indigo-600/15 to-slate-900/40 px-3 py-4 text-center shadow-lg shadow-sky-950/30 transition hover:border-sky-300/45 hover:from-sky-500/30 sm:w-1/3 sm:max-w-[33%]"
+            >
+              <span className="text-base font-bold text-white">검사 선택</span>
+              <span className="text-sm text-sky-200/90">
+                {customTestIds.size > 0
+                  ? `${customTestIds.size}개 선택됨`
+                  : '탭하여 목록 열기'}
+              </span>
+            </button>
+            {customSelectedTests.length > 0 ? (
+              <ul className="min-h-0 flex-1 space-y-1.5 overflow-y-auto rounded-lg border border-white/10 bg-black/20 px-3 py-2.5">
+                {customSelectedTests.map((t, idx) => (
+                  <li key={t.testId} className="truncate text-[15px] font-medium leading-snug text-slate-100">
+                    {idx + 1}. {t.name}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="flex flex-1 items-center text-sm text-slate-500">
+                선택된 검사가 오른쪽에 표시됩니다.
+              </p>
+            )}
+          </div>
         </CounselorSendStepBlock>
 
         <CounselorSendStepBlock
           step={2}
-          title="그룹 · 소속 · 안내 · 전송"
+          title="상담코드 설정"
           subtitle="필수 정보를 입력하고 코드 전송 방법을 선택하세요."
           compact
           allowOverflow
-          className="[&>div:first-child]:bg-gradient-to-l [&>div:first-child]:from-indigo-600/12 [&>div:first-child]:via-sky-500/18 [&>div:first-child]:to-sky-600/40"
+          className="[&>div:first-child]:bg-gradient-to-l [&>div:first-child]:from-emerald-700/15 [&>div:first-child]:via-teal-600/20 [&>div:first-child]:to-emerald-600/35"
         >
-          <div className="mb-4 rounded-xl border border-white/10 bg-[#0d1830]/50 p-3">
-            <label htmlFor="quick-send-org" className="mb-1.5 block text-sm font-semibold text-slate-200">
-              그룹/기관명 · 소속 <span className="text-red-400">*</span>
-            </label>
-            <textarea
-              id="quick-send-org"
-              ref={customCohortTextareaRef}
-              value={customCohortName}
-              onChange={(e) => {
-                setCustomCohortName(e.target.value);
-                setTemplateId('custom');
-              }}
-              onFocus={() => {
-                setCustomCohortFocused(true);
-                setTemplateId('custom');
-              }}
-              onBlur={() => setCustomCohortFocused(false)}
-              rows={3}
-              maxLength={320}
-              disabled={sendLocked}
-              placeholder={CUSTOM_ORG_INPUT_DRAFT}
-              className={`${INPUT} min-h-[4.5rem] resize-y text-sm`}
-              aria-label="그룹명 및 소속"
-            />
+          <div className="mb-3 space-y-3 rounded-xl border border-white/10 bg-[#0d1830]/50 p-3">
+            <div>
+              <label htmlFor="quick-send-group" className="mb-1.5 block text-sm font-semibold text-slate-200">
+                그룹/기관명 <span className="text-red-400">*</span>
+              </label>
+              <input
+                id="quick-send-group"
+                type="text"
+                value={groupName}
+                onChange={(e) => {
+                  setGroupName(e.target.value);
+                  setTemplateId('custom');
+                }}
+                maxLength={120}
+                disabled={sendLocked}
+                placeholder="예: ○○초등학교"
+                className={INPUT}
+              />
+            </div>
+            <div>
+              <label htmlFor="quick-send-affiliation" className="mb-1.5 block text-sm font-semibold text-slate-200">
+                소속 <span className="text-red-400">*</span>
+              </label>
+              <input
+                id="quick-send-affiliation"
+                type="text"
+                value={affiliationTitle}
+                onChange={(e) => {
+                  setAffiliationTitle(e.target.value);
+                  setTemplateId('custom');
+                }}
+                maxLength={200}
+                disabled={sendLocked}
+                placeholder="예: 상담실 / 홍길동"
+                className={INPUT}
+              />
+            </div>
           </div>
           <PublicClaimChannelField
             value={publicClaimChannel}
@@ -497,6 +517,8 @@ export default function CounselorQuickSendForm({
             className="mb-4"
             showPointPerRecipient
             hintOverride={null}
+            allowedChannels={[PUBLIC_CLAIM_CHANNEL_PHONE, PUBLIC_CLAIM_CHANNEL_EMAIL]}
+            optionLayout="inline"
           />
           <div className="mb-4">
             <div className="mb-1.5 flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1">

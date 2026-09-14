@@ -23,6 +23,8 @@ type Props = {
   allowedChannels?: PublicClaimChannel[];
   /** 타이틀 아래 1포인트/명 표시 */
   showPointPerRecipient?: boolean;
+  /** `inline` — 라디오 2열 한 줄 */
+  optionLayout?: 'stack' | 'inline';
 };
 
 export default function PublicClaimChannelField({
@@ -34,6 +36,7 @@ export default function PublicClaimChannelField({
   hintOverride,
   allowedChannels,
   showPointPerRecipient = false,
+  optionLayout = 'stack',
 }: Props) {
   const options = useMemo(() => {
     if (!allowedChannels?.length) return PUBLIC_CLAIM_CHANNEL_OPTIONS;
@@ -54,7 +57,7 @@ export default function PublicClaimChannelField({
       {showPointPerRecipient ? (
         <p className="mb-2 text-xs text-amber-300/90">내담자 1명당 1포인트 (발송·알림 포함)</p>
       ) : null}
-      <div className="space-y-2">
+      <div className={optionLayout === 'inline' ? 'grid grid-cols-1 gap-2 sm:grid-cols-2' : 'space-y-2'}>
         {options.map((opt) => {
           const active = normalizePublicClaimChannel(value) === opt.value;
           return (

@@ -986,7 +986,7 @@ def update_dispatch_recipient_contact(
     email: str = "",
 ) -> dict:
     """상담진행 현황 — 내담자 휴대폰·이메일 수정."""
-    from utils.phone_format import normalize_recipient_phone
+    from utils.phone_format import is_valid_kr_mobile_phone, normalize_recipient_phone
 
     _verify_assessment_owned(db, assessment_id, counselor_uid)
     pid = (portal_id or "").strip()
@@ -1008,6 +1008,8 @@ def update_dispatch_recipient_contact(
     norm_email = (email or "").strip().lower()
     if not norm_phone and not norm_email:
         raise ValueError("휴대폰 또는 이메일 중 하나는 입력해야 합니다.")
+    if norm_phone and not is_valid_kr_mobile_phone(norm_phone):
+        raise ValueError("휴대폰 번호는 11자리(010 등) 형식이어야 합니다.")
 
     pref.update({"phone": norm_phone, "email": norm_email})
     return {"portalId": pid, "phone": norm_phone, "email": norm_email}

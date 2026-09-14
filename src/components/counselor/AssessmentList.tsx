@@ -59,7 +59,7 @@ import { exportCounselorAssessments } from '@/lib/counselorAssessmentListExport'
 import { matchesWildcardFields } from '@/lib/wildcardSearch';
 import { getAppRoleSync, isAdmin } from '@/utils/roleUtils';
 import { CounselorAdminEmailSortHeader, CounselorAdminEmailTd, compareCounselorEmail } from '@/components/counselor/CounselorAdminEmailColumn';
-import { formatPublicClaimChannelLabel } from '@/lib/publicClaimDelivery';
+import { formatPublicClaimChannelLabel, publicClaimChannelTextClass } from '@/lib/publicClaimDelivery';
 
 type ListSortKey = 'createdAt' | 'counselInfo' | 'accessCode' | 'usageEndDate' | 'counselorEmail';
 type SortDirection = 'asc' | 'desc';
@@ -638,7 +638,7 @@ export default function AssessmentList({
   return (
     <CounselorPageSection
       showHierarchyBreadcrumb
-      title="상담코드"
+      title="상담코드 목록"
       titleAccent="list"
       headerAction={undefined}
       className="flex min-h-0 flex-1"
@@ -862,9 +862,11 @@ export default function AssessmentList({
                         </span>
                       </td>
                       <td
-                        className={`whitespace-nowrap ${counselorListTdCompactClass} text-center text-slate-300`}
+                        className={`whitespace-nowrap ${counselorListTdCompactClass} text-center`}
                       >
-                        {formatAssessmentDeliveryMethod(a)}
+                        <span className={publicClaimChannelTextClass(a.publicClaimChannel)}>
+                          {formatAssessmentDeliveryMethod(a)}
+                        </span>
                       </td>
                       <td
                         className={`whitespace-nowrap ${counselorListTdCompactClass} text-center cursor-default tabular-nums`}

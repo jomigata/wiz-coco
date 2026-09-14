@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { bulkCreateClientPortals } from '@/lib/clientPortalApi';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
-import { normalizeRecipientPhone } from '@/lib/phoneFormat';
+import { normalizeRecipientPhone, formatPhoneWhileTyping, isValidKrMobilePhone } from '@/lib/phoneFormat';
 import { FORM_INPUT, FORM_LABEL } from '@/lib/assessmentFormUi';
 import { getAssessmentOrgLabel } from '@/lib/assessmentSortOptions';
 import { formatCounselorIssueDate } from '@/lib/counselorListTableStyles';
@@ -158,6 +158,10 @@ export default function AssessmentAddRecipientModal({
       setAddError('휴대폰 또는 이메일 중 하나 이상 입력해 주세요.');
       return;
     }
+    if (phone && !isValidKrMobilePhone(phone)) {
+      setAddError('휴대폰 번호는 11자리(010-1234-5678) 형식으로 입력해 주세요.');
+      return;
+    }
     setAddError('');
     setPendingRows((prev) => [...prev, { displayName: name, phone, email }]);
     setDraftName('');
@@ -196,11 +200,20 @@ export default function AssessmentAddRecipientModal({
       setAddError('개별 입력 또는 파일에서 내담자 1명 이상을 추가해 주세요.');
       return;
     }
-    const invalid = rows.find(
-      (r) => !normalizeRecipientPhone(r.phone) && !(r.email || '').trim(),
-    );
+    const invalid = rows.find((r) => {
+      const phone = normalizeRecipientPhone(r.phone);
+      const email = (r.email || '').trim();
+      if (!phone && !email) return true;
+      if (phone && !isValidKrMobilePhone(phone)) return true;
+      return false;
+    });
     if (invalid) {
-      setAddError(`「${invalid.displayName}」님의 휴대폰 또는 이메일이 필요합니다.`);
+      const phone = normalizeRecipientPhone(invalid.phone);
+      if (phone && !isValidKrMobilePhone(phone)) {
+        setAddError(`「${invalid.displayName}」님의 휴대폰 번호(11자리)를 확인해 주세요.`);
+      } else {
+        setAddError(`「${invalid.displayName}」님의 휴대폰 또는 이메일이 필요합니다.`);
+      }
       return;
     }
     setAddError('');
@@ -306,7 +319,7 @@ export default function AssessmentAddRecipientModal({
               <h4 className={FORM_LABEL}>개별 입력</h4>
               <p className="mt-0.5 text-sm text-slate-400">이름 필수 · 휴대폰·이메일 중 1개 이상</p>
               <div className="mt-2.5 flex flex-wrap items-end gap-2">
-                <div className="w-[4.5rem] shrink-0">
+                <div className="w-[5.5rem] shrink-0">
                   <label htmlFor="add-recipient-name" className={FORM_LABEL}>
                     이름
                   </label>
@@ -314,40 +327,48 @@ export default function AssessmentAddRecipientModal({
                     ref={nameInputRef}
                     id="add-recipient-name"
                     type="text"
-                    className={`${FORM_INPUT} break-words`}
+                    className={`${FORM_INPUT} !px-2 text-center`}
                     value={draftName}
                     onChange={(e) => setDraftName(e.target.value)}
                     onKeyDown={handleDraftKeyDown}
                     disabled={addLoading}
                     placeholder="홍길동"
+                    maxLength={20}
                   />
                 </div>
-                <div className="w-[7.5rem] shrink-0">
+                <div className="w-[15ch] shrink-0">
                   <label htmlFor="add-recipient-phone" className={FORM_LABEL}>
                     휴대폰
                   </label>
                   <input
                     id="add-recipient-phone"
                     type="tel"
-                    className={`${FORM_INPUT} break-words`}
+                    inputMode="numeric"
+                    className={`${FORM_INPUT} tabular-nums !px-2`}
+                    style={{ width: '15ch', maxWidth: '100%' }}
                     value={draftPhone}
-                    onChange={(e) => setDraftPhone(e.target.value)}
+                    onChange={(e) => setDraftPhone(formatPhoneWhileTyping(e.target.value))}
                     onKeyDown={handleDraftKeyDown}
                     disabled={addLoading}
-                    placeholder="010-0000-0000"
+                    placeholder="010-1234-5678"
                   />
                 </div>
-                <div className="min-w-[10rem] max-w-[14rem] flex-1 shrink-0">
+                <div className="shrink-0" style={{ width: 'min(100%, 25ch)' }}>
                   <label htmlFor="add-recipient-email" className={FORM_LABEL}>
                     이메일
                   </label>
-                  <input
+                  <textarea
                     id="add-recipient-email"
-                    type="email"
-                    className={`${FORM_INPUT} break-words`}
+                    rows={Math.min(4, Math.max(1, Math.ceil(Math.max(draftEmail.length, 1) / 25)))}
+                    className={`${FORM_INPUT} min-h-[2.75rem] resize-none break-all leading-snug !px-2`}
+                    style={{ width: '25ch', maxWidth: '100%' }}
                     value={draftEmail}
                     onChange={(e) => setDraftEmail(e.target.value)}
-                    onKeyDown={handleDraftKeyDown}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        handleDraftKeyDown(e as unknown as React.KeyboardEvent<HTMLInputElement>);
+                      }
+                    }}
                     disabled={addLoading}
                     placeholder="name@example.com"
                   />
@@ -367,7 +388,7 @@ export default function AssessmentAddRecipientModal({
 
             <section className="overflow-visible rounded-xl border border-white/[0.1] bg-[#101f38]/55 p-3 sm:col-span-2 sm:p-3.5">
               <h4 className={FORM_LABEL}>파일 일괄 등록</h4>
-              <p className="mt-0.5 text-sm leading-relaxed text-slate-400">CSV·Excel — 이름, 휴대폰</p>
+              <p className="mt-0.5 text-sm leading-relaxed text-slate-400">CSV·Excel — 이름, 휴대폰, 이메일(선택)</p>
               <div className="mt-2.5 flex flex-wrap items-center gap-2">
                 <input
                   type="file"
@@ -492,7 +513,8 @@ export default function AssessmentAddRecipientModal({
                     className="flex items-start justify-between gap-2 rounded-md border border-white/5 bg-slate-900/40 px-2.5 py-1.5 text-sm leading-snug"
                   >
                     <span className="min-w-0 break-words text-white">
-                      <span className="font-medium">{row.displayName}:</span>{' '}
+                      <span className="font-medium">{row.displayName}</span>
+                      <span className="text-slate-400"> : </span>
                       {row.phone?.trim() ? row.phone : '—'}
                       {row.email?.trim() ? (
                         <>
@@ -518,7 +540,8 @@ export default function AssessmentAddRecipientModal({
                     className="flex items-start gap-2 rounded-md border border-emerald-500/15 bg-emerald-950/20 px-2.5 py-1.5 text-sm leading-snug text-white"
                   >
                     <span className="min-w-0 break-words">
-                      <span className="font-medium">{row.displayName}:</span>{' '}
+                      <span className="font-medium">{row.displayName}</span>
+                      <span className="text-slate-400"> : </span>
                       {row.phone?.trim() ? row.phone : '—'}
                       {row.email?.trim() ? (
                         <>
