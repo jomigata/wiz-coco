@@ -461,7 +461,7 @@ export default function CounselorPortalChatPanel() {
           }`}
         >
           <aside
-            className={`flex h-full min-h-0 flex-col overflow-hidden border-b border-slate-700/70 lg:border-b-0 lg:border-r lg:border-slate-700/70 ${PORTAL_CHAT_INNER_SHELL_CLASS}`}
+            className={`flex h-full min-h-0 flex-col overflow-hidden rounded-b-2xl border-b border-slate-700/70 lg:border-b-0 lg:border-r lg:border-slate-700/70 ${PORTAL_CHAT_INNER_SHELL_CLASS}`}
           >
             <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-slate-800/80 px-3 py-2">
               <span className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
@@ -488,7 +488,7 @@ export default function CounselorPortalChatPanel() {
                 />
               </div>
             </div>
-            <ul className="min-h-0 flex-1 divide-y divide-slate-800/80 overflow-y-auto overscroll-contain pb-10">
+            <ul className="min-h-0 flex-1 divide-y divide-slate-800/80 overflow-y-auto overscroll-contain rounded-b-2xl px-1 pb-6 pt-1">
               {sortedThreads.length === 0 ? (
                 <li className="px-4 py-6 text-sm text-slate-500">
                   {searchQuery.trim() ? '검색 결과가 없습니다.' : '등록된 내담자가 없습니다.'}
@@ -536,7 +536,7 @@ export default function CounselorPortalChatPanel() {
           </aside>
 
           <section
-            className={`flex h-full min-h-0 flex-col overflow-hidden border-b border-slate-700/70 ${PORTAL_CHAT_INNER_SHELL_CLASS}`}
+            className={`flex h-full min-h-0 flex-col overflow-hidden rounded-b-2xl border-b border-slate-700/70 ${PORTAL_CHAT_INNER_SHELL_CLASS}`}
           >
             {selectedThread ? (
               <>
@@ -565,7 +565,7 @@ export default function CounselorPortalChatPanel() {
 
                 <div
                   data-chat-scroll
-                  className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain p-4 pb-14"
+                  className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain rounded-b-2xl p-4 pb-16 pt-2"
                   onClick={handleMessageAreaReadAck}
                   onTouchStart={handleMessageAreaReadAck}
                   role="presentation"

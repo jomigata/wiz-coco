@@ -1530,15 +1530,19 @@ export default function AssessmentDispatchPanel({
                           </span>
                         </p>
                       </td>
-                      <td className={`px-3 py-2.5 align-top text-sm ${summary.className}`}>
-                        <span className="text-slate-400" aria-hidden="true">
-                          {isOpen ? '▼' : '▶'}{' '}
-                        </span>
-                        <span>{summary.text}</span>
-                        {progressMoveNote(r, displayData.joinAccessCode || '')}
+                      <td className={`px-3 py-2.5 align-middle text-sm ${summary.className}`}>
+                        <div className="flex min-h-[3.25rem] flex-col justify-center">
+                          <div>
+                            <span className="text-slate-400" aria-hidden="true">
+                              {isOpen ? '▼' : '▶'}{' '}
+                            </span>
+                            <span>{summary.text}</span>
+                          </div>
+                          {progressMoveNote(r, displayData.joinAccessCode || '')}
+                        </div>
                       </td>
                       {clientsMergedContact ? (
-                        <td className={`${counselorListTdClass} align-top`}>
+                        <td className={`${counselorListTdClass} align-middle`}>
                           <RecipientContactCell phone={r.phone} email={r.email} />
                         </td>
                       ) : (

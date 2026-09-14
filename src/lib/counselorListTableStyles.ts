@@ -29,9 +29,9 @@ export const counselorListSelectThGrayClass =
 
 export const counselorListSelectTdClass = 'py-3 px-2 text-center align-top text-sm';
 
-export const counselorListTdClass = 'py-3 px-4 text-left text-sm text-gray-300 align-top';
+export const counselorListTdClass = 'py-3 px-4 text-left text-sm text-gray-300 align-middle';
 
-export const counselorListTdCompactClass = 'py-3 px-4 text-left text-sm text-gray-300 align-top';
+export const counselorListTdCompactClass = 'py-3 px-4 text-left text-sm text-gray-300 align-middle';
 
 export const counselorListBodyRowClass =
   'border-b border-white/10 hover:bg-white/5 transition-colors';

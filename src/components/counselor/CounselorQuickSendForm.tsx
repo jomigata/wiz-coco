@@ -91,9 +91,7 @@ export default function CounselorQuickSendForm({
   const [fileLabel, setFileLabel] = useState('');
   const [samplePreviewKind, setSamplePreviewKind] = useState<'txt' | 'csv' | null>(null);
   const [showFilePreview, setShowFilePreview] = useState(false);
-  const [sendOverlay, setSendOverlay] = useState<{ kind: 'pending' } | { kind: 'done'; assessmentId: string } | null>(
-    null,
-  );
+  const [sendOverlay, setSendOverlay] = useState<{ kind: 'pending' } | null>(null);
   const sendLocked = Boolean(sendOverlay);
   const [error, setError] = useState('');
   const issuePromiseRef = useRef<Promise<string> | null>(null);
@@ -142,16 +140,6 @@ export default function CounselorQuickSendForm({
       cancelled = true;
     };
   }, [user?.uid, user?.displayName]);
-
-  useEffect(() => {
-    if (sendOverlay?.kind !== 'done') return;
-    const navId =
-      resolvedAssessmentIdRef.current.trim() ||
-      (sendOverlay.assessmentId || '').trim();
-    if (!navId) return;
-    const timer = window.setTimeout(() => finish(navId), 400);
-    return () => window.clearTimeout(timer);
-  }, [sendOverlay]);
 
   const template = COUNSELOR_SEND_TEMPLATES.find((t) => t.id === templateId) ?? null;
   const customSelectedTests = useMemo(
@@ -376,7 +364,10 @@ export default function CounselorQuickSendForm({
         setFirstSendTrialEligible(false);
       }
       resolvedAssessmentIdRef.current = assessmentId;
-      setSendOverlay({ kind: 'done', assessmentId: assessmentId || pendingId });
+      setSendOverlay(null);
+      if (assessmentId) {
+        finish(assessmentId);
+      }
       return assessmentId;
     })().catch((err) => {
       const message = err instanceof Error ? err.message : '보내기에 실패했습니다.';
@@ -447,6 +438,7 @@ export default function CounselorQuickSendForm({
                   ? `${customTestIds.size}개 선택됨`
                   : '탭하여 목록 열기'}
               </span>
+              <span className="text-xs font-medium text-sky-300/80">(수정)</span>
             </button>
             {customSelectedTests.length > 0 ? (
               <ul className="min-h-0 flex-1 space-y-1.5 overflow-y-auto rounded-lg border border-white/10 bg-black/20 px-3 py-2.5">
@@ -472,7 +464,7 @@ export default function CounselorQuickSendForm({
           allowOverflow
           className="[&>div:first-child]:bg-gradient-to-l [&>div:first-child]:from-emerald-700/15 [&>div:first-child]:via-teal-600/20 [&>div:first-child]:to-emerald-600/35"
         >
-          <div className="mb-3 space-y-3 rounded-xl border border-white/10 bg-[#0d1830]/50 p-3">
+          <div className="mb-3 grid grid-cols-1 gap-3 rounded-xl border border-white/10 bg-[#0d1830]/50 p-3 sm:grid-cols-2">
             <div>
               <label htmlFor="quick-send-group" className="mb-1.5 block text-sm font-semibold text-slate-200">
                 그룹/기관명 <span className="text-red-400">*</span>
@@ -515,7 +507,7 @@ export default function CounselorQuickSendForm({
             onChange={setPublicClaimChannel}
             disabled={sendLocked}
             className="mb-4"
-            showPointPerRecipient
+            showPointPerRecipient={false}
             hintOverride={null}
             allowedChannels={[PUBLIC_CLAIM_CHANNEL_PHONE, PUBLIC_CLAIM_CHANNEL_EMAIL]}
             optionLayout="inline"
@@ -566,23 +558,17 @@ export default function CounselorQuickSendForm({
           <button
             type="submit"
             disabled={sendLocked}
-            className="mt-4 w-full rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-950/40 transition hover:from-emerald-500 hover:via-teal-500 hover:to-cyan-500 disabled:opacity-50"
+            className="mt-4 w-full rounded-xl bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-600 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-blue-950/40 transition hover:from-sky-500 hover:via-blue-500 hover:to-indigo-500 disabled:opacity-50"
           >
             상담코드 생성
           </button>
         </CounselorSendStepBlock>
       </form>
       <CounselorActionProgressOverlay
-        open={Boolean(sendOverlay)}
-        phase={sendOverlay?.kind === 'done' ? 'success' : 'loading'}
-        title={sendOverlay?.kind === 'done' ? '생성 완료' : '생성 중…'}
-        message={
-          sendOverlay?.kind === 'done'
-            ? '상담코드가 생성되었습니다.'
-            : '잠시만 기다려 주세요.'
-        }
-        hint={sendOverlay?.kind !== 'done' ? undefined : undefined}
-        onConfirm={sendOverlay?.kind === 'done' ? handleSendConfirm : undefined}
+        open={sendOverlay?.kind === 'pending'}
+        phase="loading"
+        title="생성 중…"
+        message="잠시만 기다려 주세요."
       />
       <CounselorQuickSendTestPickerModal
         open={testPickerOpen}

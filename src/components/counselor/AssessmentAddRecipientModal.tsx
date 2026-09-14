@@ -313,12 +313,14 @@ export default function AssessmentAddRecipientModal({
           </div>
         </div>
 
-        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overflow-x-visible px-4 py-3 sm:space-y-4 sm:px-5 sm:py-4">
-          <div className="grid gap-3 lg:grid-cols-5">
-            <section className="overflow-visible rounded-xl border border-white/[0.1] bg-[#101f38]/55 p-3 sm:col-span-3 sm:p-3.5">
-              <h4 className={FORM_LABEL}>개별 입력</h4>
-              <p className="mt-0.5 text-sm text-slate-400">이름 필수 · 휴대폰·이메일 중 1개 이상</p>
-              <div className="mt-2.5 flex flex-wrap items-end gap-2">
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overflow-x-visible px-4 py-3 sm:px-5 sm:py-4">
+          <div className="grid gap-4 lg:grid-cols-12 lg:items-stretch">
+            <section className="flex flex-col overflow-visible rounded-2xl border border-sky-400/15 bg-gradient-to-br from-[#101f38]/90 via-[#0f1a30]/95 to-[#0a1220]/90 p-4 shadow-inner shadow-black/20 lg:col-span-7">
+              <div className="mb-3 border-b border-white/10 pb-2">
+                <h4 className="text-sm font-bold tracking-tight text-sky-100">개별 입력</h4>
+                <p className="mt-0.5 text-xs text-slate-400">이름 필수 · 휴대폰·이메일 중 1개 이상</p>
+              </div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-[5.5rem_15ch_minmax(0,25ch)_auto] sm:items-end">
                 <div className="w-[5.5rem] shrink-0">
                   <label htmlFor="add-recipient-name" className={FORM_LABEL}>
                     이름
@@ -373,12 +375,12 @@ export default function AssessmentAddRecipientModal({
                     placeholder="name@example.com"
                   />
                 </div>
-                <div className="flex shrink-0 justify-end">
+                <div className="flex shrink-0 justify-end sm:justify-center">
                   <button
                     type="button"
                     onClick={handleAddDraftRow}
                     disabled={addLoading}
-                    className="shrink-0 rounded-lg bg-sky-600/90 px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-sky-500 disabled:opacity-50"
+                    className="h-[2.75rem] shrink-0 rounded-xl bg-gradient-to-r from-sky-600 to-cyan-600 px-4 text-sm font-semibold text-white shadow-md shadow-sky-950/30 transition hover:from-sky-500 hover:to-cyan-500 disabled:opacity-50"
                   >
                     입력
                   </button>
@@ -386,10 +388,13 @@ export default function AssessmentAddRecipientModal({
               </div>
             </section>
 
-            <section className="overflow-visible rounded-xl border border-white/[0.1] bg-[#101f38]/55 p-3 sm:col-span-2 sm:p-3.5">
-              <h4 className={FORM_LABEL}>파일 일괄 등록</h4>
-              <p className="mt-0.5 text-sm leading-relaxed text-slate-400">CSV·Excel — 이름, 휴대폰, 이메일(선택)</p>
-              <div className="mt-2.5 flex flex-wrap items-center gap-2">
+            <section className="flex flex-col overflow-visible rounded-2xl border border-emerald-500/15 bg-gradient-to-br from-[#0f1f36]/90 via-[#0d1830]/95 to-[#0a1220]/90 p-4 shadow-inner shadow-black/20 lg:col-span-5">
+              <div className="mb-3 border-b border-white/10 pb-2">
+                <h4 className="text-sm font-bold tracking-tight text-emerald-100">파일 일괄 등록</h4>
+                <p className="mt-0.5 text-xs text-slate-400">CSV·Excel — 이름, 휴대폰, 이메일(선택)</p>
+              </div>
+              <div className="rounded-xl border border-dashed border-white/15 bg-black/25 p-3">
+              <div className="flex flex-col gap-2">
                 <input
                   type="file"
                   accept=".csv,.txt,.tsv,.xlsx,.xls,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
@@ -399,8 +404,9 @@ export default function AssessmentAddRecipientModal({
                     void handleAddRecipientFile(file);
                     e.target.value = '';
                   }}
-                  className="block min-w-0 flex-1 text-sm text-slate-300 file:mr-2 file:rounded-md file:border-0 file:bg-sky-700/90 file:px-2.5 file:py-1.5 file:text-sm file:font-medium file:text-white hover:file:bg-sky-600"
+                  className="block w-full text-sm text-slate-300 file:mr-2 file:rounded-lg file:border-0 file:bg-emerald-700/90 file:px-3 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-emerald-600"
                 />
+              </div>
               </div>
               <div
                 className="relative z-20 mt-2 overflow-visible"

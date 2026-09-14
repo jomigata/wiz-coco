@@ -84,7 +84,9 @@ export default function CounselorManageShell({ children }: Props) {
             );
             const categoryLinkActive =
               categorySelected &&
-              (middleActive || (!activeNested && pathNorm === categoryEntryHrefNorm));
+              !middleActive &&
+              !activeNested &&
+              pathNorm === categoryEntryHrefNorm;
             const categoryEntryActive = categoryLinkActive;
 
             return (

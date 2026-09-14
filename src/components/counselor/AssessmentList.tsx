@@ -59,7 +59,8 @@ import { exportCounselorAssessments } from '@/lib/counselorAssessmentListExport'
 import { matchesWildcardFields } from '@/lib/wildcardSearch';
 import { getAppRoleSync, isAdmin } from '@/utils/roleUtils';
 import { CounselorAdminEmailSortHeader, CounselorAdminEmailTd, compareCounselorEmail } from '@/components/counselor/CounselorAdminEmailColumn';
-import { formatPublicClaimChannelLabel, publicClaimChannelTextClass } from '@/lib/publicClaimDelivery';
+import { formatPublicClaimChannelLabel } from '@/lib/publicClaimDelivery';
+import PublicClaimChannelLabel from '@/components/counselor/PublicClaimChannelLabel';
 
 type ListSortKey = 'createdAt' | 'counselInfo' | 'accessCode' | 'usageEndDate' | 'counselorEmail';
 type SortDirection = 'asc' | 'desc';
@@ -864,9 +865,7 @@ export default function AssessmentList({
                       <td
                         className={`whitespace-nowrap ${counselorListTdCompactClass} text-center`}
                       >
-                        <span className={publicClaimChannelTextClass(a.publicClaimChannel)}>
-                          {formatAssessmentDeliveryMethod(a)}
-                        </span>
+                        <PublicClaimChannelLabel channel={a.publicClaimChannel} />
                       </td>
                       <td
                         className={`whitespace-nowrap ${counselorListTdCompactClass} text-center cursor-default tabular-nums`}
