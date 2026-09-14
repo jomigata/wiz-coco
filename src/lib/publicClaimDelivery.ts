@@ -89,3 +89,10 @@ export function publicClaimSuccessHint(channel: PublicClaimChannel): string {
   }
   return '휴대폰 문자(알림톡)으로 코드/비밀번호 발송하였습니다.';
 }
+
+export function formatPublicClaimChannelLabel(channel?: string | null): string {
+  const c = normalizePublicClaimChannel(channel);
+  if (c === PUBLIC_CLAIM_CHANNEL_EMAIL) return '이메일';
+  if (c === PUBLIC_CLAIM_CHANNEL_PHONE_EMAIL) return '휴대폰+이메일';
+  return '휴대폰';
+}

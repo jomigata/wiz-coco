@@ -4,7 +4,6 @@ import { useState } from 'react';
 import Link from 'next/link';
 import HomeSectionShell from '@/components/home/HomeSectionShell';
 import PageHierarchyBreadcrumb from '@/components/navigation/PageHierarchyBreadcrumb';
-import { APP_HEADER_PT } from '@/lib/appChromeLayout';
 import { resolvePortalHierarchy } from '@/lib/pageHierarchyNav';
 import { portalLoginHref } from '@/lib/portalLoginIntent';
 import { submitPersonalPurchaseInquiry } from '@/lib/personalPurchaseInquiryApi';
@@ -54,7 +53,11 @@ export default function PersonalPurchaseInquiryPageClient() {
   };
 
   return (
-    <div className={`min-h-screen bg-[#0f1628] text-slate-100 ${APP_HEADER_PT}`}>
+    <div className="min-h-screen bg-[#0f1628] text-slate-100">
+      <div
+        className="h-px w-full bg-gradient-to-r from-transparent via-sky-400/45 to-transparent"
+        aria-hidden
+      />
       <HomeSectionShell tone="hero" className="py-10 md:py-14" showBottomFade={false}>
         <div className="container mx-auto max-w-xl px-4">
           {nav ? (

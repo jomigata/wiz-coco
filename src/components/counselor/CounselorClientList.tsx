@@ -60,7 +60,7 @@ import { stripAssessmentTitleDispatchCountSuffix } from '@/lib/counselorAssessme
 import { counselorClientProgressHref } from '@/lib/counselorClientRoutes';
 import { exportClientPortalItems } from '@/lib/clientPortalListExport';
 import RecipientContactCell from '@/components/counselor/RecipientContactCell';
-import { dispatchStatusDisplay, formatNotifyDate, compareDispatchStatusSort } from '@/lib/dispatchRecipientDisplay';
+import { dispatchStatusDisplay, formatNotifyDate, compareDispatchStatusSort, recipientProgressDisplay } from '@/lib/dispatchRecipientDisplay';
 import { INDIVIDUAL_COHORT_KEY } from '@/lib/monitoringRealtime';
 import { rememberCounselorAssessmentContext, rememberCounselorProgressFrom } from '@/lib/counselorNestedNav';
 import { consumeCounselorListSkipReload } from '@/lib/counselorListNavigationCache';
@@ -158,19 +158,43 @@ function formatUsageEndDate(iso: string | undefined): string {
 }
 
 function progressLabel(item: CounselorClientPortalListItem): { text: string; className: string } {
-  if (item.progress.label === 'no_tests') {
+  const p = item.progress;
+  if (p.label === 'no_tests') {
     return { text: '검사 없음', className: 'font-medium text-slate-400' };
   }
-  if (item.progress.label === 'completed') {
-    return { text: '완료', className: 'font-medium text-emerald-300' };
-  }
-  if (item.progress.label === 'in_progress') {
+  const testStatus =
+    p.label === 'completed'
+      ? 'completed'
+      : p.label === 'in_progress'
+        ? 'in_progress'
+        : 'not_started';
+  const display = recipientProgressDisplay({
+    testStatus,
+    completedCount: p.completedTests,
+    requiredCount: p.totalTests,
+  });
+  if (p.label === 'not_started' && display.text.includes('미시작')) {
     return {
-      text: `진행 ${item.progress.percent}%`,
-      className: 'font-medium text-amber-300',
+      text: display.text.replace('미시작', '미완료'),
+      className: display.className.replace('font-medium', 'font-normal'),
     };
   }
-  return { text: '미완료', className: 'font-normal text-red-400' };
+  return display;
+}
+
+function counselMoveProgressNote(item: CounselorClientPortalListItem): React.ReactNode | null {
+  const origin = (item.originAccessCode || '').trim();
+  const current = counselJoinCodeLabel(item);
+  if (!origin || !current || origin === current) return null;
+  return (
+    <div className="mt-0.5 text-xs leading-snug text-slate-400">
+      상담코드 이동(
+      <span className="font-normal text-slate-500">{origin}</span>
+      <span className="text-slate-600"> → </span>
+      <span className="font-normal text-white">{current}</span>
+      )
+    </div>
+  );
 }
 
 function progressSortValue(item: CounselorClientPortalListItem): number {
@@ -1260,19 +1284,16 @@ export default function CounselorClientList({
                       onSort={toggleSort}
                       className="whitespace-nowrap"
                     />
-                    <DualFieldSortHeader
-                      leftLabel="이름"
-                      rightLabel="나의코드"
-                      activeKey={sortKey}
+                    <SortableColumnHeader
+                      label="이름 / 나의코드"
                       sortKey="displayName"
-                      phase={nameSortPhase}
-                      leftPhases={['name-asc', 'name-desc']}
-                      rightPhases={['code-asc', 'code-desc']}
-                      onSortLeft={() => toggleNameFieldSort('name')}
-                      onSortRight={() => toggleNameFieldSort('code')}
+                      activeKey={sortKey}
+                      direction={sortDir}
+                      onSort={toggleSort}
+                      className="whitespace-nowrap"
                     />
                     <SortableColumnHeader
-                      label="진행현황"
+                      label="검사 진행현황"
                       sortKey="progress"
                       activeKey={sortKey}
                       direction={sortDir}
@@ -1288,7 +1309,7 @@ export default function CounselorClientList({
                       className="whitespace-nowrap"
                     />
                     <SortableColumnHeader
-                      label="발송현황"
+                      label="코드 발송현황"
                       sortKey="notifyStatus"
                       activeKey={sortKey}
                       direction={sortDir}
@@ -1406,29 +1427,29 @@ export default function CounselorClientList({
                           {formatNotifyDate(item.notifyAt)}
                         </td>
                         <td
-                          className={`max-w-[11rem] ${counselorListTdClass} ${rowClickable ? 'cursor-pointer' : ''}`}
+                          className={`max-w-[12rem] ${counselorListTdClass} ${rowClickable ? 'cursor-pointer' : ''}`}
                           onClick={rowClickable ? () => goToProgress(item) : undefined}
                         >
-                          <CounselorSlashInfoCell
-                            primary={item.displayName || '—'}
-                            secondary={formatAccessCodeDisplay(item.accessCode || '')}
-                            hoverTypeLabel="나의코드"
-                            normalSecondary
-                            showTooltip={false}
-                            className={cellInteractionClass}
-                          />
+                          <p className={`min-w-0 truncate text-sm ${cellInteractionClass}`}>
+                            <span className="font-semibold text-white">{item.displayName || '—'}</span>
+                            <span className="text-slate-500"> / </span>
+                            <span className="font-mono text-slate-200">
+                              {formatAccessCodeDisplay(item.accessCode || '')}
+                            </span>
+                          </p>
                         </td>
                         <td
-                          className={`whitespace-nowrap ${counselorListTdClass} ${rowClickable ? 'cursor-pointer' : ''} ${progress.className}`}
+                          className={`${counselorListTdClass} ${rowClickable ? 'cursor-pointer' : ''} align-top`}
                           onClick={rowClickable ? () => goToProgress(item) : undefined}
                         >
-                          {progress.text}
+                          <div className={`text-sm ${progress.className}`}>{progress.text}</div>
+                          {counselMoveProgressNote(item)}
                         </td>
                         <td
                           className={`max-w-[14rem] ${counselorListTdClass} ${rowClickable ? 'cursor-pointer' : ''}`}
                           onClick={rowClickable ? () => goToProgress(item) : undefined}
                         >
-                          <RecipientContactCell phone={item.phone} />
+                          <RecipientContactCell phone={item.phone} email={item.email} />
                         </td>
                         <td
                           className={`max-w-[10rem] ${counselorListTdClass} ${rowClickable ? 'cursor-pointer' : ''}`}

@@ -215,6 +215,8 @@ def list_counselor_client_portals(
                 "counselorId": pdata.get("counselorId") or "",
                 "cohortId": cid or None,
                 "cohortName": cname or None,
+                "originAssessmentId": (pdata.get("originAssessmentId") or "").strip(),
+                "originAccessCode": (pdata.get("originAccessCode") or "").strip(),
                 "status": pdata.get("status") or "active",
                 "assignedAssessmentCount": len(assigned_ids),
                 "assessments": [

@@ -21,6 +21,8 @@ type Props = {
   label?: string;
   hintOverride?: string | null;
   allowedChannels?: PublicClaimChannel[];
+  /** 타이틀 아래 1포인트/명 표시 */
+  showPointPerRecipient?: boolean;
 };
 
 export default function PublicClaimChannelField({
@@ -31,6 +33,7 @@ export default function PublicClaimChannelField({
   label = '코드전송 방법',
   hintOverride,
   allowedChannels,
+  showPointPerRecipient = false,
 }: Props) {
   const options = useMemo(() => {
     if (!allowedChannels?.length) return PUBLIC_CLAIM_CHANNEL_OPTIONS;
@@ -48,6 +51,9 @@ export default function PublicClaimChannelField({
       <p className={FIELD_LABEL}>
         {label} <span className="text-red-400">*</span>
       </p>
+      {showPointPerRecipient ? (
+        <p className="mb-2 text-xs text-amber-300/90">내담자 1명당 1포인트 (발송·알림 포함)</p>
+      ) : null}
       <div className="space-y-2">
         {options.map((opt) => {
           const active = normalizePublicClaimChannel(value) === opt.value;
@@ -69,7 +75,6 @@ export default function PublicClaimChannelField({
               />
               <span className="min-w-0">
                 <span className="block text-sm font-semibold text-white">{opt.label}</span>
-                <span className="mt-0.5 block text-xs text-slate-400">{opt.priceNote}</span>
               </span>
             </label>
           );

@@ -422,174 +422,80 @@ export default function CounselorQuickSendForm({
           첫 검사 보내기는 무료입니다. 「무료검사」로 상담코드를 만들면 내담자가 직접 나의코드를 받을 수 있습니다.
         </p>
       ) : null}
-      <form onSubmit={handleSend} className="mx-auto flex max-w-2xl flex-col gap-2.5 p-1">
+        <form onSubmit={handleSend} className="mx-auto flex max-w-2xl flex-col gap-2.5 p-1">
         <CounselorSendStepBlock
           step={1}
-          title="어떤 검사인가요?"
-          subtitle="보낼 검사 유형을 선택하세요"
+          title="검사 선택"
+          subtitle="이 상담코드에 포함할 검사를 고릅니다."
           compact
+          bodyClassName="!p-3"
         >
-          <div className="space-y-2">
-            {COUNSELOR_SEND_TEMPLATES.filter((t) => t.customOrgInput).map((item) => {
-              const active = templateId === item.id;
-              const templateOrder = COUNSELOR_SEND_TEMPLATES.indexOf(item) + 1;
-                const parsedCustom = parseCustomOrgInput(customCohortName);
-                const customDisplay = formatCustomOrgDisplay(parsedCustom);
-                const isDraft = isCustomOrgDraft(customCohortName);
-                const showCustomPlaceholder = isDraft && !customCohortFocused;
-                const showCustomSummary = !customCohortFocused && !isDraft && Boolean(customDisplay);
-                const hideCustomText = showCustomPlaceholder || showCustomSummary;
-
-                return (
-                  <div
-                    key={item.id}
-                    className={`flex w-full flex-col rounded-lg border px-3 py-2.5 transition-colors ${templateCardBorder(active)}`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/10 text-[10px] font-semibold tabular-nums text-slate-400">
-                        {templateOrder}
-                      </span>
-                      <div
-                        className="relative min-h-[2.5rem] min-w-0 flex-1 cursor-text text-left"
-                      onClick={() => {
-                        setTemplateId('custom');
-                        if (!customCohortName.trim()) {
-                          focusCustomOrgTextarea(
-                            customCohortTextareaRef.current,
-                            customCohortName,
-                            setCustomCohortName,
-                            'group',
-                          );
-                        }
-                      }}
-                    >
-                      {showCustomPlaceholder ? (
-                        <span
-                          className="pointer-events-none absolute inset-0 flex flex-col justify-center px-1 text-sm leading-snug text-slate-400"
-                          aria-hidden
-                        >
-                          <span>{CUSTOM_ORG_INPUT_DRAFT.split('\n')[0]}</span>
-                          <span className="mt-1">{CUSTOM_ORG_INPUT_DRAFT.split('\n')[1]}</span>
-                        </span>
-                      ) : showCustomSummary && customDisplay ? (
-                        <span
-                          className={`pointer-events-none absolute inset-0 flex items-center justify-center px-1 text-center text-sm font-bold leading-snug ${
-                            active ? 'text-white' : 'text-slate-200'
-                          }`}
-                          aria-hidden
-                        >
-                          {customDisplay}
-                        </span>
-                      ) : null}
-                      <textarea
-                        ref={customCohortTextareaRef}
-                        value={customCohortName}
-                        onChange={(e) => {
-                          setCustomCohortName(e.target.value);
-                          setTemplateId('custom');
-                        }}
-                        onFocus={() => {
-                          setCustomCohortFocused(true);
-                          setTemplateId('custom');
-                          if (!customCohortName.trim()) {
-                            focusCustomOrgTextarea(
-                              customCohortTextareaRef.current,
-                              customCohortName,
-                              setCustomCohortName,
-                              'group',
-                            );
-                          }
-                        }}
-                        onBlur={() => setCustomCohortFocused(false)}
-                        onClick={(e) => {
-                          const target = resolveCustomOrgFocusFromClick(e.currentTarget, e.clientY);
-                          focusCustomOrgTextarea(
-                            e.currentTarget,
-                            customCohortName,
-                            setCustomCohortName,
-                            target,
-                          );
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key !== 'Enter' || e.shiftKey) return;
-                          const parsed = parseCustomOrgInput(customCohortName);
-                          if (!parsed.groupName.trim()) return;
-                          e.preventDefault();
-                          focusCustomOrgTextarea(
-                            customCohortTextareaRef.current,
-                            customCohortName,
-                            setCustomCohortName,
-                            'affiliation',
-                          );
-                        }}
-                        maxLength={320}
-                        rows={4}
-                        disabled={sendLocked}
-                        className={`relative h-full w-full resize-none overflow-hidden break-words bg-transparent text-left text-sm leading-snug caret-white outline-none ${
-                          hideCustomText
-                            ? 'text-transparent'
-                            : active
-                              ? 'text-white'
-                              : 'text-slate-200'
-                        }`}
-                        aria-label="그룹명 및 소속"
-                      />
-                    </div>
-                    </div>
-                    <button
-                      type="button"
-                      disabled={sendLocked}
-                      onClick={() => {
-                        setTemplateId('custom');
-                        setTestPickerOpen(true);
-                      }}
-                      className="mt-1 shrink-0 text-center text-sm font-semibold leading-snug text-sky-300 underline-offset-2 hover:text-sky-200 hover:underline disabled:opacity-50"
-                    >
-                      검사 선택
-                      {customTestIds.size > 0 ? ` (${customTestIds.size}개)` : ''}
-                    </button>
-                    {customSelectedTests.length > 0 ? (
-                      <ul className="mt-1 max-h-16 space-y-0.5 overflow-hidden text-[10px] leading-tight text-slate-400">
-                        {customSelectedTests.slice(0, 2).map((t, idx) => (
-                          <li key={t.testId} className="truncate">
-                            {idx + 1}. {t.name}
-                          </li>
-                        ))}
-                        {customSelectedTests.length > 2 ? (
-                          <li>
-                            <button
-                              type="button"
-                              disabled={sendLocked}
-                              onClick={() => {
-                                setTemplateId('custom');
-                                setTestPickerOpen(true);
-                              }}
-                              className="text-sky-300 underline-offset-2 hover:text-sky-200 hover:underline disabled:opacity-50"
-                            >
-                              +{customSelectedTests.length - 2} 확인
-                            </button>
-                          </li>
-                        ) : null}
-                      </ul>
-                    ) : null}
-                  </div>
-                );
-            })}
-          </div>
+          <button
+            type="button"
+            disabled={sendLocked}
+            onClick={() => {
+              setTemplateId('custom');
+              setTestPickerOpen(true);
+            }}
+            className="group flex w-full flex-col items-center gap-2 rounded-xl border border-sky-400/30 bg-gradient-to-br from-sky-600/25 via-indigo-600/15 to-slate-900/40 px-4 py-5 text-center shadow-lg shadow-sky-950/30 transition hover:border-sky-300/45 hover:from-sky-500/30"
+          >
+            <span className="text-base font-bold text-white">검사 선택</span>
+            <span className="text-sm text-sky-200/90">
+              {customTestIds.size > 0
+                ? `${customTestIds.size}개 검사 선택됨`
+                : '탭하여 검사 목록 열기'}
+            </span>
+          </button>
+          {customSelectedTests.length > 0 ? (
+            <ul className="mt-3 max-h-28 space-y-1 overflow-y-auto rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-xs text-slate-300">
+              {customSelectedTests.map((t, idx) => (
+                <li key={t.testId} className="truncate">
+                  {idx + 1}. {t.name}
+                </li>
+              ))}
+            </ul>
+          ) : null}
         </CounselorSendStepBlock>
 
         <CounselorSendStepBlock
           step={2}
-          title="전송 방법 · 사용종료일 · 안내"
-          subtitle="코드 전송 채널과 안내 문구를 설정합니다."
+          title="그룹 · 소속 · 안내 · 전송"
+          subtitle="필수 정보를 입력하고 코드 전송 방법을 선택하세요."
           compact
           allowOverflow
+          className="[&>div:first-child]:bg-gradient-to-l [&>div:first-child]:from-indigo-600/12 [&>div:first-child]:via-sky-500/18 [&>div:first-child]:to-sky-600/40"
         >
+          <div className="mb-4 rounded-xl border border-white/10 bg-[#0d1830]/50 p-3">
+            <label htmlFor="quick-send-org" className="mb-1.5 block text-sm font-semibold text-slate-200">
+              그룹/기관명 · 소속 <span className="text-red-400">*</span>
+            </label>
+            <textarea
+              id="quick-send-org"
+              ref={customCohortTextareaRef}
+              value={customCohortName}
+              onChange={(e) => {
+                setCustomCohortName(e.target.value);
+                setTemplateId('custom');
+              }}
+              onFocus={() => {
+                setCustomCohortFocused(true);
+                setTemplateId('custom');
+              }}
+              onBlur={() => setCustomCohortFocused(false)}
+              rows={3}
+              maxLength={320}
+              disabled={sendLocked}
+              placeholder={CUSTOM_ORG_INPUT_DRAFT}
+              className={`${INPUT} min-h-[4.5rem] resize-y text-sm`}
+              aria-label="그룹명 및 소속"
+            />
+          </div>
           <PublicClaimChannelField
             value={publicClaimChannel}
             onChange={setPublicClaimChannel}
             disabled={sendLocked}
             className="mb-4"
+            showPointPerRecipient
             hintOverride={null}
           />
           <div className="mb-4">

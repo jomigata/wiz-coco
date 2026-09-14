@@ -301,12 +301,12 @@ export default function AssessmentAddRecipientModal({
         </div>
 
         <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overflow-x-visible px-4 py-3 sm:space-y-4 sm:px-5 sm:py-4">
-          <div className="grid gap-3 md:grid-cols-2">
-            <section className="overflow-visible rounded-xl border border-white/[0.1] bg-[#101f38]/55 p-3 sm:p-3.5">
+          <div className="grid gap-3 lg:grid-cols-5">
+            <section className="overflow-visible rounded-xl border border-white/[0.1] bg-[#101f38]/55 p-3 sm:col-span-3 sm:p-3.5">
               <h4 className={FORM_LABEL}>개별 입력</h4>
               <p className="mt-0.5 text-sm text-slate-400">이름 필수 · 휴대폰·이메일 중 1개 이상</p>
-              <div className="mt-2.5 grid grid-cols-2 gap-2 sm:grid-cols-3">
-                <div>
+              <div className="mt-2.5 flex flex-wrap items-end gap-2">
+                <div className="w-[4.5rem] shrink-0">
                   <label htmlFor="add-recipient-name" className={FORM_LABEL}>
                     이름
                   </label>
@@ -314,7 +314,7 @@ export default function AssessmentAddRecipientModal({
                     ref={nameInputRef}
                     id="add-recipient-name"
                     type="text"
-                    className={FORM_INPUT}
+                    className={`${FORM_INPUT} break-words`}
                     value={draftName}
                     onChange={(e) => setDraftName(e.target.value)}
                     onKeyDown={handleDraftKeyDown}
@@ -322,14 +322,14 @@ export default function AssessmentAddRecipientModal({
                     placeholder="홍길동"
                   />
                 </div>
-                <div>
+                <div className="w-[7.5rem] shrink-0">
                   <label htmlFor="add-recipient-phone" className={FORM_LABEL}>
                     휴대폰
                   </label>
                   <input
                     id="add-recipient-phone"
                     type="tel"
-                    className={FORM_INPUT}
+                    className={`${FORM_INPUT} break-words`}
                     value={draftPhone}
                     onChange={(e) => setDraftPhone(e.target.value)}
                     onKeyDown={handleDraftKeyDown}
@@ -337,14 +337,14 @@ export default function AssessmentAddRecipientModal({
                     placeholder="010-0000-0000"
                   />
                 </div>
-                <div className="col-span-2 sm:col-span-1">
+                <div className="min-w-[10rem] max-w-[14rem] flex-1 shrink-0">
                   <label htmlFor="add-recipient-email" className={FORM_LABEL}>
                     이메일
                   </label>
                   <input
                     id="add-recipient-email"
                     type="email"
-                    className={FORM_INPUT}
+                    className={`${FORM_INPUT} break-words`}
                     value={draftEmail}
                     onChange={(e) => setDraftEmail(e.target.value)}
                     onKeyDown={handleDraftKeyDown}
@@ -352,7 +352,7 @@ export default function AssessmentAddRecipientModal({
                     placeholder="name@example.com"
                   />
                 </div>
-                <div className="col-span-2 flex justify-end sm:col-span-3">
+                <div className="flex shrink-0 justify-end">
                   <button
                     type="button"
                     onClick={handleAddDraftRow}
@@ -365,7 +365,7 @@ export default function AssessmentAddRecipientModal({
               </div>
             </section>
 
-            <section className="overflow-visible rounded-xl border border-white/[0.1] bg-[#101f38]/55 p-3 sm:p-3.5">
+            <section className="overflow-visible rounded-xl border border-white/[0.1] bg-[#101f38]/55 p-3 sm:col-span-2 sm:p-3.5">
               <h4 className={FORM_LABEL}>파일 일괄 등록</h4>
               <p className="mt-0.5 text-sm leading-relaxed text-slate-400">CSV·Excel — 이름, 휴대폰</p>
               <div className="mt-2.5 flex flex-wrap items-center gap-2">
@@ -489,11 +489,17 @@ export default function AssessmentAddRecipientModal({
                 {pendingRows.map((row, idx) => (
                   <li
                     key={`pending-${idx}`}
-                    className="flex items-center justify-between gap-2 rounded-md border border-white/5 bg-slate-900/40 px-2.5 py-1.5 text-sm"
+                    className="flex items-start justify-between gap-2 rounded-md border border-white/5 bg-slate-900/40 px-2.5 py-1.5 text-sm leading-snug"
                   >
-                    <span className="min-w-0 truncate text-slate-200">
-                      <span className="font-medium text-white">{row.displayName}</span>
-                      {row.phone ? <span className="text-slate-500"> · {row.phone}</span> : null}
+                    <span className="min-w-0 break-words text-white">
+                      <span className="font-medium">{row.displayName}:</span>{' '}
+                      {row.phone?.trim() ? row.phone : '—'}
+                      {row.email?.trim() ? (
+                        <>
+                          {' '}
+                          · {row.email}
+                        </>
+                      ) : null}
                     </span>
                     <button
                       type="button"
@@ -506,11 +512,23 @@ export default function AssessmentAddRecipientModal({
                     </button>
                   </li>
                 ))}
-                {addFileRows.length > 0 ? (
-                  <li className="rounded-md border border-emerald-500/15 bg-emerald-950/20 px-2.5 py-1.5 text-sm text-emerald-300/90">
-                    파일에서 {addFileRows.length}명 ({addFileLabel})
+                {addFileRows.map((row, idx) => (
+                  <li
+                    key={`file-row-${idx}`}
+                    className="flex items-start gap-2 rounded-md border border-emerald-500/15 bg-emerald-950/20 px-2.5 py-1.5 text-sm leading-snug text-white"
+                  >
+                    <span className="min-w-0 break-words">
+                      <span className="font-medium">{row.displayName}:</span>{' '}
+                      {row.phone?.trim() ? row.phone : '—'}
+                      {row.email?.trim() ? (
+                        <>
+                          {' '}
+                          · {row.email}
+                        </>
+                      ) : null}
+                    </span>
                   </li>
-                ) : null}
+                ))}
               </ul>
             )}
           </div>

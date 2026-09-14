@@ -74,15 +74,10 @@ export default function CounselorManageShell({ children }: Props) {
 
             const categorySelected = activeCategorySlug === category.slug;
             const pathNorm = (pathname || '').split('?')[0].replace(/\/+$/, '') || '';
-            const middleTierActiveInCategory = isMiddleTierActiveInCategory(
-              category,
-              pathNorm,
-              pathname,
-              search,
-              adminUser,
-            );
-            const categoryEntryActive =
-              categorySelected && !activeNested && !middleTierActiveInCategory;
+            const categoryEntryHrefNorm = categoryEntryHref.replace(/\/+$/, '') || '';
+            const categoryLinkActive =
+              categorySelected && !activeNested && pathNorm === categoryEntryHrefNorm;
+            const categoryEntryActive = categoryLinkActive;
 
             return (
               <div
@@ -108,8 +103,8 @@ export default function CounselorManageShell({ children }: Props) {
                       href={categoryEntryHref}
                       onClick={() => setExpandedSlug(category.slug)}
                       className={`block rounded-md px-2 py-1.5 font-normal transition-colors hover:bg-white/[0.06] ${
-                        categoryEntryActive
-                          ? 'bg-sky-500/15 font-semibold text-sky-100'
+                        categoryLinkActive
+                          ? 'bg-sky-600/30 font-semibold text-sky-100'
                           : 'text-slate-200'
                       }`}
                     >

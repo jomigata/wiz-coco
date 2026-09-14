@@ -217,7 +217,7 @@ def send_portal_credentials_alimtalk(
         "#{pin}": pin_display,
         "#{link}": link,
     }
-    fallback = f"[WizCoCo] {name}님, 접수하신 검사 접속 정보. 나의코드 {my_code} 비밀번호 {pin_display} {link}"
+    fallback = f"[ 검사코드 안내 ] {name}님, 접수하신 검사 접속 정보. 나의코드 {my_code} 비밀번호 {pin_display} {link}"
     return _send_alimtalk(
         to_phone=to_phone,
         template_id=SOLAPI_KAKAO_TEMPLATE_PORTAL_CREDENTIALS,

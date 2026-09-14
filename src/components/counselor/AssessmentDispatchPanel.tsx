@@ -1502,13 +1502,14 @@ export default function AssessmentDispatchPanel({
                           />
                         </td>
                       ) : null}
-                      <td className={`max-w-[11rem] ${counselorListTdClass} align-top w-40`}>
-                        <div className="min-w-0 text-sm leading-snug">
-                          <p className="truncate font-semibold text-white">{r.displayName || '—'}</p>
-                          <p className="mt-0.5 truncate font-mono text-[13px] text-slate-200">
+                      <td className={`max-w-[14rem] ${counselorListTdClass} align-top w-44`}>
+                        <p className="min-w-0 truncate text-sm leading-snug text-white">
+                          <span className="font-semibold">{r.displayName || '—'}</span>
+                          <span className="text-slate-500"> / </span>
+                          <span className="font-mono text-[13px] text-slate-200">
                             {myCodeWithOriginSuffix(r, assessmentId, myCodeLabel)}
-                          </p>
-                        </div>
+                          </span>
+                        </p>
                       </td>
                       <td className={`px-3 py-2.5 align-top whitespace-nowrap text-sm ${summary.className}`}>
                         <span className="text-slate-400" aria-hidden="true">
@@ -1518,7 +1519,7 @@ export default function AssessmentDispatchPanel({
                       </td>
                       {clientsMergedContact ? (
                         <td className={`${counselorListTdClass} align-top`}>
-                          <RecipientContactCell phone={r.phone} />
+                          <RecipientContactCell phone={r.phone} email={r.email} />
                         </td>
                       ) : (
                         <>
@@ -2051,7 +2052,7 @@ export default function AssessmentDispatchPanel({
                   onChange={(e) => setEditPhone(formatPhoneDisplay(e.target.value) || e.target.value)}
                   disabled={editSaving}
                   className="w-full rounded-lg border border-white/15 bg-slate-900/80 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500/40"
-                  placeholder="010-0000-0000"
+                  placeholder={editPhone.trim() ? undefined : 'none'}
                 />
               </div>
               <div className="rounded-lg border border-white/10 bg-slate-900/30 px-3 py-3">
@@ -2065,7 +2066,7 @@ export default function AssessmentDispatchPanel({
                   onChange={(e) => setEditEmail(e.target.value)}
                   disabled={editSaving}
                   className="w-full rounded-lg border border-white/15 bg-slate-900/80 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500/40"
-                  placeholder="name@example.com"
+                  placeholder={editEmail.trim() ? undefined : 'none'}
                 />
               </div>
               {editError ? <p className="text-sm text-red-400">{editError}</p> : null}

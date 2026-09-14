@@ -496,6 +496,7 @@ export default function CounselorPortalChatPanel() {
               ) : (
                 sortedThreads.map((thread) => {
                   const active = thread.portalId === selectedPortalId;
+                  const noChat = !thread.lastMessageAt;
                   return (
                     <li key={thread.portalId}>
                       <button
@@ -508,7 +509,11 @@ export default function CounselorPortalChatPanel() {
                         }`}
                       >
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-medium text-white">
+                          <p
+                            className={`truncate text-sm font-medium ${
+                              noChat ? 'text-slate-500' : 'text-white'
+                            }`}
+                          >
                             {threadTitle(thread)}
                             {showUnreadBadge(thread) ? (
                               <span className="ml-1.5 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-red-600 px-1.5 py-0.5 text-[10px] font-semibold text-white align-middle">
@@ -516,13 +521,11 @@ export default function CounselorPortalChatPanel() {
                               </span>
                             ) : null}
                           </p>
-                          <p
-                            className={`mt-0.5 text-[11px] tabular-nums leading-snug ${
-                              thread.lastMessageAt ? 'text-slate-300' : 'text-slate-500'
-                            }`}
-                          >
-                            {thread.lastMessageAt ? formatChatTimestamp(thread.lastMessageAt) : '대화 없음'}
-                          </p>
+                          {thread.lastMessageAt ? (
+                            <p className="mt-0.5 text-[11px] tabular-nums leading-snug text-slate-400">
+                              {formatChatTimestamp(thread.lastMessageAt)}
+                            </p>
+                          ) : null}
                         </div>
                       </button>
                     </li>

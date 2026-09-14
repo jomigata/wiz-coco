@@ -103,7 +103,7 @@ export default function HeroSection() {
               href="/portal/guide/"
               className="inline-flex items-center gap-1.5 text-sm text-sky-300/85 hover:text-sky-200 underline-offset-4 hover:underline transition-colors"
             >
-              상담(코드)는 어떻게 받나요?
+              검사코드는 어떻게 받나요?
               <span aria-hidden>→</span>
             </Link>
           </p>

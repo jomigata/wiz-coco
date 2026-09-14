@@ -73,12 +73,11 @@ def send_portal_credentials_sms(
     link = (magic_url or "").strip()
 
     if compact:
-        # 알림톡 실패 fallback — magic URL 1개만, SMS(단문) 구간 유지
-        body = f"[WizCoCo]{my_code}/{pin_display} {link}".strip()
+        body = f"[ 검사코드 안내 ] {my_code}/{pin_display} {link}".strip()
     else:
         name = (display_name or "").strip() or "내담자"
         login_url = f"{PUBLIC_SITE_URL.rstrip('/')}/portal/login/"
-        parts = [f"[WizCoCo] {name}님 검사시작"]
+        parts = [f"[ 검사코드 안내 ] {name}님 검사시작"]
         parts.append(f"나의코드 {my_code} 비밀번호 {pin_display}")
         parts.append(login_url)
         parts.append(link)

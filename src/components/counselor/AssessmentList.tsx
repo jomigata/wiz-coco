@@ -59,6 +59,7 @@ import { exportCounselorAssessments } from '@/lib/counselorAssessmentListExport'
 import { matchesWildcardFields } from '@/lib/wildcardSearch';
 import { getAppRoleSync, isAdmin } from '@/utils/roleUtils';
 import { CounselorAdminEmailSortHeader, CounselorAdminEmailTd, compareCounselorEmail } from '@/components/counselor/CounselorAdminEmailColumn';
+import { formatPublicClaimChannelLabel } from '@/lib/publicClaimDelivery';
 
 type ListSortKey = 'createdAt' | 'counselInfo' | 'accessCode' | 'usageEndDate' | 'counselorEmail';
 type SortDirection = 'asc' | 'desc';
@@ -74,8 +75,8 @@ function assessmentInfoLabel(a: CounselorAssessment): string {
   return `${getAssessmentOrgLabel(a)} / ${(a.title || '—').trim()}`;
 }
 
-function formatAssessmentDeliveryMethod(_a: CounselorAssessment): string {
-  return '휴대폰';
+function formatAssessmentDeliveryMethod(a: CounselorAssessment): string {
+  return formatPublicClaimChannelLabel(a.publicClaimChannel);
 }
 
 function assessmentHasPendingDispatch(a: CounselorAssessment): boolean {

@@ -128,6 +128,8 @@ export type CounselorClientPortalListItem = {
   counselorTags?: string[];
   counselorId?: string;
   counselorEmail?: string;
+  originAssessmentId?: string;
+  originAccessCode?: string;
   progress: {
     totalTests: number;
     completedTests: number;
