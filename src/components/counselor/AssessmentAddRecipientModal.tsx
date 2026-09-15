@@ -318,13 +318,13 @@ export default function AssessmentAddRecipientModal({
             <section className="flex flex-col overflow-visible rounded-2xl border border-sky-400/15 bg-gradient-to-br from-[#101f38]/90 via-[#0f1a30]/95 to-[#0a1220]/90 p-4 shadow-inner shadow-black/20 lg:col-span-7">
               <div className="mb-3 border-b border-white/10 pb-2">
                 <h4 className="text-sm font-bold tracking-tight text-sky-100">개별 입력</h4>
-                <p className="mt-0.5 text-xs text-slate-400">이름 필수 · 휴대폰·이메일 중 1개 이상</p>
               </div>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-[5.5rem_15ch_minmax(0,25ch)_auto] sm:items-end">
-                <div className="w-[5.5rem] shrink-0">
-                  <label htmlFor="add-recipient-name" className={FORM_LABEL}>
-                    이름
-                  </label>
+              <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+                  <div className="w-[5.5rem] shrink-0">
+                    <label htmlFor="add-recipient-name" className={FORM_LABEL}>
+                      이름(필수)
+                    </label>
                   <input
                     ref={nameInputRef}
                     id="add-recipient-name"
@@ -340,7 +340,7 @@ export default function AssessmentAddRecipientModal({
                 </div>
                 <div className="w-[15ch] shrink-0">
                   <label htmlFor="add-recipient-phone" className={FORM_LABEL}>
-                    휴대폰
+                    휴대폰(선택)
                   </label>
                   <input
                     id="add-recipient-phone"
@@ -355,15 +355,25 @@ export default function AssessmentAddRecipientModal({
                     placeholder="010-1234-5678"
                   />
                 </div>
-                <div className="shrink-0" style={{ width: 'min(100%, 25ch)' }}>
+                  <div className="flex shrink-0 justify-end sm:ml-auto sm:justify-center">
+                    <button
+                      type="button"
+                      onClick={handleAddDraftRow}
+                      disabled={addLoading}
+                      className="h-[2.75rem] shrink-0 rounded-xl bg-gradient-to-r from-sky-600 to-cyan-600 px-4 text-sm font-semibold text-white shadow-md shadow-sky-950/30 transition hover:from-sky-500 hover:to-cyan-500 disabled:opacity-50"
+                    >
+                      입력
+                    </button>
+                  </div>
+                </div>
+                <div className="w-full max-w-md">
                   <label htmlFor="add-recipient-email" className={FORM_LABEL}>
-                    이메일
+                    이메일(선택)
                   </label>
                   <textarea
                     id="add-recipient-email"
                     rows={Math.min(4, Math.max(1, Math.ceil(Math.max(draftEmail.length, 1) / 25)))}
-                    className={`${FORM_INPUT} min-h-[2.75rem] resize-none break-all leading-snug !px-2`}
-                    style={{ width: '25ch', maxWidth: '100%' }}
+                    className={`${FORM_INPUT} min-h-[2.75rem] w-full max-w-md resize-none break-all leading-snug !px-2`}
                     value={draftEmail}
                     onChange={(e) => setDraftEmail(e.target.value)}
                     onKeyDown={(e) => {
@@ -375,23 +385,13 @@ export default function AssessmentAddRecipientModal({
                     placeholder="name@example.com"
                   />
                 </div>
-                <div className="flex shrink-0 justify-end sm:justify-center">
-                  <button
-                    type="button"
-                    onClick={handleAddDraftRow}
-                    disabled={addLoading}
-                    className="h-[2.75rem] shrink-0 rounded-xl bg-gradient-to-r from-sky-600 to-cyan-600 px-4 text-sm font-semibold text-white shadow-md shadow-sky-950/30 transition hover:from-sky-500 hover:to-cyan-500 disabled:opacity-50"
-                  >
-                    입력
-                  </button>
-                </div>
               </div>
             </section>
 
             <section className="flex flex-col overflow-visible rounded-2xl border border-emerald-500/15 bg-gradient-to-br from-[#0f1f36]/90 via-[#0d1830]/95 to-[#0a1220]/90 p-4 shadow-inner shadow-black/20 lg:col-span-5">
               <div className="mb-3 border-b border-white/10 pb-2">
                 <h4 className="text-sm font-bold tracking-tight text-emerald-100">파일 일괄 등록</h4>
-                <p className="mt-0.5 text-xs text-slate-400">CSV·Excel — 이름, 휴대폰, 이메일(선택)</p>
+                <p className="mt-0.5 text-xs text-slate-400">CSV·Excel — 이름(필수), 휴대폰(선택), 이메일(선택)</p>
               </div>
               <div className="rounded-xl border border-dashed border-white/15 bg-black/25 p-3">
               <div className="flex flex-col gap-2">
@@ -469,10 +469,10 @@ export default function AssessmentAddRecipientModal({
                     <button
                       type="button"
                       onClick={clearAddedFile}
-                      className="ml-2 text-slate-500 hover:text-red-300"
+                      className="ml-2 font-medium text-red-500 hover:text-red-400"
                       disabled={addLoading}
                     >
-                      제거
+                      삭제
                     </button>
                   </p>
                   {showAddFilePreview && addFileRows.length > 0 ? (
@@ -485,7 +485,10 @@ export default function AssessmentAddRecipientModal({
                               key={`${row.displayName}-${row.phone}-${idx}`}
                               className="whitespace-nowrap font-mono text-xs leading-snug text-slate-200"
                             >
-                              {[row.displayName, row.phone].filter(Boolean).join(' · ')}
+                              {[row.displayName, row.phone, row.email]
+                                .map((p) => (p || '').trim())
+                                .filter(Boolean)
+                                .join(' · ')}
                             </p>
                           ))}
                           {addFileRows.length > 50 ? (

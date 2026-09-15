@@ -30,7 +30,6 @@ import {
 import { DEFAULT_WELCOME_MESSAGE } from '@/lib/welcomeMessageSamples';
 import { resolveCounselorAffiliationTitle } from '@/lib/counselorOrgInput';
 import UsageEndDateField from '@/components/counselor/UsageEndDateField';
-import PublicClaimChannelField from '@/components/counselor/PublicClaimChannelField';
 import { loadCounselorOperationAffiliation } from '@/lib/firestore/counselorRegistration';
 import { fetchMyCredits } from '@/lib/commerceApi';
 import { GROUP_RECIPIENT_MAX } from '@/lib/groupRecipientLimits';
@@ -40,9 +39,7 @@ import {
   getGroupRecipientSamplePreviewText,
 } from '@/lib/groupRecipientSampleDownload';
 import {
-  PUBLIC_CLAIM_CHANNEL_PHONE,
-  PUBLIC_CLAIM_CHANNEL_EMAIL,
-  type PublicClaimChannel,
+  PUBLIC_CLAIM_CHANNEL_PHONE_EMAIL,
 } from '@/lib/publicClaimDelivery';
 import {
   formatRecipientRowsPreview,
@@ -99,9 +96,7 @@ export default function CounselorQuickSendForm({
   const resolvedAssessmentIdRef = useRef('');
   const [firstSendTrialEligible, setFirstSendTrialEligible] = useState(false);
   const [counselorAffiliation, setCounselorAffiliation] = useState('');
-  const [publicClaimChannel, setPublicClaimChannel] = useState<PublicClaimChannel>(
-    PUBLIC_CLAIM_CHANNEL_PHONE,
-  );
+  const publicClaimChannel = PUBLIC_CLAIM_CHANNEL_PHONE_EMAIL;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const welcomeTextareaRef = useRef<HTMLTextAreaElement>(null);
   const recipientNameRefs = useRef<Array<HTMLInputElement | null>>([]);
@@ -186,9 +181,12 @@ export default function CounselorQuickSendForm({
 
   const finish = (assessmentId: string) => {
     const params = new URLSearchParams();
-    if (assessmentId) params.set('addRecipient', assessmentId);
+    if (assessmentId) {
+      params.set('assessmentId', assessmentId);
+      params.set('addRecipient', '1');
+    }
     const href = params.toString()
-      ? `/counselor/assessments?${params.toString()}`
+      ? `/counselor/assessments/progress?${params.toString()}`
       : '/counselor/assessments';
     replaceWithAuthSession(router, href);
     if (variant === 'modal') {
@@ -459,10 +457,9 @@ export default function CounselorQuickSendForm({
         <CounselorSendStepBlock
           step={2}
           title="상담코드 설정"
-          subtitle="필수 정보를 입력하고 코드 전송 방법을 선택하세요."
+          subtitle="필수 정보를 입력하고 안내 문구를 설정하세요."
           compact
           allowOverflow
-          className="[&>div:first-child]:bg-gradient-to-l [&>div:first-child]:from-emerald-700/15 [&>div:first-child]:via-teal-600/20 [&>div:first-child]:to-emerald-600/35"
         >
           <div className="mb-3 grid grid-cols-1 gap-3 rounded-xl border border-white/10 bg-[#0d1830]/50 p-3 sm:grid-cols-2">
             <div>
@@ -502,16 +499,6 @@ export default function CounselorQuickSendForm({
               />
             </div>
           </div>
-          <PublicClaimChannelField
-            value={publicClaimChannel}
-            onChange={setPublicClaimChannel}
-            disabled={sendLocked}
-            className="mb-4"
-            showPointPerRecipient={false}
-            hintOverride={null}
-            allowedChannels={[PUBLIC_CLAIM_CHANNEL_PHONE, PUBLIC_CLAIM_CHANNEL_EMAIL]}
-            optionLayout="inline"
-          />
           <div className="mb-4">
             <div className="mb-1.5 flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
               <label htmlFor="quick-send-usage-end" className="text-sm font-semibold text-slate-200">

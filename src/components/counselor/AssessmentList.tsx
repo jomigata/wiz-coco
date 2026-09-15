@@ -59,9 +59,6 @@ import { exportCounselorAssessments } from '@/lib/counselorAssessmentListExport'
 import { matchesWildcardFields } from '@/lib/wildcardSearch';
 import { getAppRoleSync, isAdmin } from '@/utils/roleUtils';
 import { CounselorAdminEmailSortHeader, CounselorAdminEmailTd, compareCounselorEmail } from '@/components/counselor/CounselorAdminEmailColumn';
-import { formatPublicClaimChannelLabel } from '@/lib/publicClaimDelivery';
-import PublicClaimChannelLabel from '@/components/counselor/PublicClaimChannelLabel';
-
 type ListSortKey = 'createdAt' | 'counselInfo' | 'accessCode' | 'usageEndDate' | 'counselorEmail';
 type SortDirection = 'asc' | 'desc';
 type CounselSortPhase = 'org-asc' | 'org-desc' | 'title-asc' | 'title-desc';
@@ -74,10 +71,6 @@ function parseCreatedAt(iso?: string): number {
 
 function assessmentInfoLabel(a: CounselorAssessment): string {
   return `${getAssessmentOrgLabel(a)} / ${(a.title || '—').trim()}`;
-}
-
-function formatAssessmentDeliveryMethod(a: CounselorAssessment): string {
-  return formatPublicClaimChannelLabel(a.publicClaimChannel);
 }
 
 function assessmentHasPendingDispatch(a: CounselorAssessment): boolean {
@@ -784,9 +777,6 @@ export default function AssessmentList({
                     className="whitespace-nowrap text-center"
                   />
                   <th scope="col" className={`${counselorListThClass} whitespace-nowrap text-center`}>
-                    <span className="block">전송방법</span>
-                  </th>
-                  <th scope="col" className={`${counselorListThClass} whitespace-nowrap text-center`}>
                     <span className="block">진행현황</span>
                   </th>
                   <SortableColumnHeader
@@ -861,11 +851,6 @@ export default function AssessmentList({
                         <span className={`${cellLinkClass} font-mono tracking-wide text-cyan-300/95`}>
                           {formatAccessCodeDisplay(a.accessCode)}
                         </span>
-                      </td>
-                      <td
-                        className={`whitespace-nowrap ${counselorListTdCompactClass} text-center`}
-                      >
-                        <PublicClaimChannelLabel channel={a.publicClaimChannel} />
                       </td>
                       <td
                         className={`whitespace-nowrap ${counselorListTdCompactClass} text-center cursor-default tabular-nums`}

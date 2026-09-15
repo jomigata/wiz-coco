@@ -59,7 +59,7 @@ import {
 import { stripAssessmentTitleDispatchCountSuffix } from '@/lib/counselorAssessmentResultDisplay';
 import { counselorClientProgressHref } from '@/lib/counselorClientRoutes';
 import { exportClientPortalItems } from '@/lib/clientPortalListExport';
-import RecipientContactCell from '@/components/counselor/RecipientContactCell';
+import RecipientPhoneMaskedCell from '@/components/counselor/RecipientPhoneMaskedCell';
 import { dispatchStatusDisplay, formatNotifyDate, compareDispatchStatusSort, recipientProgressDisplay } from '@/lib/dispatchRecipientDisplay';
 import { INDIVIDUAL_COHORT_KEY } from '@/lib/monitoringRealtime';
 import { rememberCounselorAssessmentContext, rememberCounselorProgressFrom } from '@/lib/counselorNestedNav';
@@ -1116,6 +1116,8 @@ export default function CounselorClientList({
   const cellLinkClass =
     'cursor-pointer text-left focus:outline-none focus-visible:ring-1 focus-visible:ring-sky-500/60 rounded-sm';
 
+  const showCodeDispatchColumn = deletedMode || permanentlyDeletedMode;
+
   const goToProgress = (item: CounselorClientPortalListItem) => {
     if (isRowSelectionLocked(item.portalId)) return;
     const assessmentId = item.assessments[0]?.assessmentId;
@@ -1308,14 +1310,16 @@ export default function CounselorClientList({
                       onSort={toggleSort}
                       className="whitespace-nowrap"
                     />
-                    <SortableColumnHeader
-                      label="코드 발송현황"
-                      sortKey="notifyStatus"
-                      activeKey={sortKey}
-                      direction={sortDir}
-                      onSort={toggleSort}
-                      className="whitespace-nowrap"
-                    />
+                    {showCodeDispatchColumn ? (
+                      <SortableColumnHeader
+                        label="코드 발송현황"
+                        sortKey="notifyStatus"
+                        activeKey={sortKey}
+                        direction={sortDir}
+                        onSort={toggleSort}
+                        className="whitespace-nowrap"
+                      />
+                    ) : null}
                     {adminUser ? (
                       <CounselorAdminEmailSortHeader
                         emailSortKey="counselorEmail"
@@ -1430,7 +1434,7 @@ export default function CounselorClientList({
                           className={`max-w-[12rem] ${counselorListTdClass} ${rowClickable ? 'cursor-pointer' : ''}`}
                           onClick={rowClickable ? () => goToProgress(item) : undefined}
                         >
-                          <p className={`min-w-0 truncate text-sm ${cellInteractionClass}`}>
+                          <p className={`min-w-0 break-words text-sm leading-snug ${cellInteractionClass}`}>
                             <span className="font-semibold text-white">{item.displayName || '—'}</span>
                             <span className="text-slate-500"> / </span>
                             <span className="font-mono text-slate-200">
@@ -1449,14 +1453,16 @@ export default function CounselorClientList({
                           className={`max-w-[14rem] ${counselorListTdClass} ${rowClickable ? 'cursor-pointer' : ''}`}
                           onClick={rowClickable ? () => goToProgress(item) : undefined}
                         >
-                          <RecipientContactCell phone={item.phone} email={item.email} />
+                          <RecipientPhoneMaskedCell phone={item.phone} />
                         </td>
-                        <td
-                          className={`max-w-[10rem] ${counselorListTdClass} ${rowClickable ? 'cursor-pointer' : ''}`}
-                          onClick={rowClickable ? () => goToProgress(item) : undefined}
-                        >
-                          <DispatchStatusText value={dispatchViewForRow} />
-                        </td>
+                        {showCodeDispatchColumn ? (
+                          <td
+                            className={`max-w-[10rem] ${counselorListTdClass} ${rowClickable ? 'cursor-pointer' : ''}`}
+                            onClick={rowClickable ? () => goToProgress(item) : undefined}
+                          >
+                            <DispatchStatusText value={dispatchViewForRow} />
+                          </td>
+                        ) : null}
                         {adminUser ? <CounselorAdminEmailTd email={item.counselorEmail} /> : null}
                       </tr>
                     );

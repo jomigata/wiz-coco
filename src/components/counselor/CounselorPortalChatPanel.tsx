@@ -565,7 +565,7 @@ export default function CounselorPortalChatPanel() {
 
                 <div
                   data-chat-scroll
-                  className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain rounded-b-2xl p-4 pb-16 pt-2"
+                  className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain rounded-b-2xl p-4 pb-28 pt-2"
                   onClick={handleMessageAreaReadAck}
                   onTouchStart={handleMessageAreaReadAck}
                   role="presentation"

@@ -47,6 +47,9 @@ function ProgressPageContent() {
     searchParams.toString() ? `?${searchParams.toString()}` : '',
   );
 
+  const autoOpenAddRecipient =
+    (searchParams.get('addRecipient') || '').trim() === '1';
+
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <AssessmentDispatchPanel
@@ -54,6 +57,7 @@ function ProgressPageContent() {
         filterPortalId={portalId || undefined}
         initialSearchQuery={(searchParams.get('search') || '').trim()}
         entryFrom={entryFrom}
+        autoOpenAddRecipient={autoOpenAddRecipient}
       />
     </div>
   );

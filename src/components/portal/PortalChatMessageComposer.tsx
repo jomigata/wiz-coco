@@ -11,7 +11,7 @@ export const PORTAL_CHAT_MAX_WIDTH_CLASS = 'max-w-3xl';
 /** 내 검사실 — 채팅 목록 하단·입력창 상단 동일 간격 */
 export const PORTAL_CHAT_LIST_BOTTOM_GAP_CLASS = 'mb-4 pb-2';
 export const PORTAL_CHAT_COMPOSER_TOP_GAP_CLASS = 'pt-3';
-export const PORTAL_CHAT_COMPOSER_RESERVE_CLASS = 'pb-[11rem]';
+export const PORTAL_CHAT_COMPOSER_RESERVE_CLASS = 'pb-[14rem]';
 
 /** 내 검사실 상담·문의 — 메시지 목록·입력창 공통 외곽 (너비·테두리 일치) */
 export const PORTAL_CHAT_INNER_SHELL_CLASS =

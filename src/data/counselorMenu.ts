@@ -265,6 +265,7 @@ export function getCounselorCategoryHubHref(slug: string): string {
 /** 상단·좌측 메뉴 대분류 클릭 시 실제 이동 URL (허브 우회) */
 export function getCounselorCategoryEntryHref(slug: string): string {
   if (slug === COUNSELOR_DISPATCH_MGMT_SLUG) return '/counselor/clients';
+  if (slug === COUNSELOR_ASSESSMENT_CODE_SLUG) return '/counselor/assessments';
   return getCounselorCategoryHubHref(slug);
 }
 

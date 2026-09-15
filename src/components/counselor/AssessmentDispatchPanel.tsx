@@ -89,6 +89,9 @@ import CounselorNextTestRecommendCard from '@/components/counselor/CounselorNext
 import CounselorQuickCareRecommendCard from '@/components/counselor/CounselorQuickCareRecommendCard';
 import CounselorNotifyConfirmDialog from '@/components/counselor/CounselorNotifyConfirmDialog';
 import type { NotifyRecipientContact } from '@/lib/counselorNotifyChannels';
+import AssessmentAddRecipientModal, {
+  type AssessmentAddRecipientContext,
+} from '@/components/counselor/AssessmentAddRecipientModal';
 import { LoadingMessage } from '@/components/ui/LoadingMessage';
 
 function myCodeWithOriginSuffix(
@@ -512,6 +515,21 @@ interface AssessmentDispatchPanelProps {
   filterPortalId?: string;
   initialSearchQuery?: string;
   entryFrom?: 'clients' | 'assessments' | 'deleted-recipients';
+  autoOpenAddRecipient?: boolean;
+}
+
+function buildAddRecipientContextFromDispatch(
+  data: AssessmentDispatchStatus,
+): AssessmentAddRecipientContext {
+  return {
+    assessmentId: data.assessmentId,
+    accessCode: data.joinAccessCode || '',
+    cohortName: data.cohortName || '',
+    title: (data.title || '—').trim(),
+    createdAt: '',
+    totalIssuedCount: (data.recipients || []).length,
+    testList: data.testList || [],
+  };
 }
 
 export default function AssessmentDispatchPanel({
@@ -519,6 +537,7 @@ export default function AssessmentDispatchPanel({
   filterPortalId,
   initialSearchQuery = '',
   entryFrom = 'assessments',
+  autoOpenAddRecipient = false,
 }: AssessmentDispatchPanelProps) {
   const router = useRouter();
   const { user, authPending, isAuthenticated } = useAuthResolved();
@@ -542,6 +561,7 @@ export default function AssessmentDispatchPanel({
   const [editRecipient, setEditRecipient] = useState<DispatchRecipient | null>(null);
   const [editPhone, setEditPhone] = useState('');
   const [editEmail, setEditEmail] = useState('');
+  const [addRecipientOpen, setAddRecipientOpen] = useState(false);
   const [editSaving, setEditSaving] = useState(false);
   const [editError, setEditError] = useState('');
   const [confirmAction, setConfirmAction] = useState<BulkConfirmAction>(null);
@@ -603,6 +623,19 @@ export default function AssessmentDispatchPanel({
     setLoading(!initial?.recipients?.length && !initial);
     setError('');
   }, [assessmentId, user?.uid]);
+
+  const autoOpenAddRecipientHandled = useRef(false);
+
+  useEffect(() => {
+    if (!autoOpenAddRecipient || autoOpenAddRecipientHandled.current) return;
+    autoOpenAddRecipientHandled.current = true;
+    setAddRecipientOpen(true);
+    if (typeof window === 'undefined') return;
+    const url = new URL(window.location.href);
+    url.searchParams.delete('addRecipient');
+    const next = `${url.pathname}${url.search}`;
+    router.replace(next, { scroll: false });
+  }, [autoOpenAddRecipient, router]);
 
   const load = useCallback(async (opts?: { silent?: boolean }) => {
     const fetchId = resolveDispatchFetchId(assessmentId);
@@ -1338,12 +1371,13 @@ export default function AssessmentDispatchPanel({
           <div className="flex min-h-[12rem] flex-1 flex-col items-center justify-center rounded-md border border-white/10 bg-white/[0.03] py-10 text-center">
             <p className="text-base text-slate-300">발송된 내담자가 없습니다</p>
             <p className="mt-1 text-sm text-slate-400">상담코드에 내담자를 추가하고 발송해 보세요.</p>
-            <Link
-              href={`/counselor/assessments/deleted-recipients?assessmentId=${encodeURIComponent(assessmentId)}`}
+            <button
+              type="button"
+              onClick={() => setAddRecipientOpen(true)}
               className="mt-4 inline-flex items-center rounded-md bg-sky-600/90 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-sky-500"
             >
-              삭제된 목록
-            </Link>
+              내담자 추가
+            </button>
           </div>
         ) : (
           <>
@@ -2116,6 +2150,15 @@ export default function AssessmentDispatchPanel({
           </div>
         </div>
       ) : null}
+
+      <AssessmentAddRecipientModal
+        open={addRecipientOpen}
+        onClose={() => setAddRecipientOpen(false)}
+        context={displayData ? buildAddRecipientContextFromDispatch(displayData) : null}
+        onSuccess={() => {
+          void load({ silent: true });
+        }}
+      />
 
       <CounselorPortalMoveDialog
         open={moveOpen}

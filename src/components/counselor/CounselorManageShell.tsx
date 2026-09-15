@@ -82,11 +82,14 @@ export default function CounselorManageShell({ children }: Props) {
               search,
               adminUser,
             );
+            const isFlattenListLanding =
+              (category.slug === COUNSELOR_DISPATCH_MGMT_SLUG && pathNorm === '/counselor/clients') ||
+              (category.slug === COUNSELOR_ASSESSMENT_CODE_SLUG &&
+                pathNorm === '/counselor/assessments');
             const categoryLinkActive =
               categorySelected &&
-              !middleActive &&
-              !activeNested &&
-              pathNorm === categoryEntryHrefNorm;
+              (isFlattenListLanding ||
+                (!middleActive && !activeNested && pathNorm === categoryEntryHrefNorm));
             const categoryEntryActive = categoryLinkActive;
 
             return (
@@ -207,6 +210,31 @@ export default function CounselorManageShell({ children }: Props) {
                               const rows: React.ReactNode[] = [];
                               const nestedAlign = flattenNav ? MENU_MIDDLE_ALIGN : MENU_NESTED_ALIGN;
                               const nestedPrefix = flattenNav ? '' : '\u00A0- ';
+
+                              if (flattenNav) {
+                                rows.push(
+                                  <li key={`flat-${item.href}`}>
+                                    <AuthLink
+                                      href={item.href}
+                                      onClick={() => {
+                                        if (
+                                          item.href.replace(/\/+$/, '') === '/counselor/assessments'
+                                        ) {
+                                          clearAssessmentListSearch();
+                                        }
+                                      }}
+                                      className={`block truncate rounded-md py-1 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${MENU_MIDDLE_ALIGN} ${
+                                        active
+                                          ? 'bg-sky-600/30 font-semibold text-sky-100'
+                                          : 'text-slate-300 hover:bg-white/[0.06] hover:text-white'
+                                      }`}
+                                      title={item.description}
+                                    >
+                                      {item.name}
+                                    </AuthLink>
+                                  </li>,
+                                );
+                              }
 
                               if (!flattenNav) {
                                 rows.push(

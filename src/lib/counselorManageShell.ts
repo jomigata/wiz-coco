@@ -247,6 +247,9 @@ export function isMenuItemActive(pathname: string, href: string): boolean {
   const path = normalizePath(pathname);
   const target = href.replace(/\/+$/, '');
   if (path === target) return true;
+  if (target === '/discover') {
+    return path === '/discover';
+  }
   if (target === '/counselor/assessments') {
     return path === '/counselor/assessments';
   }
