@@ -99,6 +99,10 @@ Console → **Cloud Storage** → `gcf-sources-*`, `gcf-artifacts-*`, `*_cloudbu
 3. Gemini 키 로테이션 시에만 Deploy 워크플로에서 **`sync_gemini_secret: true`**
 4. [Secret Manager 콘솔](https://console.cloud.google.com/security/secret-manager)에서 버전 수 확인
 
+**Cleanup 워크플로 SA 권한:** `GCP_SA_KEY` 서비스 계정에 `Secret Manager Admin` (`roles/secretmanager.admin`)이 없으면 구버전 destroy가 스킵됩니다. IAM에서 역할 추가 후 **🧹 GCP artifact cleanup** 재실행.
+
+**로그 보존 14일:** SA에 `logging.buckets.update`가 없으면 Console → Logging → Log storage → `_Default` → Retention **14 days** 수동 설정.
+
 ---
 
 ## `npm run deploy:auto` 와의 관계

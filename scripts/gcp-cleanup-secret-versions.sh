@@ -23,7 +23,13 @@ mapfile -t SECRETS < <(
 )
 
 if [ "${#SECRETS[@]}" -eq 0 ]; then
-  echo "ℹ️  No secrets found (or permission denied)."
+  if ! gcloud secrets list --project="${PROJECT_ID}" --limit=1 >/dev/null 2>&1; then
+    echo "⚠️  secretmanager.secrets.list 권한이 없거나 API 비활성화."
+    echo "   GitHub Actions SA에 roles/secretmanager.admin (또는 Secret Manager Admin) 부여 후 재실행하거나,"
+    echo "   Console → Secret Manager에서 구버전을 수동 destroy 하세요."
+    exit 0
+  fi
+  echo "ℹ️  No secrets in project."
   exit 0
 fi
 
