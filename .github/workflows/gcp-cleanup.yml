@@ -12,6 +12,10 @@ on:
         description: 'Cloud Logging 보존 일수'
         required: false
         default: '14'
+      keep_secret_versions:
+        description: 'Secret Manager 시크릿당 보존 버전 수'
+        required: false
+        default: '2'
 
 concurrency:
   group: gcp-cleanup
@@ -24,6 +28,7 @@ jobs:
       GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
       KEEP_IMAGES: ${{ inputs.keep_images }}
       LOG_RETENTION_DAYS: ${{ inputs.log_retention_days }}
+      KEEP_SECRET_VERSIONS: ${{ inputs.keep_secret_versions }}
 
     steps:
       - uses: actions/checkout@v5
@@ -38,3 +43,6 @@ jobs:
 
       - name: 🧹 Run cleanup script
         run: bash scripts/gcp-cleanup-artifacts.sh
+
+      - name: 🔐 Prune old Secret Manager versions
+        run: bash scripts/gcp-cleanup-secret-versions.sh

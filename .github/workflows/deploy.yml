@@ -23,6 +23,11 @@ on:
         options:
           - production
           - staging
+      sync_gemini_secret:
+        description: 'GEMINI Secret Manager 새 버전 생성 (키 로테이션 시에만 true)'
+        required: false
+        default: false
+        type: boolean
   push:
     branches: [ main ]
     paths:
@@ -280,6 +285,13 @@ jobs:
           GID="${{ secrets.COUNSEL_FAQ_SHEET_GID }}"
           [ -z "$GID" ] && GID="0"
           printf 'COUNSEL_FAQ_SHEET_ID=%s\nCOUNSEL_FAQ_SHEET_GID=%s\nCOST_SAVER_MODE=true\n' "$SHEET_ID" "$GID" > functions/.env
+
+      - name: 🔐 Sync GEMINI_API_KEY to Secret Manager (rotation only)
+        if: |
+          steps.targets.outputs.deploy_functions == 'true' &&
+          github.event_name == 'workflow_dispatch' &&
+          github.event.inputs.sync_gemini_secret == 'true'
+        run: |
           if [ -n "${{ secrets.GEMINI_API_KEY }}" ]; then
             printf '%s' "${{ secrets.GEMINI_API_KEY }}" > /tmp/gemini-key.txt
           else
@@ -288,6 +300,7 @@ jobs:
           firebase functions:secrets:set GEMINI_API_KEY --data-file /tmp/gemini-key.txt --force \
             --token "${{ secrets.FIREBASE_TOKEN }}" --project ${{ env.FIREBASE_PROJECT_ID }}
           rm -f /tmp/gemini-key.txt
+          echo "✅ GEMINI_API_KEY secret version created (manual rotation)"
 
       - name: 🚀 Firebase deploy
         run: |

@@ -87,6 +87,17 @@ Console → **Cloud Storage** → `gcf-sources-*`, `gcf-artifacts-*`, `*_cloudbu
 - Cloud Run `min-instances=0`
 - Cron 워커 — `workflow_dispatch`만 (자동 스케줄 없음)
 - Artifact Registry — API 이미지 최근 5개만 유지
+- Firebase Deploy — `GEMINI_API_KEY` Secret Manager 동기화는 **수동 배포 + `sync_gemini_secret=true` 일 때만**
+- **🧹 GCP artifact cleanup** — Registry + **Secret 구버전 destroy** + 로그 14일
+
+---
+
+## Secret Manager (청구의 80%대일 때)
+
+1. Actions → **🧹 GCP artifact cleanup** 실행 (시크릿당 최신 2버전 유지)
+2. 로컬: `GCP_PROJECT_ID=wiz-coco KEEP_SECRET_VERSIONS=2 bash scripts/gcp-cleanup-secret-versions.sh`
+3. Gemini 키 로테이션 시에만 Deploy 워크플로에서 **`sync_gemini_secret: true`**
+4. [Secret Manager 콘솔](https://console.cloud.google.com/security/secret-manager)에서 버전 수 확인
 
 ---
 
