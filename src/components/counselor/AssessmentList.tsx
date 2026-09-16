@@ -751,15 +751,7 @@ export default function AssessmentList({
                       />
                     )}
                   </th>
-                  <SortableColumnHeader
-                    label="생성일시"
-                    sortKey="createdAt"
-                    activeKey={sortKey}
-                    direction={sortDir}
-                    onSort={toggleSort}
-                    className="whitespace-nowrap"
-                  />
-                    <DualFieldSortHeader
+                  <DualFieldSortHeader
                       leftLabel="그룹명"
                       rightLabel="소속"
                       activeKey={sortKey}
@@ -775,6 +767,14 @@ export default function AssessmentList({
                     direction={sortDir}
                     onSort={toggleSort}
                     className="whitespace-nowrap text-center"
+                  />
+                  <SortableColumnHeader
+                    label="생성일시"
+                    sortKey="createdAt"
+                    activeKey={sortKey}
+                    direction={sortDir}
+                    onSort={toggleSort}
+                    className="whitespace-nowrap"
                   />
                   <th scope="col" className={`${counselorListThClass} whitespace-nowrap text-center`}>
                     <span className="block">진행현황</span>
@@ -820,14 +820,6 @@ export default function AssessmentList({
                         />
                       </td>
                       <td
-                        className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer text-white`}
-                        onClick={() => goToProgress(a.id)}
-                      >
-                        {a.createdAt
-                          ? new Date(a.createdAt).toLocaleString('ko-KR')
-                          : '—'}
-                      </td>
-                      <td
                         className={`max-w-[16rem] ${counselorListTdCompactClass} cursor-pointer`}
                         onClick={() => goToProgress(a.id)}
                       >
@@ -851,6 +843,14 @@ export default function AssessmentList({
                         <span className={`${cellLinkClass} font-mono tracking-wide text-cyan-300/95`}>
                           {formatAccessCodeDisplay(a.accessCode)}
                         </span>
+                      </td>
+                      <td
+                        className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer text-white`}
+                        onClick={() => goToProgress(a.id)}
+                      >
+                        {a.createdAt
+                          ? new Date(a.createdAt).toLocaleString('ko-KR')
+                          : '—'}
                       </td>
                       <td
                         className={`whitespace-nowrap ${counselorListTdCompactClass} text-center cursor-default tabular-nums`}

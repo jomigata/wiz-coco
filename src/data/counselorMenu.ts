@@ -36,17 +36,17 @@ export const COUNSELOR_PSYCH_TESTS_MENU_SLUG = 'psych-tests';
 export const counselorMenuCategories: CounselorMainCategory[] = [
   {
     slug: COUNSELOR_DISPATCH_MGMT_SLUG,
-    category: '검사발송',
+    category: '내담자',
     description: '검사 발송·내담자 현황',
     icon: '📤',
     subcategories: [
       {
-        name: '검사발송 목록',
+        name: '내담자 목록',
         icon: '📤',
         flatItems: true,
         items: [
           {
-            name: '검사발송 목록',
+            name: '내담자 목록',
             href: '/counselor/clients',
             description: '발송 내담자·검사 진행 현황',
             icon: '📤',
@@ -57,7 +57,7 @@ export const counselorMenuCategories: CounselorMainCategory[] = [
   },
   {
     slug: COUNSELOR_ASSESSMENT_CODE_SLUG,
-    category: '상담코드',
+    category: '상담 코드',
     description: '상담코드 발급·목록·진행현황',
     icon: '📦',
     subcategories: [

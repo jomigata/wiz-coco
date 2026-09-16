@@ -1369,7 +1369,12 @@ export default function AssessmentDispatchPanel({
       <div className="flex min-h-0 flex-1 flex-col p-2.5 text-sm sm:p-3">
         {displayData.recipients.length === 0 ? (
           <div className="flex min-h-[12rem] flex-1 flex-col items-center justify-center rounded-md border border-white/10 bg-white/[0.03] py-10 text-center">
-            <p className="text-base text-slate-300">발송된 내담자가 없습니다</p>
+            <p className="text-sm font-medium text-slate-300">
+              {stripAssessmentTitleDispatchCountSuffix(displayData.cohortName || '') || '—'}
+              <span className="text-slate-500"> / </span>
+              {(displayData.title || '—').trim()}
+            </p>
+            <p className="mt-3 text-base text-slate-300">발송된 내담자가 없습니다</p>
             <p className="mt-1 text-sm text-slate-400">상담코드에 내담자를 추가하고 발송해 보세요.</p>
             <button
               type="button"
@@ -1555,7 +1560,7 @@ export default function AssessmentDispatchPanel({
                           />
                         </td>
                       ) : null}
-                      <td className={`max-w-[14rem] ${counselorListTdClass} align-top w-44`}>
+                      <td className={`max-w-[14rem] ${counselorListTdClass} w-44`}>
                         <p className="min-w-0 truncate text-sm leading-snug text-white">
                           <span className="font-semibold">{r.displayName || '—'}</span>
                           <span className="text-slate-500"> / </span>
@@ -1565,7 +1570,7 @@ export default function AssessmentDispatchPanel({
                         </p>
                       </td>
                       <td className={`px-3 py-2.5 align-middle text-sm ${summary.className}`}>
-                        <div className="flex min-h-[3.25rem] flex-col justify-center">
+                        <div>
                           <div>
                             <span className="text-slate-400" aria-hidden="true">
                               {isOpen ? '▼' : '▶'}{' '}
@@ -1581,10 +1586,10 @@ export default function AssessmentDispatchPanel({
                         </td>
                       ) : (
                         <>
-                          <td className="px-3 py-2 text-slate-300 align-top whitespace-nowrap tabular-nums">
+                          <td className="px-3 py-2 text-slate-300 align-middle whitespace-nowrap tabular-nums">
                             {r.phone?.trim() ? displayContactPhone(r.phone, contactRevealed) : '—'}
                           </td>
-                          <td className="px-3 py-2 text-slate-300 align-top truncate tabular-nums">
+                          <td className="px-3 py-2 text-slate-300 align-middle truncate tabular-nums">
                             {r.email?.trim() ? (
                               displayContactEmail(r.email, contactRevealed)
                             ) : (
@@ -1596,7 +1601,7 @@ export default function AssessmentDispatchPanel({
                         </>
                       )}
                       <td
-                        className="px-3 py-2.5 align-top whitespace-nowrap text-sm"
+                        className="px-3 py-2.5 align-middle whitespace-nowrap text-sm"
                         title={fieldPending.notifyStatus ? undefined : notify.title}
                       >
                         {fieldPending.notifyStatus ? (
@@ -1605,11 +1610,11 @@ export default function AssessmentDispatchPanel({
                           <DispatchStatusText value={notify} />
                         )}
                       </td>
-                      <td className="px-3 py-2.5 align-top whitespace-nowrap text-sm tabular-nums text-slate-400">
+                      <td className="px-3 py-2.5 align-middle whitespace-nowrap text-sm tabular-nums text-slate-400">
                         {fieldPending.notifyAt ? DISPATCH_CHECKING_LABEL : formatNotifyDate(r.notifyAt)}
                       </td>
                       {!adminClientProgressView ? (
-                        <td className="px-2 py-2.5 align-top text-center" onClick={(e) => e.stopPropagation()}>
+                        <td className="px-2 py-2.5 align-middle text-center" onClick={(e) => e.stopPropagation()}>
                           <button
                             type="button"
                             onClick={() => openEditContact(r)}

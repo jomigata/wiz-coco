@@ -59,7 +59,7 @@ import {
 import { stripAssessmentTitleDispatchCountSuffix } from '@/lib/counselorAssessmentResultDisplay';
 import { counselorClientProgressHref } from '@/lib/counselorClientRoutes';
 import { exportClientPortalItems } from '@/lib/clientPortalListExport';
-import RecipientPhoneMaskedCell from '@/components/counselor/RecipientPhoneMaskedCell';
+import RecipientContactCell from '@/components/counselor/RecipientContactCell';
 import { dispatchStatusDisplay, formatNotifyDate, compareDispatchStatusSort, recipientProgressDisplay } from '@/lib/dispatchRecipientDisplay';
 import { INDIVIDUAL_COHORT_KEY } from '@/lib/monitoringRealtime';
 import { rememberCounselorAssessmentContext, rememberCounselorProgressFrom } from '@/lib/counselorNestedNav';
@@ -1269,6 +1269,14 @@ export default function CounselorClientList({
                         />
                       ) : null}
                     </th>
+                    <SortableColumnHeader
+                      label="이름 / 나의코드"
+                      sortKey="displayName"
+                      activeKey={sortKey}
+                      direction={sortDir}
+                      onSort={toggleSort}
+                      className="whitespace-nowrap"
+                    />
                     <CounselDualFieldSortHeader
                       leftLabel="그룹명"
                       rightLabel="소속"
@@ -1281,14 +1289,6 @@ export default function CounselorClientList({
                     <SortableColumnHeader
                       label={dateColumnLabel}
                       sortKey="notifyAt"
-                      activeKey={sortKey}
-                      direction={sortDir}
-                      onSort={toggleSort}
-                      className="whitespace-nowrap"
-                    />
-                    <SortableColumnHeader
-                      label="이름 / 나의코드"
-                      sortKey="displayName"
                       activeKey={sortKey}
                       direction={sortDir}
                       onSort={toggleSort}
@@ -1408,6 +1408,18 @@ export default function CounselorClientList({
                           )}
                         </td>
                         <td
+                          className={`max-w-[12rem] ${counselorListTdClass} ${rowClickable ? 'cursor-pointer' : ''}`}
+                          onClick={rowClickable ? () => goToProgress(item) : undefined}
+                        >
+                          <p className={`min-w-0 break-words text-sm leading-snug ${cellInteractionClass}`}>
+                            <span className="font-semibold text-white">{item.displayName || '—'}</span>
+                            <span className="text-slate-500"> / </span>
+                            <span className="font-mono text-slate-200">
+                              {formatAccessCodeDisplay(item.accessCode || '')}
+                            </span>
+                          </p>
+                        </td>
+                        <td
                           className={`max-w-[14rem] ${counselorListTdClass} ${rowClickable ? 'cursor-pointer' : ''}`}
                           onClick={rowClickable ? () => goToProgress(item) : undefined}
                         >
@@ -1431,19 +1443,7 @@ export default function CounselorClientList({
                           {formatNotifyDate(item.notifyAt)}
                         </td>
                         <td
-                          className={`max-w-[12rem] ${counselorListTdClass} ${rowClickable ? 'cursor-pointer' : ''}`}
-                          onClick={rowClickable ? () => goToProgress(item) : undefined}
-                        >
-                          <p className={`min-w-0 break-words text-sm leading-snug ${cellInteractionClass}`}>
-                            <span className="font-semibold text-white">{item.displayName || '—'}</span>
-                            <span className="text-slate-500"> / </span>
-                            <span className="font-mono text-slate-200">
-                              {formatAccessCodeDisplay(item.accessCode || '')}
-                            </span>
-                          </p>
-                        </td>
-                        <td
-                          className={`${counselorListTdClass} ${rowClickable ? 'cursor-pointer' : ''} align-top`}
+                          className={`${counselorListTdClass} ${rowClickable ? 'cursor-pointer' : ''}`}
                           onClick={rowClickable ? () => goToProgress(item) : undefined}
                         >
                           <div className={`text-sm ${progress.className}`}>{progress.text}</div>
@@ -1453,7 +1453,7 @@ export default function CounselorClientList({
                           className={`max-w-[14rem] ${counselorListTdClass} ${rowClickable ? 'cursor-pointer' : ''}`}
                           onClick={rowClickable ? () => goToProgress(item) : undefined}
                         >
-                          <RecipientPhoneMaskedCell phone={item.phone} />
+                          <RecipientContactCell phone={item.phone} email={item.email} />
                         </td>
                         {showCodeDispatchColumn ? (
                           <td

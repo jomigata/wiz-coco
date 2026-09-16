@@ -27,11 +27,11 @@ export const counselorListSelectThClass =
 export const counselorListSelectThGrayClass =
   'w-10 whitespace-nowrap text-center text-gray-700 py-3 px-2 text-sm font-medium';
 
-export const counselorListSelectTdClass = 'py-3 px-2 text-center align-top text-sm';
+export const counselorListSelectTdClass = 'py-3 px-2 text-center align-middle text-sm';
 
-export const counselorListTdClass = 'py-3 px-4 text-left text-sm text-gray-300 align-top';
+export const counselorListTdClass = 'py-3 px-4 text-left text-sm text-gray-300 align-middle';
 
-export const counselorListTdCompactClass = 'py-3 px-4 text-left text-sm text-gray-300 align-top';
+export const counselorListTdCompactClass = 'py-3 px-4 text-left text-sm text-gray-300 align-middle';
 
 /** 목록 세로 중앙 정렬 (상담코드 목록 등) */
 export const counselorListTdMiddleClass = 'py-3 px-4 text-left text-sm text-gray-300 align-middle';

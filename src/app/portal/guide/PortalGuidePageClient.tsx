@@ -33,7 +33,7 @@ const selfPurchaseSteps = [
   {
     step: '02',
     title: '결제·코드 발급',
-    desc: '결제 완료 후 이메일·문자로 나의코드와 PIN이 발급됩니다. (파일럿 단계는 문의 후 수동 발급)',
+    desc: '결제 완료 후 이메일·문자로 나의코드와 PIN이 발급됩니다.',
   },
   {
     step: '03',
@@ -216,20 +216,6 @@ export default function PortalGuidePageClient() {
                 </ul>
               </div>
             ))}
-          </div>
-
-          <div className="mt-8 rounded-xl border border-dashed border-violet-400/25 bg-violet-950/20 p-5 text-center">
-            <p className="text-sm text-slate-300">
-              파일럿 단계에서는 결제·코드 발급을{' '}
-              <strong className="text-white">문의 접수</strong>로 안내해 드립니다. PG 자동 결제는
-              순차 도입 예정입니다.
-            </p>
-            <Link
-              href="/portal/guide/inquiry"
-              className="mt-4 inline-flex rounded-xl bg-violet-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-violet-500"
-            >
-              개인 검사코드 구매 문의
-            </Link>
           </div>
         </div>
       </HomeSectionShell>

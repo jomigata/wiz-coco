@@ -3,10 +3,9 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { bulkCreateClientPortals } from '@/lib/clientPortalApi';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
-import { normalizeRecipientPhone, formatPhoneWhileTyping, isValidKrMobilePhone } from '@/lib/phoneFormat';
+import { normalizeRecipientPhone, formatPhoneWhileTyping, formatPhoneDisplay, isValidKrMobilePhone } from '@/lib/phoneFormat';
 import { FORM_INPUT, FORM_LABEL } from '@/lib/assessmentFormUi';
 import { getAssessmentOrgLabel } from '@/lib/assessmentSortOptions';
-import { formatCounselorIssueDate } from '@/lib/counselorListTableStyles';
 import type { CounselorAssessment } from '@/lib/assessmentApi';
 import {
   downloadGroupRecipientSampleCsv,
@@ -67,6 +66,29 @@ function MiniStat({ label, children }: { label: string; children: React.ReactNod
     <span className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-white/10 bg-slate-900/50 px-2 py-1">
       <span className="text-sm font-semibold text-slate-400">{label}</span>
       <span className="text-sm font-medium text-slate-200">{children}</span>
+    </span>
+  );
+}
+
+function isValidEmailAddress(raw: string): boolean {
+  const s = raw.trim();
+  if (!s) return true;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
+}
+
+function TargetRowContactDisplay({ row }: { row: RecipientRow }) {
+  const phone = formatPhoneDisplay((row.phone || '').trim());
+  const email = (row.email || '').trim();
+  const emailInvalid = email.length > 0 && !isValidEmailAddress(email);
+  if (!phone && !email) return null;
+  return (
+    <span className="mt-0.5 block text-slate-300">
+      {phone ? <span className="block tabular-nums">{phone}</span> : null}
+      {email ? (
+        <span className={`block break-all ${emailInvalid ? 'text-red-400' : ''}`}>
+          {emailInvalid ? `${email} (부적합)` : email}
+        </span>
+      ) : null}
     </span>
   );
 }
@@ -163,7 +185,10 @@ export default function AssessmentAddRecipientModal({
       return;
     }
     setAddError('');
-    setPendingRows((prev) => [...prev, { displayName: name, phone, email }]);
+    setPendingRows((prev) => [
+      ...prev,
+      { displayName: name, phone: phone ? formatPhoneDisplay(phone) : '', email },
+    ]);
     setDraftName('');
     setDraftPhone('');
     setDraftEmail('');
@@ -171,6 +196,16 @@ export default function AssessmentAddRecipientModal({
 
   const removePendingRow = (idx: number) => {
     setPendingRows((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const removeTargetRow = (idx: number) => {
+    const pendingLen = pendingRows.length;
+    if (idx < pendingLen) {
+      removePendingRow(idx);
+      return;
+    }
+    const fileIdx = idx - pendingLen;
+    setAddFileRows((prev) => prev.filter((_, i) => i !== fileIdx));
   };
 
   const handleAddRecipientFile = async (file: File | null) => {
@@ -301,15 +336,9 @@ export default function AssessmentAddRecipientModal({
             <p className="min-w-0 truncate text-sm font-medium text-sky-100/90" title={groupTitleLine}>
               {groupTitleLine}
             </p>
-            <div className="flex shrink-0 flex-wrap items-center gap-1.5">
-              <MiniStat label="코드">
-                <span className="font-mono text-cyan-300">{formatAccessCodeDisplay(context.accessCode)}</span>
-              </MiniStat>
-              <MiniStat label="총발급">
-                <span className="tabular-nums">{context.totalIssuedCount}명</span>
-              </MiniStat>
-              <MiniStat label="발급일">{formatCounselorIssueDate(context.createdAt)}</MiniStat>
-            </div>
+            <MiniStat label="코드">
+              <span className="font-mono text-cyan-300">{formatAccessCodeDisplay(context.accessCode)}</span>
+            </MiniStat>
           </div>
         </div>
 
@@ -323,7 +352,7 @@ export default function AssessmentAddRecipientModal({
                 <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
                   <div className="w-[5.5rem] shrink-0">
                     <label htmlFor="add-recipient-name" className={FORM_LABEL}>
-                      이름(필수)
+                      이름<span className="text-yellow-400">(필수)</span>
                     </label>
                   <input
                     ref={nameInputRef}
@@ -516,49 +545,24 @@ export default function AssessmentAddRecipientModal({
               </p>
             ) : (
               <ul className="max-h-40 space-y-1 overflow-y-auto pr-1">
-                {pendingRows.map((row, idx) => (
+                {combinedRows.map((row, idx) => (
                   <li
-                    key={`pending-${idx}`}
+                    key={`target-${idx}-${row.displayName}-${row.phone}-${row.email}`}
                     className="flex items-start justify-between gap-2 rounded-md border border-white/5 bg-slate-900/40 px-2.5 py-1.5 text-sm leading-snug"
                   >
                     <span className="min-w-0 break-words text-white">
                       <span className="font-medium">{row.displayName}</span>
-                      <span className="text-slate-400"> : </span>
-                      {row.phone?.trim() ? row.phone : '—'}
-                      {row.email?.trim() ? (
-                        <>
-                          {' '}
-                          · {row.email}
-                        </>
-                      ) : null}
+                      <TargetRowContactDisplay row={row} />
                     </span>
                     <button
                       type="button"
-                      onClick={() => removePendingRow(idx)}
+                      onClick={() => removeTargetRow(idx)}
                       disabled={addLoading}
                       className="shrink-0 text-slate-500 hover:text-red-300"
                       title="삭제"
                     >
                       ✕
                     </button>
-                  </li>
-                ))}
-                {addFileRows.map((row, idx) => (
-                  <li
-                    key={`file-row-${idx}`}
-                    className="flex items-start gap-2 rounded-md border border-emerald-500/15 bg-emerald-950/20 px-2.5 py-1.5 text-sm leading-snug text-white"
-                  >
-                    <span className="min-w-0 break-words">
-                      <span className="font-medium">{row.displayName}</span>
-                      <span className="text-slate-400"> : </span>
-                      {row.phone?.trim() ? row.phone : '—'}
-                      {row.email?.trim() ? (
-                        <>
-                          {' '}
-                          · {row.email}
-                        </>
-                      ) : null}
-                    </span>
                   </li>
                 ))}
               </ul>

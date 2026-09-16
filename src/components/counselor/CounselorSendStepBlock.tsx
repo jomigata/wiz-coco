@@ -12,12 +12,12 @@ const STEP_THEMES = {
     ring: 'ring-sky-400/15',
   },
   2: {
-    border: 'border-emerald-400/30',
-    shell: 'bg-gradient-to-br from-emerald-950/40 via-[#101e36]/95 to-teal-950/35',
-    header: 'bg-gradient-to-r from-emerald-600/35 via-teal-500/16 to-cyan-600/10',
-    badge: 'bg-emerald-500/25 text-emerald-50 border border-emerald-400/40 shadow-sm shadow-emerald-950/40',
-    glow: 'from-emerald-400/30 via-teal-300/10 to-transparent',
-    ring: 'ring-emerald-400/15',
+    border: 'border-sky-400/30',
+    shell: 'bg-gradient-to-br from-sky-950/45 via-[#101e36]/95 to-indigo-950/35',
+    header: 'bg-gradient-to-r from-sky-600/40 via-sky-500/18 to-indigo-600/12',
+    badge: 'bg-sky-500/25 text-sky-50 border border-sky-400/40 shadow-sm shadow-sky-950/40',
+    glow: 'from-sky-400/30 via-sky-300/10 to-transparent',
+    ring: 'ring-sky-400/15',
   },
   3: {
     border: 'border-emerald-400/30',

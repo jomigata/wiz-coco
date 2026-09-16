@@ -282,27 +282,28 @@ function buildChannelDetailParts(r: DispatchDisplayRecipient): ChannelDetailPart
   const terminal = isTerminalNotifyStatus(status);
   const parts: ChannelDetailPart[] = [];
 
-  if (hasEmail) {
-    const emailLegacy =
-      via.emailOk && !failed.emailFailed
-        ? 'ok'
-        : failed.emailFailed
-          ? 'fail'
-          : status === 'sending' || r.notifyEmailChannel === 'sending'
-            ? 'pending'
-            : via.emailOk || r.notifyEmailChannel === 'sent'
-              ? 'ok'
-              : r.notifyEmailChannel === 'failed'
-                ? 'fail'
-                : status === 'sent' || status === 'partial'
-                  ? 'ok'
-                  : 'idle';
-    let emailState = r.notifyEmailChannel;
-    if (terminal && emailState === 'sending') emailState = undefined;
-    pushChannelFromExplicitState(parts, '이메일', emailState, emailLegacy);
+  if (!hasPhone) {
+    if (hasEmail) {
+      const emailLegacy =
+        via.emailOk && !failed.emailFailed
+          ? 'ok'
+          : failed.emailFailed
+            ? 'fail'
+            : status === 'sending' || r.notifyEmailChannel === 'sending'
+              ? 'pending'
+              : via.emailOk || r.notifyEmailChannel === 'sent'
+                ? 'ok'
+                : r.notifyEmailChannel === 'failed'
+                  ? 'fail'
+                  : status === 'sent' || status === 'partial'
+                    ? 'ok'
+                    : 'idle';
+      let emailState = r.notifyEmailChannel;
+      if (terminal && emailState === 'sending') emailState = undefined;
+      pushChannelFromExplicitState(parts, '이메일', emailState, emailLegacy);
+    }
+    return parts;
   }
-
-  if (!hasPhone) return parts;
 
   const showAlimtalk =
     via.alimtalkOk ||
@@ -332,6 +333,26 @@ function buildChannelDetailParts(r: DispatchDisplayRecipient): ChannelDetailPart
     let channelState = r.notifyPhoneChannel;
     if (terminal && channelState === 'sending') channelState = undefined;
     pushChannelFromExplicitState(parts, phoneLabel, channelState, legacy);
+  }
+
+  if (hasEmail) {
+    const emailLegacy =
+      via.emailOk && !failed.emailFailed
+        ? 'ok'
+        : failed.emailFailed
+          ? 'fail'
+          : status === 'sending' || r.notifyEmailChannel === 'sending'
+            ? 'pending'
+            : via.emailOk || r.notifyEmailChannel === 'sent'
+              ? 'ok'
+              : r.notifyEmailChannel === 'failed'
+                ? 'fail'
+                : status === 'sent' || status === 'partial'
+                  ? 'ok'
+                  : 'idle';
+    let emailState = r.notifyEmailChannel;
+    if (terminal && emailState === 'sending') emailState = undefined;
+    pushChannelFromExplicitState(parts, '이메일', emailState, emailLegacy);
   }
 
   return parts;

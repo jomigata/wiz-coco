@@ -82,14 +82,16 @@ export default function CounselorManageShell({ children }: Props) {
               search,
               adminUser,
             );
-            const isFlattenListLanding =
+            const hideCategoryBgWhenFlatMiddleSelected =
               (category.slug === COUNSELOR_DISPATCH_MGMT_SLUG && pathNorm === '/counselor/clients') ||
               (category.slug === COUNSELOR_ASSESSMENT_CODE_SLUG &&
                 pathNorm === '/counselor/assessments');
             const categoryLinkActive =
               categorySelected &&
-              (isFlattenListLanding ||
-                (!middleActive && !activeNested && pathNorm === categoryEntryHrefNorm));
+              !hideCategoryBgWhenFlatMiddleSelected &&
+              !middleActive &&
+              !activeNested &&
+              pathNorm === categoryEntryHrefNorm;
             const categoryEntryActive = categoryLinkActive;
 
             return (
@@ -130,13 +132,7 @@ export default function CounselorManageShell({ children }: Props) {
                             : category.icon}
                         </span>
                         <span className="text-xs leading-tight sm:text-[13px]">
-                          {stripCategoryNumber(
-                            (category.slug === COUNSELOR_DISPATCH_MGMT_SLUG ||
-                            category.slug === COUNSELOR_ASSESSMENT_CODE_SLUG) &&
-                              category.subcategories[0]?.items[0]?.name
-                              ? category.subcategories[0].items[0].name
-                              : category.category,
-                          )}
+                          {stripCategoryNumber(category.category)}
                         </span>
                       </span>
                     </AuthLink>
