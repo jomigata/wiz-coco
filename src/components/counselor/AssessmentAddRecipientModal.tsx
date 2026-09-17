@@ -21,6 +21,10 @@ import CounselorActionProgressOverlay from '@/components/counselor/CounselorActi
 import CounselorActionCompleteModal from '@/components/counselor/CounselorActionCompleteModal';
 import CounselorNotifyConfirmDialog from '@/components/counselor/CounselorNotifyConfirmDialog';
 import type { NotifyRecipientContact } from '@/lib/counselorNotifyChannels';
+import { isValidEmailAddress } from '@/lib/emailValidation';
+
+type TargetSortKey = 'input' | 'name' | 'phone' | 'email';
+type TargetSortDir = 'asc' | 'desc';
 
 export type AssessmentAddRecipientContext = {
   assessmentId: string;
@@ -68,12 +72,6 @@ function MiniStat({ label, children }: { label: string; children: React.ReactNod
       <span className="text-sm font-medium text-slate-200">{children}</span>
     </span>
   );
-}
-
-function isValidEmailAddress(raw: string): boolean {
-  const s = raw.trim();
-  if (!s) return true;
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
 }
 
 function TargetRowContactDisplay({ row }: { row: RecipientRow }) {
@@ -135,6 +133,8 @@ export default function AssessmentAddRecipientModal({
   const [showAddFilePreview, setShowAddFilePreview] = useState(false);
   const [samplePreviewKind, setSamplePreviewKind] = useState<'txt' | 'csv' | null>(null);
   const [notifyConfirmOpen, setNotifyConfirmOpen] = useState(false);
+  const [targetSortKey, setTargetSortKey] = useState<TargetSortKey>('input');
+  const [targetSortDir, setTargetSortDir] = useState<TargetSortDir>('asc');
 
   const samplePreviewText = useMemo(() => getGroupRecipientSamplePreviewText(), []);
   const samplePreviewLayout = useMemo(() => {
@@ -147,6 +147,47 @@ export default function AssessmentAddRecipientModal({
     () => mergeRecipients(pendingRows, addFileRows),
     [pendingRows, addFileRows],
   );
+
+  const indexedTargetRows = useMemo(
+    () => combinedRows.map((row, originalIndex) => ({ row, originalIndex })),
+    [combinedRows],
+  );
+
+  const displayedTargetRows = useMemo(() => {
+    if (targetSortKey === 'input') return indexedTargetRows;
+    const list = [...indexedTargetRows];
+    const mult = targetSortDir === 'asc' ? 1 : -1;
+    list.sort((a, b) => {
+      let av = '';
+      let bv = '';
+      if (targetSortKey === 'name') {
+        av = a.row.displayName.trim();
+        bv = b.row.displayName.trim();
+      } else if (targetSortKey === 'phone') {
+        av = normalizeRecipientPhone(a.row.phone);
+        bv = normalizeRecipientPhone(b.row.phone);
+      } else {
+        av = (a.row.email || '').trim().toLowerCase();
+        bv = (b.row.email || '').trim().toLowerCase();
+      }
+      return mult * av.localeCompare(bv, 'ko');
+    });
+    return list;
+  }, [indexedTargetRows, targetSortKey, targetSortDir]);
+
+  const toggleTargetSort = (key: Exclude<TargetSortKey, 'input'>) => {
+    if (targetSortKey === key) {
+      setTargetSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setTargetSortKey(key);
+      setTargetSortDir('asc');
+    }
+  };
+
+  const targetSortArrow = (key: Exclude<TargetSortKey, 'input'>) => {
+    if (targetSortKey !== key) return '↕';
+    return targetSortDir === 'asc' ? '▲' : '▼';
+  };
 
   const notifyRecipients = useMemo<NotifyRecipientContact[]>(
     () =>
@@ -177,6 +218,8 @@ export default function AssessmentAddRecipientModal({
     setAddFileLabel('');
     setShowAddFilePreview(false);
     setSamplePreviewKind(null);
+    setTargetSortKey('input');
+    setTargetSortDir('asc');
   };
 
   const handleClose = () => {
@@ -401,7 +444,7 @@ export default function AssessmentAddRecipientModal({
                   type="button"
                   onClick={handleAddDraftRow}
                   disabled={addLoading}
-                  className="min-h-[8.5rem] w-full shrink-0 rounded-xl bg-gradient-to-b from-sky-600 to-cyan-600 px-5 text-sm font-semibold text-white shadow-md shadow-sky-950/30 transition hover:from-sky-500 hover:to-cyan-500 disabled:opacity-50 sm:w-24"
+                  className="min-h-[8.5rem] w-full shrink-0 rounded-xl border border-sky-400/20 bg-gradient-to-r from-sky-600/25 via-sky-500/15 to-transparent px-5 text-sm font-semibold text-sky-50 shadow-md shadow-sky-950/30 transition hover:from-sky-600/35 hover:via-sky-500/25 disabled:opacity-50 sm:w-24"
                 >
                   입력
                 </button>
@@ -524,8 +567,36 @@ export default function AssessmentAddRecipientModal({
           </div>
 
           <div className="rounded-xl border border-white/[0.08] bg-[#0d1830]/60 p-3">
-            <div className="mb-2 flex items-center justify-between">
-              <h4 className={FORM_LABEL}>추가 대상 목록</h4>
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+              <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
+                <h4 className={FORM_LABEL}>추가 대상 목록</h4>
+                <span className="flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-0.5 hover:text-sky-200"
+                    onClick={() => toggleTargetSort('name')}
+                  >
+                    이름
+                    <span className="text-[10px] text-slate-500">{targetSortArrow('name')}</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-0.5 hover:text-sky-200"
+                    onClick={() => toggleTargetSort('phone')}
+                  >
+                    핸드폰
+                    <span className="text-[10px] text-slate-500">{targetSortArrow('phone')}</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-0.5 hover:text-sky-200"
+                    onClick={() => toggleTargetSort('email')}
+                  >
+                    이메일
+                    <span className="text-[10px] text-slate-500">{targetSortArrow('email')}</span>
+                  </button>
+                </span>
+              </div>
               <span className="rounded-full bg-white/5 px-2 py-0.5 text-sm font-semibold text-slate-300">
                 총 {combinedRows.length}명
               </span>
@@ -536,9 +607,9 @@ export default function AssessmentAddRecipientModal({
               </p>
             ) : (
               <ul className="max-h-40 space-y-1 overflow-y-auto pr-1">
-                {combinedRows.map((row, idx) => (
+                {displayedTargetRows.map(({ row, originalIndex }) => (
                   <li
-                    key={`target-${idx}-${row.displayName}-${row.phone}-${row.email}`}
+                    key={`target-${originalIndex}-${row.displayName}-${row.phone}-${row.email}`}
                     className="flex items-center justify-between gap-2 rounded-md border border-white/5 bg-slate-900/40 px-2.5 py-1.5 text-sm leading-snug"
                   >
                     <span className="min-w-0 break-words text-white">
@@ -547,7 +618,7 @@ export default function AssessmentAddRecipientModal({
                     </span>
                     <button
                       type="button"
-                      onClick={() => removeTargetRow(idx)}
+                      onClick={() => removeTargetRow(originalIndex)}
                       disabled={addLoading}
                       className="shrink-0 text-slate-500 hover:text-red-300"
                       title="삭제"

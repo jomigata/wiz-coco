@@ -1380,7 +1380,7 @@ export default function CounselorClientList({
                       (deletedMode || permanentlyDeletedMode) &&
                       isAssessmentDeletedLinkedRow(item.portalId);
                     const rowClickable = !permanentlyDeletedMode && !locked && !deletedMode;
-                    const rowExpandable = deletedMode && !permanentlyDeletedMode && !locked;
+                    const rowExpandable = deletedMode && !permanentlyDeletedMode;
                     const isExpanded = expandedPortalId === item.portalId;
                     const expandTests = item.archivedTests ?? [];
                     const rowClass =
@@ -1411,7 +1411,7 @@ export default function CounselorClientList({
                         tabIndex={rowExpandable ? 0 : undefined}
                         role={rowExpandable ? 'button' : undefined}
                         aria-expanded={rowExpandable ? isExpanded : undefined}
-                        className={`${rowClass} ${isSelected ? 'bg-white/[0.04]' : ''} ${locked ? 'opacity-70' : ''} ${rowExpandable ? 'cursor-pointer' : ''} ${isExpanded ? 'bg-white/[0.04]' : ''}`}
+                        className={`${rowClass} ${isSelected ? 'bg-white/[0.04]' : ''} ${locked && !rowExpandable ? 'opacity-70' : ''} ${rowExpandable ? 'cursor-pointer' : ''} ${isExpanded ? 'bg-white/[0.04]' : ''}`}
                       >
                         <td className={`${counselorListTdClass} tabular-nums text-slate-500`}>
                           {startIndex + idx + 1}

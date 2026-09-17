@@ -271,6 +271,9 @@ export default function CounselorManageShell({ children }: Props) {
 
                               for (const nested of parentSubmenu.sort((a, b) => a.order - b.order)) {
                                 const nestedActive = nested.isActive(pathNorm);
+                                const alignMiddle = nested.menuAlign !== 'nested';
+                                const itemMenuAlign = alignMiddle ? MENU_MIDDLE_ALIGN : nestedAlign;
+                                const itemPrefix = alignMiddle ? '' : nestedPrefix;
                                 rows.push(
                                   <li
                                     key={`${item.href}-${nested.href}`}
@@ -290,13 +293,13 @@ export default function CounselorManageShell({ children }: Props) {
                                           clearAssessmentListSearch();
                                         }
                                       }}
-                                      className={`block truncate rounded-md py-1 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${nestedAlign} ${
+                                      className={`block truncate rounded-md py-1 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${itemMenuAlign} ${
                                         nestedActive
                                           ? 'bg-sky-600/30 font-semibold text-sky-100'
                                           : 'text-slate-300 hover:bg-white/[0.06] hover:text-white'
                                       }`}
                                     >
-                                      {nestedPrefix}
+                                      {itemPrefix}
                                       {nested.label}
                                     </AuthLink>
                                   </li>,

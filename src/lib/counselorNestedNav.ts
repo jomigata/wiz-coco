@@ -16,6 +16,8 @@ export type AssessmentListNestedNavItem = {
   order: number;
   href: string;
   isActive: (path: string) => boolean;
+  /** middle = 부모 목록과 같은 들여쓰기, nested = `-` 소분류 */
+  menuAlign?: 'middle' | 'nested';
 };
 
 import { markCounselorListSkipReload } from '@/lib/counselorListNavigationCache';
@@ -232,6 +234,7 @@ export function getAssessmentsParentSubmenuItems(options?: {
       label: '상담진행 현황',
       href: progressHref,
       isActive: (p) => p.startsWith('/counselor/assessments/progress'),
+      menuAlign: 'nested',
     });
   }
 
@@ -240,12 +243,14 @@ export function getAssessmentsParentSubmenuItems(options?: {
     label: '상담코드 생성',
     href: ASSESSMENTS_NEW_HREF,
     isActive: (p) => p.startsWith(ASSESSMENTS_NEW_HREF),
+    menuAlign: 'middle',
   });
   items.push({
     order: 90,
     label: '삭제된 상담코드',
     href: DELETED_ASSESSMENTS_HREF,
     isActive: isDeletedAssessmentsPath,
+    menuAlign: 'middle',
   });
   return items;
 }
@@ -275,6 +280,7 @@ export function getClientsParentSubmenuItems(options?: {
       isActive: (p) =>
         p.startsWith('/counselor/assessments/progress') &&
         resolveCounselorProgressFrom(options?.pathname || '', options?.search || '') === 'clients',
+      menuAlign: 'nested',
     });
   }
   items.push({
@@ -282,6 +288,7 @@ export function getClientsParentSubmenuItems(options?: {
     label: '삭제된 내담자',
     href: DELETED_RECIPIENTS_HREF,
     isActive: isDeletedRecipientsPath,
+    menuAlign: 'middle',
   });
   return items;
 }

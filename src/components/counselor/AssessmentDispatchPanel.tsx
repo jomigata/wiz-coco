@@ -9,7 +9,8 @@ import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { getAppRoleSync, isAdmin } from '@/utils/roleUtils';
-import { formatPhoneDisplay, normalizeRecipientPhone } from '@/lib/phoneFormat';
+import { formatPhoneDisplay, normalizeRecipientPhone, isValidKrMobilePhone } from '@/lib/phoneFormat';
+import { isValidEmailAddress } from '@/lib/emailValidation';
 import { displayContactEmail, displayContactPhone } from '@/lib/contactPrivacy';
 import DispatchStatusText from '@/components/counselor/DispatchStatusText';
 import {
@@ -701,6 +702,14 @@ export default function AssessmentDispatchPanel({
     const email = editEmail.trim().toLowerCase();
     if (!phone && !email) {
       setEditError('휴대폰 또는 이메일 중 하나 이상 입력해 주세요.');
+      return;
+    }
+    if (email && !isValidEmailAddress(email)) {
+      setEditError('이메일 형식을 확인해 주세요.');
+      return;
+    }
+    if (phone && !isValidKrMobilePhone(phone)) {
+      setEditError('휴대폰 번호는 11자리(010-1234-5678) 형식으로 입력해 주세요.');
       return;
     }
     setEditSaving(true);

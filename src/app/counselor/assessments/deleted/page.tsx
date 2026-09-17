@@ -49,6 +49,8 @@ import { matchesWildcardFields } from '@/lib/wildcardSearch';
 import { getAppRoleSync, isAdmin } from '@/utils/roleUtils';
 import { exportDeletedAssessments } from '@/lib/counselorAssessmentListExport';
 import { CounselorAdminEmailSortHeader, CounselorAdminEmailTd, compareCounselorEmail } from '@/components/counselor/CounselorAdminEmailColumn';
+import { fetchAssessmentDispatchStatus, type DispatchRecipient } from '@/lib/clientPortalApi';
+import CounselorDeletedAssessmentRecipientsSummary from '@/components/counselor/CounselorDeletedAssessmentRecipientsSummary';
 
 type ListSortKey = 'createdAt' | 'counselInfo' | 'accessCode' | 'usageEndDate' | 'archivedAt' | 'counselorEmail';
 type SortDirection = 'asc' | 'desc';
@@ -260,6 +262,45 @@ export default function DeletedAssessmentsPage() {
   const [sortDir, setSortDir] = useState<SortDirection>('desc');
   const [counselSortPhase, setCounselSortPhase] = useState<CounselSortPhase>('org-asc');
   const { pageSize, setPageSize } = useCounselorListPageSize();
+  const [expandedAssessmentId, setExpandedAssessmentId] = useState<string | null>(null);
+  const [expandCache, setExpandCache] = useState<
+    Record<string, { loading?: boolean; error?: string; recipients?: DispatchRecipient[] }>
+  >({});
+
+  const detailColSpan = 5 + (adminUser ? 1 : 0);
+
+  const loadExpandDetail = useCallback(async (assessmentId: string) => {
+    setExpandCache((prev) => ({
+      ...prev,
+      [assessmentId]: { ...prev[assessmentId], loading: true, error: undefined },
+    }));
+    try {
+      const data = await fetchAssessmentDispatchStatus(assessmentId);
+      setExpandCache((prev) => ({
+        ...prev,
+        [assessmentId]: { loading: false, recipients: data.recipients || [] },
+      }));
+    } catch (err) {
+      setExpandCache((prev) => ({
+        ...prev,
+        [assessmentId]: {
+          loading: false,
+          error: err instanceof Error ? err.message : '내담자 현황을 불러오지 못했습니다.',
+          recipients: [],
+        },
+      }));
+    }
+  }, []);
+
+  const toggleAssessmentExpand = (id: string) => {
+    setExpandedAssessmentId((prev) => {
+      const next = prev === id ? null : id;
+      if (next && !expandCache[next]?.recipients && !expandCache[next]?.loading) {
+        void loadExpandDetail(next);
+      }
+      return next;
+    });
+  };
 
   const load = useCallback(async () => {
     const cached = counselorUid
@@ -573,11 +614,23 @@ export default function DeletedAssessmentsPage() {
                     const infoPrimary = getAssessmentOrgLabel(row);
                     const infoSecondary = (row.title || '—').trim();
                     const isSelected = selected.has(row.id);
+                    const isExpanded = expandedAssessmentId === row.id;
+                    const expandState = expandCache[row.id];
 
                     return (
+                      <React.Fragment key={row.id}>
                       <tr
-                        key={row.id}
-                        className={`${counselorListBodyRowStaticClass}${idx % 2 === 1 ? ' bg-white/[0.035]' : ''} ${isSelected ? 'bg-white/[0.04]' : ''}`}
+                        onClick={() => toggleAssessmentExpand(row.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            toggleAssessmentExpand(row.id);
+                          }
+                        }}
+                        tabIndex={0}
+                        role="button"
+                        aria-expanded={isExpanded}
+                        className={`cursor-pointer ${counselorListBodyRowStaticClass}${idx % 2 === 1 ? ' bg-white/[0.035]' : ''} ${isSelected ? 'bg-white/[0.04]' : ''} ${isExpanded ? 'bg-white/[0.04]' : ''}`}
                       >
                         <td className={`${counselorListTdCompactClass} tabular-nums text-slate-500`}>
                           {startIndex + idx + 1}
@@ -612,6 +665,9 @@ export default function DeletedAssessmentsPage() {
                             showTotalClients
                             items={[{ label: '검사완료', value: testComplete }]}
                           />
+                          <span className="ml-1 text-slate-500" aria-hidden="true">
+                            {isExpanded ? '▼' : '▶'}
+                          </span>
                         </td>
                         <td
                           className={`whitespace-nowrap ${counselorListTdCompactClass} text-center ${expired ? 'text-red-400' : ''}`}
@@ -620,6 +676,16 @@ export default function DeletedAssessmentsPage() {
                         </td>
                         {adminUser ? <CounselorAdminEmailTd email={row.counselorEmail} /> : null}
                       </tr>
+                      {isExpanded ? (
+                        <CounselorDeletedAssessmentRecipientsSummary
+                          recipients={expandState?.recipients || []}
+                          loading={Boolean(expandState?.loading)}
+                          error={expandState?.error || ''}
+                          leadingColSpan={2}
+                          detailColSpan={detailColSpan}
+                        />
+                      ) : null}
+                      </React.Fragment>
                     );
                   })}
                 </tbody>
