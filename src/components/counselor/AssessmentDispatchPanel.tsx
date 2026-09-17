@@ -1219,7 +1219,7 @@ export default function AssessmentDispatchPanel({
     setDetailError('');
   };
 
-  const progressPageTitle = entryFrom === 'clients' ? '검사발송 현황' : '상담진행 현황';
+  const progressPageTitle = entryFrom === 'clients' ? '나의코드 현황' : '상담진행 현황';
 
   if (!displayData && loading) {
     return (
@@ -1259,7 +1259,7 @@ export default function AssessmentDispatchPanel({
     entryFrom === 'deleted-recipients'
       ? '삭제된 내담자'
       : entryFrom === 'clients'
-        ? '검사발송 목록'
+        ? '내담자 목록'
         : '상담코드 목록';
 
   return (
@@ -1369,7 +1369,7 @@ export default function AssessmentDispatchPanel({
       <div className="flex min-h-0 flex-1 flex-col p-2.5 text-sm sm:p-3">
         {displayData.recipients.length === 0 ? (
           <div className="flex min-h-[12rem] flex-1 flex-col items-center justify-center rounded-md border border-white/10 bg-white/[0.03] py-10 text-center">
-            <p className="text-sm font-medium text-slate-300">
+            <p className="text-lg font-semibold text-white sm:text-xl">
               {stripAssessmentTitleDispatchCountSuffix(displayData.cohortName || '') || '—'}
               <span className="text-slate-500"> / </span>
               {(displayData.title || '—').trim()}

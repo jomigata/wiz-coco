@@ -217,6 +217,15 @@ export default function PortalGuidePageClient() {
               </div>
             ))}
           </div>
+
+          <div className="mt-10 text-center">
+            <Link
+              href="/portal/guide/inquiry"
+              className="inline-flex rounded-xl bg-violet-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-violet-500"
+            >
+              개인 검사코드 구매 문의
+            </Link>
+          </div>
         </div>
       </HomeSectionShell>
 

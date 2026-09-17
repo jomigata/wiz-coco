@@ -67,8 +67,8 @@ export default function PersonalPurchaseInquiryPageClient() {
             개인 구매 문의
           </h1>
           <p className="text-sm leading-relaxed text-slate-400 md:text-base">
-            파일럿 단계에서는 결제·코드 발급을 문의 접수 후 안내해 드립니다. 아래 양식을 작성해 주시면
-            담당자가 이메일로 회신합니다.
+            패키지·결제 방식에 대한 문의를 접수합니다. 아래 양식을 작성해 주시면 담당자가 이메일로
+            회신합니다.
           </p>
         </div>
       </HomeSectionShell>

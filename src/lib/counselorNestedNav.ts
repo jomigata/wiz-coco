@@ -270,7 +270,7 @@ export function getClientsParentSubmenuItems(options?: {
   if (showProgressMenu) {
     items.push({
       order: 2,
-      label: '검사발송 현황',
+      label: '나의코드 현황',
       href: progressHref,
       isActive: (p) =>
         p.startsWith('/counselor/assessments/progress') &&

@@ -29,10 +29,7 @@ import {
   writeCachedPortalChatMessages,
 } from '@/lib/portalChatMessageUi';
 import PortalChatMessageComposer, {
-  PORTAL_CHAT_COMPOSER_RESERVE_CLASS,
   PORTAL_CHAT_INNER_SHELL_CLASS,
-  PORTAL_CHAT_LIST_BOTTOM_GAP_CLASS,
-  PortalChatFixedComposerShell,
 } from '@/components/portal/PortalChatMessageComposer';
 import PortalChatMessageList from '@/components/portal/PortalChatMessageList';
 
@@ -435,9 +432,7 @@ export default function CounselorPortalChatPanel() {
   return (
     <>
       <div
-        className={`flex h-full min-h-0 flex-1 flex-col ${
-          selectedThread ? PORTAL_CHAT_COMPOSER_RESERVE_CLASS : ''
-        }`}
+        className="flex h-full min-h-0 flex-1 flex-col"
       >
         <div className="mb-3 shrink-0 space-y-3">
           <h1 className="text-lg font-semibold text-white">1:1 채팅</h1>
@@ -455,13 +450,9 @@ export default function CounselorPortalChatPanel() {
           ) : null}
         </div>
 
-        <div
-          className={`grid min-h-[calc(100dvh-15rem)] h-full min-h-0 flex-1 gap-4 lg:grid-cols-[minmax(260px,340px)_1fr] ${
-            selectedThread ? PORTAL_CHAT_LIST_BOTTOM_GAP_CLASS : ''
-          }`}
-        >
+        <div className="grid min-h-0 h-full flex-1 gap-4 lg:grid-cols-[minmax(260px,340px)_1fr]">
           <aside
-            className={`flex h-full min-h-0 flex-col overflow-hidden rounded-2xl ${PORTAL_CHAT_INNER_SHELL_CLASS}`}
+            className={`flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl ${PORTAL_CHAT_INNER_SHELL_CLASS}`}
           >
             <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-slate-800/80 px-3 py-2">
               <span className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
@@ -535,8 +526,9 @@ export default function CounselorPortalChatPanel() {
             </ul>
           </aside>
 
+          <div className="flex min-h-0 flex-col gap-4">
           <section
-            className={`flex h-full min-h-0 flex-col overflow-hidden rounded-2xl ${PORTAL_CHAT_INNER_SHELL_CLASS}`}
+            className={`flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl ${PORTAL_CHAT_INNER_SHELL_CLASS}`}
           >
             {selectedThread ? (
               <>
@@ -565,7 +557,7 @@ export default function CounselorPortalChatPanel() {
 
                 <div
                   data-chat-scroll
-                  className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain rounded-b-2xl p-4 pb-28 pt-2"
+                  className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain rounded-b-2xl p-4 pt-2"
                   onClick={handleMessageAreaReadAck}
                   onTouchStart={handleMessageAreaReadAck}
                   role="presentation"
@@ -598,14 +590,12 @@ export default function CounselorPortalChatPanel() {
               </>
             )}
           </section>
+          {selectedThread && composer ? (
+            <div className={`shrink-0 p-4 ${PORTAL_CHAT_INNER_SHELL_CLASS}`}>{composer}</div>
+          ) : null}
+          </div>
         </div>
       </div>
-
-      {selectedThread && composer ? (
-        <PortalChatFixedComposerShell maxWidthClass="max-w-[1920px]" alignWithCounselorChatGrid>
-          {composer}
-        </PortalChatFixedComposerShell>
-      ) : null}
     </>
   );
 }

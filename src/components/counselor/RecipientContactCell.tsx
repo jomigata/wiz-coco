@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { formatPhoneDisplay } from '@/lib/phoneFormat';
+import { displayContactEmail, displayContactPhone } from '@/lib/contactPrivacy';
 
 type Props = {
   phone?: string | null;
@@ -10,6 +11,8 @@ type Props = {
   emptyClassName?: string;
   /** 목록 셀 세로 중앙 정렬용 */
   stacked?: boolean;
+  /** 목록 등 — 마스킹 표시 */
+  masked?: boolean;
 };
 
 export default function RecipientContactCell({
@@ -18,9 +21,19 @@ export default function RecipientContactCell({
   className = 'text-slate-300',
   emptyClassName = 'text-slate-500',
   stacked = true,
+  masked = false,
 }: Props) {
-  const phoneText = formatPhoneDisplay((phone || '').trim());
-  const emailText = (email || '').trim().toLowerCase();
+  const phoneText = masked
+    ? (phone || '').trim()
+      ? displayContactPhone(phone, false)
+      : ''
+    : formatPhoneDisplay((phone || '').trim());
+  const emailRaw = (email || '').trim().toLowerCase();
+  const emailText = masked
+    ? emailRaw
+      ? displayContactEmail(emailRaw, false)
+      : ''
+    : emailRaw;
 
   if (!phoneText && !emailText) {
     return null;

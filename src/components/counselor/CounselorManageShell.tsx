@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import AuthLink from '@/components/auth/AuthLink';
-import { counselorMenuCategories, getCounselorCategoryEntryHref, COUNSELOR_DISPATCH_MGMT_SLUG, COUNSELOR_ASSESSMENT_CODE_SLUG } from '@/data/counselorMenu';
+import { counselorMenuCategories, getCounselorCategoryEntryHref, COUNSELOR_DISPATCH_MGMT_SLUG, COUNSELOR_ASSESSMENT_CODE_SLUG, COUNSELOR_TEST_MGMT_SLUG } from '@/data/counselorMenu';
 import {
   getAssessmentListContextNestedItems,
   getAssessmentsParentSubmenuItems,
@@ -94,14 +94,22 @@ export default function CounselorManageShell({ children }: Props) {
               pathNorm === categoryEntryHrefNorm;
             const categoryEntryActive = categoryLinkActive;
 
+            const categoryNavActive = categorySelected || middleActive;
+
+            const categoryFrameClass = categoryNavActive
+              ? category.slug === COUNSELOR_DISPATCH_MGMT_SLUG
+                ? 'border-cyan-400/45 ring-1 ring-inset ring-cyan-400/20'
+                : category.slug === COUNSELOR_ASSESSMENT_CODE_SLUG
+                  ? 'border-violet-400/40 ring-1 ring-inset ring-violet-400/18'
+                  : category.slug === COUNSELOR_TEST_MGMT_SLUG
+                    ? 'border-emerald-400/35 ring-1 ring-inset ring-emerald-400/15'
+                    : 'border-sky-400/45 ring-1 ring-inset ring-sky-400/20'
+              : 'border-white/10';
+
             return (
               <div
                 key={category.slug}
-                className={`mb-1 rounded-lg border ${
-                  categoryEntryActive
-                    ? 'border-sky-400/45 ring-1 ring-inset ring-sky-400/20'
-                    : 'border-white/10'
-                }`}
+                className={`mb-1 rounded-lg border ${categoryFrameClass}`}
               >
                 <div className="flex items-stretch gap-0.5">
                   <button
@@ -204,8 +212,8 @@ export default function CounselorManageShell({ children }: Props) {
                                     : isMenuItemActive(pathname, item.href);
                               const active = !activeNested && !hasActiveNested && parentExactActive;
                               const rows: React.ReactNode[] = [];
-                              const nestedAlign = flattenNav ? MENU_MIDDLE_ALIGN : MENU_NESTED_ALIGN;
-                              const nestedPrefix = flattenNav ? '' : '\u00A0- ';
+                              const nestedAlign = MENU_NESTED_ALIGN;
+                              const nestedPrefix = '\u00A0- ';
 
                               if (flattenNav) {
                                 rows.push(

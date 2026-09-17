@@ -768,6 +768,9 @@ export default function AssessmentList({
                     onSort={toggleSort}
                     className="whitespace-nowrap text-center"
                   />
+                  <th scope="col" className={`${counselorListThClass} whitespace-nowrap text-center`}>
+                    <span className="block">진행현황</span>
+                  </th>
                   <SortableColumnHeader
                     label="생성일시"
                     sortKey="createdAt"
@@ -776,9 +779,6 @@ export default function AssessmentList({
                     onSort={toggleSort}
                     className="whitespace-nowrap"
                   />
-                  <th scope="col" className={`${counselorListThClass} whitespace-nowrap text-center`}>
-                    <span className="block">진행현황</span>
-                  </th>
                   <SortableColumnHeader
                     label="사용 종료일"
                     sortKey="usageEndDate"
@@ -845,14 +845,6 @@ export default function AssessmentList({
                         </span>
                       </td>
                       <td
-                        className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer text-white`}
-                        onClick={() => goToProgress(a.id)}
-                      >
-                        {a.createdAt
-                          ? new Date(a.createdAt).toLocaleString('ko-KR')
-                          : '—'}
-                      </td>
-                      <td
                         className={`whitespace-nowrap ${counselorListTdCompactClass} text-center cursor-default tabular-nums`}
                       >
                         <CounselorProgressMetricsInline
@@ -863,6 +855,14 @@ export default function AssessmentList({
                             { label: '미완료', value: testIncomplete, tone: 'danger' },
                           ]}
                         />
+                      </td>
+                      <td
+                        className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer text-white`}
+                        onClick={() => goToProgress(a.id)}
+                      >
+                        {a.createdAt
+                          ? new Date(a.createdAt).toLocaleString('ko-KR')
+                          : '—'}
                       </td>
                       <td
                         className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer text-center ${expired ? 'text-red-400' : ''}`}

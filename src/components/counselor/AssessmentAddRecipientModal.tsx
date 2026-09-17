@@ -79,18 +79,35 @@ function isValidEmailAddress(raw: string): boolean {
 function TargetRowContactDisplay({ row }: { row: RecipientRow }) {
   const phone = formatPhoneDisplay((row.phone || '').trim());
   const email = (row.email || '').trim();
-  const emailInvalid = email.length > 0 && !isValidEmailAddress(email);
-  if (!phone && !email) return null;
+  const invalid = targetRowInvalid(row);
+  if (invalid && !phone && !email) {
+    return <span className="text-red-400"> (부적합)</span>;
+  }
+  const parts: string[] = [];
+  if (phone) parts.push(phone);
+  if (email) {
+    const emailInvalid = !isValidEmailAddress(email);
+    parts.push(emailInvalid ? `${email} (부적합)` : email);
+  }
+  if (parts.length === 0) {
+    return <span className="text-red-400"> (부적합)</span>;
+  }
   return (
-    <span className="mt-0.5 block text-slate-300">
-      {phone ? <span className="block tabular-nums">{phone}</span> : null}
-      {email ? (
-        <span className={`block break-all ${emailInvalid ? 'text-red-400' : ''}`}>
-          {emailInvalid ? `${email} (부적합)` : email}
-        </span>
-      ) : null}
+    <span className="text-slate-300">
+      {' · '}
+      {parts.join(' · ')}
+      {invalid ? <span className="text-red-400"> (부적합)</span> : null}
     </span>
   );
+}
+
+function targetRowInvalid(row: RecipientRow): boolean {
+  const phone = normalizeRecipientPhone(row.phone);
+  const email = (row.email || '').trim();
+  if (!phone && !email) return true;
+  if (phone && !isValidKrMobilePhone(phone)) return true;
+  if (email && !isValidEmailAddress(email)) return true;
+  return false;
 }
 
 export default function AssessmentAddRecipientModal({
@@ -176,14 +193,6 @@ export default function AssessmentAddRecipientModal({
       setAddError('이름을 입력해 주세요.');
       return;
     }
-    if (!phone && !email) {
-      setAddError('휴대폰 또는 이메일 중 하나 이상 입력해 주세요.');
-      return;
-    }
-    if (phone && !isValidKrMobilePhone(phone)) {
-      setAddError('휴대폰 번호는 11자리(010-1234-5678) 형식으로 입력해 주세요.');
-      return;
-    }
     setAddError('');
     setPendingRows((prev) => [
       ...prev,
@@ -235,20 +244,9 @@ export default function AssessmentAddRecipientModal({
       setAddError('개별 입력 또는 파일에서 내담자 1명 이상을 추가해 주세요.');
       return;
     }
-    const invalid = rows.find((r) => {
-      const phone = normalizeRecipientPhone(r.phone);
-      const email = (r.email || '').trim();
-      if (!phone && !email) return true;
-      if (phone && !isValidKrMobilePhone(phone)) return true;
-      return false;
-    });
+    const invalid = rows.find((r) => targetRowInvalid(r));
     if (invalid) {
-      const phone = normalizeRecipientPhone(invalid.phone);
-      if (phone && !isValidKrMobilePhone(phone)) {
-        setAddError(`「${invalid.displayName}」님의 휴대폰 번호(11자리)를 확인해 주세요.`);
-      } else {
-        setAddError(`「${invalid.displayName}」님의 휴대폰 또는 이메일이 필요합니다.`);
-      }
+      setAddError(`추가 대상 목록에 부적합 항목이 있습니다. 「${invalid.displayName}」님의 연락처를 확인해 주세요.`);
       return;
     }
     setAddError('');
@@ -336,7 +334,7 @@ export default function AssessmentAddRecipientModal({
             <p className="min-w-0 truncate text-sm font-medium text-sky-100/90" title={groupTitleLine}>
               {groupTitleLine}
             </p>
-            <MiniStat label="코드">
+            <MiniStat label="상담코드">
               <span className="font-mono text-cyan-300">{formatAccessCodeDisplay(context.accessCode)}</span>
             </MiniStat>
           </div>
@@ -348,72 +346,65 @@ export default function AssessmentAddRecipientModal({
               <div className="mb-3 border-b border-white/10 pb-2">
                 <h4 className="text-sm font-bold tracking-tight text-sky-100">개별 입력</h4>
               </div>
-              <div className="flex flex-col gap-3">
-                <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
-                  <div className="w-[5.5rem] shrink-0">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto] sm:items-stretch">
+                <div className="flex min-w-0 flex-col gap-3">
+                  <div>
                     <label htmlFor="add-recipient-name" className={FORM_LABEL}>
                       이름<span className="text-yellow-400">(필수)</span>
                     </label>
-                  <input
-                    ref={nameInputRef}
-                    id="add-recipient-name"
-                    type="text"
-                    className={`${FORM_INPUT} !px-2 text-center`}
-                    value={draftName}
-                    onChange={(e) => setDraftName(e.target.value)}
-                    onKeyDown={handleDraftKeyDown}
-                    disabled={addLoading}
-                    placeholder="홍길동"
-                    maxLength={20}
-                  />
-                </div>
-                <div className="w-[15ch] shrink-0">
-                  <label htmlFor="add-recipient-phone" className={FORM_LABEL}>
-                    휴대폰(선택)
-                  </label>
-                  <input
-                    id="add-recipient-phone"
-                    type="tel"
-                    inputMode="numeric"
-                    className={`${FORM_INPUT} tabular-nums !px-2`}
-                    style={{ width: '15ch', maxWidth: '100%' }}
-                    value={draftPhone}
-                    onChange={(e) => setDraftPhone(formatPhoneWhileTyping(e.target.value))}
-                    onKeyDown={handleDraftKeyDown}
-                    disabled={addLoading}
-                    placeholder="010-1234-5678"
-                  />
-                </div>
-                  <div className="flex shrink-0 justify-end sm:ml-auto sm:justify-center">
-                    <button
-                      type="button"
-                      onClick={handleAddDraftRow}
+                    <input
+                      ref={nameInputRef}
+                      id="add-recipient-name"
+                      type="text"
+                      className={`${FORM_INPUT} w-full !px-2`}
+                      value={draftName}
+                      onChange={(e) => setDraftName(e.target.value)}
+                      onKeyDown={handleDraftKeyDown}
                       disabled={addLoading}
-                      className="h-[2.75rem] shrink-0 rounded-xl bg-gradient-to-r from-sky-600 to-cyan-600 px-4 text-sm font-semibold text-white shadow-md shadow-sky-950/30 transition hover:from-sky-500 hover:to-cyan-500 disabled:opacity-50"
-                    >
-                      입력
-                    </button>
+                      placeholder="홍길동"
+                      maxLength={20}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="add-recipient-phone" className={FORM_LABEL}>
+                      휴대폰(선택)
+                    </label>
+                    <input
+                      id="add-recipient-phone"
+                      type="tel"
+                      inputMode="numeric"
+                      className={`${FORM_INPUT} w-full tabular-nums !px-2`}
+                      value={draftPhone}
+                      onChange={(e) => setDraftPhone(formatPhoneWhileTyping(e.target.value))}
+                      onKeyDown={handleDraftKeyDown}
+                      disabled={addLoading}
+                      placeholder="010-1234-5678"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="add-recipient-email" className={FORM_LABEL}>
+                      이메일(선택)
+                    </label>
+                    <input
+                      id="add-recipient-email"
+                      type="email"
+                      className={`${FORM_INPUT} w-full !px-2`}
+                      value={draftEmail}
+                      onChange={(e) => setDraftEmail(e.target.value)}
+                      onKeyDown={handleDraftKeyDown}
+                      disabled={addLoading}
+                      placeholder="name@example.com"
+                    />
                   </div>
                 </div>
-                <div className="w-full max-w-md">
-                  <label htmlFor="add-recipient-email" className={FORM_LABEL}>
-                    이메일(선택)
-                  </label>
-                  <textarea
-                    id="add-recipient-email"
-                    rows={Math.min(4, Math.max(1, Math.ceil(Math.max(draftEmail.length, 1) / 25)))}
-                    className={`${FORM_INPUT} min-h-[2.75rem] w-full max-w-md resize-none break-all leading-snug !px-2`}
-                    value={draftEmail}
-                    onChange={(e) => setDraftEmail(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        handleDraftKeyDown(e as unknown as React.KeyboardEvent<HTMLInputElement>);
-                      }
-                    }}
-                    disabled={addLoading}
-                    placeholder="name@example.com"
-                  />
-                </div>
+                <button
+                  type="button"
+                  onClick={handleAddDraftRow}
+                  disabled={addLoading}
+                  className="min-h-[8.5rem] w-full shrink-0 rounded-xl bg-gradient-to-b from-sky-600 to-cyan-600 px-5 text-sm font-semibold text-white shadow-md shadow-sky-950/30 transition hover:from-sky-500 hover:to-cyan-500 disabled:opacity-50 sm:w-24"
+                >
+                  입력
+                </button>
               </div>
             </section>
 
@@ -548,7 +539,7 @@ export default function AssessmentAddRecipientModal({
                 {combinedRows.map((row, idx) => (
                   <li
                     key={`target-${idx}-${row.displayName}-${row.phone}-${row.email}`}
-                    className="flex items-start justify-between gap-2 rounded-md border border-white/5 bg-slate-900/40 px-2.5 py-1.5 text-sm leading-snug"
+                    className="flex items-center justify-between gap-2 rounded-md border border-white/5 bg-slate-900/40 px-2.5 py-1.5 text-sm leading-snug"
                   >
                     <span className="min-w-0 break-words text-white">
                       <span className="font-medium">{row.displayName}</span>

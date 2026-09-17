@@ -8,8 +8,9 @@ export function formatEmailMaskedDisplay(email: string | null | undefined): stri
   if (at <= 0) return raw.length <= 2 ? `${raw[0] ?? ''}*` : `${raw.slice(0, 2)}***`;
   const local = raw.slice(0, at);
   const domain = raw.slice(at);
-  if (local.length <= 2) return `${local[0] ?? ''}***${domain}`;
-  return `${local.slice(0, 2)}***${domain}`;
+  if (local.length <= 2) return `${local[0] ?? ''}**${domain}`;
+  const visible = local.length >= 4 ? local.slice(0, 4) : local.slice(0, 2);
+  return `${visible}**${domain}`;
 }
 
 export function displayContactEmail(

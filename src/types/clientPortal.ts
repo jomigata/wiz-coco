@@ -136,6 +136,13 @@ export type CounselorClientPortalListItem = {
     percent: number;
     label: ClientPortalProgressLabel;
   };
+  archivedTests?: {
+    testId: string;
+    testName?: string;
+    status: string;
+    completedAt?: string | null;
+    resultId?: string | null;
+  }[];
 };
 
 export type CounselorClientPortalCohort = {

@@ -46,7 +46,7 @@ import {
 import CounselorListBackLink from '@/components/counselor/CounselorListBackLink';
 import { DELETED_RECIPIENTS_HREF } from '@/lib/counselorNestedNav';
 import { LoadingMessage } from '@/components/ui/LoadingMessage';
-import { listAssessments, clearCounselorAssessmentsListCache } from '@/lib/assessmentApi';
+import { listAssessments, clearCounselorAssessmentsListCache, getCounselorResult, type CounselorResultDetail } from '@/lib/assessmentApi';
 import {
   archiveDispatchRecipients,
   fetchArchivedDispatchRecipients,
@@ -55,11 +55,13 @@ import {
   permanentlyDeleteArchivedDispatchRecipients,
   restoreArchivedDispatchRecipients,
   type ArchivedDispatchRecipient,
+  type DispatchTestResult,
 } from '@/lib/clientPortalApi';
 import { stripAssessmentTitleDispatchCountSuffix } from '@/lib/counselorAssessmentResultDisplay';
 import { counselorClientProgressHref } from '@/lib/counselorClientRoutes';
 import { exportClientPortalItems } from '@/lib/clientPortalListExport';
 import RecipientContactCell from '@/components/counselor/RecipientContactCell';
+import CounselorRecipientTestsExpandRow from '@/components/counselor/CounselorRecipientTestsExpandRow';
 import { dispatchStatusDisplay, formatNotifyDate, compareDispatchStatusSort, recipientProgressDisplay } from '@/lib/dispatchRecipientDisplay';
 import { INDIVIDUAL_COHORT_KEY } from '@/lib/monitoringRealtime';
 import { rememberCounselorAssessmentContext, rememberCounselorProgressFrom } from '@/lib/counselorNestedNav';
@@ -532,6 +534,7 @@ function mapArchivedToClientItem(row: ArchivedDispatchRecipient): CounselorClien
       completedTests: completed,
       totalTests: required,
     },
+    archivedTests: row.tests,
   };
 }
 
@@ -599,6 +602,10 @@ export default function CounselorClientList({
     error?: boolean;
   } | null>(null);
   const { pageSize, setPageSize } = useCounselorListPageSize();
+  const [expandedPortalId, setExpandedPortalId] = useState<string | null>(null);
+  const [testDetail, setTestDetail] = useState<CounselorResultDetail | null>(null);
+  const [testDetailLoading, setTestDetailLoading] = useState(false);
+  const [testDetailError, setTestDetailError] = useState('');
 
   const cacheKey = useMemo(
     () =>
@@ -1127,11 +1134,27 @@ export default function CounselorClientList({
     router.push(counselorClientProgressHref(assessmentId, item.portalId));
   };
 
+  const toggleDeletedRowExpand = (portalId: string) => {
+    setExpandedPortalId((prev) => (prev === portalId ? null : portalId));
+  };
+
+  const openDeletedTestResult = (resultId: string, assessmentId: string) => {
+    setTestDetailLoading(true);
+    setTestDetailError('');
+    getCounselorResult(assessmentId, resultId)
+      .then(setTestDetail)
+      .catch((err) => setTestDetailError(err instanceof Error ? err.message : '조회 실패'))
+      .finally(() => setTestDetailLoading(false));
+  };
+
+  const deletedListDetailColSpan =
+    6 + (showCodeDispatchColumn ? 1 : 0) + (adminUser ? 1 : 0);
+
   const pageTitle = permanentlyDeletedMode
     ? '영구삭제 내담자'
     : deletedMode
       ? '삭제된 내담자'
-      : '검사발송 목록';
+      : '내담자 목록';
   const dateColumnLabel = permanentlyDeletedMode
     ? '영구삭제일'
     : deletedMode
@@ -1152,7 +1175,7 @@ export default function CounselorClientList({
       description={
         <span className="inline-flex w-full flex-wrap items-center gap-x-3 gap-y-2">
           {deletedMode && !permanentlyDeletedMode ? (
-            <CounselorListBackLink href="/counselor/clients" label="검사발송 목록" />
+            <CounselorListBackLink href="/counselor/clients" label="내담자 목록" />
           ) : null}
           {permanentlyDeletedMode ? (
             <span className="shrink-0">
@@ -1356,7 +1379,10 @@ export default function CounselorClientList({
                       adminUser &&
                       (deletedMode || permanentlyDeletedMode) &&
                       isAssessmentDeletedLinkedRow(item.portalId);
-                    const rowClickable = !deletedMode && !permanentlyDeletedMode && !locked;
+                    const rowClickable = !permanentlyDeletedMode && !locked && !deletedMode;
+                    const rowExpandable = deletedMode && !permanentlyDeletedMode && !locked;
+                    const isExpanded = expandedPortalId === item.portalId;
+                    const expandTests = item.archivedTests ?? [];
                     const rowClass =
                       deletedMode || permanentlyDeletedMode
                         ? `${counselorListBodyRowStaticClass}${idx % 2 === 1 ? ' bg-white/[0.035]' : ''}`
@@ -1369,9 +1395,23 @@ export default function CounselorClientList({
                         : dispatchView;
 
                     return (
+                      <React.Fragment key={item.portalId}>
                       <tr
-                        key={item.portalId}
-                        className={`${rowClass} ${isSelected ? 'bg-white/[0.04]' : ''} ${locked ? 'opacity-70' : ''}`}
+                        onClick={rowExpandable ? () => toggleDeletedRowExpand(item.portalId) : undefined}
+                        onKeyDown={
+                          rowExpandable
+                            ? (e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault();
+                                  toggleDeletedRowExpand(item.portalId);
+                                }
+                              }
+                            : undefined
+                        }
+                        tabIndex={rowExpandable ? 0 : undefined}
+                        role={rowExpandable ? 'button' : undefined}
+                        aria-expanded={rowExpandable ? isExpanded : undefined}
+                        className={`${rowClass} ${isSelected ? 'bg-white/[0.04]' : ''} ${locked ? 'opacity-70' : ''} ${rowExpandable ? 'cursor-pointer' : ''} ${isExpanded ? 'bg-white/[0.04]' : ''}`}
                       >
                         <td className={`${counselorListTdClass} tabular-nums text-slate-500`}>
                           {startIndex + idx + 1}
@@ -1443,17 +1483,24 @@ export default function CounselorClientList({
                           {formatNotifyDate(item.notifyAt)}
                         </td>
                         <td
-                          className={`${counselorListTdClass} ${rowClickable ? 'cursor-pointer' : ''}`}
+                          className={`${counselorListTdClass} ${rowClickable || rowExpandable ? 'cursor-pointer' : ''}`}
                           onClick={rowClickable ? () => goToProgress(item) : undefined}
                         >
-                          <div className={`text-sm ${progress.className}`}>{progress.text}</div>
+                          <div className={`text-sm ${progress.className}`}>
+                            {rowExpandable ? (
+                              <span className="text-slate-400" aria-hidden="true">
+                                {isExpanded ? '▼' : '▶'}{' '}
+                              </span>
+                            ) : null}
+                            {progress.text}
+                          </div>
                           {counselMoveProgressNote(item)}
                         </td>
                         <td
                           className={`max-w-[14rem] ${counselorListTdClass} ${rowClickable ? 'cursor-pointer' : ''}`}
                           onClick={rowClickable ? () => goToProgress(item) : undefined}
                         >
-                          <RecipientContactCell phone={item.phone} email={item.email} />
+                          <RecipientContactCell phone={item.phone} email={item.email} masked={!deletedMode && !permanentlyDeletedMode} />
                         </td>
                         {showCodeDispatchColumn ? (
                           <td
@@ -1465,6 +1512,18 @@ export default function CounselorClientList({
                         ) : null}
                         {adminUser ? <CounselorAdminEmailTd email={item.counselorEmail} /> : null}
                       </tr>
+                      {rowExpandable && isExpanded ? (
+                        <CounselorRecipientTestsExpandRow
+                          tests={expandTests as DispatchTestResult[]}
+                          leadingColSpan={2}
+                          detailColSpan={deletedListDetailColSpan}
+                          onOpenResult={(resultId) => {
+                            const assessmentId = item.assessments[0]?.assessmentId;
+                            if (assessmentId) openDeletedTestResult(resultId, assessmentId);
+                          }}
+                        />
+                      ) : null}
+                      </React.Fragment>
                     );
                   })}
                 </tbody>
@@ -1641,6 +1700,46 @@ export default function CounselorClientList({
           message={`선택 ${selected.size}명을 삭제하고 있습니다.`}
         />
       )}
+      {testDetailLoading ? (
+        <CounselorActionProgressOverlay open zIndexClass="z-[80]" title="결과 로딩중…" />
+      ) : null}
+      {testDetailError ? (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 p-4">
+          <div className="rounded-xl border border-red-500/40 bg-slate-900 p-6 text-center">
+            <p className="text-sm text-red-300">{testDetailError}</p>
+            <button
+              type="button"
+              onClick={() => setTestDetailError('')}
+              className="mt-4 rounded-lg bg-slate-700 px-4 py-2 text-sm text-white"
+            >
+              닫기
+            </button>
+          </div>
+        </div>
+      ) : null}
+      {testDetail ? (
+        <div
+          className="fixed inset-0 z-[80] flex items-center justify-center bg-black/75 p-4"
+          onClick={() => setTestDetail(null)}
+        >
+          <div
+            className="max-h-[85vh] w-full max-w-2xl overflow-auto rounded-xl border border-slate-600 bg-slate-900 p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-semibold text-white">{testDetail.testId || '검사 결과'}</h3>
+            <pre className="mt-4 max-h-[50vh] overflow-auto whitespace-pre-wrap rounded-lg bg-slate-950/80 p-4 text-xs text-slate-300">
+              {JSON.stringify(testDetail.resultData ?? testDetail.responses ?? testDetail, null, 2)}
+            </pre>
+            <button
+              type="button"
+              onClick={() => setTestDetail(null)}
+              className="mt-4 rounded-lg bg-slate-700 px-4 py-2 text-sm text-white"
+            >
+              닫기
+            </button>
+          </div>
+        </div>
+      ) : null}
       <CounselorActionCompleteModal
         open={Boolean(actionComplete)}
         title={actionComplete?.title ?? ''}
