@@ -845,7 +845,8 @@ export default function AssessmentList({
                         </span>
                       </td>
                       <td
-                        className={`whitespace-nowrap ${counselorListTdCompactClass} text-center cursor-default tabular-nums`}
+                        className={`whitespace-nowrap ${counselorListTdCompactClass} text-center cursor-pointer`}
+                        onClick={() => goToProgress(a.id)}
                       >
                         <CounselorProgressMetricsInline
                           totalClients={dispatchTotal}

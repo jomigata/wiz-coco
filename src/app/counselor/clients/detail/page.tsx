@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { fetchCounselorClientPortalDetail } from '@/lib/clientPortalApi';
-import { counselorClientProgressHref } from '@/lib/counselorClientRoutes';
 import { rememberCounselorAssessmentContext } from '@/lib/counselorNestedNav';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
@@ -35,7 +34,7 @@ export default function ClientDetailPage() {
         if (cancelled) return;
         if (assessmentId) {
           rememberCounselorAssessmentContext(assessmentId);
-          router.replace(counselorClientProgressHref(assessmentId, portalId));
+          router.replace(`/counselor/clients?expandPortalId=${encodeURIComponent(portalId)}`);
         } else {
           router.replace('/counselor/clients');
         }
@@ -59,5 +58,5 @@ export default function ClientDetailPage() {
     );
   }
 
-  return <AuthLoadingState className="py-16" message="상담진행 현황으로 이동 중…" />;
+  return <AuthLoadingState className="py-16" message="내담자 목록으로 이동 중…" />;
 }

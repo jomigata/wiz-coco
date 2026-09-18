@@ -26,6 +26,12 @@ import { isValidEmailAddress } from '@/lib/emailValidation';
 type TargetSortKey = 'input' | 'name' | 'phone' | 'email';
 type TargetSortDir = 'asc' | 'desc';
 
+type ImportedFileBatch = {
+  batchId: string;
+  name: string;
+  rows: RecipientRow[];
+};
+
 export type AssessmentAddRecipientContext = {
   assessmentId: string;
   accessCode: string;
@@ -128,9 +134,8 @@ export default function AssessmentAddRecipientModal({
     error?: boolean;
   } | null>(null);
   const [addError, setAddError] = useState('');
-  const [addFileRows, setAddFileRows] = useState<RecipientRow[]>([]);
-  const [addFileLabel, setAddFileLabel] = useState('');
-  const [showAddFilePreview, setShowAddFilePreview] = useState(false);
+  const [fileBatches, setFileBatches] = useState<ImportedFileBatch[]>([]);
+  const [filePreviewBatchId, setFilePreviewBatchId] = useState<string | null>(null);
   const [samplePreviewKind, setSamplePreviewKind] = useState<'txt' | 'csv' | null>(null);
   const [notifyConfirmOpen, setNotifyConfirmOpen] = useState(false);
   const [targetSortKey, setTargetSortKey] = useState<TargetSortKey>('input');
@@ -143,9 +148,19 @@ export default function AssessmentAddRecipientModal({
     return { widthCh };
   }, [samplePreviewText]);
 
+  const importedFileRows = useMemo(
+    () => fileBatches.flatMap((batch) => batch.rows),
+    [fileBatches],
+  );
+
   const combinedRows = useMemo(
-    () => mergeRecipients(pendingRows, addFileRows),
-    [pendingRows, addFileRows],
+    () => mergeRecipients(pendingRows, importedFileRows),
+    [pendingRows, importedFileRows],
+  );
+
+  const numberedFileBatches = useMemo(
+    () => fileBatches.map((batch, index) => ({ ...batch, displayIndex: index + 1 })),
+    [fileBatches],
   );
 
   const indexedTargetRows = useMemo(
@@ -214,9 +229,8 @@ export default function AssessmentAddRecipientModal({
     setPendingRows([]);
     setAddSendNow(true);
     setAddError('');
-    setAddFileRows([]);
-    setAddFileLabel('');
-    setShowAddFilePreview(false);
+    setFileBatches([]);
+    setFilePreviewBatchId(null);
     setSamplePreviewKind(null);
     setTargetSortKey('input');
     setTargetSortDir('asc');
@@ -256,35 +270,45 @@ export default function AssessmentAddRecipientModal({
       removePendingRow(idx);
       return;
     }
-    const fileIdx = idx - pendingLen;
-    setAddFileRows((prev) => prev.filter((_, i) => i !== fileIdx));
+    let offset = idx - pendingLen;
+    setFileBatches((prev) => {
+      const next: ImportedFileBatch[] = [];
+      for (const batch of prev) {
+        if (offset >= batch.rows.length) {
+          offset -= batch.rows.length;
+          next.push(batch);
+          continue;
+        }
+        const rows = batch.rows.filter((_, rowIdx) => rowIdx !== offset);
+        offset = -1;
+        if (rows.length > 0) next.push({ ...batch, rows });
+      }
+      return next;
+    });
   };
 
   const handleAddRecipientFiles = async (fileList: FileList | null) => {
     if (!fileList?.length) return;
     setAddError('');
     try {
-      const mergedRows: RecipientRow[] = [];
-      const names: string[] = [];
+      const additions: ImportedFileBatch[] = [];
       for (const file of Array.from(fileList)) {
         const parsed = await parseRecipientFile(file);
-        mergedRows.push(...parsed);
-        names.push(file.name);
+        additions.push({
+          batchId: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+          name: file.name,
+          rows: parsed,
+        });
       }
-      setAddFileRows((prev) => mergeRecipients(prev, mergedRows));
-      setAddFileLabel((prev) => {
-        const parts = prev ? prev.split(', ').filter(Boolean) : [];
-        return [...parts, ...names].join(', ');
-      });
+      setFileBatches((prev) => [...prev, ...additions]);
     } catch (err) {
       setAddError(err instanceof Error ? err.message : '파일을 읽지 못했습니다.');
     }
   };
 
-  const clearAddedFile = () => {
-    setAddFileRows([]);
-    setAddFileLabel('');
-    setShowAddFilePreview(false);
+  const removeFileBatch = (batchId: string) => {
+    setFileBatches((prev) => prev.filter((b) => b.batchId !== batchId));
+    setFilePreviewBatchId((prev) => (prev === batchId ? null : prev));
   };
 
   const handleSubmit = () => {
@@ -453,16 +477,19 @@ export default function AssessmentAddRecipientModal({
                   disabled={addLoading}
                   className="min-h-[8.5rem] w-full shrink-0 rounded-xl border border-sky-400/20 bg-gradient-to-r from-sky-600/25 via-sky-500/15 to-transparent px-5 text-sm font-semibold text-sky-50 shadow-md shadow-sky-950/30 transition hover:from-sky-600/35 hover:via-sky-500/25 disabled:opacity-50 sm:w-24"
                 >
-                  개별 추가
+                  <span className="flex flex-col items-center leading-tight">
+                    <span>개별</span>
+                    <span>추가</span>
+                  </span>
                 </button>
               </div>
             </section>
 
             <section className="flex flex-col overflow-visible rounded-2xl border border-emerald-500/15 bg-gradient-to-br from-[#0f1f36]/90 via-[#0d1830]/95 to-[#0a1220]/90 p-4 shadow-inner shadow-black/20 lg:col-span-5">
               <div className="mb-3 border-b border-white/10 pb-2">
-                <h4 className="text-sm font-bold tracking-tight text-emerald-100">파일 일괄 등록</h4>
+                <h4 className="text-sm font-bold tracking-tight text-emerald-100">파일 일괄 추가</h4>
                 <p className="mt-0.5 text-xs text-slate-400">CSV·Excel — 이름(필수), 휴대폰(선택), 이메일(선택)</p>
-                <p className="mt-0.5 text-[11px] text-slate-500">복수 파일 가능</p>
+                <p className="mt-1 text-sm font-semibold text-amber-300">복수 파일 가능</p>
               </div>
               <div className="rounded-xl border border-dashed border-white/15 bg-black/25 p-3">
               <div className="flex flex-col gap-2">
@@ -521,54 +548,69 @@ export default function AssessmentAddRecipientModal({
                   </div>
                 ) : null}
               </div>
-              {addFileLabel ? (
-                <div className="relative z-20 mt-2 overflow-visible" onMouseLeave={() => setShowAddFilePreview(false)}>
-                  <p className="text-sm text-emerald-300">
-                    <span
-                      className="cursor-help break-all underline decoration-dotted decoration-emerald-400/60 underline-offset-2"
-                      onMouseEnter={() => setShowAddFilePreview(true)}
-                      onFocus={() => setShowAddFilePreview(true)}
-                      onBlur={() => setShowAddFilePreview(false)}
-                      tabIndex={0}
-                      role="button"
-                      aria-label={`${addFileLabel} 파일 내용 미리보기`}
+              {numberedFileBatches.length > 0 ? (
+                <div className="relative z-20 mt-3 space-y-2">
+                  {numberedFileBatches.map((batch) => (
+                    <div
+                      key={batch.batchId}
+                      className="relative overflow-visible rounded-lg border border-emerald-500/20 bg-emerald-950/20 px-2.5 py-2"
+                      onMouseLeave={() =>
+                        setFilePreviewBatchId((prev) => (prev === batch.batchId ? null : prev))
+                      }
                     >
-                      {addFileLabel}
-                    </span>
-                    {' · '}
-                    {addFileRows.length}명
-                    <button
-                      type="button"
-                      onClick={clearAddedFile}
-                      className="ml-2 font-medium text-red-500 hover:text-red-400"
-                      disabled={addLoading}
-                    >
-                      삭제
-                    </button>
-                  </p>
-                  {showAddFilePreview && addFileRows.length > 0 ? (
-                    <div className="pointer-events-none absolute left-0 top-full z-[200] mt-1.5" role="tooltip">
-                      <div className="max-w-[min(100vw-2rem,40rem)] overflow-x-auto rounded-lg border border-sky-500/40 bg-slate-950 p-2.5 text-left shadow-2xl">
-                        <p className="mb-1 text-xs font-semibold text-sky-300">파일 내용 미리보기</p>
-                        <div className="max-h-32 space-y-0.5 overflow-y-auto">
-                          {addFileRows.slice(0, 50).map((row, idx) => (
-                            <p
-                              key={`${row.displayName}-${row.phone}-${idx}`}
-                              className="whitespace-nowrap font-mono text-xs leading-snug text-slate-200"
-                            >
-                              {[row.displayName, row.phone, row.email]
-                                .map((p) => (p || '').trim())
-                                .filter(Boolean)
-                                .join(' · ')}
-                            </p>
-                          ))}
-                          {addFileRows.length > 50 ? (
-                            <p className="text-xs text-slate-500">… 외 {(addFileRows.length - 50).toLocaleString('ko-KR')}명</p>
-                          ) : null}
+                      <p className="text-sm leading-snug text-emerald-100">
+                        <span className="font-semibold tabular-nums">{batch.displayIndex}.</span>{' '}
+                        <span
+                          className="cursor-help break-all underline decoration-dotted decoration-emerald-400/60 underline-offset-2"
+                          onMouseEnter={() => setFilePreviewBatchId(batch.batchId)}
+                          onFocus={() => setFilePreviewBatchId(batch.batchId)}
+                          onBlur={() => setFilePreviewBatchId(null)}
+                          tabIndex={0}
+                          role="button"
+                          aria-label={`${batch.name} 파일 내용 미리보기`}
+                        >
+                          {batch.name}
+                        </span>
+                        <span className="text-emerald-300/90"> · 총 {batch.rows.length}명</span>
+                        <button
+                          type="button"
+                          onClick={() => removeFileBatch(batch.batchId)}
+                          className="ml-2 font-medium text-red-400 hover:text-red-300"
+                          disabled={addLoading}
+                        >
+                          삭제
+                        </button>
+                      </p>
+                      {filePreviewBatchId === batch.batchId && batch.rows.length > 0 ? (
+                        <div
+                          className="pointer-events-none absolute left-0 top-full z-[200] mt-1.5 w-full min-w-[16rem]"
+                          role="tooltip"
+                        >
+                          <div className="max-w-[min(100vw-2rem,40rem)] overflow-x-auto rounded-lg border border-sky-500/40 bg-slate-950 p-2.5 text-left shadow-2xl">
+                            <p className="mb-1 text-xs font-semibold text-sky-300">파일 내용 미리보기</p>
+                            <div className="max-h-32 space-y-0.5 overflow-y-auto">
+                              {batch.rows.slice(0, 50).map((row, idx) => (
+                                <p
+                                  key={`${batch.batchId}-${row.displayName}-${idx}`}
+                                  className="whitespace-nowrap font-mono text-xs leading-snug text-slate-200"
+                                >
+                                  {[row.displayName, row.phone, row.email]
+                                    .map((p) => (p || '').trim())
+                                    .filter(Boolean)
+                                    .join(' · ')}
+                                </p>
+                              ))}
+                              {batch.rows.length > 50 ? (
+                                <p className="text-xs text-slate-500">
+                                  … 외 {(batch.rows.length - 50).toLocaleString('ko-KR')}명
+                                </p>
+                              ) : null}
+                            </div>
+                          </div>
                         </div>
-                      </div>
+                      ) : null}
                     </div>
-                  ) : null}
+                  ))}
                 </div>
               ) : null}
             </section>
@@ -652,19 +694,19 @@ export default function AssessmentAddRecipientModal({
             <div className="flex shrink-0 gap-2">
               <button
                 type="button"
-                onClick={handleClose}
-                disabled={addLoading}
-                className="rounded-lg border border-white/10 bg-slate-700/80 px-4 py-2 text-sm text-slate-300 transition-colors hover:bg-slate-600 disabled:opacity-50"
-              >
-                취소
-              </button>
-              <button
-                type="button"
                 onClick={() => void handleSubmit()}
                 disabled={addLoading}
                 className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-emerald-900/25 transition-colors hover:bg-emerald-500 disabled:opacity-50"
               >
                 {addLoading ? '추가 중…' : '코드 발송'}
+              </button>
+              <button
+                type="button"
+                onClick={handleClose}
+                disabled={addLoading}
+                className="rounded-lg border border-white/10 bg-slate-700/80 px-4 py-2 text-sm text-slate-300 transition-colors hover:bg-slate-600 disabled:opacity-50"
+              >
+                취소
               </button>
             </div>
           </div>

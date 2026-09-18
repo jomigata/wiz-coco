@@ -200,7 +200,7 @@ export default function CounselorNotifyConfirmDialog({
                   {pointSummary.footerLine}
                 </p>
                 {kind === 'add_recipient' ? (
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="mt-1 text-xs text-white/90">
                     (내담자 1명 추가 시 {formatPoints(POINT_COST_PORTAL_RECIPIENT)}가 차감됩니다.)
                   </p>
                 ) : null}
@@ -225,19 +225,19 @@ export default function CounselorNotifyConfirmDialog({
         <div className="flex justify-end gap-2 border-t border-white/10 px-5 py-4">
           <button
             type="button"
-            onClick={onCancel}
-            disabled={loading}
-            className="rounded-lg border border-white/15 bg-white/5 px-4 py-2 text-sm text-slate-200 hover:bg-white/10 disabled:opacity-50"
-          >
-            취소
-          </button>
-          <button
-            type="button"
             disabled={loading || Boolean(validationError) || insufficient || balanceLoading}
             onClick={() => onConfirm(notifyChannelsToPayload(effectiveChannels))}
             className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-50"
           >
             {loading ? '처리 중…' : confirmLabel}
+          </button>
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={loading}
+            className="rounded-lg border border-white/15 bg-white/5 px-4 py-2 text-sm text-slate-200 hover:bg-white/10 disabled:opacity-50"
+          >
+            취소
           </button>
         </div>
       </div>

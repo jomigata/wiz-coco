@@ -94,6 +94,7 @@ import type { NotifyRecipientContact } from '@/lib/counselorNotifyChannels';
 import AssessmentAddRecipientModal, {
   type AssessmentAddRecipientContext,
 } from '@/components/counselor/AssessmentAddRecipientModal';
+import CounselorRecipientContactEditModal from '@/components/counselor/CounselorRecipientContactEditModal';
 import { LoadingMessage } from '@/components/ui/LoadingMessage';
 
 function myCodeWithOriginSuffix(
@@ -1265,6 +1266,9 @@ export default function AssessmentDispatchPanel({
   const adminClientProgressView = adminUser && entryFrom === 'clients';
   const clientsSimplifiedView = entryFrom === 'clients' && !adminUser;
   const clientsMergedContact = entryFrom !== 'deleted-recipients' && !adminClientProgressView;
+  const contactAfterNotifyAt = entryFrom === 'deleted-assessments';
+  const showArchiveDeleteFooter =
+    (entryFrom === 'assessments' || entryFrom === 'deleted-assessments') && !adminUser;
   const showTableCheckbox = !adminClientProgressView && !clientsSimplifiedView;
   const showTableSort = !clientsSimplifiedView;
   const showBulkToolbar = entryFrom === 'assessments' && !adminUser;
@@ -1478,39 +1482,41 @@ export default function AssessmentDispatchPanel({
                     진행 현황
                   </th>
                 )}
-                {clientsMergedContact ? (
+                {clientsMergedContact && !contactAfterNotifyAt ? (
                   <th scope="col" className={`${counselorListThGrayClass} w-52 whitespace-nowrap`}>
                     연락처
                   </th>
-                ) : showTableSort ? (
-                  <>
-                    <SortableColumnHeader
-                      label="휴대폰"
-                      sortKey="phone"
-                      activeKey={sortKey}
-                      direction={sortDir}
-                      onSort={toggleSort}
-                      className="w-32"
-                    />
-                    <SortableColumnHeader
-                      label="이메일"
-                      sortKey="email"
-                      activeKey={sortKey}
-                      direction={sortDir}
-                      onSort={toggleSort}
-                      className="w-52"
-                    />
-                  </>
-                ) : (
-                  <>
-                    <th scope="col" className={`${counselorListThGrayClass} w-32 whitespace-nowrap`}>
-                      휴대폰
-                    </th>
-                    <th scope="col" className={`${counselorListThGrayClass} w-52 whitespace-nowrap`}>
-                      이메일
-                    </th>
-                  </>
-                )}
+                ) : !clientsMergedContact ? (
+                  showTableSort ? (
+                    <>
+                      <SortableColumnHeader
+                        label="휴대폰"
+                        sortKey="phone"
+                        activeKey={sortKey}
+                        direction={sortDir}
+                        onSort={toggleSort}
+                        className="w-32"
+                      />
+                      <SortableColumnHeader
+                        label="이메일"
+                        sortKey="email"
+                        activeKey={sortKey}
+                        direction={sortDir}
+                        onSort={toggleSort}
+                        className="w-52"
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <th scope="col" className={`${counselorListThGrayClass} w-32 whitespace-nowrap`}>
+                        휴대폰
+                      </th>
+                      <th scope="col" className={`${counselorListThGrayClass} w-52 whitespace-nowrap`}>
+                        이메일
+                      </th>
+                    </>
+                  )
+                ) : null}
                 {showTableSort ? (
                   <SortableColumnHeader
                     label="발송현황"
@@ -1539,6 +1545,11 @@ export default function AssessmentDispatchPanel({
                     발송일시
                   </th>
                 )}
+                {contactAfterNotifyAt && clientsMergedContact ? (
+                  <th scope="col" className={`${counselorListThGrayClass} w-52 whitespace-nowrap`}>
+                    연락처
+                  </th>
+                ) : null}
                 {!adminClientProgressView ? (
                   <th className={`${counselorListTdClass} w-[4.5rem] text-center text-xs font-medium text-slate-400`}>
                     연락처 수정
@@ -1607,11 +1618,11 @@ export default function AssessmentDispatchPanel({
                           {progressMoveNote(r, displayData.joinAccessCode || '')}
                         </div>
                       </td>
-                      {clientsMergedContact ? (
+                      {clientsMergedContact && !contactAfterNotifyAt ? (
                         <td className={`${counselorListTdClass} align-middle`}>
                           <RecipientContactCell phone={r.phone} email={r.email} />
                         </td>
-                      ) : (
+                      ) : !clientsMergedContact ? (
                         <>
                           <td className="px-3 py-2 text-slate-300 align-middle whitespace-nowrap tabular-nums">
                             {r.phone?.trim() ? displayContactPhone(r.phone, contactRevealed) : '—'}
@@ -1626,7 +1637,7 @@ export default function AssessmentDispatchPanel({
                             )}
                           </td>
                         </>
-                      )}
+                      ) : null}
                       <td
                         className="px-3 py-2.5 align-middle whitespace-nowrap text-sm"
                         title={fieldPending.notifyStatus ? undefined : notify.title}
@@ -1640,6 +1651,11 @@ export default function AssessmentDispatchPanel({
                       <td className="px-3 py-2.5 align-middle whitespace-nowrap text-sm tabular-nums text-slate-400">
                         {fieldPending.notifyAt ? DISPATCH_CHECKING_LABEL : formatNotifyDate(r.notifyAt)}
                       </td>
+                      {contactAfterNotifyAt && clientsMergedContact ? (
+                        <td className={`${counselorListTdClass} align-middle`}>
+                          <RecipientContactCell phone={r.phone} email={r.email} />
+                        </td>
+                      ) : null}
                       {!adminClientProgressView ? (
                         <td className="px-2 py-2.5 align-middle text-center" onClick={(e) => e.stopPropagation()}>
                           <button
@@ -1821,7 +1837,7 @@ export default function AssessmentDispatchPanel({
                 >
                   인쇄 ({selected.size})
                 </button>
-                {!adminUser ? (
+                {showArchiveDeleteFooter ? (
                   <button
                     type="button"
                     onClick={() => setConfirmAction('delete')}
@@ -2110,77 +2126,47 @@ export default function AssessmentDispatchPanel({
       )}
 
       {editRecipient ? (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
-          onClick={() => closeEditContact()}
-        >
-          <div
-            className="w-full max-w-md rounded-xl border border-slate-600 bg-slate-800 p-4 shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="rounded-lg border border-white/10 bg-slate-900/40 px-3 py-3">
-              <h3 className="text-lg font-semibold text-white">연락처 수정</h3>
-            </div>
-            <div className="mt-3 rounded-lg border border-white/10 bg-slate-900/30 px-3 py-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">내담자</p>
-              <p className="mt-1 text-base font-semibold text-white">
-                {editRecipient.displayName || '내담자'}
-              </p>
-              <p className="mt-0.5 font-mono text-lg font-semibold tracking-wide text-cyan-200">
-                {formatAccessCodeDisplay(editRecipient.myCode)}
-              </p>
-            </div>
-            <div className="mt-3 space-y-3">
-              <div className="rounded-lg border border-white/10 bg-slate-900/30 px-3 py-3">
-                <label htmlFor="dispatch-edit-phone" className="mb-1.5 block text-xs font-semibold text-slate-400">
-                  휴대폰
-                </label>
-                <input
-                  id="dispatch-edit-phone"
-                  type="tel"
-                  value={editPhone}
-                  onChange={(e) => setEditPhone(formatPhoneDisplay(e.target.value) || e.target.value)}
-                  disabled={editSaving}
-                  className="w-full rounded-lg border border-white/15 bg-slate-900/80 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500/40"
-                  placeholder={editPhone.trim() ? undefined : 'none'}
-                />
-              </div>
-              <div className="rounded-lg border border-white/10 bg-slate-900/30 px-3 py-3">
-                <label htmlFor="dispatch-edit-email" className="mb-1.5 block text-xs font-semibold text-slate-400">
-                  이메일
-                </label>
-                <input
-                  id="dispatch-edit-email"
-                  type="email"
-                  value={editEmail}
-                  onChange={(e) => setEditEmail(e.target.value)}
-                  disabled={editSaving}
-                  className="w-full rounded-lg border border-white/15 bg-slate-900/80 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500/40"
-                  placeholder={editEmail.trim() ? undefined : 'none'}
-                />
-              </div>
-              {editError ? <p className="text-sm text-red-400">{editError}</p> : null}
-            </div>
-            <div className="mt-5 flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => closeEditContact()}
-                disabled={editSaving}
-                className="rounded-lg bg-slate-700 px-4 py-2 text-sm text-slate-200 hover:bg-slate-600 disabled:opacity-50"
-              >
-                취소
-              </button>
-              <button
-                type="button"
-                onClick={() => void saveEditContact()}
-                disabled={editSaving}
-                className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500 disabled:opacity-50"
-              >
-                {editSaving ? '저장 중…' : '저장'}
-              </button>
-            </div>
-          </div>
-        </div>
+        <CounselorRecipientContactEditModal
+          open
+          target={{
+            displayName: editRecipient.displayName,
+            myCode: editRecipient.myCode,
+            phone: editRecipient.phone,
+            email: editRecipient.email,
+          }}
+          saving={editSaving}
+          onClose={closeEditContact}
+          onSave={async (payload) => {
+            if (!editRecipient) return;
+            setEditSaving(true);
+            setEditError('');
+            try {
+              const updated = await updateDispatchRecipientContact(
+                assessmentId,
+                editRecipient.portalId,
+                payload,
+              );
+              setData((prev) => {
+                if (!prev) return prev;
+                const next: AssessmentDispatchStatus = {
+                  ...prev,
+                  recipients: prev.recipients.map((row) =>
+                    row.portalId === updated.portalId
+                      ? { ...row, phone: updated.phone, email: updated.email }
+                      : row,
+                  ),
+                };
+                writeCachedDispatchStatus(assessmentId, next, user?.uid);
+                return next;
+              });
+              closeEditContact();
+            } catch (err) {
+              setEditError(err instanceof Error ? err.message : '연락처 수정에 실패했습니다.');
+            } finally {
+              setEditSaving(false);
+            }
+          }}
+        />
       ) : null}
 
       <AssessmentAddRecipientModal

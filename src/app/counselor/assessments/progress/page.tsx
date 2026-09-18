@@ -30,8 +30,29 @@ function ProgressPageContent() {
     rememberCounselorProgressFrom(from);
     if (!id) {
       router.replace('/counselor/assessments');
+      return;
+    }
+    if (from === 'clients') {
+      const q = new URLSearchParams();
+      if (pid) q.set('expandPortalId', pid);
+      router.replace(q.size ? `/counselor/clients?${q.toString()}` : '/counselor/clients');
+      return;
+    }
+    if (from === 'deleted-recipients') {
+      const q = new URLSearchParams();
+      if (pid) q.set('expandPortalId', pid);
+      router.replace(
+        q.size
+          ? `/counselor/assessments/deleted-recipients?${q.toString()}`
+          : '/counselor/assessments/deleted-recipients',
+      );
     }
   }, [searchParams, router]);
+
+  const entryFrom = resolveCounselorProgressFrom(
+    '/counselor/assessments/progress',
+    searchParams.toString() ? `?${searchParams.toString()}` : '',
+  );
 
   if (authPending) {
     return <AuthLoadingState className="py-8" />;
@@ -47,10 +68,9 @@ function ProgressPageContent() {
     return null;
   }
 
-  const entryFrom = resolveCounselorProgressFrom(
-    '/counselor/assessments/progress',
-    searchParams.toString() ? `?${searchParams.toString()}` : '',
-  );
+  if (entryFrom === 'clients' || entryFrom === 'deleted-recipients') {
+    return <AuthLoadingState className="py-8" message="목록으로 이동 중…" />;
+  }
 
   const autoOpenAddRecipient =
     (searchParams.get('addRecipient') || '').trim() === '1';

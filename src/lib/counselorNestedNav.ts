@@ -311,43 +311,7 @@ export function getClientsParentSubmenuItems(options?: {
   search?: string;
 }): CounselorParentSubmenuItem[] {
   const path = options?.pathname ? normalizeCounselorPath(options.pathname) : '';
-  const progressFrom = options?.pathname
-    ? resolveCounselorProgressFrom(options.pathname, options.search || '')
-    : 'clients';
-  const showProgressMenu =
-    path.startsWith('/counselor/assessments/progress') && progressFrom === 'clients';
-  const showDeletedProgressMenu =
-    path.startsWith('/counselor/assessments/progress') && progressFrom === 'deleted-recipients';
-  const assessmentId =
-    options?.pathname != null
-      ? resolveAssessmentContextId(options.pathname, options.search || '')
-      : null;
-  const progressHref = buildProgressHref(assessmentId, options?.search || '?from=clients');
-
   const items: CounselorParentSubmenuItem[] = [];
-  if (showProgressMenu) {
-    items.push({
-      order: 2,
-      label: '나의코드 현황',
-      href: progressHref,
-      isActive: (p) =>
-        p.startsWith('/counselor/assessments/progress') &&
-        resolveCounselorProgressFrom(options?.pathname || '', options?.search || '') === 'clients',
-      menuAlign: 'nested',
-    });
-  }
-  if (showDeletedProgressMenu) {
-    items.push({
-      order: 91,
-      label: '삭제코드 현황',
-      href: buildProgressHref(assessmentId, options?.search || '?from=deleted-recipients'),
-      isActive: (p) =>
-        p.startsWith('/counselor/assessments/progress') &&
-        resolveCounselorProgressFrom(options?.pathname || '', options?.search || '') ===
-          'deleted-recipients',
-      menuAlign: 'nested',
-    });
-  }
   items.push({
     order: 90,
     label: '삭제된 내담자',
