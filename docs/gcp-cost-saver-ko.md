@@ -4,16 +4,17 @@
 
 | 동작 | GCP 과금 | 설명 |
 |------|----------|------|
-| `git push origin main` | **없음** (기본) | `ci.yml`만 실행 — lint·타입·테스트·빌드 검증 |
+| `git push origin main` (프론트·설정 경로 변경) | **Hosting 배포** (Variable `true`일 때) | `deploy.yml` — `src/**` 등 paths 매칭 시 Build & Deploy |
+| `git push origin main` (백엔드만) | **Cloud Run** (Variable `true`일 때) | `deploy-backend.yml` |
+| `git push origin main` (Variable `false`) | **없음** | `ci.yml`만 — lint·타입·테스트·빌드 검증 |
 | Actions → **Deploy (Firebase)** 수동 실행 | 있음 | Hosting / Functions 배포 |
 | Actions → **Deploy Flask API** 수동 실행 | 있음 | Cloud Build + Cloud Run |
 | Actions → **GCP artifact cleanup** 수동 실행 | 거의 없음 | 저장소·로그 정리 |
 
 ### 원리
 
-- `deploy.yml`, `deploy-backend.yml`은 **push만으로는 배포하지 않음**
-- 배포 게이트: GitHub 저장소 **Variable** `AUTO_DEPLOY_ON_PUSH` 가 **`true`** 일 때만 push → 자동 배포
-- **준비 단계 기본값: Variable 미설정 또는 `false`** → push = CI만
+- `deploy.yml`, `deploy-backend.yml`은 push 시 **Variable `AUTO_DEPLOY_ON_PUSH=true`** 이면 자동 배포
+- **현재 저장소 정책: `AUTO_DEPLOY_ON_PUSH=true`** — 에이전트·개발 push 후 사이트에서 바로 확인 (비용 절감 시 GitHub Variables에서 `false`로 되돌림)
 
 ### 설정 위치
 
@@ -21,7 +22,7 @@ GitHub → **Settings** → **Secrets and variables** → **Actions** → **Vari
 
 | Variable | 준비 단계 | 정식 오픈 후 |
 |----------|-----------|--------------|
-| `AUTO_DEPLOY_ON_PUSH` | *(비움 또는 `false`)* | 필요 시 `true` |
+| `AUTO_DEPLOY_ON_PUSH` | **`true`** (사이트 즉시 반영) | 비용 절감 시 `false` + 수동 workflow |
 
 ---
 
