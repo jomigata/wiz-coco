@@ -34,6 +34,7 @@ import CounselorPortalMoveDialog from '@/components/counselor/CounselorPortalMov
 import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
 import {
   archiveDispatchRecipients,
+  permanentlyDeleteArchivedDispatchRecipients,
   fetchAssessmentDispatchStatus,
   resendDispatchCredentials,
   restoreAssessmentMove,
@@ -87,8 +88,7 @@ import {
   counselorListThGrayClass,
   counselorListTheadClass,
 } from '@/lib/counselorListTableStyles';
-import CounselorNextTestRecommendCard from '@/components/counselor/CounselorNextTestRecommendCard';
-import CounselorQuickCareRecommendCard from '@/components/counselor/CounselorQuickCareRecommendCard';
+import { CounselorDispatchRecipientExpandContent } from '@/components/counselor/CounselorDispatchRecipientExpandDetail';
 import CounselorNotifyConfirmDialog from '@/components/counselor/CounselorNotifyConfirmDialog';
 import type { NotifyRecipientContact } from '@/lib/counselorNotifyChannels';
 import AssessmentAddRecipientModal, {
@@ -504,7 +504,7 @@ function skipCredentialReason(r: DispatchRecipient, mode: CredentialSendMode): s
   return '발송 대상 아님';
 }
 
-type BulkConfirmAction = 'delete' | null;
+type BulkConfirmAction = 'delete' | 'permanent_delete' | null;
 type DispatchProgress = { kind: 'remind' | 'resend' | 'delete'; count: number };
 type DispatchComplete = {
   kind: 'remind' | 'resend' | 'delete';
@@ -1187,6 +1187,7 @@ export default function AssessmentDispatchPanel({
       const result = await archiveDispatchRecipients(assessmentId, Array.from(selected));
       await load({ silent: true });
       setExpandedId((prev) => (prev && selected.has(prev) ? null : prev));
+      setSelected(new Set());
       setDispatchComplete({
         kind: 'delete',
         summary: `삭제 ${result.archived}명${result.failed ? `, 실패 ${result.failed}명` : ''}`,
@@ -1203,10 +1204,42 @@ export default function AssessmentDispatchPanel({
     }
   };
 
+  const handlePermanentDelete = async () => {
+    if (selected.size === 0) return;
+    const portalIds = Array.from(selected);
+    setDispatchProgress({ kind: 'delete', count: portalIds.length });
+    setDeleteLoading(true);
+    try {
+      if (assessmentId) {
+        await archiveDispatchRecipients(assessmentId, portalIds);
+      }
+      const result = await permanentlyDeleteArchivedDispatchRecipients(portalIds);
+      await load({ silent: true });
+      setExpandedId((prev) => (prev && selected.has(prev) ? null : prev));
+      setSelected(new Set());
+      setDispatchComplete({
+        kind: 'delete',
+        summary: `영구삭제 ${result.deleted}명${result.failed ? `, 실패 ${result.failed}명` : ''}`,
+      });
+    } catch (err) {
+      setDispatchComplete({
+        kind: 'delete',
+        error: true,
+        summary: err instanceof Error ? err.message : '영구 삭제에 실패했습니다.',
+      });
+    } finally {
+      setDeleteLoading(false);
+      setDispatchProgress(null);
+    }
+  };
+
   const confirmBulkAction = async () => {
     if (confirmAction === 'delete') {
       setConfirmAction(null);
       await handleDelete();
+    } else if (confirmAction === 'permanent_delete') {
+      setConfirmAction(null);
+      await handlePermanentDelete();
     }
   };
 
@@ -1267,14 +1300,16 @@ export default function AssessmentDispatchPanel({
   const clientsSimplifiedView = entryFrom === 'clients' && !adminUser;
   const clientsMergedContact = entryFrom !== 'deleted-recipients' && !adminClientProgressView;
   const contactAfterNotifyAt = entryFrom === 'deleted-assessments';
-  const showArchiveDeleteFooter =
-    (entryFrom === 'assessments' || entryFrom === 'deleted-assessments') && !adminUser;
+  const showContactEditColumn = !adminClientProgressView && entryFrom !== 'deleted-assessments';
+  const showArchiveDeleteFooter = entryFrom === 'assessments' && !adminUser;
+  const showPermanentDeleteFooter = entryFrom === 'deleted-assessments' && !adminUser;
   const showTableCheckbox = !adminClientProgressView && !clientsSimplifiedView;
   const showTableSort = !clientsSimplifiedView;
   const showBulkToolbar = entryFrom === 'assessments' && !adminUser;
   const showFooterActions = !adminClientProgressView && !clientsSimplifiedView;
   const leadingDetailSpacerColSpan = adminClientProgressView || clientsSimplifiedView ? 1 : 2;
-  const expandedDetailColSpan = (clientsMergedContact ? 5 : 6) + (!adminClientProgressView ? 1 : 0);
+  const expandedDetailColSpan =
+    (clientsMergedContact ? 5 : 6) + (showContactEditColumn ? 1 : 0);
 
   const backHref =
     entryFrom === 'deleted-recipients'
@@ -1550,7 +1585,7 @@ export default function AssessmentDispatchPanel({
                     연락처
                   </th>
                 ) : null}
-                {!adminClientProgressView ? (
+                {showContactEditColumn ? (
                   <th className={`${counselorListTdClass} w-[4.5rem] text-center text-xs font-medium text-slate-400`}>
                     연락처 수정
                   </th>
@@ -1656,7 +1691,7 @@ export default function AssessmentDispatchPanel({
                           <RecipientContactCell phone={r.phone} email={r.email} />
                         </td>
                       ) : null}
-                      {!adminClientProgressView ? (
+                      {showContactEditColumn ? (
                         <td className="px-2 py-2.5 align-middle text-center" onClick={(e) => e.stopPropagation()}>
                           <button
                             type="button"
@@ -1679,121 +1714,17 @@ export default function AssessmentDispatchPanel({
                           colSpan={expandedDetailColSpan}
                           className="border-b border-slate-700/60 bg-slate-900/20 px-3 py-3 pb-4 align-top"
                         >
-                          {isMovedOutRecipient(r) ? (
-                            <div className="mb-3 rounded-lg border border-slate-600/80 bg-slate-950/55 px-4 py-3 text-sm">
-                              <p className="font-medium text-slate-300">
-                                상담코드 ({formatAccessCodeDisplay(r.movedToJoinAccessCode || '') || '—'}) 로
-                                이동 완료
-                              </p>
-                              <p className="mt-1 text-slate-400">
-                                {r.movedToAssessmentTitle || '다른 상담코드'}(
-                                {formatAccessCodeDisplay(r.movedToJoinAccessCode || '') || '—'})로
-                                이동했습니다.
-                              </p>
-                              <div className="mt-3 flex flex-wrap gap-2">
-                                {r.movedToAssessmentId ? (
-                                  <Link
-                                    href={buildAssessmentProgressHref(r.movedToAssessmentId, searchQuery)}
-                                    className="rounded-md border border-sky-500/40 bg-sky-950/40 px-3 py-1.5 text-xs text-sky-200 hover:bg-sky-900/50"
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    이동한 상담코드로 가기
-                                  </Link>
-                                ) : null}
-                                {r.tombstoneId ? (
-                                  <button
-                                    type="button"
-                                    disabled={restoreLoading}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setRestoreTombstoneId(r.tombstoneId || null);
-                                    }}
-                                    className="rounded-md border border-amber-500/40 bg-amber-950/30 px-3 py-1.5 text-xs text-amber-200 hover:bg-amber-900/40 disabled:opacity-50"
-                                  >
-                                    이전 코드로 복구
-                                  </button>
-                                ) : null}
-                              </div>
-                            </div>
-                          ) : null}
-                          {tests.length === 0 ? (
-                            <p className="text-slate-500 text-sm rounded-lg border border-slate-700/60 bg-slate-950/40 px-3 py-2">
-                              등록된 검사 항목이 없습니다.
-                            </p>
-                          ) : (
-                            <div className="max-w-2xl rounded-lg border border-slate-600/80 bg-slate-950/55 overflow-hidden shadow-inner">
-                              <table className="w-full text-sm table-fixed">
-                                <colgroup>
-                                  <col className="w-10" />
-                                  <col />
-                                  <col className="w-[5.5rem]" />
-                                  <col className="w-[10.5rem]" />
-                                  <col className="w-[5.5rem]" />
-                                </colgroup>
-                                <thead className={counselorListTheadClass}>
-                                  <tr className="text-slate-400 text-xs border-b border-slate-700/70 bg-slate-900/40">
-                                    <th className="px-3 py-2" aria-hidden="true" />
-                                    <th className="px-3 py-2 text-left font-medium">검사명</th>
-                                    <th className="px-3 py-2 text-left font-medium">상태</th>
-                                    <th className="px-3 py-2 text-left font-medium">완료일시</th>
-                                    <th className="px-3 py-2 text-left font-medium">결과 확인</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {tests.map((t, testIndex) => {
-                                    const st = testStatusLabel(t.status);
-                                    return (
-                                      <tr
-                                        key={t.testId}
-                                        className="border-b border-slate-800/80 last:border-0 hover:bg-slate-900/30"
-                                      >
-                                        <td className="px-3 py-2.5 text-slate-500 tabular-nums align-top">
-                                          {testLetterLabel(testIndex)}
-                                        </td>
-                                        <td className="px-3 py-2.5 text-white align-top break-words">
-                                          {t.testName || t.testId}
-                                        </td>
-                                        <td className={`px-3 py-2.5 align-top ${st.className}`}>
-                                          {st.text}
-                                        </td>
-                                        <td className="px-3 py-2.5 text-slate-400 align-top text-xs leading-relaxed">
-                                          {formatCompletedAt(t.completedAt)}
-                                        </td>
-                                        <td className="px-3 py-2.5 align-top">
-                                          {t.status === 'completed' && t.resultId ? (
-                                            <button
-                                              type="button"
-                                              onClick={() => openResultDetail(t.resultId!)}
-                                              className="text-blue-400 hover:text-blue-300 whitespace-nowrap"
-                                            >
-                                              결과 보기
-                                            </button>
-                                          ) : t.status === 'in_progress' ? (
-                                            <span className="text-amber-300">진행 중</span>
-                                          ) : (
-                                            <span className="text-slate-500">미실시</span>
-                                          )}
-                                        </td>
-                                      </tr>
-                                    );
-                                  })}
-                                </tbody>
-                              </table>
-                            </div>
-                          )}
-                          {!adminClientProgressView && !isMovedOutRecipient(r) ? (
-                            <>
-                            <CounselorNextTestRecommendCard
-                              assessmentId={assessmentId}
-                              recipient={r}
-                              onAssigned={() => void load({ silent: true })}
-                            />
-                            <CounselorQuickCareRecommendCard
-                              recipient={r}
-                              onAssigned={() => void load({ silent: true })}
-                            />
-                            </>
-                          ) : null}
+                          <CounselorDispatchRecipientExpandContent
+                            recipient={r}
+                            tests={tests}
+                            assessmentId={assessmentId}
+                            searchQuery={searchQuery}
+                            showRecommendCards={!adminClientProgressView}
+                            onOpenResult={(resultId) => openResultDetail(resultId)}
+                            onRestoreTombstone={(tombstoneId) => setRestoreTombstoneId(tombstoneId)}
+                            restoreLoading={restoreLoading}
+                            onRecommendAssigned={() => void load({ silent: true })}
+                          />
                         </td>
                       </tr>
                     ) : null}
@@ -1847,11 +1778,23 @@ export default function AssessmentDispatchPanel({
                     {deleteLoading ? '삭제 중…' : `삭제 (${selected.size})`}
                   </button>
                 ) : null}
-                {selected.size > 0 && !adminUser ? (
+                {showPermanentDeleteFooter ? (
+                  <button
+                    type="button"
+                    onClick={() => setConfirmAction('permanent_delete')}
+                    disabled={deleteLoading || selected.size === 0 || remindLoading || resendLoading}
+                    className="rounded-md bg-red-700/90 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-red-600 disabled:opacity-50 sm:text-sm"
+                  >
+                    {deleteLoading ? '영구삭제 중…' : `영구삭제 (${selected.size})`}
+                  </button>
+                ) : null}
+                {!adminUser ? (
                   <button
                     type="button"
                     onClick={() => setMoveOpen(true)}
-                    disabled={remindLoading || resendLoading || deleteLoading}
+                    disabled={
+                      selected.size === 0 || remindLoading || resendLoading || deleteLoading
+                    }
                     className="inline-flex shrink-0 items-center justify-center rounded-md border border-sky-500/40 bg-sky-900/40 px-2.5 py-1.5 text-xs font-medium text-sky-100 transition-colors hover:bg-sky-800/50 disabled:opacity-50 sm:text-sm"
                   >
                     다른 상담코드로 이동
@@ -2011,6 +1954,73 @@ export default function AssessmentDispatchPanel({
                 className="px-4 py-2 rounded-lg text-sm font-medium text-white disabled:opacity-50 bg-red-600 hover:bg-red-700"
               >
                 삭제
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {confirmAction === 'permanent_delete' ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          onClick={closeConfirm}
+        >
+          <div
+            className="bg-slate-800 rounded-xl border border-slate-600 max-w-2xl w-full max-h-[85vh] overflow-hidden shadow-xl flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-4 py-3 border-b border-slate-600">
+              <h3 className="text-lg font-semibold text-white">나의코드 영구삭제 확인</h3>
+              <p className="text-sm text-slate-400 mt-1">
+                선택한 내담자의 나의코드를 영구삭제합니다. 복구할 수 없습니다.
+              </p>
+            </div>
+            <div className="p-4 overflow-y-auto flex-1 space-y-4 text-sm">
+              <div className="rounded-lg border border-slate-600 bg-slate-900/50 p-3 space-y-1">
+                <p>
+                  <span className="text-slate-500">상담코드 </span>
+                  <span className="font-mono text-cyan-300">
+                    {formatAccessCodeDisplay(displayData.joinAccessCode)}
+                  </span>
+                </p>
+                <p>
+                  <span className="text-slate-500">검사명 </span>
+                  <span className="text-white">{displayData.title || '—'}</span>
+                </p>
+              </div>
+              <div>
+                <p className="text-slate-300 font-medium mb-2">영구삭제 대상 {selectedRecipients.length}명</p>
+                <ul className="space-y-2 max-h-48 overflow-y-auto">
+                  {selectedRecipients.map((r) => (
+                    <li
+                      key={r.portalId}
+                      className="rounded-lg border border-slate-700 bg-slate-900/40 px-3 py-2"
+                    >
+                      <RecipientTargetLine recipient={r} />
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <p className="text-red-300/90 text-xs">
+                영구삭제 후 해당 나의코드는 삭제코드 현황·삭제된 내담자 목록에서 제외됩니다.
+              </p>
+            </div>
+            <div className="px-4 py-3 border-t border-slate-600 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={closeConfirm}
+                disabled={deleteLoading}
+                className="px-4 py-2 rounded-lg text-sm text-slate-300 bg-slate-700 hover:bg-slate-600 disabled:opacity-50"
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                onClick={() => void confirmBulkAction()}
+                disabled={deleteLoading || selectedRecipients.length === 0}
+                className="px-4 py-2 rounded-lg text-sm font-medium text-white disabled:opacity-50 bg-red-600 hover:bg-red-700"
+              >
+                영구삭제
               </button>
             </div>
           </div>

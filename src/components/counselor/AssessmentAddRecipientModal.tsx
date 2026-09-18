@@ -583,16 +583,18 @@ export default function AssessmentAddRecipientModal({
                       </p>
                       {filePreviewBatchId === batch.batchId && batch.rows.length > 0 ? (
                         <div
-                          className="pointer-events-none absolute left-0 top-full z-[200] mt-1.5 w-full min-w-[16rem]"
+                          className="pointer-events-none fixed inset-x-2 top-[8dvh] bottom-[8dvh] z-[250] flex sm:inset-x-4 sm:top-[10dvh] sm:bottom-[10dvh]"
                           role="tooltip"
                         >
-                          <div className="max-w-[min(100vw-2rem,40rem)] overflow-x-auto rounded-lg border border-sky-500/40 bg-slate-950 p-2.5 text-left shadow-2xl">
-                            <p className="mb-1 text-xs font-semibold text-sky-300">파일 내용 미리보기</p>
-                            <div className="max-h-32 space-y-0.5 overflow-y-auto">
-                              {batch.rows.slice(0, 50).map((row, idx) => (
+                          <div className="mx-auto flex h-full w-full max-w-[min(96vw,72rem)] flex-col rounded-lg border border-sky-500/40 bg-slate-950 p-3 text-left shadow-2xl sm:p-4">
+                            <p className="mb-2 shrink-0 text-xs font-semibold text-sky-300 sm:text-sm">
+                              파일 내용 미리보기 · {batch.name} ({batch.rows.length.toLocaleString('ko-KR')}명)
+                            </p>
+                            <div className="min-h-0 flex-1 columns-1 gap-x-6 space-y-0.5 sm:columns-2 lg:columns-3">
+                              {batch.rows.map((row, idx) => (
                                 <p
                                   key={`${batch.batchId}-${row.displayName}-${idx}`}
-                                  className="whitespace-nowrap font-mono text-xs leading-snug text-slate-200"
+                                  className="break-words font-mono text-[11px] leading-snug text-slate-200 sm:text-xs"
                                 >
                                   {[row.displayName, row.phone, row.email]
                                     .map((p) => (p || '').trim())
@@ -600,11 +602,6 @@ export default function AssessmentAddRecipientModal({
                                     .join(' · ')}
                                 </p>
                               ))}
-                              {batch.rows.length > 50 ? (
-                                <p className="text-xs text-slate-500">
-                                  … 외 {(batch.rows.length - 50).toLocaleString('ko-KR')}명
-                                </p>
-                              ) : null}
                             </div>
                           </div>
                         </div>

@@ -62,12 +62,13 @@ import {
   restoreArchivedDispatchRecipients,
   updateDispatchRecipientContact,
   type ArchivedDispatchRecipient,
+  type DispatchRecipient,
   type DispatchTestResult,
 } from '@/lib/clientPortalApi';
 import { stripAssessmentTitleDispatchCountSuffix } from '@/lib/counselorAssessmentResultDisplay';
 import { exportClientPortalItems } from '@/lib/clientPortalListExport';
 import RecipientContactCell from '@/components/counselor/RecipientContactCell';
-import CounselorRecipientTestsExpandRow from '@/components/counselor/CounselorRecipientTestsExpandRow';
+import CounselorDispatchRecipientExpandRow from '@/components/counselor/CounselorDispatchRecipientExpandDetail';
 import CounselorRecipientContactEditModal from '@/components/counselor/CounselorRecipientContactEditModal';
 import { dispatchStatusDisplay, formatNotifyDate, compareDispatchStatusSort, recipientProgressDisplay } from '@/lib/dispatchRecipientDisplay';
 import { INDIVIDUAL_COHORT_KEY } from '@/lib/monitoringRealtime';
@@ -559,6 +560,35 @@ function mapArchivedToClientItem(row: ArchivedDispatchRecipient): CounselorClien
   };
 }
 
+function listItemToDispatchRecipient(
+  item: CounselorClientPortalListItem,
+  tests: DispatchTestResult[],
+): DispatchRecipient {
+  const p = item.progress;
+  const testStatus: DispatchRecipient['testStatus'] =
+    p.label === 'completed'
+      ? 'completed'
+      : p.label === 'in_progress'
+        ? 'in_progress'
+        : 'not_started';
+  return {
+    portalId: item.portalId,
+    displayName: item.displayName || '',
+    email: item.email || '',
+    phone: item.phone || '',
+    myCode: item.accessCode || '',
+    joinAccessCode: item.assessments[0]?.joinAccessCode || '',
+    notifyStatus: item.notifyStatus || 'not_sent',
+    notifyError: item.notifyError,
+    notifyAt: item.notifyAt,
+    testStatus,
+    completedCount: p.completedTests,
+    requiredCount: p.totalTests,
+    tests,
+    originAccessCode: item.originAccessCode,
+  };
+}
+
 function mapPermanentlyDeletedToClientItem(row: PermanentlyDeletedPortal): CounselorClientPortalListItem {
   return mapArchivedToClientItem({
     portalId: row.portalId,
@@ -622,8 +652,11 @@ export default function CounselorClientList({
     error?: boolean;
   } | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [expandTestsByPortal, setExpandTestsByPortal] = useState<
-    Record<string, DispatchTestResult[] | 'loading' | 'error'>
+  const [expandDetailByPortal, setExpandDetailByPortal] = useState<
+    Record<
+      string,
+      { recipient: DispatchRecipient; tests: DispatchTestResult[] } | 'loading' | 'error'
+    >
   >({});
   const [contactEditItem, setContactEditItem] = useState<CounselorClientPortalListItem | null>(
     null,
@@ -1148,44 +1181,59 @@ export default function CounselorClientList({
   };
 
   const rowExpandable = !permanentlyDeletedMode;
+  const showContactEditColumn = !adminUser && !deletedMode && !permanentlyDeletedMode;
   const expandLeadingColSpan = 2;
-  const expandDetailColSpan = 7;
+  const expandDetailColSpan = showContactEditColumn ? 7 : 6;
 
   const toggleExpand = useCallback((portalId: string) => {
     setExpandedId((prev) => (prev === portalId ? null : portalId));
   }, []);
 
   useEffect(() => {
-    if (!expandedId || deletedMode || permanentlyDeletedMode) return;
+    if (!expandedId || permanentlyDeletedMode) return;
 
-    setExpandTestsByPortal((prev) => {
+    setExpandDetailByPortal((prev) => {
       if (prev[expandedId] !== undefined) return prev;
 
       const item = displayItems.find((i) => i.portalId === expandedId);
       const assessmentId = item?.assessments[0]?.assessmentId;
 
       void (async () => {
-        if (!assessmentId) {
-          setExpandTestsByPortal((p) =>
-            p[expandedId] !== undefined ? p : { ...p, [expandedId]: [] },
+        if (!item) {
+          setExpandDetailByPortal((p) =>
+            p[expandedId] !== undefined ? p : { ...p, [expandedId]: 'error' },
           );
+          return;
+        }
+        if (!assessmentId) {
+          const tests = archivedTestsToDispatchTests(item.archivedTests);
+          setExpandDetailByPortal((p) => ({
+            ...p,
+            [expandedId]: { recipient: listItemToDispatchRecipient(item, tests), tests },
+          }));
           return;
         }
         try {
           const data = await fetchAssessmentDispatchStatus(assessmentId);
           const recipient = data.recipients.find((r) => r.portalId === expandedId);
-          setExpandTestsByPortal((p) => ({
+          const tests =
+            recipient?.tests?.map((t) => ({ ...t })) ??
+            archivedTestsToDispatchTests(item.archivedTests);
+          setExpandDetailByPortal((p) => ({
             ...p,
-            [expandedId]: recipient?.tests?.map((t) => ({ ...t })) ?? [],
+            [expandedId]: {
+              recipient: recipient ?? listItemToDispatchRecipient(item, tests),
+              tests,
+            },
           }));
         } catch {
-          setExpandTestsByPortal((p) => ({ ...p, [expandedId]: 'error' }));
+          setExpandDetailByPortal((p) => ({ ...p, [expandedId]: 'error' }));
         }
       })();
 
       return { ...prev, [expandedId]: 'loading' };
     });
-  }, [deletedMode, permanentlyDeletedMode, expandedId, displayItems]);
+  }, [permanentlyDeletedMode, expandedId, displayItems]);
 
   useEffect(() => {
     if (!rowExpandable || loading) return;
@@ -1452,14 +1500,14 @@ export default function CounselorClientList({
                       onSort={toggleSort}
                       className="whitespace-nowrap"
                     />
-                    {!adminUser ? (
+                    {!showContactEditColumn ? null : (
                       <th
                         scope="col"
                         className={`${counselorListThClass} w-[4.5rem] whitespace-nowrap text-center text-xs font-medium text-slate-400`}
                       >
                         연락처 수정
                       </th>
-                    ) : null}
+                    )}
                     {adminUser ? (
                       <CounselorAdminEmailSortHeader
                         emailSortKey="counselorEmail"
@@ -1491,14 +1539,15 @@ export default function CounselorClientList({
                     });
                     const isSelected = selected.has(item.portalId);
                     const isOpen = expandedId === item.portalId;
+                    const expandDetailState = expandDetailByPortal[item.portalId];
                     const assessmentId = primaryAssessment?.assessmentId || '';
-                    const expandTestsState = expandTestsByPortal[item.portalId];
-                    const rowTests: DispatchTestResult[] =
-                      deletedMode || permanentlyDeletedMode
-                        ? archivedTestsToDispatchTests(item.archivedTests)
-                        : Array.isArray(expandTestsState)
-                          ? expandTestsState
-                          : [];
+                    const expandPayload =
+                      expandDetailState &&
+                      expandDetailState !== 'loading' &&
+                      expandDetailState !== 'error'
+                        ? expandDetailState
+                        : null;
+                    const rowTests: DispatchTestResult[] = expandPayload?.tests ?? [];
 
                     const locked = isRowSelectionLocked(item.portalId);
                     const dimmedCheckbox =
@@ -1606,28 +1655,24 @@ export default function CounselorClientList({
                         <td className={`max-w-[14rem] ${counselorListTdClass}`}>
                           <RecipientContactCell phone={item.phone} email={item.email} masked={!deletedMode && !permanentlyDeletedMode} />
                         </td>
-                        {!adminUser ? (
+                        {showContactEditColumn ? (
                           <td
                             className={`${counselorListTdClass} text-center`}
                             onClick={(e) => e.stopPropagation()}
                           >
-                            {!deletedMode && !permanentlyDeletedMode ? (
-                              <button
-                                type="button"
-                                onClick={() => setContactEditItem(item)}
-                                className="rounded-md border border-white/15 bg-white/[0.04] px-2 py-1 text-xs text-sky-200 transition-colors hover:border-sky-400/40 hover:bg-sky-500/10"
-                              >
-                                연락처 수정
-                              </button>
-                            ) : (
-                              <span className="text-slate-600">—</span>
-                            )}
+                            <button
+                              type="button"
+                              onClick={() => setContactEditItem(item)}
+                              className="rounded-md border border-white/15 bg-white/[0.04] px-2 py-1 text-xs text-sky-200 transition-colors hover:border-sky-400/40 hover:bg-sky-500/10"
+                            >
+                              연락처 수정
+                            </button>
                           </td>
                         ) : null}
                         {adminUser ? <CounselorAdminEmailTd email={item.counselorEmail} /> : null}
                       </tr>
                       {isOpen && rowExpandable ? (
-                        expandTestsState === 'loading' ? (
+                        expandDetailState === 'loading' ? (
                           <tr>
                             <td
                               colSpan={expandLeadingColSpan}
@@ -1641,7 +1686,7 @@ export default function CounselorClientList({
                               <LoadingMessage layout="inline" textClassName="text-sm text-slate-500" />
                             </td>
                           </tr>
-                        ) : expandTestsState === 'error' ? (
+                        ) : expandDetailState === 'error' ? (
                           <tr>
                             <td
                               colSpan={expandLeadingColSpan}
@@ -1655,9 +1700,12 @@ export default function CounselorClientList({
                               검사 목록을 불러오지 못했습니다.
                             </td>
                           </tr>
-                        ) : (
-                          <CounselorRecipientTestsExpandRow
+                        ) : expandPayload ? (
+                          <CounselorDispatchRecipientExpandRow
+                            recipient={expandPayload.recipient}
                             tests={rowTests}
+                            assessmentId={assessmentId}
+                            showRecommendCards={!deletedMode && !permanentlyDeletedMode}
                             leadingColSpan={expandLeadingColSpan}
                             detailColSpan={expandDetailColSpan}
                             onOpenResult={
@@ -1665,8 +1713,9 @@ export default function CounselorClientList({
                                 ? (resultId) => openResultDetail(assessmentId, resultId)
                                 : undefined
                             }
+                            onRecommendAssigned={() => void load()}
                           />
-                        )
+                        ) : null
                       ) : null}
                       </React.Fragment>
                     );
