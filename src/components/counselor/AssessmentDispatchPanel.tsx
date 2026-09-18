@@ -73,6 +73,7 @@ import CounselorProgressMetricsInline from '@/components/counselor/CounselorProg
 import { stripAssessmentTitleDispatchCountSuffix } from '@/lib/counselorAssessmentResultDisplay';
 import { replaceWithAuthSession } from '@/utils/authSessionLifecycle';
 import { buildAssessmentListHref, writeAssessmentListSearch, buildAssessmentProgressHref } from '@/lib/counselorAssessmentListSearch';
+import { DELETED_ASSESSMENTS_HREF } from '@/lib/counselorNestedNav';
 import { matchesWildcardFields } from '@/lib/wildcardSearch';
 import {
   counselorListBodyRowClass,
@@ -515,7 +516,7 @@ interface AssessmentDispatchPanelProps {
   assessmentId: string;
   filterPortalId?: string;
   initialSearchQuery?: string;
-  entryFrom?: 'clients' | 'assessments' | 'deleted-recipients';
+  entryFrom?: 'clients' | 'assessments' | 'deleted-recipients' | 'deleted-assessments';
   autoOpenAddRecipient?: boolean;
 }
 
@@ -700,6 +701,12 @@ export default function AssessmentDispatchPanel({
     if (!editRecipient) return;
     const phone = normalizeRecipientPhone(editPhone);
     const email = editEmail.trim().toLowerCase();
+    const prevPhone = normalizeRecipientPhone(editRecipient.phone || '');
+    const prevEmail = (editRecipient.email || '').trim().toLowerCase();
+    if (phone === prevPhone && email === prevEmail) {
+      closeEditContact();
+      return;
+    }
     if (!phone && !email) {
       setEditError('휴대폰 또는 이메일 중 하나 이상 입력해 주세요.');
       return;
@@ -1228,7 +1235,14 @@ export default function AssessmentDispatchPanel({
     setDetailError('');
   };
 
-  const progressPageTitle = entryFrom === 'clients' ? '나의코드 현황' : '상담진행 현황';
+  const progressPageTitle =
+    entryFrom === 'clients'
+      ? '나의코드 현황'
+      : entryFrom === 'deleted-recipients'
+        ? '삭제된 코드현황'
+        : entryFrom === 'deleted-assessments'
+          ? '삭제코드 현황'
+          : '상담진행 현황';
 
   if (!displayData && loading) {
     return (
@@ -1261,15 +1275,19 @@ export default function AssessmentDispatchPanel({
   const backHref =
     entryFrom === 'deleted-recipients'
       ? '/counselor/assessments/deleted-recipients'
-      : entryFrom === 'clients'
-        ? '/counselor/clients'
-        : buildAssessmentListHref(searchQuery);
+      : entryFrom === 'deleted-assessments'
+        ? DELETED_ASSESSMENTS_HREF
+        : entryFrom === 'clients'
+          ? '/counselor/clients'
+          : buildAssessmentListHref(searchQuery);
   const backButtonLabel =
     entryFrom === 'deleted-recipients'
       ? '삭제된 내담자'
-      : entryFrom === 'clients'
-        ? '내담자 목록'
-        : '상담코드 목록';
+      : entryFrom === 'deleted-assessments'
+        ? '삭제된 상담코드'
+        : entryFrom === 'clients'
+          ? '내담자 목록'
+          : '상담코드 목록';
 
   return (
     <>

@@ -260,17 +260,24 @@ export default function AssessmentAddRecipientModal({
     setAddFileRows((prev) => prev.filter((_, i) => i !== fileIdx));
   };
 
-  const handleAddRecipientFile = async (file: File | null) => {
-    if (!file) return;
+  const handleAddRecipientFiles = async (fileList: FileList | null) => {
+    if (!fileList?.length) return;
     setAddError('');
     try {
-      const parsed = await parseRecipientFile(file);
-      setAddFileRows(parsed);
-      setAddFileLabel(file.name);
+      const mergedRows: RecipientRow[] = [];
+      const names: string[] = [];
+      for (const file of Array.from(fileList)) {
+        const parsed = await parseRecipientFile(file);
+        mergedRows.push(...parsed);
+        names.push(file.name);
+      }
+      setAddFileRows((prev) => mergeRecipients(prev, mergedRows));
+      setAddFileLabel((prev) => {
+        const parts = prev ? prev.split(', ').filter(Boolean) : [];
+        return [...parts, ...names].join(', ');
+      });
     } catch (err) {
       setAddError(err instanceof Error ? err.message : '파일을 읽지 못했습니다.');
-      setAddFileRows([]);
-      setAddFileLabel('');
     }
   };
 
@@ -289,7 +296,7 @@ export default function AssessmentAddRecipientModal({
     }
     const invalid = rows.find((r) => targetRowInvalid(r));
     if (invalid) {
-      setAddError(`추가 대상 목록에 부적합 항목이 있습니다. 「${invalid.displayName}」님의 연락처를 확인해 주세요.`);
+      setAddError(`추가 목록에 부적합 항목이 있습니다. 「${invalid.displayName}」님의 연락처를 확인해 주세요.`);
       return;
     }
     setAddError('');
@@ -446,7 +453,7 @@ export default function AssessmentAddRecipientModal({
                   disabled={addLoading}
                   className="min-h-[8.5rem] w-full shrink-0 rounded-xl border border-sky-400/20 bg-gradient-to-r from-sky-600/25 via-sky-500/15 to-transparent px-5 text-sm font-semibold text-sky-50 shadow-md shadow-sky-950/30 transition hover:from-sky-600/35 hover:via-sky-500/25 disabled:opacity-50 sm:w-24"
                 >
-                  입력
+                  개별 추가
                 </button>
               </div>
             </section>
@@ -455,16 +462,17 @@ export default function AssessmentAddRecipientModal({
               <div className="mb-3 border-b border-white/10 pb-2">
                 <h4 className="text-sm font-bold tracking-tight text-emerald-100">파일 일괄 등록</h4>
                 <p className="mt-0.5 text-xs text-slate-400">CSV·Excel — 이름(필수), 휴대폰(선택), 이메일(선택)</p>
+                <p className="mt-0.5 text-[11px] text-slate-500">복수 파일 가능</p>
               </div>
               <div className="rounded-xl border border-dashed border-white/15 bg-black/25 p-3">
               <div className="flex flex-col gap-2">
                 <input
                   type="file"
+                  multiple
                   accept=".csv,.txt,.tsv,.xlsx,.xls,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
                   disabled={addLoading}
                   onChange={(e) => {
-                    const file = e.target.files?.[0] ?? null;
-                    void handleAddRecipientFile(file);
+                    void handleAddRecipientFiles(e.target.files);
                     e.target.value = '';
                   }}
                   className="block w-full text-sm text-slate-300 file:mr-2 file:rounded-lg file:border-0 file:bg-emerald-700/90 file:px-3 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-emerald-600"
@@ -569,7 +577,7 @@ export default function AssessmentAddRecipientModal({
           <div className="rounded-xl border border-white/[0.08] bg-[#0d1830]/60 p-3">
             <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
               <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
-                <h4 className={FORM_LABEL}>추가 대상 목록</h4>
+                <h4 className={FORM_LABEL}>추가 목록</h4>
                 <span className="flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
                   <button
                     type="button"
@@ -603,7 +611,7 @@ export default function AssessmentAddRecipientModal({
             </div>
             {combinedRows.length === 0 ? (
               <p className="py-3 text-center text-sm text-slate-400">
-                개별 입력 후 「입력」을 누르거나 파일을 첨부해 주세요.
+                개별 입력 후 「개별 추가」를 누르거나 파일을 첨부해 주세요.
               </p>
             ) : (
               <ul className="max-h-40 space-y-1 overflow-y-auto pr-1">
@@ -656,7 +664,7 @@ export default function AssessmentAddRecipientModal({
                 disabled={addLoading}
                 className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-emerald-900/25 transition-colors hover:bg-emerald-500 disabled:opacity-50"
               >
-                {addLoading ? '추가 중…' : '추가 후 발송'}
+                {addLoading ? '추가 중…' : '코드 발송'}
               </button>
             </div>
           </div>
@@ -692,7 +700,7 @@ export default function AssessmentAddRecipientModal({
         hideChannels
         recipients={notifyRecipients}
         loading={addLoading}
-        confirmLabel="추가·발송"
+        confirmLabel="코드 발송"
         onConfirm={(channels) => void executeSubmit(channels)}
         onCancel={() => setNotifyConfirmOpen(false)}
       />

@@ -3,7 +3,7 @@
 import React, { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import AssessmentDispatchPanel from '@/components/counselor/AssessmentDispatchPanel';
-import { rememberCounselorAssessmentContext, resolveCounselorProgressFrom } from '@/lib/counselorNestedNav';
+import { rememberCounselorAssessmentContext, rememberCounselorProgressFrom, resolveCounselorProgressFrom } from '@/lib/counselorNestedNav';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
 import { LoadingMessage } from '@/components/ui/LoadingMessage';
@@ -23,6 +23,11 @@ function ProgressPageContent() {
     setAssessmentId(id);
     setPortalId(pid);
     if (id) rememberCounselorAssessmentContext(id);
+    const from = resolveCounselorProgressFrom(
+      '/counselor/assessments/progress',
+      searchParams.toString() ? `?${searchParams.toString()}` : '',
+    );
+    rememberCounselorProgressFrom(from);
     if (!id) {
       router.replace('/counselor/assessments');
     }

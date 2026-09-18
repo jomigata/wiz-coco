@@ -65,12 +65,25 @@ function normalizeHref(href: string): string {
   return href.replace(/\/+$/, '');
 }
 
-export function rememberCounselorProgressFrom(source: 'clients' | 'assessments' | 'deleted-recipients') {
+export type CounselorProgressFrom =
+  | 'clients'
+  | 'assessments'
+  | 'deleted-recipients'
+  | 'deleted-assessments';
+
+export function rememberCounselorProgressFrom(source: CounselorProgressFrom) {
   if (typeof window === 'undefined') return;
   try {
     sessionStorage.setItem(PROGRESS_FROM_KEY, source);
-    if (source === 'clients' || source === 'assessments' || source === 'deleted-recipients') {
-      markCounselorListSkipReload(source);
+    if (
+      source === 'clients' ||
+      source === 'assessments' ||
+      source === 'deleted-recipients' ||
+      source === 'deleted-assessments'
+    ) {
+      markCounselorListSkipReload(
+        source === 'deleted-assessments' ? 'assessments' : source,
+      );
     }
   } catch {
     // ignore
@@ -80,17 +93,23 @@ export function rememberCounselorProgressFrom(source: 'clients' | 'assessments' 
 export function resolveCounselorProgressFrom(
   pathname: string,
   search: string,
-): 'clients' | 'assessments' | 'deleted-recipients' {
+): CounselorProgressFrom {
   const params = new URLSearchParams(search.startsWith('?') ? search.slice(1) : search);
   const fromQuery = (params.get('from') || '').trim();
   if (fromQuery === 'clients') return 'clients';
   if (fromQuery === 'deleted-recipients') return 'deleted-recipients';
+  if (fromQuery === 'deleted-assessments') return 'deleted-assessments';
   if (fromQuery === 'assessments') return 'assessments';
   if (typeof window !== 'undefined') {
     try {
       const stored = (sessionStorage.getItem(PROGRESS_FROM_KEY) || '').trim();
-      if (stored === 'clients' || stored === 'assessments' || stored === 'deleted-recipients') {
-        return stored;
+      if (
+        stored === 'clients' ||
+        stored === 'assessments' ||
+        stored === 'deleted-recipients' ||
+        stored === 'deleted-assessments'
+      ) {
+        return stored as CounselorProgressFrom;
       }
     } catch {
       // ignore
@@ -194,6 +213,12 @@ export function isClientsMenuSelected(pathname: string, search: string): boolean
   ) {
     return true;
   }
+  if (
+    path.startsWith('/counselor/assessments/progress') &&
+    resolveCounselorProgressFrom(pathname, search) === 'deleted-recipients'
+  ) {
+    return true;
+  }
   return false;
 }
 
@@ -202,6 +227,12 @@ export function isAssessmentsMenuSelected(pathname: string, search: string): boo
   if (isClientsMenuSelected(pathname, search)) return false;
   const path = normalizeCounselorPath(pathname);
   if (isDeletedAssessmentsPath(path)) return true;
+  if (
+    path.startsWith('/counselor/assessments/progress') &&
+    resolveCounselorProgressFrom(pathname, search) === 'deleted-assessments'
+  ) {
+    return true;
+  }
   if (isPermanentlyDeletedAdminPath(path)) return false;
   return path.startsWith('/counselor/assessments');
 }
@@ -233,7 +264,25 @@ export function getAssessmentsParentSubmenuItems(options?: {
       order: 0,
       label: '상담진행 현황',
       href: progressHref,
-      isActive: (p) => p.startsWith('/counselor/assessments/progress'),
+      isActive: (p) =>
+        p.startsWith('/counselor/assessments/progress') &&
+        resolveCounselorProgressFrom(options?.pathname || '', options?.search || '') ===
+          'assessments',
+      menuAlign: 'nested',
+    });
+  }
+
+  const showDeletedProgressMenu =
+    path.startsWith('/counselor/assessments/progress') && progressFrom === 'deleted-assessments';
+  if (showDeletedProgressMenu) {
+    items.push({
+      order: 91,
+      label: '삭제코드 현황',
+      href: buildProgressHref(assessmentId, options?.search || '?from=deleted-assessments'),
+      isActive: (p) =>
+        p.startsWith('/counselor/assessments/progress') &&
+        resolveCounselorProgressFrom(options?.pathname || '', options?.search || '') ===
+          'deleted-assessments',
       menuAlign: 'nested',
     });
   }
@@ -262,9 +311,13 @@ export function getClientsParentSubmenuItems(options?: {
   search?: string;
 }): CounselorParentSubmenuItem[] {
   const path = options?.pathname ? normalizeCounselorPath(options.pathname) : '';
+  const progressFrom = options?.pathname
+    ? resolveCounselorProgressFrom(options.pathname, options.search || '')
+    : 'clients';
   const showProgressMenu =
-    path.startsWith('/counselor/assessments/progress') &&
-    resolveCounselorProgressFrom(options?.pathname || '', options?.search || '') === 'clients';
+    path.startsWith('/counselor/assessments/progress') && progressFrom === 'clients';
+  const showDeletedProgressMenu =
+    path.startsWith('/counselor/assessments/progress') && progressFrom === 'deleted-recipients';
   const assessmentId =
     options?.pathname != null
       ? resolveAssessmentContextId(options.pathname, options.search || '')
@@ -280,6 +333,18 @@ export function getClientsParentSubmenuItems(options?: {
       isActive: (p) =>
         p.startsWith('/counselor/assessments/progress') &&
         resolveCounselorProgressFrom(options?.pathname || '', options?.search || '') === 'clients',
+      menuAlign: 'nested',
+    });
+  }
+  if (showDeletedProgressMenu) {
+    items.push({
+      order: 91,
+      label: '삭제코드 현황',
+      href: buildProgressHref(assessmentId, options?.search || '?from=deleted-recipients'),
+      isActive: (p) =>
+        p.startsWith('/counselor/assessments/progress') &&
+        resolveCounselorProgressFrom(options?.pathname || '', options?.search || '') ===
+          'deleted-recipients',
       menuAlign: 'nested',
     });
   }

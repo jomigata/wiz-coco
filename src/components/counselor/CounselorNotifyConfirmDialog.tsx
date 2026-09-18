@@ -138,11 +138,7 @@ export default function CounselorNotifyConfirmDialog({
           <h3 className="text-base font-semibold text-white">{title || KIND_LABELS[kind]}</h3>
           {description ? (
             <p className="mt-1 text-sm text-slate-400">{description}</p>
-          ) : kind === 'add_recipient' ? (
-            <p className="mt-1 text-sm text-slate-400">
-              내담자 1명 추가 시 {formatPoints(POINT_COST_PORTAL_RECIPIENT)}가 차감됩니다.
-            </p>
-          ) : channelUiHidden ? (
+          ) : kind === 'add_recipient' ? null : channelUiHidden ? (
             <p className="mt-1 text-sm text-slate-400">
               등록된 연락처로 나의코드·안내가 발송됩니다.
             </p>
@@ -199,9 +195,16 @@ export default function CounselorNotifyConfirmDialog({
               ))}
             </ul>
             {showPointFooter ? (
-              <p className="mt-3 border-t border-white/10 pt-3 text-sm font-semibold tabular-nums text-amber-100">
-                {pointSummary.footerLine}
-              </p>
+              <>
+                <p className="mt-3 border-t border-white/10 pt-3 text-sm font-semibold tabular-nums text-amber-100">
+                  {pointSummary.footerLine}
+                </p>
+                {kind === 'add_recipient' ? (
+                  <p className="mt-1 text-xs text-slate-500">
+                    (내담자 1명 추가 시 {formatPoints(POINT_COST_PORTAL_RECIPIENT)}가 차감됩니다.)
+                  </p>
+                ) : null}
+              </>
             ) : null}
             {balanceLoading ? (
               <p className="mt-2 text-xs text-slate-500">포인트 잔액 확인 중…</p>

@@ -116,9 +116,11 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
     if (path.startsWith('/counselor/assessments/deleted')) return '삭제된 상담코드';
     if (path.startsWith('/counselor/assessments/new')) return '검사 보내기';
     if (path.startsWith('/counselor/assessments/progress')) {
-      return resolveCounselorProgressFrom(path, search) === 'clients'
-        ? '나의코드 현황'
-        : '상담진행 현황';
+      const from = resolveCounselorProgressFrom(path, search);
+      if (from === 'clients') return '나의코드 현황';
+      if (from === 'deleted-recipients') return '삭제된 코드현황';
+      if (from === 'deleted-assessments') return '삭제코드 현황';
+      return '상담진행 현황';
     }
     if (path.startsWith('/counselor/assessments/dispatch')) return '진행현황';
     if (path.startsWith('/counselor/assessments/edit')) return '상담코드 수정';

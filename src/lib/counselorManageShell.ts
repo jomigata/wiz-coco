@@ -77,7 +77,8 @@ export function isDispatchMgmtWorkspaceRoute(pathname: string, search = ''): boo
   const path = normalizePath(pathname);
   if (
     path.startsWith('/counselor/assessments/progress') &&
-    resolveCounselorProgressFrom(pathname, search) === 'clients'
+    (resolveCounselorProgressFrom(pathname, search) === 'clients' ||
+      resolveCounselorProgressFrom(pathname, search) === 'deleted-recipients')
   ) {
     return true;
   }
@@ -88,7 +89,8 @@ export function isAssessmentCodeWorkspaceRoute(pathname: string, search = ''): b
   const path = normalizePath(pathname);
   if (
     path.startsWith('/counselor/assessments/progress') &&
-    resolveCounselorProgressFrom(pathname, search) === 'clients'
+    (resolveCounselorProgressFrom(pathname, search) === 'clients' ||
+      resolveCounselorProgressFrom(pathname, search) === 'deleted-recipients')
   ) {
     return false;
   }
@@ -202,9 +204,11 @@ function resolveSlugFromPrefixes(path: string, pathname: string, search: string)
     return COUNSELOR_DATA_SLUG;
   }
   if (path.startsWith('/counselor/assessments/progress')) {
-    return resolveCounselorProgressFrom(pathname, search) === 'clients'
-      ? COUNSELOR_DISPATCH_MGMT_SLUG
-      : COUNSELOR_ASSESSMENT_CODE_SLUG;
+    const from = resolveCounselorProgressFrom(pathname, search);
+    if (from === 'clients' || from === 'deleted-recipients') {
+      return COUNSELOR_DISPATCH_MGMT_SLUG;
+    }
+    return COUNSELOR_ASSESSMENT_CODE_SLUG;
   }
   if (path.startsWith('/counselor/clients/detail')) {
     return COUNSELOR_DISPATCH_MGMT_SLUG;

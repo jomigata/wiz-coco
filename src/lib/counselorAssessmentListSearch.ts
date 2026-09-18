@@ -46,3 +46,11 @@ export function buildAssessmentProgressHref(assessmentId: string, searchQuery: s
   if (q) params.set('search', q);
   return `/counselor/assessments/progress?${params.toString()}`;
 }
+
+export function buildDeletedAssessmentProgressHref(assessmentId: string): string {
+  const params = new URLSearchParams({
+    assessmentId: assessmentId.trim(),
+    from: 'deleted-assessments',
+  });
+  return `/counselor/assessments/progress?${params.toString()}`;
+}
