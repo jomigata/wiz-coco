@@ -39,6 +39,20 @@ function run(cmd, args, opts = {}) {
 
 console.log('=== WizCoCo local stack setup ===\n');
 
+const javaCheck = spawnSync('java', ['-version'], {
+  encoding: 'utf8',
+  shell: false,
+  windowsHide: true,
+});
+if (javaCheck.error || javaCheck.status !== 0) {
+  console.error('❌ Java JDK 11+ 가 필요합니다 (Firestore Emulator).');
+  console.error('   설치: winget install --id Microsoft.OpenJDK.17 -e');
+  console.error('   설치 후 터미널을 다시 열고 npm run setup:local 을 실행하세요.\n');
+  process.exit(1);
+}
+const javaOut = `${javaCheck.stderr || ''}${javaCheck.stdout || ''}`;
+console.log(`✓ Java: ${javaOut.split('\n')[0] || 'ok'}\n`);
+
 if (!fs.existsSync(venvDir)) {
   console.log('Creating Python venv...');
   run(python, ['-m', 'venv', venvDir]);

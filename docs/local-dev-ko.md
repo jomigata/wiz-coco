@@ -7,7 +7,8 @@
 
 - **Node.js** 18+ (프로젝트 `engines` 참고)
 - **Python** 3.10+ (`python` / `python3`)
-- **Java JDK 11+** (Firestore Emulator용 — `java -version` 확인)
+- **Java JDK 11+** (Firestore Emulator용 — `java -version` 확인)  
+  - Windows 미설치 시: `winget install --id Microsoft.OpenJDK.17 -e` 후 **터미널 재시작**
 
 ## 1회 설정
 
