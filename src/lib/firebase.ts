@@ -1,6 +1,7 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { browserSessionPersistence, getAuth, initializeAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore';
+import { connectAuthEmulator } from 'firebase/auth';
 import { getFunctions } from 'firebase/functions';
 import { getStorage } from 'firebase/storage';
 import { getAnalytics, isSupported } from 'firebase/analytics';
@@ -36,6 +37,19 @@ export function initializeFirebase() {
       }
 
       db = getFirestore(app);
+
+      const useEmulator =
+        typeof window !== 'undefined' &&
+        process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATOR === 'true';
+      if (useEmulator) {
+        const g = globalThis as typeof globalThis & { __wizcocoFirebaseEmulator?: boolean };
+        if (!g.__wizcocoFirebaseEmulator) {
+          connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
+          connectFirestoreEmulator(db, '127.0.0.1', 8080);
+          g.__wizcocoFirebaseEmulator = true;
+        }
+      }
+
       if (typeof window !== 'undefined') {
         functions = getFunctions(app, FUNCTIONS_REGION);
       }

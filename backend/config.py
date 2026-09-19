@@ -6,6 +6,19 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# 로컬 Emulator (Firestore/Auth) — GCP 과금·prod DB 접근 없음
+USE_FIREBASE_EMULATOR = os.getenv("USE_FIREBASE_EMULATOR", "").lower() in ("1", "true", "yes")
+FIREBASE_PROJECT_ID = os.getenv("FIREBASE_PROJECT_ID", "wiz-coco").strip() or "wiz-coco"
+if USE_FIREBASE_EMULATOR:
+    os.environ.setdefault(
+        "FIRESTORE_EMULATOR_HOST",
+        os.getenv("FIRESTORE_EMULATOR_HOST", "127.0.0.1:8080"),
+    )
+    os.environ.setdefault(
+        "FIREBASE_AUTH_EMULATOR_HOST",
+        os.getenv("FIREBASE_AUTH_EMULATOR_HOST", "127.0.0.1:9099"),
+    )
+
 # Firebase
 FIREBASE_CREDENTIALS_PATH = os.getenv("FIREBASE_CREDENTIALS_PATH", "")
 # 환경변수 GOOGLE_APPLICATION_CREDENTIALS가 있으면 Firebase Admin이 자동 사용

@@ -4,7 +4,7 @@ import threading
 import firebase_admin
 from firebase_admin import credentials, firestore, auth
 
-from config import FIREBASE_CREDENTIALS_PATH
+from config import FIREBASE_CREDENTIALS_PATH, FIREBASE_PROJECT_ID, USE_FIREBASE_EMULATOR
 
 _firebase_app = None
 _db = None
@@ -28,7 +28,11 @@ def get_firebase_app():
             return _firebase_app
         path = FIREBASE_CREDENTIALS_PATH.strip()
         try:
-            if path and os.path.isfile(path):
+            if USE_FIREBASE_EMULATOR and not (path and os.path.isfile(path)):
+                _firebase_app = firebase_admin.initialize_app(
+                    options={"projectId": FIREBASE_PROJECT_ID},
+                )
+            elif path and os.path.isfile(path):
                 cred = credentials.Certificate(path)
                 _firebase_app = firebase_admin.initialize_app(cred)
             else:

@@ -2,6 +2,8 @@
 
 ## push 시 GCP 과금을 **0원**으로 유지
 
+**일상 개발:** [로컬 풀스택 가이드](./local-dev-ko.md) — `npm run dev` (Emulator + Flask + Next). **push·배포 없이** 화면 확인.
+
 | 동작 | GCP 과금 | 설명 |
 |------|----------|------|
 | `git push origin main` (프론트·설정 경로 변경) | **Hosting 배포** (Variable `true`일 때) | `deploy.yml` — `src/**` 등 paths 매칭 시 Build & Deploy |
