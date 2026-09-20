@@ -36,14 +36,11 @@ type ImportedFileBatch = {
 /** 파일 hover 미리보기 — 최대 표시 인원(초과분은 … 추가 n명) */
 const FILE_RECIPIENT_PREVIEW_MAX_VISIBLE = 14;
 /** 파일명 기준 말풍선 가로 오프셋(글자 수) */
-const FILE_PREVIEW_OFFSET_CH = 6;
-
-function formatRecipientPreviewLine(row: RecipientRow): string {
-  return [row.displayName, row.phone, row.email]
-    .map((p) => (p || '').trim())
-    .filter(Boolean)
-    .join(' · ');
-}
+const FILE_PREVIEW_OFFSET_CH = 4;
+const FILE_PREVIEW_COLUMN_TITLE = '이름 · 휴대폰 · 이메일';
+const FILE_PREVIEW_VIEWPORT_PAD_PX = 12;
+/** `ch` → px (뷰포트 클램프용 근사) */
+const FILE_PREVIEW_CH_PX = 8;
 
 type FilePreviewAnchor = {
   fileName: string;
@@ -52,6 +49,59 @@ type FilePreviewAnchor = {
   bottom: number;
   placement: 'above' | 'below';
 };
+
+function formatRecipientPreviewLine(row: RecipientRow): string {
+  const name = row.displayName.trim();
+  const phone = formatPhoneDisplay((row.phone || '').trim());
+  const email = (row.email || '').trim();
+  return [name, phone, email].map((p) => p || '—').join(' · ');
+}
+
+function clampFilePreviewTooltipStyle(
+  anchor: FilePreviewAnchor,
+  widthCh: number,
+): React.CSSProperties {
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const pad = FILE_PREVIEW_VIEWPORT_PAD_PX;
+  const contentPx = widthCh * FILE_PREVIEW_CH_PX + 20;
+  const maxWidthPx = Math.max(160, Math.min(contentPx, vw - pad * 2));
+
+  let leftPx = anchor.left + FILE_PREVIEW_OFFSET_CH * FILE_PREVIEW_CH_PX;
+  if (leftPx + maxWidthPx > vw - pad) {
+    leftPx = Math.max(pad, vw - pad - maxWidthPx);
+  }
+  if (leftPx < pad) leftPx = pad;
+
+  const maxTooltipH = Math.min(208, Math.floor(vh * 0.42));
+  let placement = anchor.placement;
+  let topPx = placement === 'below' ? anchor.bottom + 2 : anchor.top - 2;
+  let transform: string | undefined = placement === 'above' ? 'translateY(-100%)' : undefined;
+
+  if (placement === 'below' && anchor.bottom + 2 + maxTooltipH > vh - pad) {
+    if (anchor.top - maxTooltipH > pad) {
+      placement = 'above';
+      topPx = anchor.top - 2;
+      transform = 'translateY(-100%)';
+    } else {
+      topPx = Math.max(pad, vh - pad - maxTooltipH);
+      transform = undefined;
+    }
+  } else if (placement === 'above' && anchor.top - maxTooltipH < pad) {
+    topPx = anchor.bottom + 2;
+    transform = undefined;
+  }
+
+  return {
+    position: 'fixed',
+    left: leftPx,
+    top: topPx,
+    transform,
+    width: 'max-content',
+    minWidth: `min(${widthCh}ch, ${maxWidthPx}px)`,
+    maxWidth: maxWidthPx,
+  };
+}
 
 type DisplayFileBatch = {
   name: string;
@@ -214,14 +264,17 @@ export default function AssessmentAddRecipientModal({
     if (!batch || batch.rows.length === 0) return null;
     const visibleRows = batch.rows.slice(0, FILE_RECIPIENT_PREVIEW_MAX_VISIBLE);
     const overflowCount = batch.rows.length - visibleRows.length;
-    const previewHeader = `파일 내용 · ${batch.name} (${batch.rows.length.toLocaleString('ko-KR')}명)`;
     const previewWidthCh =
       Math.max(
         12,
-        previewHeader.length,
+        FILE_PREVIEW_COLUMN_TITLE.length,
         ...visibleRows.map((row) => formatRecipientPreviewLine(row).length),
       ) + 1;
-    return { batch, visibleRows, overflowCount, previewHeader, previewWidthCh };
+    const style =
+      typeof window !== 'undefined'
+        ? clampFilePreviewTooltipStyle(filePreviewAnchor, previewWidthCh)
+        : {};
+    return { batch, visibleRows, overflowCount, previewWidthCh, style };
   }, [filePreviewAnchor, displayFileBatches]);
 
   const bulkFileStatusLabel = useMemo(() => {
@@ -826,22 +879,13 @@ export default function AssessmentAddRecipientModal({
         ? createPortal(
             <div
               role="tooltip"
-              className="pointer-events-none fixed z-[400] w-max max-w-none rounded-lg border border-sky-500/40 bg-slate-950 p-2.5 text-left shadow-2xl"
-              style={{
-                left: `calc(${filePreviewAnchor.left}px + ${FILE_PREVIEW_OFFSET_CH}ch)`,
-                top:
-                  filePreviewAnchor.placement === 'below'
-                    ? filePreviewAnchor.bottom + 2
-                    : filePreviewAnchor.top - 2,
-                transform:
-                  filePreviewAnchor.placement === 'above' ? 'translateY(-100%)' : undefined,
-                minWidth: `${filePreviewTooltip.previewWidthCh}ch`,
-              }}
+              className="pointer-events-none fixed z-[400] rounded-lg border border-sky-500/40 bg-slate-950 p-2.5 text-left shadow-2xl"
+              style={filePreviewTooltip.style}
             >
-              <p className="mb-1.5 whitespace-nowrap text-xs font-semibold text-sky-300">
-                {filePreviewTooltip.previewHeader}
+              <p className="mb-1.5 whitespace-nowrap border-b border-white/10 pb-1 text-xs font-semibold text-sky-300">
+                {FILE_PREVIEW_COLUMN_TITLE}
               </p>
-              <ul className="max-h-52 space-y-0.5 overflow-y-auto">
+              <ul className="max-h-52 space-y-0.5 overflow-y-auto overflow-x-auto">
                 {filePreviewTooltip.visibleRows.map((row, idx) => (
                   <li
                     key={`preview-${filePreviewTooltip.batch.name}-${idx}-${row.displayName}-${row.phone}`}
