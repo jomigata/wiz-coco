@@ -278,6 +278,7 @@ export default function AssessmentAddRecipientModal({
     error?: boolean;
   } | null>(null);
   const [addError, setAddError] = useState('');
+  const [invalidBulkDeleteOffer, setInvalidBulkDeleteOffer] = useState(false);
   const [fileBatches, setFileBatches] = useState<ImportedFileBatch[]>([]);
   const [filePreviewAnchor, setFilePreviewAnchor] = useState<FilePreviewAnchor | null>(null);
   const [samplePreviewKind, setSamplePreviewKind] = useState<'txt' | 'csv' | null>(null);
@@ -396,6 +397,7 @@ export default function AssessmentAddRecipientModal({
     setPendingRows([]);
     setAddSendNow(true);
     setAddError('');
+    setInvalidBulkDeleteOffer(false);
     setFileBatches([]);
     setFilePreviewAnchor(null);
     setSamplePreviewKind(null);
@@ -414,10 +416,12 @@ export default function AssessmentAddRecipientModal({
     const phone = normalizeRecipientPhone(draftPhone);
     const email = draftEmail.trim().toLowerCase();
     if (!name) {
+      setInvalidBulkDeleteOffer(false);
       setAddError('이름을 입력해 주세요.');
       return;
     }
     setAddError('');
+    setInvalidBulkDeleteOffer(false);
     setPendingRows((prev) => [
       ...prev,
       { displayName: name, phone: phone ? formatPhoneDisplay(phone) : '', email },
@@ -457,6 +461,7 @@ export default function AssessmentAddRecipientModal({
   const handleAddRecipientFiles = async (fileList: FileList | null) => {
     if (!fileList?.length) return;
     setAddError('');
+    setInvalidBulkDeleteOffer(false);
     try {
       const additions: ImportedFileBatch[] = [];
       for (const file of Array.from(fileList)) {
@@ -469,6 +474,7 @@ export default function AssessmentAddRecipientModal({
       }
       setFileBatches((prev) => [...prev, ...additions]);
     } catch (err) {
+      setInvalidBulkDeleteOffer(false);
       setAddError(err instanceof Error ? err.message : '파일을 읽지 못했습니다.');
     }
   };
@@ -492,19 +498,36 @@ export default function AssessmentAddRecipientModal({
     setFilePreviewAnchor((prev) => (prev?.fileName === fileName ? null : prev));
   };
 
+  const removeAllInvalidRecipients = () => {
+    setPendingRows((prev) => prev.filter((r) => !targetRowInvalid(r)));
+    setFileBatches((prev) =>
+      prev
+        .map((batch) => ({
+          ...batch,
+          rows: batch.rows.filter((r) => !targetRowInvalid(r)),
+        }))
+        .filter((batch) => batch.rows.length > 0),
+    );
+    setAddError('');
+    setInvalidBulkDeleteOffer(false);
+  };
+
   const handleSubmit = () => {
     if (!context) return;
     const rows = combinedRows;
     if (rows.length === 0) {
+      setInvalidBulkDeleteOffer(false);
       setAddError('개별 입력 또는 파일에서 내담자 1명 이상을 추가해 주세요.');
       return;
     }
     const invalid = rows.find((r) => targetRowInvalid(r));
     if (invalid) {
+      setInvalidBulkDeleteOffer(true);
       setAddError(`추가 목록에 부적합 항목이 있습니다. 「${invalid.displayName}」님의 연락처를 확인해 주세요.`);
       return;
     }
     setAddError('');
+    setInvalidBulkDeleteOffer(false);
     if (addSendNow) {
       setNotifyConfirmOpen(true);
       return;
@@ -518,6 +541,7 @@ export default function AssessmentAddRecipientModal({
     const cohortName = (context.cohortName || context.title || '내담자').trim();
     setAddLoading(true);
     setAddError('');
+    setInvalidBulkDeleteOffer(false);
     setNotifyConfirmOpen(false);
     try {
       await bulkCreateClientPortals({
@@ -789,6 +813,25 @@ export default function AssessmentAddRecipientModal({
             </section>
           </div>
 
+          {addError ? (
+            <div
+              className="rounded-lg border border-red-500/35 bg-red-950/35 px-3 py-2 text-sm leading-relaxed text-red-200"
+              role="alert"
+            >
+              <span>{addError}</span>
+              {invalidBulkDeleteOffer ? (
+                <button
+                  type="button"
+                  onClick={removeAllInvalidRecipients}
+                  disabled={addLoading}
+                  className="ml-0.5 inline font-semibold text-red-300 underline decoration-red-400/70 underline-offset-2 hover:text-red-100 disabled:opacity-50"
+                >
+                  (부적합 일괄 삭제)
+                </button>
+              ) : null}
+            </div>
+          ) : null}
+
           <div className="rounded-xl border border-white/[0.08] bg-[#0d1830]/60 p-3">
             <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
               <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
@@ -853,12 +896,6 @@ export default function AssessmentAddRecipientModal({
               </ul>
             )}
           </div>
-
-          {addError ? (
-            <p className="text-sm text-red-300" role="alert">
-              {addError}
-            </p>
-          ) : null}
         </div>
 
         <div className="shrink-0 border-t border-sky-400/20 bg-gradient-to-r from-sky-600/25 via-sky-500/15 to-transparent px-4 py-3 sm:px-5">
