@@ -382,7 +382,7 @@ body.dropdown-open {
     transform: translateX(0);
   }
   50% {
-    transform: translateX(-3px);
+    transform: translateX(-5px);
   }
 }
 
@@ -392,7 +392,7 @@ body.dropdown-open {
     transform: translateX(0);
   }
   50% {
-    transform: translateX(3px);
+    transform: translateX(5px);
   }
 }
 

@@ -9,15 +9,46 @@ type Props = {
 };
 
 const SCROLL_EDGE_THRESHOLD = 6;
+const HOVER_SCROLL_PX_PER_FRAME = 10;
+
+function TallScrollChevron({ side }: { side: 'left' | 'right' }) {
+  const isLeft = side === 'left';
+  return (
+    <svg
+      className={`h-full w-full min-h-[3rem] max-w-[0.85rem] text-sky-300/95 drop-shadow-[0_0_6px_rgba(56,189,248,0.35)] ${
+        isLeft ? 'counselor-scroll-hint-nudge-left' : 'counselor-scroll-hint-nudge-right'
+      }`}
+      viewBox="0 0 24 200"
+      preserveAspectRatio="none"
+      aria-hidden
+    >
+      {isLeft ? (
+        <path
+          fill="currentColor"
+          d="M20 4 L6 100 L20 196 L14 196 L2 100 L14 4 Z"
+        />
+      ) : (
+        <path
+          fill="currentColor"
+          d="M4 4 L18 100 L4 196 L10 196 L22 100 L10 4 Z"
+        />
+      )}
+    </svg>
+  );
+}
 
 function ScrollEdge({
   side,
   visible,
-  onScroll,
+  active,
+  onEnter,
+  onLeave,
 }: {
   side: 'left' | 'right';
   visible: boolean;
-  onScroll: () => void;
+  active: boolean;
+  onEnter: () => void;
+  onLeave: () => void;
 }) {
   if (!visible) return null;
 
@@ -26,55 +57,44 @@ function ScrollEdge({
   return (
     <button
       type="button"
-      onClick={onScroll}
-      aria-label={isLeft ? '왼쪽으로 더 보기' : '오른쪽으로 더 보기'}
-      className={`pointer-events-auto absolute top-0 z-20 flex h-full w-11 items-center justify-center border-0 bg-transparent p-0 ${
+      aria-label={isLeft ? '왼쪽으로 스크롤 (마우스를 올리세요)' : '오른쪽으로 스크롤 (마우스를 올리세요)'}
+      onMouseEnter={onEnter}
+      onMouseLeave={onLeave}
+      onFocus={onEnter}
+      onBlur={onLeave}
+      className={`pointer-events-auto absolute inset-y-0 z-20 flex w-12 shrink-0 items-stretch justify-center border-0 bg-transparent p-0 outline-none ${
         isLeft ? 'left-0' : 'right-0'
-      }`}
+      } ${active ? 'cursor-grabbing' : 'cursor-pointer'}`}
     >
       <span
-        className={`absolute inset-y-2 w-10 bg-gradient-to-r ${
+        className={`pointer-events-none absolute inset-y-0 w-14 ${
           isLeft
-            ? 'from-[#0b1120]/95 via-[#0b1120]/55 to-transparent left-0'
-            : 'from-transparent via-[#0b1120]/55 to-[#0b1120]/95 right-0'
+            ? 'left-0 bg-gradient-to-r from-[#0b1120]/92 via-[#0b1120]/45 to-transparent'
+            : 'right-0 bg-gradient-to-l from-[#0b1120]/92 via-[#0b1120]/45 to-transparent'
         }`}
         aria-hidden
       />
       <span
-        className={`relative flex h-8 w-8 items-center justify-center rounded-full border border-sky-400/35 bg-sky-950/80 text-sky-200 shadow-lg shadow-black/40 ${
-          isLeft ? 'counselor-scroll-hint-nudge-left' : 'counselor-scroll-hint-nudge-right'
+        className={`relative my-1 flex h-[calc(100%-0.5rem)] w-8 flex-col items-center justify-center rounded-lg border transition-colors ${
+          active
+            ? 'border-sky-400/55 bg-sky-500/15 shadow-[inset_0_0_12px_rgba(56,189,248,0.2)]'
+            : 'border-sky-400/30 bg-sky-950/75 hover:border-sky-400/45 hover:bg-sky-900/80'
         }`}
       >
-        <svg
-          className="h-4 w-4 shrink-0"
-          viewBox="0 0 20 20"
-          fill="currentColor"
-          aria-hidden
-        >
-          {isLeft ? (
-            <path
-              fillRule="evenodd"
-              d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z"
-              clipRule="evenodd"
-            />
-          ) : (
-            <path
-              fillRule="evenodd"
-              d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.25 4.5a.75.75 0 010 1.08l-4.25 4.25a.75.75 0 01-1.06-.02z"
-              clipRule="evenodd"
-            />
-          )}
-        </svg>
+        <TallScrollChevron side={side} />
       </span>
     </button>
   );
 }
 
-/** 상담사 목록 테이블 — 가로 스크롤 시 좌·우 끝에 이동 가능 화살표 */
+/** 상담사 목록 테이블 — 가로 스크롤 시 좌·우 끝 세로 화살표 + hover 연속 스크롤 */
 export default function CounselorListTableScroll({ children, className = '' }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const hoverRafRef = useRef<number | null>(null);
+  const hoverDirectionRef = useRef<'left' | 'right' | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+  const [hoverSide, setHoverSide] = useState<'left' | 'right' | null>(null);
 
   const updateScrollHints = useCallback(() => {
     const el = scrollRef.current;
@@ -93,6 +113,47 @@ export default function CounselorListTableScroll({ children, className = '' }: P
     setCanScrollLeft(scrollLeft > SCROLL_EDGE_THRESHOLD);
     setCanScrollRight(scrollLeft + clientWidth < scrollWidth - SCROLL_EDGE_THRESHOLD);
   }, []);
+
+  const stopHoverScroll = useCallback(() => {
+    hoverDirectionRef.current = null;
+    setHoverSide(null);
+    if (hoverRafRef.current != null) {
+      cancelAnimationFrame(hoverRafRef.current);
+      hoverRafRef.current = null;
+    }
+  }, []);
+
+  const startHoverScroll = useCallback(
+    (direction: 'left' | 'right') => {
+      stopHoverScroll();
+      hoverDirectionRef.current = direction;
+      setHoverSide(direction);
+
+      const tick = () => {
+        const el = scrollRef.current;
+        const dir = hoverDirectionRef.current;
+        if (!el || !dir) return;
+
+        const { scrollLeft, scrollWidth, clientWidth } = el;
+        const maxLeft = scrollWidth - clientWidth;
+        const delta = dir === 'left' ? -HOVER_SCROLL_PX_PER_FRAME : HOVER_SCROLL_PX_PER_FRAME;
+        const next = Math.max(0, Math.min(maxLeft, scrollLeft + delta));
+
+        if (next === scrollLeft) {
+          stopHoverScroll();
+          updateScrollHints();
+          return;
+        }
+
+        el.scrollLeft = next;
+        updateScrollHints();
+        hoverRafRef.current = requestAnimationFrame(tick);
+      };
+
+      hoverRafRef.current = requestAnimationFrame(tick);
+    },
+    [stopHoverScroll, updateScrollHints],
+  );
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -118,15 +179,9 @@ export default function CounselorListTableScroll({ children, className = '' }: P
       ro.disconnect();
       mo.disconnect();
       window.removeEventListener('resize', updateScrollHints);
+      stopHoverScroll();
     };
-  }, [updateScrollHints, children]);
-
-  const scrollByStep = (direction: 'left' | 'right') => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const step = Math.max(200, Math.round(el.clientWidth * 0.55));
-    el.scrollBy({ left: direction === 'left' ? -step : step, behavior: 'smooth' });
-  };
+  }, [updateScrollHints, stopHoverScroll, children]);
 
   return (
     <div className={`relative min-h-0 ${className}`.trim()}>
@@ -143,9 +198,17 @@ export default function CounselorListTableScroll({ children, className = '' }: P
         <ScrollEdge
           side="left"
           visible={canScrollLeft}
-          onScroll={() => scrollByStep('left')}
+          active={hoverSide === 'left'}
+          onEnter={() => startHoverScroll('left')}
+          onLeave={stopHoverScroll}
         />
-        <ScrollEdge side="right" visible={canScrollRight} onScroll={() => scrollByStep('right')} />
+        <ScrollEdge
+          side="right"
+          visible={canScrollRight}
+          active={hoverSide === 'right'}
+          onEnter={() => startHoverScroll('right')}
+          onLeave={stopHoverScroll}
+        />
       </div>
     </div>
   );
