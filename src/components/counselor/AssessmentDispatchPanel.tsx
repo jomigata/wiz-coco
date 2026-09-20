@@ -71,6 +71,13 @@ import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import CounselorSlashInfoCell from '@/components/counselor/CounselorSlashInfoCell';
 import CounselorListSearchInput from '@/components/counselor/CounselorListSearchInput';
 import CounselorProgressMetricsInline from '@/components/counselor/CounselorProgressMetricsInline';
+import {
+  readDispatchLiveRefreshPref,
+  writeDispatchLiveRefreshPref,
+} from '@/lib/dispatchRealtimePref';
+
+const DISPATCH_PAGE_SIZE = 50;
+const DISPATCH_IDLE_POLL_MS = 45_000;
 import { stripAssessmentTitleDispatchCountSuffix } from '@/lib/counselorAssessmentResultDisplay';
 import { replaceWithAuthSession } from '@/utils/authSessionLifecycle';
 import { buildAssessmentListHref, writeAssessmentListSearch, buildAssessmentProgressHref } from '@/lib/counselorAssessmentListSearch';
@@ -577,6 +584,10 @@ export default function AssessmentDispatchPanel({
   const [sortDir, setSortDir] = useState<SortDirection>('desc');
   const [nameSortPhase, setNameSortPhase] = useState<NameSortPhase>('name-asc');
   const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
+  const [liveRefreshEnabled, setLiveRefreshEnabled] = useState(false);
+  const [dispatchNextCursor, setDispatchNextCursor] = useState<string | null>(null);
+  const [dispatchTotalCount, setDispatchTotalCount] = useState<number | null>(null);
+  const [loadingMoreDispatch, setLoadingMoreDispatch] = useState(false);
 
   useEffect(() => {
     if (initialSearchQuery) {
@@ -599,6 +610,10 @@ export default function AssessmentDispatchPanel({
   useRedirectOnLoginRequiredError(detailError);
 
   useEffect(() => {
+    setLiveRefreshEnabled(readDispatchLiveRefreshPref());
+  }, []);
+
+  useEffect(() => {
     if (!pendingIssue) {
       setPendingIssueError('');
       return undefined;
@@ -616,7 +631,7 @@ export default function AssessmentDispatchPanel({
       if (issueError) setPendingIssueError(issueError);
     };
     syncPendingResolution();
-    const timer = window.setInterval(syncPendingResolution, 800);
+    const timer = window.setInterval(syncPendingResolution, 3000);
     return () => window.clearInterval(timer);
   }, [assessmentId, pendingIssue, router]);
 
@@ -640,7 +655,7 @@ export default function AssessmentDispatchPanel({
     router.replace(next, { scroll: false });
   }, [autoOpenAddRecipient, router]);
 
-  const load = useCallback(async (opts?: { silent?: boolean }) => {
+  const load = useCallback(async (opts?: { silent?: boolean; refresh?: boolean }) => {
     const fetchId = resolveDispatchFetchId(assessmentId);
     if (!fetchId) return;
     const cached =
@@ -649,7 +664,7 @@ export default function AssessmentDispatchPanel({
     if (!opts?.silent && !cached?.recipients?.length) setLoading(true);
     setError('');
     try {
-      const result = await fetchAssessmentDispatchStatus(fetchId);
+      const result = await fetchAssessmentDispatchStatus(fetchId, { limit: DISPATCH_PAGE_SIZE });
       const fetchedIsAuthoritative =
         (result.recipients?.length ?? 0) > 0 &&
         result.recipients.every((row) => !isOptimisticPortalId(row.portalId));
@@ -657,10 +672,14 @@ export default function AssessmentDispatchPanel({
       const nextData: AssessmentDispatchStatus = {
         ...merged,
         assessmentId: fetchId,
+        totalRecipientCount: result.totalRecipientCount ?? merged.totalRecipientCount,
+        nextCursor: result.nextCursor ?? null,
         recipients: (merged.recipients || []).map((row) => ({ ...row, tests: row.tests?.map((t) => ({ ...t })) })),
       };
       writeCachedDispatchStatus(fetchId, nextData, user?.uid);
       setData(nextData);
+      setDispatchNextCursor(result.nextCursor ?? null);
+      setDispatchTotalCount(result.totalRecipientCount ?? nextData.recipients.length);
       setSelected(new Set());
       if (shouldClearDispatchIssueSeed(nextData)) {
         clearDispatchIssueSeed(fetchId);
@@ -671,6 +690,8 @@ export default function AssessmentDispatchPanel({
     } catch (err) {
       if (cached?.recipients?.length) {
         setData(cached);
+        setDispatchNextCursor(cached.nextCursor ?? null);
+        setDispatchTotalCount(cached.totalRecipientCount ?? cached.recipients.length);
         setError('');
       } else if (!opts?.silent) {
         setData(null);
@@ -682,6 +703,40 @@ export default function AssessmentDispatchPanel({
       }
     }
   }, [assessmentId, user?.uid]);
+
+  const loadMoreDispatch = useCallback(async () => {
+    const fetchId = resolveDispatchFetchId(assessmentId);
+    if (!fetchId || !dispatchNextCursor || loadingMoreDispatch) return;
+    setLoadingMoreDispatch(true);
+    setError('');
+    try {
+      const result = await fetchAssessmentDispatchStatus(fetchId, {
+        limit: DISPATCH_PAGE_SIZE,
+        cursor: dispatchNextCursor,
+      });
+      setData((prev) => {
+        if (!prev) return result;
+        const seen = new Set(prev.recipients.map((r) => r.portalId));
+        const appended = (result.recipients || []).filter((r) => !seen.has(r.portalId));
+        const next: AssessmentDispatchStatus = {
+          ...prev,
+          recipients: [...prev.recipients, ...appended],
+          totalRecipientCount: result.totalRecipientCount ?? prev.totalRecipientCount,
+          nextCursor: result.nextCursor ?? null,
+        };
+        writeCachedDispatchStatus(fetchId, next, user?.uid);
+        return next;
+      });
+      setDispatchNextCursor(result.nextCursor ?? null);
+      if (result.totalRecipientCount != null) {
+        setDispatchTotalCount(result.totalRecipientCount);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '추가 목록 불러오기 실패');
+    } finally {
+      setLoadingMoreDispatch(false);
+    }
+  }, [assessmentId, dispatchNextCursor, loadingMoreDispatch, user?.uid]);
 
   const openEditContact = useCallback((recipient: DispatchRecipient) => {
     setEditRecipient(recipient);
@@ -757,13 +812,22 @@ export default function AssessmentDispatchPanel({
   }, [load, authPending, isAuthenticated, assessmentId, user?.uid]);
 
   const realtimeAssessmentId = resolveDispatchFetchId(assessmentId) || assessmentId;
+  const portalIdsForLive = useMemo(
+    () => (data?.recipients || []).map((r) => r.portalId).filter(Boolean),
+    [data?.recipients],
+  );
+  const realtimeEnabled =
+    liveRefreshEnabled &&
+    isAuthenticated &&
+    !authPending &&
+    Boolean(realtimeAssessmentId) &&
+    !isPendingDispatchAssessmentId(realtimeAssessmentId);
+
   const { data: liveData } = useAssessmentDispatchRealtime(
     realtimeAssessmentId,
     data,
-    isAuthenticated &&
-      !authPending &&
-      Boolean(realtimeAssessmentId) &&
-      !isPendingDispatchAssessmentId(realtimeAssessmentId),
+    realtimeEnabled,
+    portalIdsForLive,
   );
 
   const displayData = liveData ?? data;
@@ -823,9 +887,34 @@ export default function AssessmentDispatchPanel({
     };
 
     syncFromCache();
-    const cacheTimer = window.setInterval(syncFromCache, 1000);
+    const cacheTimer = window.setInterval(syncFromCache, 30_000);
     return () => window.clearInterval(cacheTimer);
   }, [authPending, isAuthenticated, needsLiveRefresh, assessmentId, user?.uid]);
+
+  useEffect(() => {
+    if (liveRefreshEnabled || authPending || !isAuthenticated) return;
+    if (needsLiveRefresh || hasSendingNotify) return;
+
+    const pollIfVisible = () => {
+      if (document.visibilityState !== 'visible') return;
+      void load({ silent: true });
+    };
+    pollIfVisible();
+    const timer = window.setInterval(pollIfVisible, DISPATCH_IDLE_POLL_MS);
+    const onVisibility = () => pollIfVisible();
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, [
+    liveRefreshEnabled,
+    needsLiveRefresh,
+    hasSendingNotify,
+    load,
+    authPending,
+    isAuthenticated,
+  ]);
 
   useEffect(() => {
     if (!data?.recipients?.length) return;
@@ -885,12 +974,18 @@ export default function AssessmentDispatchPanel({
       return;
     }
     if (authPending || !isAuthenticated) return;
+    if (liveRefreshEnabled && !hasSendingNotify && !pendingIssue && !issuingPhase) {
+      return;
+    }
     if (sendingStartedAtRef.current === null) sendingStartedAtRef.current = Date.now();
-    const hasActiveOverlay = Object.keys(dispatchOverrides).length > 0;
-    const pollMs =
-      pendingIssue || issuingPhase ? 1000 : hasSendingNotify || hasActiveOverlay ? 1500 : 3000;
+    const maxActiveMs = 120_000;
     void load({ silent: true });
+    scheduleBurstDispatchRefresh();
+    const pollMs = pendingIssue || issuingPhase ? 5000 : 8000;
     const timer = window.setInterval(() => {
+      if (sendingStartedAtRef.current && Date.now() - sendingStartedAtRef.current > maxActiveMs) {
+        return;
+      }
       void load({ silent: true });
     }, pollMs);
     return () => window.clearInterval(timer);
@@ -899,10 +994,11 @@ export default function AssessmentDispatchPanel({
     hasSendingNotify,
     pendingIssue,
     issuingPhase,
+    liveRefreshEnabled,
     load,
     authPending,
     isAuthenticated,
-    dispatchOverrides,
+    scheduleBurstDispatchRefresh,
   ]);
 
   const allIds = useMemo(
@@ -925,7 +1021,8 @@ export default function AssessmentDispatchPanel({
     [visibleData?.recipients],
   );
 
-  const totalRecipientCount = visibleData?.recipients.length ?? 0;
+  const totalRecipientCount =
+    dispatchTotalCount ?? visibleData?.totalRecipientCount ?? visibleData?.recipients.length ?? 0;
 
   const sortedRecipients = useMemo(() => {
     const q = searchQuery.trim();
@@ -1390,6 +1487,32 @@ export default function AssessmentDispatchPanel({
             placeholder="이름 · 이메일 · 휴대폰 · 나의코드 검색"
             className="sm:max-w-xs"
           />
+          <span className="inline-flex flex-wrap items-center gap-2 rounded-md border border-white/10 bg-slate-900/40 px-2 py-1">
+            <button
+              type="button"
+              onClick={() => void load({ silent: false, refresh: true })}
+              disabled={loading}
+              className="rounded-md border border-white/15 bg-white/[0.04] px-2 py-1 text-xs text-sky-200 transition-colors hover:border-sky-400/40 hover:bg-sky-500/10 disabled:opacity-50"
+            >
+              {loading ? '새로고침…' : '새로고침'}
+            </button>
+            <label className="inline-flex cursor-pointer items-center gap-1.5 text-xs text-slate-400">
+              <input
+                type="checkbox"
+                className="rounded border-white/20 bg-slate-900"
+                checked={liveRefreshEnabled}
+                onChange={(e) => {
+                  const next = e.target.checked;
+                  setLiveRefreshEnabled(next);
+                  writeDispatchLiveRefreshPref(next);
+                }}
+              />
+              실시간 갱신
+            </label>
+            <span className="hidden text-[10px] text-slate-500 sm:inline" title="Firestore read 비용">
+              (켜면 read 증가)
+            </span>
+          </span>
           {showBulkToolbar ? (
             <span className="ml-auto inline-flex shrink-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
               <button
@@ -1734,6 +1857,21 @@ export default function AssessmentDispatchPanel({
             </tbody>
               </table>
             </div>
+
+            {dispatchNextCursor ? (
+              <div className="mt-3 flex justify-center border-t border-white/10 pt-3">
+                <button
+                  type="button"
+                  disabled={loadingMoreDispatch}
+                  onClick={() => void loadMoreDispatch()}
+                  className="rounded-md border border-white/15 bg-white/[0.04] px-4 py-2 text-sm text-sky-200 transition-colors hover:border-sky-400/40 hover:bg-sky-500/10 disabled:opacity-50"
+                >
+                  {loadingMoreDispatch
+                    ? '불러오는 중…'
+                    : `더 보기 (${displayData.recipients.length}${totalRecipientCount ? ` / ${totalRecipientCount}` : ''})`}
+                </button>
+              </div>
+            ) : null}
 
             {showFooterActions ? (
             <div className="mt-2 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-3">

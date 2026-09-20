@@ -109,6 +109,7 @@ jobs:
             ENV_VARS="${ENV_VARS},NOTIFICATION_CRON_SECRET=${{ secrets.NOTIFICATION_CRON_SECRET }}"
           fi
           ENV_VARS="${ENV_VARS},PUBLIC_SITE_URL=https://wizcoco.com"
+          ENV_VARS="${ENV_VARS},AI_CREDITS_ENFORCE=true"
           if [ -n "${{ secrets.SOLAPI_API_KEY }}" ]; then ENV_VARS="${ENV_VARS},SOLAPI_API_KEY=${{ secrets.SOLAPI_API_KEY }}"; fi
           if [ -n "${{ secrets.SOLAPI_API_SECRET }}" ]; then ENV_VARS="${ENV_VARS},SOLAPI_API_SECRET=${{ secrets.SOLAPI_API_SECRET }}"; fi
           if [ -n "${{ secrets.SOLAPI_SENDER }}" ]; then ENV_VARS="${ENV_VARS},SOLAPI_SENDER=${{ secrets.SOLAPI_SENDER }}"; fi

@@ -408,10 +408,23 @@ export default function IndividualAssessmentCreateForm({
     };
 
     void poll();
-    const timer = window.setInterval(() => void poll(), 2000);
+    const startedAt = Date.now();
+    const maxPollMs = 10 * 60 * 1000;
+    let delayMs = 2000;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const schedule = () => {
+      if (cancelled || Date.now() - startedAt > maxPollMs) return;
+      timer = setTimeout(() => {
+        void poll().finally(() => {
+          delayMs = Math.min(delayMs * 1.5, 15_000);
+          schedule();
+        });
+      }, delayMs);
+    };
+    schedule();
     return () => {
       cancelled = true;
-      window.clearInterval(timer);
+      if (timer !== undefined) clearTimeout(timer);
     };
   }, [activeJobId, goToAssessmentListAfterIssue, lastCreatedAssessmentId]);
 

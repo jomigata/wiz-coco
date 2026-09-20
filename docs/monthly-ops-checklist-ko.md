@@ -13,7 +13,8 @@
 
 ## Solapi · SMS
 
-- [ ] Solapi 콘솔 — 발송 건수, 실패율
+- [ ] Solapi 콘솔 — 발송 건수, 실패율 ([Solapi](https://console.solapi.com/))
+- [ ] 기록란: 이번 달 SMS ___건 (전월 ___건)
 - [ ] prod `COST_SAVER_MODE=false` 확인 (실서비스만)
 
 ## AI

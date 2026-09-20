@@ -15,10 +15,14 @@ type UseAssessmentDispatchRealtimeResult = {
   lastUpdatedAt: Date | null;
 };
 
+const FIRESTORE_IN_CHUNK = 10;
+
+/** When set, only subscribe to testResults for these portals (TASK-022). */
 export function useAssessmentDispatchRealtime(
   assessmentId: string,
   baseData: AssessmentDispatchStatus | null,
   enabled: boolean,
+  portalIds?: string[] | null,
 ): UseAssessmentDispatchRealtimeResult {
   const [liveResults, setLiveResults] = useState<RealtimeTestResultDoc[]>([]);
   const [isLive, setIsLive] = useState(false);
@@ -43,30 +47,63 @@ export function useAssessmentDispatchRealtime(
         const { db } = await import('@/lib/firebase');
         if (!db || cancelled) return;
 
-        const q = query(
-          collection(db, 'testResults'),
-          where('assessmentId', '==', assessmentId),
-        );
+        const ids = (portalIds || [])
+          .map((id) => id.trim())
+          .filter(Boolean)
+          .slice(0, 200);
+        if (ids.length === 0) {
+          setLiveResults([]);
+          setIsLive(false);
+          return;
+        }
+        const chunks: string[][] = [];
+        for (let i = 0; i < ids.length; i += FIRESTORE_IN_CHUNK) {
+          chunks.push(ids.slice(i, i + FIRESTORE_IN_CHUNK));
+        }
 
-        unsub = onSnapshot(
-          q,
-          (snapshot) => {
-            if (cancelled) return;
-            const docs: RealtimeTestResultDoc[] = snapshot.docs.map((doc) => ({
-              id: doc.id,
-              ...(doc.data() as Omit<RealtimeTestResultDoc, 'id'>),
-            }));
-            setLiveResults(docs);
-            setIsLive(true);
-            setLiveError('');
-            setLastUpdatedAt(new Date());
-          },
-          (err) => {
-            if (cancelled) return;
-            setIsLive(false);
-            setLiveError(err instanceof Error ? err.message : '실시간 연결 오류');
-          },
-        );
+        const mergedById = new Map<string, RealtimeTestResultDoc>();
+        const unsubs: (() => void)[] = [];
+
+        const publishMerged = () => {
+          if (cancelled) return;
+          setLiveResults(Array.from(mergedById.values()));
+          setIsLive(true);
+          setLiveError('');
+          setLastUpdatedAt(new Date());
+        };
+
+        for (const chunk of chunks) {
+          const q = query(
+            collection(db, 'testResults'),
+            where('assessmentId', '==', assessmentId),
+            where('portalId', 'in', chunk),
+          );
+          const off = onSnapshot(
+            q,
+            (snapshot) => {
+              if (cancelled) return;
+              for (const change of snapshot.docChanges()) {
+                const id = change.doc.id;
+                if (change.type === 'removed') {
+                  mergedById.delete(id);
+                } else {
+                  mergedById.set(id, {
+                    id,
+                    ...(change.doc.data() as Omit<RealtimeTestResultDoc, 'id'>),
+                  });
+                }
+              }
+              publishMerged();
+            },
+            (err) => {
+              if (cancelled) return;
+              setIsLive(false);
+              setLiveError(err instanceof Error ? err.message : '실시간 연결 오류');
+            },
+          );
+          unsubs.push(off);
+        }
+        unsub = () => unsubs.forEach((fn) => fn());
       } catch (err) {
         if (cancelled) return;
         setIsLive(false);
@@ -81,7 +118,7 @@ export function useAssessmentDispatchRealtime(
       unsub?.();
       setIsLive(false);
     };
-  }, [assessmentId, enabled, baseData?.assessmentId]);
+  }, [assessmentId, enabled, baseData?.assessmentId, portalIds?.join('|')]);
 
   const data = useMemo(() => {
     const base = baseData;

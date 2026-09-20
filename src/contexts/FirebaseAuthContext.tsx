@@ -207,8 +207,12 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     if (!user) return;
+    if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
     touchAuthHeartbeat();
-    const heartbeatTimer = window.setInterval(touchAuthHeartbeat, 10_000);
+    const heartbeatTimer = window.setInterval(() => {
+      if (document.visibilityState === 'hidden') return;
+      touchAuthHeartbeat();
+    }, 60_000);
     const handleVisibility = () => {
       if (document.visibilityState === 'visible') touchAuthHeartbeat();
     };

@@ -9,6 +9,8 @@ import type {
 
 export const COUNSELOR_SWR_PREFIX = 'swr:counselor';
 export const COUNSELOR_CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+/** Dispatch status session cache TTL (TASK-021). */
+export const DISPATCH_CACHE_MAX_AGE_MS = 45_000;
 export const COUNSELOR_CACHE_SCOPE = 'local' as const;
 
 const ASSESSMENT_DETAIL_PREFIX = `${COUNSELOR_SWR_PREFIX}Assessment:`;
@@ -53,9 +55,17 @@ function cacheOpts() {
   return { scope: COUNSELOR_CACHE_SCOPE, maxAgeMs: COUNSELOR_CACHE_MAX_AGE_MS };
 }
 
-function readFreshCounselorCache<T>(key: string | null): T | null {
+/** Dispatch cache: assessmentId + counselor uid, TTL {@link DISPATCH_CACHE_MAX_AGE_MS}. */
+
+function readFreshCounselorCache<T>(
+  key: string | null,
+  opts?: { maxAgeMs?: number },
+): T | null {
   if (typeof window === 'undefined' || !key) return null;
-  const cached = readSWRCache<T>(key, cacheOpts());
+  const cached = readSWRCache<T>(key, {
+    scope: COUNSELOR_CACHE_SCOPE,
+    maxAgeMs: opts?.maxAgeMs ?? COUNSELOR_CACHE_MAX_AGE_MS,
+  });
   if (!cached.isFresh || cached.data == null) return null;
   return cached.data;
 }
@@ -115,7 +125,9 @@ export function readCachedDispatchStatus(
   if (!assessmentId) return null;
   const key = scopedKey(DISPATCH_PREFIX, counselorUid);
   if (!key) return null;
-  return readFreshCounselorCache<AssessmentDispatchStatus>(`${key}:${assessmentId}`);
+  return readFreshCounselorCache<AssessmentDispatchStatus>(`${key}:${assessmentId}`, {
+    maxAgeMs: DISPATCH_CACHE_MAX_AGE_MS,
+  });
 }
 
 /** fresh 여부와 관계없이 마지막 캐시 반환 (발급 직후 재진입 시 즉시 표시) */
@@ -126,7 +138,10 @@ export function readAnyCachedDispatchStatus(
   if (!assessmentId || typeof window === 'undefined') return null;
   const key = scopedKey(DISPATCH_PREFIX, counselorUid);
   if (!key) return null;
-  const cached = readSWRCache<AssessmentDispatchStatus>(`${key}:${assessmentId}`, cacheOpts());
+  const cached = readSWRCache<AssessmentDispatchStatus>(`${key}:${assessmentId}`, {
+    scope: COUNSELOR_CACHE_SCOPE,
+    maxAgeMs: DISPATCH_CACHE_MAX_AGE_MS,
+  });
   return cached.data ?? null;
 }
 

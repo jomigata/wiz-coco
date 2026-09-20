@@ -13,6 +13,7 @@ type UseCounselorMonitoringRealtimeResult = {
   lastUpdatedAt: Date | null;
 };
 
+/** 모니터링 허브 — assessmentIds 집합에 대해서만 enabled 시 onSnapshot (TASK-022). */
 export function useCounselorMonitoringRealtime(
   assessmentIds: string[],
   baseData: CounselorMonitoringHubResult | null,

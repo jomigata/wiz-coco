@@ -102,6 +102,7 @@ def prepare_bulk_assessment(
 
 
 def _enqueue_portal_notification(
+    db,
     notify_queue,
     *,
     portal_id: str,
@@ -150,7 +151,9 @@ def _enqueue_portal_notification(
         payload["welcomeMessage"] = welcome_message
     if notify_channels is not None:
         payload["notifyChannels"] = list(notify_channels)
-    notify_queue.add(payload)
+    from utils.notification_enqueue_guard import enqueue_with_dedupe
+
+    enqueue_with_dedupe(db, notify_queue, payload)
 
 
 def create_portal_for_row(
@@ -247,6 +250,7 @@ def create_portal_for_row(
                 notify_queued = True
         else:
             _enqueue_portal_notification(
+                db,
                 db.collection(NOTIFICATION_QUEUE_COLLECTION),
                 portal_id=portal_ref.id,
                 email=email,
@@ -596,6 +600,7 @@ def _resend_notifications_for_job(db, job_id: str, data: dict, counselor_uid: st
             if not email and not phone:
                 continue
             _enqueue_portal_notification(
+                db,
                 notify_coll,
                 portal_id=row_doc.id,
                 email=email,

@@ -630,7 +630,14 @@ def aggregate_assessment_list_stats(
     return stats
 
 
-def get_assessment_dispatch_status(db, assessment_id: str, counselor_uid: str | None) -> dict | None:
+def get_assessment_dispatch_status(
+    db,
+    assessment_id: str,
+    counselor_uid: str | None,
+    *,
+    limit: int | None = None,
+    cursor: str | None = None,
+) -> dict | None:
     ass_ref = db.collection(ASSESSMENTS_COLLECTION).document(assessment_id)
     ass_doc = ass_ref.get()
     if not ass_doc.exists:
@@ -664,7 +671,6 @@ def get_assessment_dispatch_status(db, assessment_id: str, counselor_uid: str | 
         owner_uid=owner_uid,
     )
     rows = [(pid, pdata) for pid, pdata in rows if (pdata.get("status") or "active") == "active"]
-    portal_ids = [pid for pid, _ in rows]
 
     sending_portal_data = {
         pid: pdata
@@ -693,13 +699,40 @@ def get_assessment_dispatch_status(db, assessment_id: str, counselor_uid: str | 
                 refreshed.append((pid, pdata))
         rows = refreshed
 
+    rows.sort(
+        key=lambda item: (
+            (item[1].get("displayName") or "").casefold(),
+            item[0],
+        )
+    )
+    total_recipient_count = len(rows)
+    page_start = 0
+    cursor_id = (cursor or "").strip()
+    if cursor_id:
+        for idx, (pid, _) in enumerate(rows):
+            if pid == cursor_id:
+                page_start = idx + 1
+                break
+    if limit is not None and limit > 0:
+        page_rows = rows[page_start : page_start + limit]
+        next_cursor = (
+            page_rows[-1][0]
+            if page_rows and page_start + len(page_rows) < total_recipient_count
+            else None
+        )
+    else:
+        page_rows = rows
+        next_cursor = None
+
+    portal_ids = [pid for pid, _ in page_rows]
+
     notify_map = _latest_notify_by_portal(db, set(portal_ids))
     completion_map = _bulk_completed_tests_by_portal_assessment(
         db, portal_ids, {assessment_id}
     )
     test_results_map = _bulk_test_results_by_portal_assessment(db, portal_ids, assessment_id)
     recipients = []
-    for portal_id, pdata in rows:
+    for portal_id, pdata in page_rows:
         notify = notify_map.get(portal_id) or {}
         email = (pdata.get("email") or "").strip()
         phone = (pdata.get("phone") or "").strip()
@@ -737,7 +770,7 @@ def get_assessment_dispatch_status(db, assessment_id: str, counselor_uid: str | 
 
     recipients.sort(key=lambda r: (r.get("displayName") or "", r.get("portalId") or ""))
 
-    if counselor_uid:
+    if counselor_uid and page_start == 0 and not cursor_id:
         from utils.portal_assessment_move_tombstone import (
             list_move_tombstones_for_assessment,
             tombstones_to_dispatch_recipients,
@@ -755,7 +788,7 @@ def get_assessment_dispatch_status(db, assessment_id: str, counselor_uid: str | 
                 if row.get("portalId") not in existing_ids:
                     recipients.append(row)
 
-    return {
+    payload = {
         "assessmentId": assessment_id,
         "title": ass.get("title") or "",
         "cohortName": ass.get("cohortName") or "",
@@ -763,6 +796,28 @@ def get_assessment_dispatch_status(db, assessment_id: str, counselor_uid: str | 
         "testList": test_list,
         "recipients": recipients,
     }
+    if limit is not None:
+        payload["totalRecipientCount"] = total_recipient_count
+        payload["nextCursor"] = next_cursor
+
+    from config import LOG_FIRESTORE_READS, DISPATCH_LIST_SOURCE
+
+    if DISPATCH_LIST_SOURCE == "postgres":
+        logger.debug(
+            "DISPATCH_LIST_SOURCE=postgres requested; firestore path used until TASK-072 parity"
+        )
+    if LOG_FIRESTORE_READS:
+        page_portals = len(page_rows)
+        read_estimate = 1 + len(rows) + page_portals * 3 + (len(to_confirm) if to_confirm else 0)
+        logger.info(
+            "firestore_read_estimate op=dispatch_status assessment=%s limit=%s page=%s total_portals=%s estimate=%s",
+            assessment_id,
+            limit,
+            page_portals,
+            total_recipient_count,
+            read_estimate,
+        )
+    return payload
 
 
 def _normalize_notify_channels(raw) -> list[str] | None:

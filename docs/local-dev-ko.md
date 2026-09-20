@@ -73,6 +73,12 @@ FIREBASE_CREDENTIALS_PATH=../Firebase_GitHub/<service-account>.json
 
 → **클라oud Firestore 읽기/쓰기 과금**이 다시 붙습니다. 일상 개발에는 Emulator 권장.
 
+## Emulator → prod 데이터 (TASK-062)
+
+- **금지**: Emulator export / 로컬 JSON을 **prod Firestore에 import**하는 스크립트·수동 작업
+- **허용**: prod → backup export (보관만), Postgres Phase 7 착수 전까지 SQL cutover 없음
+- 에이전트 규칙: [scale-cost-roadmap-agent-tasks-ko.md](./scale-cost-roadmap-agent-tasks-ko.md) 범위外
+
 ## prod 배포와 분리
 
 - 개발: **`npm run dev`** 만 사용 → GitHub Actions / Cloud Build / Hosting 배포 **없음**

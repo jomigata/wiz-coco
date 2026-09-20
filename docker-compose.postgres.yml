@@ -1,0 +1,15 @@
+# Postgres for local dispatch POC (TASK-071) — not prod data
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: wizcoco
+      POSTGRES_PASSWORD: wizcoco_local
+      POSTGRES_DB: wizcoco_dispatch
+    ports:
+      - "5432:5432"
+    volumes:
+      - wizcoco_pg_data:/var/lib/postgresql/data
+
+volumes:
+  wizcoco_pg_data:

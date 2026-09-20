@@ -1056,10 +1056,26 @@ def restore_assessment_move():
 def get_dispatch_status(assessment_id):
     """상담(코드)별 내담자 발송·검사 완료 현황."""
     db = get_firestore()
-    data = get_assessment_dispatch_status(db, assessment_id, scope_counselor_uid())
+    try:
+        limit_raw = request.args.get("limit", "").strip()
+        limit = int(limit_raw) if limit_raw else None
+        if limit is not None:
+            limit = max(1, min(limit, 200))
+    except ValueError:
+        limit = None
+    cursor = (request.args.get("cursor") or "").strip() or None
+    data = get_assessment_dispatch_status(
+        db,
+        assessment_id,
+        scope_counselor_uid(),
+        limit=limit,
+        cursor=cursor,
+    )
     if not data:
         return jsonify({"error": "Not Found", "message": "상담(코드)를 찾을 수 없습니다."}), 404
-    return jsonify(data)
+    resp = jsonify(data)
+    resp.headers["Cache-Control"] = "private, max-age=30"
+    return resp
 
 
 @bp.route("/assessments/<assessment_id>/dispatch/resend", methods=["POST"])

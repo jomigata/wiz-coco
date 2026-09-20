@@ -31,11 +31,15 @@
 ## GCP 예산 알림
 
 - [Cloud Billing Budgets](https://console.cloud.google.com/billing/budgets) — ₩30k / ₩50k / ₩100k 단계
+- 로컬 dev: [`local-dev-ko.md`](./local-dev-ko.md) · 배포 절감: [`gcp-cost-saver-ko.md`](./gcp-cost-saver-ko.md)
 
-## After (TASK-080에서 채움)
+## After (TASK-080)
 
 | 지표 | Before | After | 날짜 |
 |------|--------|-------|------|
-| dispatch API reads/req | TBD | TBD | |
-| Realtime default | ON | | |
-| SMS 건/월 | | | |
+| dispatch API reads/req (limit=50) | N portals + bulk | ~50 + α join | 2026-09-20 |
+| Realtime default (상담진행) | ON (full testResults) | **OFF** + opt-in; scoped portalIds | 2026-09-20 |
+| idle poll (progress) | 1–3s | 45s visible-only | 2026-09-20 |
+| dispatch session cache TTL | 24h fresh gate | **45s** | 2026-09-20 |
+| SMS duplicate enqueue | possible | 45s dedupe window | 2026-09-20 |
+| prod AI_CREDITS_ENFORCE | false | **true** (Cloud Run deploy) | 2026-09-20 |

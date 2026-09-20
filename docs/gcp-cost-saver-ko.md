@@ -4,6 +4,8 @@
 
 **일상 개발:** [로컬 풀스택 가이드](./local-dev-ko.md) — `npm run dev` (Emulator + Flask + Next). **push·배포 없이** 화면 확인.
 
+**배포 권장 (TASK-061):** 로컬 **매일** `npm run dev` · prod 반영 **주 1~2회** (또는 `AUTO_DEPLOY_ON_PUSH=false` + 수동 workflow). 에이전트 자동 푸시 규칙: [`.cursor/rules/git-push-after-edit.mdc`](../.cursor/rules/git-push-after-edit.mdc).
+
 | 동작 | GCP 과금 | 설명 |
 |------|----------|------|
 | `git push origin main` (프론트·설정 경로 변경) | **Hosting 배포** (Variable `true`일 때) | `deploy.yml` — `src/**` 등 paths 매칭 시 Build & Deploy |

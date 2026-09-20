@@ -384,16 +384,28 @@ export type AssessmentDispatchStatus = {
   joinAccessCode: string;
   testList: { testId: string; name: string }[];
   recipients: DispatchRecipient[];
+  totalRecipientCount?: number;
+  nextCursor?: string | null;
+};
+
+export type FetchAssessmentDispatchOptions = {
+  limit?: number;
+  cursor?: string | null;
 };
 
 export async function fetchAssessmentDispatchStatus(
-  assessmentId: string
+  assessmentId: string,
+  options?: FetchAssessmentDispatchOptions,
 ): Promise<AssessmentDispatchStatus> {
   const token = await getCounselorToken();
   if (!token) throw new Error('전문가·상담사 로그인이 필요합니다.');
+  const params = new URLSearchParams();
+  if (options?.limit != null) params.set('limit', String(options.limit));
+  if (options?.cursor) params.set('cursor', options.cursor);
+  const qs = params.toString();
   const res = await fetch(
-    `${getBaseUrl()}/api/client-portals/assessments/${encodeURIComponent(assessmentId)}/dispatch`,
-    { headers: { Authorization: `Bearer ${token}` } }
+    `${getBaseUrl()}/api/client-portals/assessments/${encodeURIComponent(assessmentId)}/dispatch${qs ? `?${qs}` : ''}`,
+    { headers: { Authorization: `Bearer ${token}` } },
   );
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {

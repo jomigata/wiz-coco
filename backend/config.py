@@ -112,6 +112,18 @@ AI_USAGE_LEDGER_COLLECTION = "aiUsageLedger"
 AI_REPORTS_COLLECTION = "aiReports"
 AI_CREDITS_ENFORCE = os.getenv("AI_CREDITS_ENFORCE", "false").lower() in ("1", "true", "yes")
 
+# Scale/cost (TASK-030, TASK-072)
+LOG_FIRESTORE_READS = os.getenv("LOG_FIRESTORE_READS", "0").lower() in ("1", "true", "yes")
+DISPATCH_LIST_SOURCE = (os.getenv("DISPATCH_LIST_SOURCE", "firestore") or "firestore").strip().lower()
+
+# SMS queue (TASK-040)
+NOTIFICATION_DEDUPE_WINDOW_SEC = int(os.getenv("NOTIFICATION_DEDUPE_WINDOW_SEC", "45"))
+NOTIFICATION_RETRY_BACKOFF_BASE_SEC = int(os.getenv("NOTIFICATION_RETRY_BACKOFF_BASE_SEC", "30"))
+
+# AI model tier (TASK-051)
+GEMINI_MODEL_FAST = os.getenv("GEMINI_MODEL_FAST", "gemini-2.0-flash").strip()
+GEMINI_MODEL_DEEP = os.getenv("GEMINI_MODEL_DEEP", "gemini-2.5-pro").strip()
+
 # 공개 사이트 URL (매직 링크·초대 메일)
 PUBLIC_SITE_URL = os.getenv("PUBLIC_SITE_URL", "https://wizcoco.com").rstrip("/")
 
