@@ -24,7 +24,6 @@ import { counselorAssessmentTestOptions } from '@/data/counselorAssessmentTests'
 import {
   COUNSELOR_SEND_TEMPLATES,
   resolveTemplateTestList,
-  resolveTemplateOrgFields,
   type CounselorSendTemplateId,
 } from '@/data/counselorSendTemplates';
 import { DEFAULT_WELCOME_MESSAGE } from '@/lib/welcomeMessageSamples';
@@ -263,57 +262,32 @@ export default function CounselorQuickSendForm({
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (customTestIds.size === 0) {
+      setError('포함할 검사를 하나 이상 선택해 주세요.');
+      return;
+    }
+
+    if (!groupName.trim()) {
+      setError('그룹/기관명을 입력해 주세요.');
+      document.getElementById('quick-send-group')?.focus();
+      return;
+    }
+
+    if (!affiliationTitle.trim()) {
+      setError('소속을 입력해 주세요.');
+      document.getElementById('quick-send-affiliation')?.focus();
+      return;
+    }
+
     if (!template || testList.length === 0) {
       setError('검사 세트를 하나 골라 주세요.');
       return;
     }
 
-    let affiliationForSend = counselorAffiliation;
-    if (user?.uid && templateId !== 'custom') {
-      try {
-        affiliationForSend = await loadCounselorOperationAffiliation(
-          user.uid,
-          user.displayName || undefined,
-        );
-        setCounselorAffiliation(affiliationForSend);
-      } catch {
-        // 초기 로드 값으로 계속 진행
-      }
-    }
-
-    if (templateId === 'custom') {
-      if (!groupName.trim()) {
-        setError('그룹/기관명을 입력해 주세요.');
-        return;
-      }
-      if (!affiliationTitle.trim()) {
-        setError('소속을 입력해 주세요.');
-        return;
-      }
-    }
-    if (templateId === 'custom' && customTestIds.size === 0) {
-      setError('포함할 검사를 하나 이상 선택해 주세요.');
-      return;
-    }
-    if (templateId !== 'custom') {
-      const orgPreview = resolveTemplateOrgFields(template, affiliationForSend);
-      if (!orgPreview.title.trim()) {
-        setError('소속(기관 상호명 또는 상담사 이름)을 프로필에 등록해 주세요.');
-        return;
-      }
-    }
     const message = welcomeMessage.trim() || DEFAULT_WELCOME_MESSAGE;
-
-    let cohortName = '';
-    let title = '';
-    if (templateId === 'custom') {
-      cohortName = groupName.trim().slice(0, 120);
-      title = affiliationTitle.trim().slice(0, 200);
-    } else {
-      const org = resolveTemplateOrgFields(template, affiliationForSend);
-      cohortName = org.cohortName;
-      title = org.title;
-    }
+    const cohortName = groupName.trim().slice(0, 120);
+    const title = affiliationTitle.trim().slice(0, 200);
 
     const pendingId = createPendingDispatchAssessmentId();
     pendingAssessmentIdRef.current = pendingId;
