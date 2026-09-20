@@ -26,6 +26,7 @@ import {
   counselorListSortActiveClass,
   counselorListSortIdleClass,
   counselorListTableWrapperClass,
+  counselorListTableClass,
   counselorListTdClass,
   counselorListThClass,
 } from '@/lib/counselorListTableStyles';
@@ -248,7 +249,7 @@ export default function ArchivedRecipientsTable({
   return (
     <>
       <div className={counselorListTableWrapperClass}>
-        <table className="w-max min-w-full table-fixed text-sm">
+        <table className={counselorListTableClass}>
           <thead>
             <tr className={counselorListHeaderRowClass}>
               <th className={counselorListNoThClass}>No.</th>

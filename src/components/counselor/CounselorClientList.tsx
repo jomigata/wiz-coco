@@ -25,6 +25,7 @@ import {
   counselorListSortActiveClass,
   counselorListSortIdleClass,
   counselorListTableWrapperClass,
+  counselorListTableClass,
   counselorListTdClass,
   counselorListThClass,
   counselorListTheadClass,
@@ -78,7 +79,12 @@ import { applyRealtimeToClientList } from '@/lib/clientPortalRealtime';
 import { useCounselorTestResultsRealtime } from '@/hooks/useCounselorTestResultsRealtime';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { getAppRoleSync, isAdmin } from '@/utils/roleUtils';
-import { CounselorAdminEmailSortHeader, CounselorAdminEmailTd, compareCounselorEmail } from '@/components/counselor/CounselorAdminEmailColumn';
+import { compareCounselorEmail } from '@/components/counselor/CounselorAdminEmailColumn';
+import {
+  CounselorListSecondaryField,
+  CounselorListSecondaryRow,
+  counselorListRowSpanCellClass,
+} from '@/components/counselor/CounselorListTwoLineRow';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
 import {
   fetchPermanentlyDeletedRecords,
@@ -1183,8 +1189,9 @@ export default function CounselorClientList({
 
   const rowExpandable = !permanentlyDeletedMode;
   const showContactEditColumn = !adminUser && !deletedMode && !permanentlyDeletedMode;
+  const clientListPrimaryColCount = 5;
   const expandLeadingColSpan = 2;
-  const expandDetailColSpan = showContactEditColumn ? 7 : 6;
+  const expandDetailColSpan = clientListPrimaryColCount - expandLeadingColSpan;
 
   const toggleExpand = useCallback((portalId: string) => {
     setExpandedId((prev) => (prev === portalId ? null : portalId));
@@ -1435,7 +1442,7 @@ export default function CounselorClientList({
         ) : (
           <>
             <div className={counselorListTableWrapperClass}>
-              <table className="w-max min-w-full table-fixed text-sm">
+              <table className={counselorListTableClass}>
                 <thead className={counselorListTheadClass}>
                   <tr className={counselorListHeaderRowClass}>
                     <th className={`${counselorListNoThClass} w-12 tabular-nums`}>No.</th>
@@ -1468,14 +1475,6 @@ export default function CounselorClientList({
                       onSortRight={() => toggleCounselFieldSort('title')}
                     />
                     <SortableColumnHeader
-                      label={dateColumnLabel}
-                      sortKey="notifyAt"
-                      activeKey={sortKey}
-                      direction={sortDir}
-                      onSort={toggleSort}
-                      className="whitespace-nowrap"
-                    />
-                    <SortableColumnHeader
                       label="검사 진행현황"
                       sortKey="progress"
                       activeKey={sortKey}
@@ -1483,38 +1482,6 @@ export default function CounselorClientList({
                       onSort={toggleSort}
                       className="whitespace-nowrap"
                     />
-                    <SortableColumnHeader
-                      label="발송현황"
-                      sortKey="notifyStatus"
-                      activeKey={sortKey}
-                      direction={sortDir}
-                      onSort={toggleSort}
-                      className="whitespace-nowrap"
-                    />
-                    <SortableColumnHeader
-                      label="연락처"
-                      sortKey="phone"
-                      activeKey={sortKey}
-                      direction={sortDir}
-                      onSort={toggleSort}
-                      className="whitespace-nowrap"
-                    />
-                    {!showContactEditColumn ? null : (
-                      <th
-                        scope="col"
-                        className={`${counselorListThClass} w-[4.5rem] whitespace-nowrap text-center text-xs font-medium text-slate-400`}
-                      >
-                        연락처 수정
-                      </th>
-                    )}
-                    {adminUser ? (
-                      <CounselorAdminEmailSortHeader
-                        emailSortKey="counselorEmail"
-                        activeKey={sortKey}
-                        direction={sortDir}
-                        onSort={toggleSort}
-                      />
-                    ) : null}
                   </tr>
                 </thead>
                 <tbody>
@@ -1578,10 +1545,16 @@ export default function CounselorClientList({
                         aria-expanded={rowExpandable ? isOpen : undefined}
                         className={`${rowClass} ${isSelected || isOpen ? 'bg-white/[0.04]' : ''} ${locked ? 'opacity-70' : ''} ${rowExpandable ? 'cursor-pointer' : ''}`}
                       >
-                        <td className={`${counselorListTdClass} tabular-nums text-slate-500`}>
+                        <td
+                          rowSpan={2}
+                          className={`${counselorListTdClass} ${counselorListRowSpanCellClass} tabular-nums text-slate-500`}
+                        >
                           {startIndex + idx + 1}
                         </td>
-                        <td className={`${counselorListTdClass} text-center`}>
+                        <td
+                          rowSpan={2}
+                          className={`${counselorListTdClass} ${counselorListRowSpanCellClass} text-center`}
+                        >
                           {locked && (deletedMode || permanentlyDeletedMode) && !adminUser ? (
                             <span className="group/check relative inline-flex">
                               <input
@@ -1639,37 +1612,43 @@ export default function CounselorClientList({
                             <span className="text-slate-500">—</span>
                           )}
                         </td>
-                        <td
-                          className={`whitespace-nowrap ${counselorListTdClass} text-slate-200 tabular-nums`}
-                        >
-                          {formatNotifyDate(item.notifyAt)}
-                        </td>
                         <td className={counselorListTdClass}>
                           <div className={`text-sm ${progress.className}`}>{progress.text}</div>
                           {counselMoveProgressNote(item)}
                         </td>
-                        <td className={`max-w-[10rem] ${counselorListTdClass}`} title={dispatchView.title}>
-                          <DispatchStatusText value={dispatchView} />
-                        </td>
-                        <td className={`max-w-[14rem] ${counselorListTdClass}`}>
-                          <RecipientContactCell phone={item.phone} email={item.email} masked={!deletedMode && !permanentlyDeletedMode} />
-                        </td>
-                        {showContactEditColumn ? (
-                          <td
-                            className={`${counselorListTdClass} text-center`}
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <button
-                              type="button"
-                              onClick={() => setContactEditItem(item)}
-                              className="rounded-md border border-white/15 bg-white/[0.04] px-2 py-1 text-xs text-sky-200 transition-colors hover:border-sky-400/40 hover:bg-sky-500/10"
-                            >
-                              연락처 수정
-                            </button>
-                          </td>
-                        ) : null}
-                        {adminUser ? <CounselorAdminEmailTd email={item.counselorEmail} /> : null}
                       </tr>
+                      <CounselorListSecondaryRow colSpan={clientListPrimaryColCount}>
+                        <CounselorListSecondaryField label={dateColumnLabel}>
+                          {formatNotifyDate(item.notifyAt)}
+                        </CounselorListSecondaryField>
+                        <CounselorListSecondaryField label="발송현황">
+                          <DispatchStatusText value={dispatchView} />
+                        </CounselorListSecondaryField>
+                        <CounselorListSecondaryField label="연락처">
+                          <RecipientContactCell
+                            phone={item.phone}
+                            email={item.email}
+                            masked={!deletedMode && !permanentlyDeletedMode}
+                          />
+                        </CounselorListSecondaryField>
+                        {showContactEditColumn ? (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setContactEditItem(item);
+                            }}
+                            className="rounded-md border border-white/15 bg-white/[0.04] px-2 py-1 text-xs text-sky-200 transition-colors hover:border-sky-400/40 hover:bg-sky-500/10"
+                          >
+                            연락처 수정
+                          </button>
+                        ) : null}
+                        {adminUser ? (
+                          <CounselorListSecondaryField label="상담사">
+                            {item.counselorEmail?.trim() || '—'}
+                          </CounselorListSecondaryField>
+                        ) : null}
+                      </CounselorListSecondaryRow>
                       {isOpen && rowExpandable ? (
                         expandDetailState === 'loading' ? (
                           <tr>

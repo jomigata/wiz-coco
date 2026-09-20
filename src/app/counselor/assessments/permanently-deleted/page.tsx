@@ -25,6 +25,7 @@ import {
   counselorListSortActiveClass,
   counselorListSortIdleClass,
   counselorListTableWrapperClass,
+  counselorListTableClass,
   counselorListTdCompactClass,
   counselorListThClass,
   formatCounselorIssueDate,
@@ -425,7 +426,7 @@ export default function PermanentlyDeletedAssessmentsPage() {
         ) : (
           <>
             <div className={`min-h-0 flex-1 ${counselorListTableWrapperClass}`}>
-              <table className="w-max min-w-full table-fixed text-sm">
+              <table className={counselorListTableClass}>
                 <thead>
                   <tr className={counselorListHeaderRowClass}>
                     <th className={counselorListNoThClass}>No.</th>

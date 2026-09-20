@@ -18,6 +18,7 @@ import CounselorListPagination from '@/components/counselor/CounselorListPaginat
 import {
   counselorListNoThClass,
   counselorListTableWrapperClass,
+  counselorListTableClass,
   counselorListTdClass,
   counselorListThClass,
   counselorListTheadClass,
@@ -198,7 +199,7 @@ export default function TestResultsPage() {
         ) : (
           <>
             <div className={counselorListTableWrapperClass}>
-              <table className="w-max min-w-full table-fixed text-sm text-white/90">
+              <table className={`${counselorListTableClass} text-white/90`}>
                 <thead className={counselorListTheadClass}>
                   <tr>
                     <th className={counselorListNoThClass}>No.</th>

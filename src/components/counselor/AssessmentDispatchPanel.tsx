@@ -92,6 +92,7 @@ import {
   counselorListSelectThGrayClass,
   counselorListSortActiveGrayClass,
   counselorListTableWrapperClass,
+  counselorListTableClass,
   counselorListTdClass,
   counselorListThGrayClass,
   counselorListTheadClass,
@@ -1616,7 +1617,7 @@ export default function AssessmentDispatchPanel({
         ) : (
           <>
             <div className={`min-h-0 flex-1 ${counselorListTableWrapperClass}`}>
-              <table className="w-max min-w-full table-fixed text-sm">
+              <table className={counselorListTableClass}>
                 <colgroup>
                   <col className="w-10" />
                   {showTableCheckbox ? <col className="w-10" /> : null}

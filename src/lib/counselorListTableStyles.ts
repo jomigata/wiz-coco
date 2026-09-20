@@ -1,6 +1,9 @@
 /** 신입생 목록(test-management)과 통일된 테이블 스타일 */
 
-export const counselorListTableWrapperClass = 'min-h-0 overflow-x-auto';
+/** 가로 스크롤 최소화 — w-max 대신 전체 너비 + 2줄 행 패턴과 함께 사용 */
+export const counselorListTableClass = 'counselor-list-table w-full min-w-0 table-fixed text-sm';
+
+export const counselorListTableWrapperClass = 'counselor-list-table-wrap min-h-0 w-full max-w-full overflow-x-auto';
 
 export const counselorListHeaderRowClass = 'border-b border-white/20 bg-[#121f38]';
 
