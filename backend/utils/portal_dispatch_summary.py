@@ -30,6 +30,12 @@ def patch_portal_dispatch_summary(db, portal_id: str, summary: dict) -> None:
         {"dispatchSummary": summary},
         merge=True,
     )
+    try:
+        from utils.dispatch_postgres_sync import sync_portal_dispatch_to_postgres
+
+        sync_portal_dispatch_to_postgres(db, portal_id)
+    except Exception:
+        pass
 
 
 def refresh_portal_test_summary(
@@ -63,3 +69,9 @@ def refresh_portal_test_summary(
             required_count=test_info.get("requiredCount") or len(required_test_ids),
         ),
     )
+    try:
+        from utils.dispatch_postgres_sync import sync_portal_dispatch_to_postgres
+
+        sync_portal_dispatch_to_postgres(db, portal_id, assessment_id=assessment_id)
+    except Exception:
+        pass

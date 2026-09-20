@@ -36,6 +36,7 @@ import {
   archiveDispatchRecipients,
   permanentlyDeleteArchivedDispatchRecipients,
   fetchAssessmentDispatchStatus,
+  fetchDispatchRecipientDetail,
   resendDispatchCredentials,
   restoreAssessmentMove,
   sendDispatchTestReminders,
@@ -588,6 +589,8 @@ export default function AssessmentDispatchPanel({
   const [dispatchNextCursor, setDispatchNextCursor] = useState<string | null>(null);
   const [dispatchTotalCount, setDispatchTotalCount] = useState<number | null>(null);
   const [loadingMoreDispatch, setLoadingMoreDispatch] = useState(false);
+  const [loadingExpandedTests, setLoadingExpandedTests] = useState<string | null>(null);
+  const expandedTestsLoadedRef = useRef(new Set<string>());
 
   useEffect(() => {
     if (initialSearchQuery) {
@@ -664,7 +667,10 @@ export default function AssessmentDispatchPanel({
     if (!opts?.silent && !cached?.recipients?.length) setLoading(true);
     setError('');
     try {
-      const result = await fetchAssessmentDispatchStatus(fetchId, { limit: DISPATCH_PAGE_SIZE });
+      const result = await fetchAssessmentDispatchStatus(fetchId, {
+        limit: DISPATCH_PAGE_SIZE,
+        expandTests: false,
+      });
       const fetchedIsAuthoritative =
         (result.recipients?.length ?? 0) > 0 &&
         result.recipients.every((row) => !isOptimisticPortalId(row.portalId));
@@ -678,6 +684,7 @@ export default function AssessmentDispatchPanel({
       };
       writeCachedDispatchStatus(fetchId, nextData, user?.uid);
       setData(nextData);
+      expandedTestsLoadedRef.current.clear();
       setDispatchNextCursor(result.nextCursor ?? null);
       setDispatchTotalCount(result.totalRecipientCount ?? nextData.recipients.length);
       setSelected(new Set());
@@ -713,6 +720,7 @@ export default function AssessmentDispatchPanel({
       const result = await fetchAssessmentDispatchStatus(fetchId, {
         limit: DISPATCH_PAGE_SIZE,
         cursor: dispatchNextCursor,
+        expandTests: false,
       });
       setData((prev) => {
         if (!prev) return result;
@@ -737,6 +745,38 @@ export default function AssessmentDispatchPanel({
       setLoadingMoreDispatch(false);
     }
   }, [assessmentId, dispatchNextCursor, loadingMoreDispatch, user?.uid]);
+
+  useEffect(() => {
+    if (authPending || !isAuthenticated || !expandedId) return;
+    if (expandedTestsLoadedRef.current.has(expandedId)) return;
+    const fetchId = resolveDispatchFetchId(assessmentId) || assessmentId;
+    let cancelled = false;
+    setLoadingExpandedTests(expandedId);
+    void fetchDispatchRecipientDetail(fetchId, expandedId)
+      .then((detail) => {
+        if (cancelled) return;
+        expandedTestsLoadedRef.current.add(expandedId);
+        const tests = (detail.recipient.tests ?? []).map((t) => ({ ...t }));
+        setData((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            recipients: prev.recipients.map((row) =>
+              row.portalId === expandedId ? { ...row, ...detail.recipient, tests } : row,
+            ),
+          };
+        });
+      })
+      .catch(() => {
+        expandedTestsLoadedRef.current.delete(expandedId);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingExpandedTests(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [expandedId, assessmentId, authPending, isAuthenticated]);
 
   const openEditContact = useCallback((recipient: DispatchRecipient) => {
     setEditRecipient(recipient);
@@ -1837,6 +1877,9 @@ export default function AssessmentDispatchPanel({
                           colSpan={expandedDetailColSpan}
                           className="border-b border-slate-700/60 bg-slate-900/20 px-3 py-3 pb-4 align-top"
                         >
+                          {loadingExpandedTests === r.portalId ? (
+                            <p className="text-sm text-slate-400">검사 상세 불러오는 중…</p>
+                          ) : (
                           <CounselorDispatchRecipientExpandContent
                             recipient={r}
                             tests={tests}
@@ -1848,6 +1891,7 @@ export default function AssessmentDispatchPanel({
                             restoreLoading={restoreLoading}
                             onRecommendAssigned={() => void load({ silent: true })}
                           />
+                          )}
                         </td>
                       </tr>
                     ) : null}

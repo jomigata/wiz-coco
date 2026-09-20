@@ -391,6 +391,17 @@ export type AssessmentDispatchStatus = {
 export type FetchAssessmentDispatchOptions = {
   limit?: number;
   cursor?: string | null;
+  /** Default true when omitted (API). List views should pass false. */
+  expandTests?: boolean;
+};
+
+export type DispatchRecipientDetailResponse = {
+  assessmentId: string;
+  title: string;
+  cohortName: string;
+  joinAccessCode: string;
+  testList: { testId: string; name: string }[];
+  recipient: DispatchRecipient;
 };
 
 export async function fetchAssessmentDispatchStatus(
@@ -402,6 +413,7 @@ export async function fetchAssessmentDispatchStatus(
   const params = new URLSearchParams();
   if (options?.limit != null) params.set('limit', String(options.limit));
   if (options?.cursor) params.set('cursor', options.cursor);
+  if (options?.expandTests === false) params.set('expandTests', 'false');
   const qs = params.toString();
   const res = await fetch(
     `${getBaseUrl()}/api/client-portals/assessments/${encodeURIComponent(assessmentId)}/dispatch${qs ? `?${qs}` : ''}`,
@@ -412,6 +424,23 @@ export async function fetchAssessmentDispatchStatus(
     throw new Error(typeof data?.message === 'string' ? data.message : '발송 현황 조회에 실패했습니다.');
   }
   return data as AssessmentDispatchStatus;
+}
+
+export async function fetchDispatchRecipientDetail(
+  assessmentId: string,
+  portalId: string,
+): Promise<DispatchRecipientDetailResponse> {
+  const token = await getCounselorToken();
+  if (!token) throw new Error('전문가·상담사 로그인이 필요합니다.');
+  const res = await fetch(
+    `${getBaseUrl()}/api/client-portals/assessments/${encodeURIComponent(assessmentId)}/dispatch/recipients/${encodeURIComponent(portalId)}`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(typeof data?.message === 'string' ? data.message : '검사 상세 조회에 실패했습니다.');
+  }
+  return data as DispatchRecipientDetailResponse;
 }
 
 export async function resendDispatchCredentials(

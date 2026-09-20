@@ -68,6 +68,7 @@ from utils.points_display import (
 )
 from utils.assessment_dispatch import (
     get_assessment_dispatch_status,
+    get_dispatch_recipient_detail,
     resend_portal_credentials,
     send_test_reminders,
     archive_dispatch_portals,
@@ -1081,6 +1082,24 @@ def get_dispatch_status(assessment_id):
         return jsonify({"error": "Not Found", "message": "상담(코드)를 찾을 수 없습니다."}), 404
     resp = jsonify(data)
     resp.headers["Cache-Control"] = "private, max-age=30"
+    return resp
+
+
+@bp.route("/assessments/<assessment_id>/dispatch/recipients/<portal_id>", methods=["GET"])
+@require_counselor
+def get_dispatch_recipient(assessment_id, portal_id):
+    """Single recipient with full tests (row expand)."""
+    db = get_firestore()
+    data = get_dispatch_recipient_detail(
+        db,
+        assessment_id,
+        portal_id,
+        scope_counselor_uid(),
+    )
+    if not data:
+        return jsonify({"error": "Not Found", "message": "내담자를 찾을 수 없습니다."}), 404
+    resp = jsonify(data)
+    resp.headers["Cache-Control"] = "private, max-age=15"
     return resp
 
 

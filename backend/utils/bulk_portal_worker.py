@@ -207,6 +207,13 @@ def create_portal_for_row(
         portal_payload["prepaidByOrg"] = True
     portal_ref.set(portal_payload)
 
+    try:
+        from utils.dispatch_postgres_sync import sync_portal_dispatch_to_postgres
+
+        sync_portal_dispatch_to_postgres(db, portal_ref.id, assessment_id=assessment_ref_id)
+    except Exception:
+        pass
+
     magic = create_magic_link(portal_ref.id, portal_access_code)
     magic_path = f"/go?t={magic}"
     from config import PUBLIC_SITE_URL

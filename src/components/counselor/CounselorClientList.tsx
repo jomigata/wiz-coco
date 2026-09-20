@@ -56,6 +56,7 @@ import {
   archiveDispatchRecipients,
   fetchArchivedDispatchRecipients,
   fetchAssessmentDispatchStatus,
+  fetchDispatchRecipientDetail,
   isAssessmentLinkedArchivedRecipient,
   listCounselorClientPortals,
   permanentlyDeleteArchivedDispatchRecipients,
@@ -1214,11 +1215,9 @@ export default function CounselorClientList({
           return;
         }
         try {
-          const data = await fetchAssessmentDispatchStatus(assessmentId);
-          const recipient = data.recipients.find((r) => r.portalId === expandedId);
-          const tests =
-            recipient?.tests?.map((t) => ({ ...t })) ??
-            archivedTestsToDispatchTests(item.archivedTests);
+          const detail = await fetchDispatchRecipientDetail(assessmentId, expandedId);
+          const recipient = detail.recipient;
+          const tests = recipient.tests?.map((t) => ({ ...t })) ?? archivedTestsToDispatchTests(item.archivedTests);
           setExpandDetailByPortal((p) => ({
             ...p,
             [expandedId]: {

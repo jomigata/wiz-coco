@@ -116,6 +116,11 @@ AI_CREDITS_ENFORCE = os.getenv("AI_CREDITS_ENFORCE", "false").lower() in ("1", "
 LOG_FIRESTORE_READS = os.getenv("LOG_FIRESTORE_READS", "0").lower() in ("1", "true", "yes")
 DATABASE_URL = (os.getenv("DATABASE_URL") or "").strip()
 DISPATCH_LIST_SOURCE = (os.getenv("DISPATCH_LIST_SOURCE", "firestore") or "firestore").strip().lower()
+DISPATCH_SQL_DUAL_WRITE = os.getenv("DISPATCH_SQL_DUAL_WRITE", "false").lower() in (
+    "1",
+    "true",
+    "yes",
+)
 
 # SMS queue (TASK-040)
 NOTIFICATION_DEDUPE_WINDOW_SEC = int(os.getenv("NOTIFICATION_DEDUPE_WINDOW_SEC", "45"))

@@ -1035,6 +1035,91 @@ def get_assessment_dispatch_status(
     return payload
 
 
+def _portal_in_assessment_scope(pdata: dict, assessment_id: str) -> bool:
+    aid = (assessment_id or "").strip()
+    if not aid:
+        return False
+    assigned = pdata.get("assignedAssessmentIds") or []
+    if aid in assigned:
+        return True
+    return (pdata.get("archivedFromAssessmentId") or "").strip() == aid
+
+
+def get_dispatch_recipient_detail(
+    db,
+    assessment_id: str,
+    portal_id: str,
+    counselor_uid: str | None,
+) -> dict | None:
+    """Single dispatch recipient with full test rows (expand)."""
+    try:
+        ass = _verify_assessment_owned(db, assessment_id, counselor_uid)
+    except (ValueError, PermissionError):
+        return None
+    pid = (portal_id or "").strip()
+    if not pid:
+        return None
+    pdoc = db.collection(CLIENT_PORTALS_COLLECTION).document(pid).get()
+    if not pdoc.exists:
+        return None
+    pdata = pdoc.to_dict() or {}
+    if not _portal_owned_by_scope(pdata, counselor_uid):
+        return None
+    if not _portal_in_assessment_scope(pdata, assessment_id):
+        return None
+    if not _is_active_portal_row(pdata):
+        return None
+
+    join_access_code = (ass.get("accessCode") or "").strip()
+    test_list = ass.get("testList") or []
+    required = {
+        str(t.get("testId") or "").strip()
+        for t in test_list
+        if t and str(t.get("testId") or "").strip()
+    }
+    required_count = len(required)
+
+    notify_map = _latest_notify_by_portal(db, {pid})
+    completion_map = _bulk_completed_tests_by_portal_assessment(db, [pid], {assessment_id})
+    test_results_map = _bulk_test_results_by_portal_assessment(db, [pid], assessment_id)
+
+    notify = notify_map.get(pid) or {}
+    email = (pdata.get("email") or "").strip()
+    phone = (pdata.get("phone") or "").strip()
+    notify_snap = _merge_notify_snapshot(notify, pdata)
+    notify_status, notify_error = _resolve_notify_status(notify, pdata, email=email, phone=phone)
+    notify_at = _resolve_notify_at(notify, pdata, notify_status)
+    completed = completion_map.get((pid, assessment_id), set())
+    test_info = _test_status_from_completed(completed, required)
+    recipient = {
+        "portalId": pid,
+        "displayName": pdata.get("displayName") or "",
+        "email": email,
+        "phone": phone,
+        "myCode": pdata.get("accessCode") or "",
+        "joinAccessCode": join_access_code,
+        "originAssessmentId": (pdata.get("originAssessmentId") or "").strip(),
+        "originAccessCode": (pdata.get("originAccessCode") or "").strip(),
+        "notifyStatus": notify_status,
+        "notifyError": notify_error,
+        "notifyAt": notify_at,
+        "notifySentVia": notify_snap.get("sentVia") or "",
+        "notifyKind": notify_snap.get("notifyKind") or "initial",
+        "notifyEmailChannel": notify_snap.get("emailChannel") or "",
+        "notifyPhoneChannel": notify_snap.get("phoneChannel") or "",
+        "tests": _test_detail_rows_from_map(test_results_map.get(pid) or {}, test_list),
+        **test_info,
+    }
+    return {
+        "assessmentId": assessment_id,
+        "title": ass.get("title") or "",
+        "cohortName": ass.get("cohortName") or "",
+        "joinAccessCode": join_access_code,
+        "testList": test_list,
+        "recipient": recipient,
+    }
+
+
 def _normalize_notify_channels(raw) -> list[str] | None:
     if raw is None:
         return None
@@ -1282,6 +1367,12 @@ def update_dispatch_recipient_contact(
         raise ValueError("휴대폰 번호는 11자리(010 등) 형식이어야 합니다.")
 
     pref.update({"phone": norm_phone, "email": norm_email})
+    try:
+        from utils.dispatch_postgres_sync import sync_portal_dispatch_to_postgres
+
+        sync_portal_dispatch_to_postgres(db, pid, assessment_id=assessment_id)
+    except Exception:
+        pass
     return {"portalId": pid, "phone": norm_phone, "email": norm_email}
 
 
