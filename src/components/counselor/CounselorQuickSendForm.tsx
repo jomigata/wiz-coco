@@ -93,7 +93,6 @@ export default function CounselorQuickSendForm({
   const issuePromiseRef = useRef<Promise<string> | null>(null);
   const pendingAssessmentIdRef = useRef('');
   const resolvedAssessmentIdRef = useRef('');
-  const [firstSendTrialEligible, setFirstSendTrialEligible] = useState(false);
   const [counselorAffiliation, setCounselorAffiliation] = useState('');
   const publicClaimChannel = PUBLIC_CLAIM_CHANNEL_PHONE_EMAIL;
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -104,11 +103,9 @@ export default function CounselorQuickSendForm({
     if (!user) return;
     fetchMyCredits(5)
       .then((data) => {
-        const eligible = Boolean(data.firstSendTrialEligible);
-        setFirstSendTrialEligible(eligible);
-        if (eligible) setTemplateId('free');
+        if (Boolean(data.firstSendTrialEligible)) setTemplateId('free');
       })
-      .catch(() => setFirstSendTrialEligible(false));
+      .catch(() => {});
   }, [user]);
 
   useEffect(() => {
@@ -332,9 +329,6 @@ export default function CounselorQuickSendForm({
         };
         prependCounselorAssessmentToListCache(optimistic);
       }
-      if (result.credits?.trial) {
-        setFirstSendTrialEligible(false);
-      }
       resolvedAssessmentIdRef.current = assessmentId;
       setSendOverlay(null);
       if (assessmentId) {
@@ -381,11 +375,6 @@ export default function CounselorQuickSendForm({
       description="그룹·소속과 검사를 정한 뒤 전송 방법·안내를 설정하고 상담코드를 생성합니다."
       toolbar={fullLink}
     >
-      {firstSendTrialEligible ? (
-        <p className="mx-auto mb-3 max-w-2xl rounded-lg border border-emerald-500/25 bg-emerald-950/30 px-3 py-2 text-sm text-emerald-200">
-          첫 검사 보내기는 무료입니다. 「무료검사」로 상담코드를 만들면 내담자가 직접 나의코드를 받을 수 있습니다.
-        </p>
-      ) : null}
         <form onSubmit={handleSend} className="mx-auto flex max-w-2xl flex-col gap-2.5 p-1">
         <CounselorSendStepBlock
           step={1}
