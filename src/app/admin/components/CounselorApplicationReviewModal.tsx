@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { FaCheck, FaTimes } from 'react-icons/fa';
+import { COUNSELOR_APPROVAL_MEMO_SAMPLES } from '@/lib/counselorApprovalMemoSamples';
 
 interface Props {
   open: boolean;
@@ -66,6 +67,29 @@ export default function CounselorApplicationReviewModal({
         <label className="mb-1 block text-sm font-medium text-slate-300">
           {isApprove ? '승인·안내 메모' : '거부·안내 메모'}
         </label>
+        {isApprove && (
+          <div className="mb-2 flex flex-wrap items-center gap-2">
+            <span className="text-sm text-slate-400">샘플</span>
+            {COUNSELOR_APPROVAL_MEMO_SAMPLES.map((sample) => {
+              const selected = memo === sample.text;
+              return (
+                <button
+                  key={sample.label}
+                  type="button"
+                  disabled={busy}
+                  onClick={() => onMemoChange(sample.text)}
+                  className={`rounded-md border px-2 py-0.5 text-sm transition disabled:opacity-50 ${
+                    selected
+                      ? 'border-sky-400/60 bg-sky-500/20 text-sky-200'
+                      : 'border-white/10 bg-slate-800/80 text-sky-300 hover:border-sky-500/40 hover:text-sky-200'
+                  }`}
+                >
+                  {sample.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
         <textarea
           value={memo}
           onChange={(e) => onMemoChange(e.target.value)}
