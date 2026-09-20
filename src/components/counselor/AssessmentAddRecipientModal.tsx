@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { bulkCreateClientPortals } from '@/lib/clientPortalApi';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import { normalizeRecipientPhone, formatPhoneWhileTyping, formatPhoneDisplay, isValidKrMobilePhone } from '@/lib/phoneFormat';
@@ -34,6 +35,8 @@ type ImportedFileBatch = {
 
 /** 파일 hover 미리보기 — 최대 표시 인원(초과분은 … 추가 n명) */
 const FILE_RECIPIENT_PREVIEW_MAX_VISIBLE = 14;
+/** 파일명 기준 말풍선 가로 오프셋(글자 수) */
+const FILE_PREVIEW_OFFSET_CH = 6;
 
 function formatRecipientPreviewLine(row: RecipientRow): string {
   return [row.displayName, row.phone, row.email]
@@ -41,6 +44,14 @@ function formatRecipientPreviewLine(row: RecipientRow): string {
     .filter(Boolean)
     .join(' · ');
 }
+
+type FilePreviewAnchor = {
+  fileName: string;
+  left: number;
+  top: number;
+  bottom: number;
+  placement: 'above' | 'below';
+};
 
 type DisplayFileBatch = {
   name: string;
@@ -172,8 +183,7 @@ export default function AssessmentAddRecipientModal({
   } | null>(null);
   const [addError, setAddError] = useState('');
   const [fileBatches, setFileBatches] = useState<ImportedFileBatch[]>([]);
-  const [filePreviewFileName, setFilePreviewFileName] = useState<string | null>(null);
-  const [filePreviewPlacement, setFilePreviewPlacement] = useState<'above' | 'below'>('below');
+  const [filePreviewAnchor, setFilePreviewAnchor] = useState<FilePreviewAnchor | null>(null);
   const [samplePreviewKind, setSamplePreviewKind] = useState<'txt' | 'csv' | null>(null);
   const [notifyConfirmOpen, setNotifyConfirmOpen] = useState(false);
   const [targetSortKey, setTargetSortKey] = useState<TargetSortKey>('input');
@@ -197,6 +207,22 @@ export default function AssessmentAddRecipientModal({
   );
 
   const displayFileBatches = useMemo(() => groupFileBatchesByName(fileBatches), [fileBatches]);
+
+  const filePreviewTooltip = useMemo(() => {
+    if (!filePreviewAnchor) return null;
+    const batch = displayFileBatches.find((b) => b.name === filePreviewAnchor.fileName);
+    if (!batch || batch.rows.length === 0) return null;
+    const visibleRows = batch.rows.slice(0, FILE_RECIPIENT_PREVIEW_MAX_VISIBLE);
+    const overflowCount = batch.rows.length - visibleRows.length;
+    const previewHeader = `파일 내용 · ${batch.name} (${batch.rows.length.toLocaleString('ko-KR')}명)`;
+    const previewWidthCh =
+      Math.max(
+        12,
+        previewHeader.length,
+        ...visibleRows.map((row) => formatRecipientPreviewLine(row).length),
+      ) + 1;
+    return { batch, visibleRows, overflowCount, previewHeader, previewWidthCh };
+  }, [filePreviewAnchor, displayFileBatches]);
 
   const bulkFileStatusLabel = useMemo(() => {
     if (fileBatches.length === 0) return '선택된 파일 없음';
@@ -272,7 +298,7 @@ export default function AssessmentAddRecipientModal({
     setAddSendNow(true);
     setAddError('');
     setFileBatches([]);
-    setFilePreviewFileName(null);
+    setFilePreviewAnchor(null);
     setSamplePreviewKind(null);
     setTargetSortKey('input');
     setTargetSortDir('asc');
@@ -352,13 +378,19 @@ export default function AssessmentAddRecipientModal({
     const rect = anchor.getBoundingClientRect();
     const spaceBelow = window.innerHeight - rect.bottom;
     const spaceAbove = rect.top;
-    setFilePreviewPlacement(spaceBelow < 200 && spaceAbove > spaceBelow ? 'above' : 'below');
-    setFilePreviewFileName(fileName);
+    const placement = spaceBelow < 200 && spaceAbove > spaceBelow ? 'above' : 'below';
+    setFilePreviewAnchor({
+      fileName,
+      left: rect.left,
+      top: rect.top,
+      bottom: rect.bottom,
+      placement,
+    });
   };
 
   const removeFileBatchesByName = (fileName: string) => {
     setFileBatches((prev) => prev.filter((b) => b.name !== fileName));
-    setFilePreviewFileName((prev) => (prev === fileName ? null : prev));
+    setFilePreviewAnchor((prev) => (prev?.fileName === fileName ? null : prev));
   };
 
   const handleSubmit = () => {
@@ -615,26 +647,12 @@ export default function AssessmentAddRecipientModal({
               </div>
               {displayFileBatches.length > 0 ? (
                 <div className="relative z-20 mt-3 space-y-2">
-                  {displayFileBatches.map((batch) => {
-                    const previewOpen = filePreviewFileName === batch.name && batch.rows.length > 0;
-                    const visibleRows = batch.rows.slice(0, FILE_RECIPIENT_PREVIEW_MAX_VISIBLE);
-                    const overflowCount = batch.rows.length - visibleRows.length;
-                    const previewHeader = `파일 내용 · ${batch.name} (${batch.rows.length.toLocaleString('ko-KR')}명)`;
-                    const previewWidthCh = Math.min(
-                      120,
-                      Math.max(
-                        12,
-                        previewHeader.length,
-                        ...visibleRows.map((row) => formatRecipientPreviewLine(row).length),
-                      ) + 1,
-                    );
-
-                    return (
+                  {displayFileBatches.map((batch) => (
                       <div
                         key={batch.name}
                         className="relative overflow-visible rounded-lg border border-emerald-500/20 bg-emerald-950/20 px-2.5 py-2"
                         onMouseLeave={() =>
-                          setFilePreviewFileName((prev) => (prev === batch.name ? null : prev))
+                          setFilePreviewAnchor((prev) => (prev?.fileName === batch.name ? null : prev))
                         }
                       >
                         <div className="flex items-start justify-between gap-2">
@@ -644,7 +662,7 @@ export default function AssessmentAddRecipientModal({
                               className="cursor-help break-all underline decoration-dotted decoration-emerald-400/60 underline-offset-2"
                               onMouseEnter={(e) => openFilePreview(batch.name, e.currentTarget)}
                               onFocus={(e) => openFilePreview(batch.name, e.currentTarget)}
-                              onBlur={() => setFilePreviewFileName(null)}
+                              onBlur={() => setFilePreviewAnchor(null)}
                               tabIndex={0}
                               role="button"
                               aria-label={`${batch.name} 파일 내용 미리보기`}
@@ -665,39 +683,8 @@ export default function AssessmentAddRecipientModal({
                             삭제
                           </button>
                         </div>
-                        {previewOpen ? (
-                          <div
-                            className={`pointer-events-none absolute left-[3ch] z-[200] w-max max-w-[92vw] rounded-lg border border-sky-500/40 bg-slate-950 p-2.5 text-left shadow-2xl ${
-                              filePreviewPlacement === 'above'
-                                ? 'bottom-full mb-0.5'
-                                : 'top-full mt-0.5'
-                            }`}
-                            style={{ minWidth: `${previewWidthCh}ch` }}
-                            role="tooltip"
-                          >
-                            <p className="mb-1.5 whitespace-nowrap text-xs font-semibold text-sky-300">
-                              {previewHeader}
-                            </p>
-                            <ul className="max-h-52 space-y-0.5 overflow-y-auto overflow-x-visible">
-                              {visibleRows.map((row, idx) => (
-                                <li
-                                  key={`${batch.name}-${idx}-${row.displayName}-${row.phone}`}
-                                  className="whitespace-nowrap font-mono text-[11px] leading-snug text-slate-200 sm:text-xs"
-                                >
-                                  {formatRecipientPreviewLine(row)}
-                                </li>
-                              ))}
-                            </ul>
-                            {overflowCount > 0 ? (
-                              <p className="mt-1.5 text-xs font-medium text-slate-400">
-                                … (추가{overflowCount.toLocaleString('ko-KR')}명)
-                              </p>
-                            ) : null}
-                          </div>
-                        ) : null}
                       </div>
-                    );
-                  })}
+                    ))}
                 </div>
               ) : null}
             </section>
@@ -833,6 +820,46 @@ export default function AssessmentAddRecipientModal({
         onConfirm={(channels) => void executeSubmit(channels)}
         onCancel={() => setNotifyConfirmOpen(false)}
       />
+      {filePreviewTooltip &&
+      filePreviewAnchor &&
+      typeof document !== 'undefined'
+        ? createPortal(
+            <div
+              role="tooltip"
+              className="pointer-events-none fixed z-[400] w-max max-w-none rounded-lg border border-sky-500/40 bg-slate-950 p-2.5 text-left shadow-2xl"
+              style={{
+                left: `calc(${filePreviewAnchor.left}px + ${FILE_PREVIEW_OFFSET_CH}ch)`,
+                top:
+                  filePreviewAnchor.placement === 'below'
+                    ? filePreviewAnchor.bottom + 2
+                    : filePreviewAnchor.top - 2,
+                transform:
+                  filePreviewAnchor.placement === 'above' ? 'translateY(-100%)' : undefined,
+                minWidth: `${filePreviewTooltip.previewWidthCh}ch`,
+              }}
+            >
+              <p className="mb-1.5 whitespace-nowrap text-xs font-semibold text-sky-300">
+                {filePreviewTooltip.previewHeader}
+              </p>
+              <ul className="max-h-52 space-y-0.5 overflow-y-auto">
+                {filePreviewTooltip.visibleRows.map((row, idx) => (
+                  <li
+                    key={`preview-${filePreviewTooltip.batch.name}-${idx}-${row.displayName}-${row.phone}`}
+                    className="whitespace-nowrap font-mono text-[11px] leading-snug text-slate-200 sm:text-xs"
+                  >
+                    {formatRecipientPreviewLine(row)}
+                  </li>
+                ))}
+              </ul>
+              {filePreviewTooltip.overflowCount > 0 ? (
+                <p className="mt-1.5 text-xs font-medium text-slate-400">
+                  … (추가{filePreviewTooltip.overflowCount.toLocaleString('ko-KR')}명)
+                </p>
+              ) : null}
+            </div>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }
