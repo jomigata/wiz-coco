@@ -1593,6 +1593,12 @@ def archive_dispatch_portals(
                 "archivedReason": "manual",
             }
         )
+        try:
+            from utils.dispatch_postgres_sync import sync_portal_dispatch_to_postgres
+
+            sync_portal_dispatch_to_postgres(db, pid, assessment_id=assessment_id)
+        except Exception:
+            pass
         archived += 1
         details.append({"portalId": pid, "status": "archived"})
 

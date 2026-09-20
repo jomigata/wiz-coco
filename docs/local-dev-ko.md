@@ -79,6 +79,36 @@ FIREBASE_CREDENTIALS_PATH=../Firebase_GitHub/<service-account>.json
 - **허용**: prod → backup export (보관만), Postgres Phase 7 착수 전까지 SQL cutover 없음
 - 에이전트 규칙: [scale-cost-roadmap-agent-tasks-ko.md](./scale-cost-roadmap-agent-tasks-ko.md) 범위外
 
+## Postgres dual-write (로컬, TASK-071~073)
+
+Docker Desktop + WSL2 필요. **Docker MCP Toolkit(MCP Profiles)은 WizCoCo 필수 아님** — 무시해도 됩니다.
+
+1. `backend/.env` (또는 `.env.local`):
+   ```env
+   DATABASE_URL=postgresql://wizcoco:wizcoco_local@127.0.0.1:5432/wizcoco_dispatch
+   DISPATCH_SQL_DUAL_WRITE=true
+   DISPATCH_LIST_SOURCE=firestore
+   ```
+2. 터미널:
+   ```powershell
+   npm run postgres:up
+   npm run postgres:migrate
+   npm run dev
+   ```
+3. UI에서 상담코드에 **내담자 1명 추가** (Emulator)
+4. 확인:
+   ```powershell
+   docker exec wizcoco-postgres-1 psql -U wizcoco -d wizcoco_dispatch -c "SELECT portal_id, notify_status FROM dispatch_recipients LIMIT 5;"
+   ```
+5. (선택) Firestore vs SQL parity:
+   ```powershell
+   cd backend
+   python scripts/compare_dispatch_parity.py --assessment-id <id> --counselor-uid <uid>
+   ```
+
+**Firestore 인덱스**(ordered pagination, prod): `firebase deploy --only firestore:indexes --project wiz-coco`  
+Staging parity: [staging-dispatch-postgres-parity-ko.md](./staging-dispatch-postgres-parity-ko.md)
+
 ## prod 배포와 분리
 
 - 개발: **`npm run dev`** 만 사용 → GitHub Actions / Cloud Build / Hosting 배포 **없음**
