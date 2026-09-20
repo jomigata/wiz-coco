@@ -5,6 +5,7 @@ import {
   assessmentCreditsToPoints,
   formatPoints,
   formatPointsDelta,
+  pointsToAssessmentCredits,
 } from '@/lib/pointsCatalog';
 import {
   grantCounselorCredits,
@@ -12,8 +13,8 @@ import {
   type CreditLedgerEntry,
 } from '@/lib/commerceApi';
 
-const DEFAULT_GRANT_CREDITS = 10;
-const PRESET_AMOUNTS = [10, 50, 100] as const;
+const PRESET_POINT_AMOUNTS = [1, 10, 50, 100, 1000] as const;
+const MAX_GRANT_POINTS = 100_000 * 100;
 
 const REASON_OPTIONS = [
   { value: 'admin_grant', label: '관리자 지급' },
@@ -33,7 +34,7 @@ type LookupState = {
 export default function AdminCounselorCreditGrantPanel() {
   const [email, setEmail] = useState('');
   const [counselorUid, setCounselorUid] = useState('');
-  const [amount, setAmount] = useState(DEFAULT_GRANT_CREDITS);
+  const [grantPoints, setGrantPoints] = useState(0);
   const [reason, setReason] = useState('admin_grant');
   const [lookup, setLookup] = useState<LookupState | null>(null);
   const [message, setMessage] = useState('');
@@ -110,6 +111,11 @@ export default function AdminCounselorCreditGrantPanel() {
       setError('먼저 상담사를 조회해 주세요.');
       return;
     }
+    if (grantPoints < 1) {
+      setError('지급할 포인트를 1 이상 선택해 주세요.');
+      return;
+    }
+    const creditAmount = pointsToAssessmentCredits(grantPoints);
     setLoading(true);
     setError('');
     setMessage('');
@@ -117,7 +123,7 @@ export default function AdminCounselorCreditGrantPanel() {
       const result = await grantCounselorCredits({
         counselorUid: uid || undefined,
         counselorEmail: uid ? undefined : targetEmail,
-        amount,
+        amount: creditAmount,
         reason,
       });
       setMessage(
@@ -207,31 +213,43 @@ export default function AdminCounselorCreditGrantPanel() {
         )}
 
         <div>
-          <label className="mb-2 block text-sm text-slate-400">지급 수량</label>
+          <label className="mb-2 block text-sm text-slate-400">지급 수량 (포인트)</label>
           <div className="mb-3 flex flex-wrap gap-2">
-            {PRESET_AMOUNTS.map((preset) => (
+            {PRESET_POINT_AMOUNTS.map((preset) => (
               <button
                 key={preset}
                 type="button"
-                onClick={() => setAmount(preset)}
-                className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
-                  amount === preset
-                    ? 'bg-blue-600 text-white'
-                    : 'border border-white/15 text-slate-300 hover:bg-white/5'
-                }`}
+                onClick={() =>
+                  setGrantPoints((prev) => Math.min(MAX_GRANT_POINTS, prev + preset))
+                }
+                className="rounded-lg border border-white/15 px-3 py-1.5 text-sm font-medium text-slate-300 hover:border-sky-400/40 hover:bg-sky-500/10 hover:text-white"
               >
-                {preset.toLocaleString()}
+                +{preset.toLocaleString()}
               </button>
             ))}
+            <button
+              type="button"
+              onClick={() => setGrantPoints(0)}
+              className="rounded-lg border border-white/10 px-3 py-1.5 text-sm text-slate-500 hover:bg-white/5 hover:text-slate-300"
+            >
+              초기화
+            </button>
           </div>
           <input
             type="number"
-            min={1}
-            max={100000}
-            value={amount}
-            onChange={(e) => setAmount(Number(e.target.value))}
+            min={0}
+            max={MAX_GRANT_POINTS}
+            value={grantPoints}
+            onChange={(e) => {
+              const n = Number(e.target.value);
+              if (!Number.isFinite(n)) return;
+              setGrantPoints(Math.min(MAX_GRANT_POINTS, Math.max(0, Math.round(n))));
+            }}
             className="w-full rounded-lg border border-white/10 bg-slate-800 px-3 py-2 text-sm text-white"
           />
+          <p className="mt-1.5 text-xs text-slate-500">
+            빠른 선택 버튼을 누를 때마다 합산됩니다. 지급 버튼 숫자와 동일한 포인트 기준입니다.
+          </p>
         </div>
 
         <div>
@@ -251,10 +269,10 @@ export default function AdminCounselorCreditGrantPanel() {
 
         <button
           type="submit"
-          disabled={loading || !lookup}
+          disabled={loading || !lookup || grantPoints < 1}
           className="w-full rounded-lg bg-blue-600 py-3 text-sm font-semibold text-white hover:bg-blue-500 disabled:opacity-50"
         >
-          {loading ? '처리 중…' : `${formatPoints(assessmentCreditsToPoints(amount))} 지급`}
+          {loading ? '처리 중…' : `${formatPoints(grantPoints)} 지급`}
         </button>
       </form>
 

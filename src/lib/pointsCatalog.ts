@@ -75,6 +75,13 @@ export function assessmentCreditsToPoints(credits: number): number {
   return Math.max(0, Math.round(n * POINTS_PER_ASSESSMENT_CREDIT));
 }
 
+/** 관리자 지급 등 — UI 포인트 → DB 검사 크레딧 */
+export function pointsToAssessmentCredits(points: number): number {
+  const p = Math.max(0, Math.round(points));
+  if (p === 0) return 0;
+  return Math.max(1, Math.ceil(p / POINTS_PER_ASSESSMENT_CREDIT));
+}
+
 export function aiCreditsToPoints(credits: number): number {
   const n = Number.isFinite(credits) ? credits : 0;
   return Math.max(0, Math.round(n * POINTS_PER_AI_CREDIT));
