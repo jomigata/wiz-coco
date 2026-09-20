@@ -33,6 +33,11 @@ import {
 import { useListPagination } from '@/hooks/useListPagination';
 import { useCounselorListPageSize } from '@/hooks/useCounselorListPageSize';
 import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
+import {
+  CounselorListSecondaryField,
+  CounselorListSecondaryRow,
+  counselorListRowSpanCellClass,
+} from '@/components/counselor/CounselorListTwoLineRow';
 
 function SortableColumnHeader({
   label,
@@ -166,14 +171,9 @@ export default function ArchivedRecipientsTable({
   const showArchivedAtColumn = !hideArchivedAt && !isDispatchLayout;
   const showSelectColumn = !hideSelect;
 
-  const expandLeadingColSpan = isDispatchLayout
-    ? showSelectColumn
-      ? 2
-      : 1
-    : 3;
-  const expandRestColSpan = isDispatchLayout
-    ? 6
-    : (showAssessmentColumns ? 9 : showArchivedAtColumn ? 7 : 6);
+  const archivedPrimaryColCount = 3 + (showSelectColumn ? 1 : 0);
+  const expandLeadingColSpan = showSelectColumn ? 2 : 1;
+  const expandRestColSpan = archivedPrimaryColCount - expandLeadingColSpan;
 
   const renderTestExpandRow = (row: ArchivedDispatchRecipient, tests: DispatchTestResult[]) => (
     <tr>
@@ -279,40 +279,8 @@ export default function ArchivedRecipientsTable({
                     className="w-36"
                   />
                   <SortableColumnHeader
-                    label="이메일"
-                    sortKey="email"
-                    activeKey={sortKey}
-                    direction={sortDir}
-                    onSort={toggleSort}
-                    className="w-52"
-                  />
-                  <SortableColumnHeader
-                    label="휴대폰"
-                    sortKey="phone"
-                    activeKey={sortKey}
-                    direction={sortDir}
-                    onSort={toggleSort}
-                    className="w-32"
-                  />
-                  <SortableColumnHeader
                     label="검사 현황"
                     sortKey="testStatus"
-                    activeKey={sortKey}
-                    direction={sortDir}
-                    onSort={toggleSort}
-                    className="w-36"
-                  />
-                  <SortableColumnHeader
-                    label="발송현황"
-                    sortKey="notifyStatus"
-                    activeKey={sortKey}
-                    direction={sortDir}
-                    onSort={toggleSort}
-                    className="w-28"
-                  />
-                  <SortableColumnHeader
-                    label="발송일시"
-                    sortKey="notifyAt"
                     activeKey={sortKey}
                     direction={sortDir}
                     onSort={toggleSort}
@@ -330,14 +298,6 @@ export default function ArchivedRecipientsTable({
                     className="w-32"
                   />
                   <SortableColumnHeader
-                    label="발송일시"
-                    sortKey="notifyAt"
-                    activeKey={sortKey}
-                    direction={sortDir}
-                    onSort={toggleSort}
-                    className="w-36"
-                  />
-                  <SortableColumnHeader
                     label="이름"
                     sortKey="displayName"
                     activeKey={sortKey}
@@ -345,54 +305,6 @@ export default function ArchivedRecipientsTable({
                     onSort={toggleSort}
                     className="w-28"
                   />
-                  <SortableColumnHeader
-                    label="이메일"
-                    sortKey="email"
-                    activeKey={sortKey}
-                    direction={sortDir}
-                    onSort={toggleSort}
-                    className="w-52"
-                  />
-                  <SortableColumnHeader
-                    label="휴대폰"
-                    sortKey="phone"
-                    activeKey={sortKey}
-                    direction={sortDir}
-                    onSort={toggleSort}
-                    className="w-32"
-                  />
-                  <SortableColumnHeader
-                    label="나의코드"
-                    sortKey="myCode"
-                    activeKey={sortKey}
-                    direction={sortDir}
-                    onSort={toggleSort}
-                    className="w-24"
-                  />
-                  <SortableColumnHeader
-                    label="발송"
-                    sortKey="notifyStatus"
-                    activeKey={sortKey}
-                    direction={sortDir}
-                    onSort={toggleSort}
-                    className="w-24"
-                  />
-                  {showAssessmentColumns ? (
-                    <>
-                      <th className={counselorListThClass}>상담코드</th>
-                      <th className={counselorListThClass}>검사명</th>
-                    </>
-                  ) : null}
-                  {showArchivedAtColumn ? (
-                    <SortableColumnHeader
-                      label="삭제일시"
-                      sortKey="archivedAt"
-                      activeKey={sortKey}
-                      direction={sortDir}
-                      onSort={toggleSort}
-                      className="w-36"
-                    />
-                  ) : null}
                 </>
               )}
             </tr>
@@ -432,12 +344,16 @@ export default function ArchivedRecipientsTable({
                     }
                     className={`cursor-pointer ${counselorListBodyRowClass} ${isOpen ? 'bg-white/[0.04]' : ''}`}
                   >
-                    <td className={`${counselorListTdClass} tabular-nums text-slate-400 align-top`}>
+                    <td
+                      rowSpan={2}
+                      className={`${counselorListTdClass} ${counselorListRowSpanCellClass} tabular-nums text-slate-400`}
+                    >
                       {startIndex + rowIndex + 1}
                     </td>
                     {showSelectColumn ? (
                       <td
-                        className={isDispatchLayout ? counselorListSelectTdClass : `${counselorListTdClass} align-top`}
+                        rowSpan={2}
+                        className={`${isDispatchLayout ? counselorListSelectTdClass : counselorListSelectTdClass} ${counselorListRowSpanCellClass}`}
                         onClick={(e) => e.stopPropagation()}
                       >
                         <input
@@ -457,53 +373,42 @@ export default function ArchivedRecipientsTable({
                     {isDispatchLayout ? (
                       <>
                         <td
-                          className="max-w-[9rem] truncate px-3 py-2 text-white align-top w-36"
+                          className="max-w-[14rem] px-3 py-2 text-white align-top"
                           title={nameWithCode}
                         >
-                          {nameWithCode}
+                          <p className="min-w-0 break-words text-sm leading-snug">{nameWithCode}</p>
                         </td>
-                        <td className="truncate px-3 py-2 text-slate-300 align-top tabular-nums">
-                          {row.email?.trim() ? (
-                            displayContactEmail(row.email, contactRevealed)
-                          ) : (
-                            <span className="text-amber-300/90" title="이메일 주소 없음">
-                              없음
-                            </span>
-                          )}
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-2 text-slate-300 align-top tabular-nums">
-                          {row.phone?.trim() ? displayContactPhone(row.phone, contactRevealed) : '—'}
-                        </td>
-                        <td className={`px-3 py-2.5 align-top whitespace-nowrap text-sm ${summary.className}`}>
+                        <td className={`px-3 py-2.5 align-middle whitespace-nowrap text-sm ${summary.className}`}>
                           <span className="text-slate-400" aria-hidden="true">
                             {isOpen ? '▼' : '▶'}{' '}
                           </span>
                           <span>{summary.text}</span>
-                        </td>
-                        <td className="px-3 py-2.5 align-top whitespace-nowrap text-sm" title={notify.title}>
-                          <DispatchStatusText value={notify} />
-                        </td>
-                        <td className="px-3 py-2.5 align-top whitespace-nowrap text-sm tabular-nums text-slate-400">
-                          {formatNotifyDate(row.notifyAt)}
                         </td>
                       </>
                     ) : (
                       <>
                         <td
-                          className={`${counselorListTdClass} whitespace-nowrap align-top ${summary.className}`}
+                          className={`${counselorListTdClass} whitespace-nowrap align-middle ${summary.className}`}
                         >
                           <span className="text-slate-400" aria-hidden="true">
                             {isOpen ? '▼' : '▶'}{' '}
                           </span>
                           <span>{summary.text}</span>
                         </td>
-                        <td className="whitespace-nowrap px-3 py-2 text-xs tabular-nums text-slate-400 align-top">
-                          {formatNotifyDate(row.notifyAt)}
-                        </td>
-                        <td className="max-w-[7rem] truncate px-3 py-2 text-white align-top">
+                        <td className="max-w-[10rem] truncate px-3 py-2 text-white align-middle">
                           {row.displayName || '—'}
                         </td>
-                        <td className="truncate px-3 py-2 text-slate-300 align-top tabular-nums">
+                      </>
+                    )}
+                  </tr>
+                  <CounselorListSecondaryRow
+                    colSpan={archivedPrimaryColCount}
+                    className="cursor-pointer"
+                    onClick={() => toggleExpand(row.portalId)}
+                  >
+                    {isDispatchLayout ? (
+                      <>
+                        <CounselorListSecondaryField label="이메일">
                           {row.email?.trim() ? (
                             displayContactEmail(row.email, contactRevealed)
                           ) : (
@@ -511,37 +416,62 @@ export default function ArchivedRecipientsTable({
                               없음
                             </span>
                           )}
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-2 text-slate-300 align-top tabular-nums">
+                        </CounselorListSecondaryField>
+                        <CounselorListSecondaryField label="휴대폰">
                           {row.phone?.trim() ? displayContactPhone(row.phone, contactRevealed) : '—'}
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-2 font-mono text-cyan-300 align-top">
-                          {formatAccessCodeDisplay(row.myCode)}
-                        </td>
-                        <td className={`whitespace-nowrap ${counselorListTdClass} align-top`} title={notify.title}>
+                        </CounselorListSecondaryField>
+                        <CounselorListSecondaryField label="발송현황">
                           <DispatchStatusText value={notify} />
-                        </td>
+                        </CounselorListSecondaryField>
+                        <CounselorListSecondaryField label="발송일시">
+                          {formatNotifyDate(row.notifyAt)}
+                        </CounselorListSecondaryField>
+                      </>
+                    ) : (
+                      <>
+                        <CounselorListSecondaryField label="발송일시">
+                          {formatNotifyDate(row.notifyAt)}
+                        </CounselorListSecondaryField>
+                        <CounselorListSecondaryField label="이메일">
+                          {row.email?.trim() ? (
+                            displayContactEmail(row.email, contactRevealed)
+                          ) : (
+                            <span className="text-amber-300/90" title="이메일 주소 없음">
+                              없음
+                            </span>
+                          )}
+                        </CounselorListSecondaryField>
+                        <CounselorListSecondaryField label="휴대폰">
+                          {row.phone?.trim() ? displayContactPhone(row.phone, contactRevealed) : '—'}
+                        </CounselorListSecondaryField>
+                        <CounselorListSecondaryField label="나의코드">
+                          <span className="font-mono text-cyan-300">
+                            {formatAccessCodeDisplay(row.myCode)}
+                          </span>
+                        </CounselorListSecondaryField>
+                        <CounselorListSecondaryField label="발송">
+                          <DispatchStatusText value={notify} />
+                        </CounselorListSecondaryField>
                         {showAssessmentColumns ? (
                           <>
-                            <td className="whitespace-nowrap px-3 py-2 font-mono text-cyan-300 align-top">
-                              {row.joinAccessCode ? formatAccessCodeDisplay(row.joinAccessCode) : '—'}
-                            </td>
-                            <td
-                              className="max-w-xs truncate px-3 py-2 text-slate-300 align-top"
-                              title={row.assessmentTitle}
-                            >
+                            <CounselorListSecondaryField label="상담코드">
+                              <span className="font-mono text-cyan-300">
+                                {row.joinAccessCode ? formatAccessCodeDisplay(row.joinAccessCode) : '—'}
+                              </span>
+                            </CounselorListSecondaryField>
+                            <CounselorListSecondaryField label="검사명">
                               {row.assessmentTitle || row.cohortName || '—'}
-                            </td>
+                            </CounselorListSecondaryField>
                           </>
                         ) : null}
                         {showArchivedAtColumn ? (
-                          <td className="whitespace-nowrap px-3 py-2 text-xs tabular-nums text-slate-400 align-top">
+                          <CounselorListSecondaryField label="삭제일시">
                             {formatNotifyDate(row.archivedAt)}
-                          </td>
+                          </CounselorListSecondaryField>
                         ) : null}
                       </>
                     )}
-                  </tr>
+                  </CounselorListSecondaryRow>
                   {isOpen ? renderTestExpandRow(row, tests) : null}
                 </React.Fragment>
               );

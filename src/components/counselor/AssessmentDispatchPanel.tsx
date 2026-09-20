@@ -105,6 +105,11 @@ import AssessmentAddRecipientModal, {
 } from '@/components/counselor/AssessmentAddRecipientModal';
 import CounselorRecipientContactEditModal from '@/components/counselor/CounselorRecipientContactEditModal';
 import { LoadingMessage } from '@/components/ui/LoadingMessage';
+import {
+  CounselorListSecondaryField,
+  CounselorListSecondaryRow,
+  counselorListRowSpanCellClass,
+} from '@/components/counselor/CounselorListTwoLineRow';
 
 function myCodeWithOriginSuffix(
   r: DispatchRecipient,
@@ -1445,9 +1450,9 @@ export default function AssessmentDispatchPanel({
   const showTableSort = !clientsSimplifiedView;
   const showBulkToolbar = entryFrom === 'assessments' && !adminUser;
   const showFooterActions = !adminClientProgressView && !clientsSimplifiedView;
-  const leadingDetailSpacerColSpan = adminClientProgressView || clientsSimplifiedView ? 1 : 2;
-  const expandedDetailColSpan =
-    (clientsMergedContact ? 5 : 6) + (showContactEditColumn ? 1 : 0);
+  const dispatchPrimaryColCount = 3 + (showTableCheckbox ? 1 : 0);
+  const leadingDetailSpacerColSpan = showTableCheckbox ? 2 : 1;
+  const expandedDetailColSpan = dispatchPrimaryColCount - leadingDetailSpacerColSpan;
 
   const backHref =
     entryFrom === 'deleted-recipients'
@@ -1618,23 +1623,6 @@ export default function AssessmentDispatchPanel({
           <>
             <div className={`min-h-0 flex-1 ${counselorListTableWrapperClass}`}>
               <table className={counselorListTableClass}>
-                <colgroup>
-                  <col className="w-10" />
-                  {showTableCheckbox ? <col className="w-10" /> : null}
-                  <col className="w-36" />
-                  <col className="w-36" />
-                  {clientsMergedContact ? (
-                    <col className="w-52" />
-                  ) : (
-                    <>
-                      <col className="w-32" />
-                      <col className="w-52" />
-                    </>
-                  )}
-                  <col className="w-28" />
-                  <col className="w-36" />
-                  {!adminClientProgressView ? <col className="w-[4.5rem]" /> : null}
-                </colgroup>
                 <thead className={counselorListTheadClass}>
               <tr className={counselorListHeaderRowGrayClass}>
                 <th className={counselorListNoThGrayClass}>No.</th>
@@ -1677,83 +1665,10 @@ export default function AssessmentDispatchPanel({
                     className="w-36"
                   />
                 ) : (
-                  <th scope="col" className={`${counselorListThGrayClass} w-36 whitespace-nowrap`}>
+                  <th scope="col" className={`${counselorListThGrayClass} whitespace-nowrap`}>
                     진행 현황
                   </th>
                 )}
-                {clientsMergedContact && !contactAfterNotifyAt ? (
-                  <th scope="col" className={`${counselorListThGrayClass} w-52 whitespace-nowrap`}>
-                    연락처
-                  </th>
-                ) : !clientsMergedContact ? (
-                  showTableSort ? (
-                    <>
-                      <SortableColumnHeader
-                        label="휴대폰"
-                        sortKey="phone"
-                        activeKey={sortKey}
-                        direction={sortDir}
-                        onSort={toggleSort}
-                        className="w-32"
-                      />
-                      <SortableColumnHeader
-                        label="이메일"
-                        sortKey="email"
-                        activeKey={sortKey}
-                        direction={sortDir}
-                        onSort={toggleSort}
-                        className="w-52"
-                      />
-                    </>
-                  ) : (
-                    <>
-                      <th scope="col" className={`${counselorListThGrayClass} w-32 whitespace-nowrap`}>
-                        휴대폰
-                      </th>
-                      <th scope="col" className={`${counselorListThGrayClass} w-52 whitespace-nowrap`}>
-                        이메일
-                      </th>
-                    </>
-                  )
-                ) : null}
-                {showTableSort ? (
-                  <SortableColumnHeader
-                    label="발송현황"
-                    sortKey="notifyStatus"
-                    activeKey={sortKey}
-                    direction={sortDir}
-                    onSort={toggleSort}
-                    className="w-28"
-                  />
-                ) : (
-                  <th scope="col" className={`${counselorListThGrayClass} w-28 whitespace-nowrap`}>
-                    발송현황
-                  </th>
-                )}
-                {showTableSort ? (
-                  <SortableColumnHeader
-                    label="발송일시"
-                    sortKey="notifyAt"
-                    activeKey={sortKey}
-                    direction={sortDir}
-                    onSort={toggleSort}
-                    className="w-36"
-                  />
-                ) : (
-                  <th scope="col" className={`${counselorListThGrayClass} w-36 whitespace-nowrap`}>
-                    발송일시
-                  </th>
-                )}
-                {contactAfterNotifyAt && clientsMergedContact ? (
-                  <th scope="col" className={`${counselorListThGrayClass} w-52 whitespace-nowrap`}>
-                    연락처
-                  </th>
-                ) : null}
-                {showContactEditColumn ? (
-                  <th className={`${counselorListTdClass} w-[4.5rem] text-center text-xs font-medium text-slate-400`}>
-                    연락처 수정
-                  </th>
-                ) : null}
               </tr>
             </thead>
             <tbody>
@@ -1785,9 +1700,18 @@ export default function AssessmentDispatchPanel({
                       aria-label={`${r.displayName || '내담자'} 진행 현황 ${isOpen ? '접기' : '펼치기'}`}
                       className={`cursor-pointer ${counselorListBodyRowClass} ${isOpen ? 'bg-white/[0.04]' : ''}`}
                     >
-                      <td className={`${counselorListTdClass} tabular-nums text-slate-400`}>{rowIndex + 1}</td>
+                      <td
+                        rowSpan={2}
+                        className={`${counselorListTdClass} ${counselorListRowSpanCellClass} tabular-nums text-slate-400`}
+                      >
+                        {rowIndex + 1}
+                      </td>
                       {showTableCheckbox ? (
-                        <td className={counselorListSelectTdClass} onClick={(e) => e.stopPropagation()}>
+                        <td
+                          rowSpan={2}
+                          className={`${counselorListSelectTdClass} ${counselorListRowSpanCellClass}`}
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           <input
                             type="checkbox"
                             checked={selected.has(r.portalId)}
@@ -1797,8 +1721,8 @@ export default function AssessmentDispatchPanel({
                           />
                         </td>
                       ) : null}
-                      <td className={`max-w-[14rem] ${counselorListTdClass} w-44`}>
-                        <p className="min-w-0 truncate text-sm leading-snug text-white">
+                      <td className={`max-w-[14rem] ${counselorListTdClass}`}>
+                        <p className="min-w-0 break-words text-sm leading-snug text-white">
                           <span className="font-semibold">{r.displayName || '—'}</span>
                           <span className="text-slate-500"> / </span>
                           <span className="font-mono text-[13px] text-slate-200">
@@ -1817,16 +1741,22 @@ export default function AssessmentDispatchPanel({
                           {progressMoveNote(r, displayData.joinAccessCode || '')}
                         </div>
                       </td>
+                    </tr>
+                    <CounselorListSecondaryRow
+                      colSpan={dispatchPrimaryColCount}
+                      className="cursor-pointer"
+                      onClick={() => toggleExpand(r.portalId)}
+                    >
                       {clientsMergedContact && !contactAfterNotifyAt ? (
-                        <td className={`${counselorListTdClass} align-middle`}>
+                        <CounselorListSecondaryField label="연락처">
                           <RecipientContactCell phone={r.phone} email={r.email} />
-                        </td>
+                        </CounselorListSecondaryField>
                       ) : !clientsMergedContact ? (
                         <>
-                          <td className="px-3 py-2 text-slate-300 align-middle whitespace-nowrap tabular-nums">
+                          <CounselorListSecondaryField label="휴대폰">
                             {r.phone?.trim() ? displayContactPhone(r.phone, contactRevealed) : '—'}
-                          </td>
-                          <td className="px-3 py-2 text-slate-300 align-middle truncate tabular-nums">
+                          </CounselorListSecondaryField>
+                          <CounselorListSecondaryField label="이메일">
                             {r.email?.trim() ? (
                               displayContactEmail(r.email, contactRevealed)
                             ) : (
@@ -1834,39 +1764,37 @@ export default function AssessmentDispatchPanel({
                                 없음
                               </span>
                             )}
-                          </td>
+                          </CounselorListSecondaryField>
                         </>
                       ) : null}
-                      <td
-                        className="px-3 py-2.5 align-middle whitespace-nowrap text-sm"
-                        title={fieldPending.notifyStatus ? undefined : notify.title}
-                      >
+                      {contactAfterNotifyAt && clientsMergedContact ? (
+                        <CounselorListSecondaryField label="연락처">
+                          <RecipientContactCell phone={r.phone} email={r.email} />
+                        </CounselorListSecondaryField>
+                      ) : null}
+                      <CounselorListSecondaryField label="발송현황">
                         {fieldPending.notifyStatus ? (
                           <span className="text-amber-300">{DISPATCH_SENDING_LABEL}</span>
                         ) : (
                           <DispatchStatusText value={notify} />
                         )}
-                      </td>
-                      <td className="px-3 py-2.5 align-middle whitespace-nowrap text-sm tabular-nums text-slate-400">
+                      </CounselorListSecondaryField>
+                      <CounselorListSecondaryField label="발송일시">
                         {fieldPending.notifyAt ? DISPATCH_CHECKING_LABEL : formatNotifyDate(r.notifyAt)}
-                      </td>
-                      {contactAfterNotifyAt && clientsMergedContact ? (
-                        <td className={`${counselorListTdClass} align-middle`}>
-                          <RecipientContactCell phone={r.phone} email={r.email} />
-                        </td>
-                      ) : null}
+                      </CounselorListSecondaryField>
                       {showContactEditColumn ? (
-                        <td className="px-2 py-2.5 align-middle text-center" onClick={(e) => e.stopPropagation()}>
-                          <button
-                            type="button"
-                            onClick={() => openEditContact(r)}
-                            className="rounded-md border border-white/15 bg-white/[0.04] px-2 py-1 text-xs text-sky-200 transition-colors hover:border-sky-400/40 hover:bg-sky-500/10"
-                          >
-                            연락처 수정
-                          </button>
-                        </td>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openEditContact(r);
+                          }}
+                          className="rounded-md border border-white/15 bg-white/[0.04] px-2 py-1 text-xs text-sky-200 transition-colors hover:border-sky-400/40 hover:bg-sky-500/10"
+                        >
+                          연락처 수정
+                        </button>
                       ) : null}
-                    </tr>
+                    </CounselorListSecondaryRow>
                     {isOpen ? (
                       <tr>
                         <td

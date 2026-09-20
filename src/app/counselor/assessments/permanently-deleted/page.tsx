@@ -34,7 +34,12 @@ import { useListPagination } from '@/hooks/useListPagination';
 import { useCounselorListPageSize } from '@/hooks/useCounselorListPageSize';
 import { matchesWildcardFields } from '@/lib/wildcardSearch';
 import { getAppRoleSync, isAdmin } from '@/utils/roleUtils';
-import { CounselorAdminEmailSortHeader, CounselorAdminEmailTd, compareCounselorEmail } from '@/components/counselor/CounselorAdminEmailColumn';
+import { compareCounselorEmail } from '@/components/counselor/CounselorAdminEmailColumn';
+import {
+  CounselorListSecondaryField,
+  CounselorListSecondaryRow,
+  counselorListRowSpanCellClass,
+} from '@/components/counselor/CounselorListTwoLineRow';
 import {
   fetchPermanentlyDeletedRecords,
   restorePermanentlyDeletedRecords,
@@ -371,6 +376,8 @@ export default function PermanentlyDeletedAssessmentsPage() {
     });
   };
 
+  const permanentListColCount = 5;
+
   if (authPending) return <AuthLoadingState className="py-8" />;
   if (showLoginRequired) {
     return <AuthRequiredState description="Firebase에 로그인한 상태에서 다시 시도해 주세요." />;
@@ -439,22 +446,6 @@ export default function PermanentlyDeletedAssessmentsPage() {
                         aria-label="전체 선택"
                       />
                     </th>
-                    <SortableColumnHeader
-                      label="영구삭제일"
-                      sortKey="permanentlyDeletedAt"
-                      activeKey={sortKey}
-                      direction={sortDir}
-                      onSort={toggleSort}
-                      className="whitespace-nowrap text-center"
-                    />
-                    <SortableColumnHeader
-                      label="상담코드"
-                      sortKey="accessCode"
-                      activeKey={sortKey}
-                      direction={sortDir}
-                      onSort={toggleSort}
-                      className="whitespace-nowrap text-center"
-                    />
                     <DualFieldSortHeader
                       leftLabel="그룹명"
                       rightLabel="소속"
@@ -464,23 +455,17 @@ export default function PermanentlyDeletedAssessmentsPage() {
                       onSortLeft={() => toggleCounselFieldSort('org')}
                       onSortRight={() => toggleCounselFieldSort('title')}
                     />
-                    <th scope="col" className={`${counselorListThClass} whitespace-nowrap text-center`}>
-                      <span className="block">진행현황</span>
-                    </th>
                     <SortableColumnHeader
-                      label="사용 종료일"
-                      sortKey="usageEndDate"
+                      label="상담코드"
+                      sortKey="accessCode"
                       activeKey={sortKey}
                       direction={sortDir}
                       onSort={toggleSort}
                       className="whitespace-nowrap text-center"
                     />
-                    <CounselorAdminEmailSortHeader
-                      emailSortKey="counselorEmail"
-                      activeKey={sortKey}
-                      direction={sortDir}
-                      onSort={toggleSort}
-                    />
+                    <th scope="col" className={`${counselorListThClass} whitespace-nowrap text-center`}>
+                      <span className="block">진행현황</span>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -492,51 +477,63 @@ export default function PermanentlyDeletedAssessmentsPage() {
                     const isSelected = selected.has(row.id);
 
                     return (
-                      <tr
-                        key={row.id}
-                        className={`${counselorListBodyRowStaticClass} ${isSelected ? 'bg-white/[0.04]' : ''}`}
-                      >
-                        <td className={`${counselorListTdCompactClass} tabular-nums text-slate-500`}>
-                          {startIndex + idx + 1}
-                        </td>
-                        <td className={counselorListSelectTdClass} onClick={(e) => e.stopPropagation()}>
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={() => toggleOne(row.id)}
-                            className="rounded accent-blue-500"
-                            aria-label={`${infoSecondary} 선택`}
-                          />
-                        </td>
-                        <td className={`whitespace-nowrap ${counselorListTdCompactClass} text-center text-slate-300`}>
-                          {formatCounselorIssueDate(row.permanentlyDeletedAt)}
-                        </td>
-                        <td className={`whitespace-nowrap ${counselorListTdCompactClass} text-center`}>
-                          <span className="font-mono tracking-wide text-cyan-300/95">
-                            {formatAccessCodeDisplay(row.accessCode)}
-                          </span>
-                        </td>
-                        <td className={`max-w-[16rem] ${counselorListTdCompactClass}`}>
-                          <CounselorSlashInfoCell
-                            primary={infoPrimary}
-                            secondary={infoSecondary}
-                            showTooltip={false}
-                          />
-                        </td>
-                        <td className={`whitespace-nowrap ${counselorListTdCompactClass} text-center`}>
-                          <CounselorProgressMetricsInline
-                            totalClients={dispatchTotal}
-                            showTotalClients={false}
-                            items={[{ label: '검사완료', value: testComplete }]}
-                          />
-                        </td>
-                        <td
-                          className={`whitespace-nowrap ${counselorListTdCompactClass} text-center ${expired ? 'text-red-400' : ''}`}
+                      <React.Fragment key={row.id}>
+                        <tr
+                          className={`${counselorListBodyRowStaticClass} ${isSelected ? 'bg-white/[0.04]' : ''}`}
                         >
-                          {formatUsageEndDate(row.usageEndDate)}
-                        </td>
-                        <CounselorAdminEmailTd email={row.counselorEmail} />
-                      </tr>
+                          <td
+                            rowSpan={2}
+                            className={`${counselorListTdCompactClass} ${counselorListRowSpanCellClass} tabular-nums text-slate-500`}
+                          >
+                            {startIndex + idx + 1}
+                          </td>
+                          <td
+                            rowSpan={2}
+                            className={`${counselorListSelectTdClass} ${counselorListRowSpanCellClass}`}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => toggleOne(row.id)}
+                              className="rounded accent-blue-500"
+                              aria-label={`${infoSecondary} 선택`}
+                            />
+                          </td>
+                          <td className={`max-w-[16rem] ${counselorListTdCompactClass}`}>
+                            <CounselorSlashInfoCell
+                              primary={infoPrimary}
+                              secondary={infoSecondary}
+                              showTooltip={false}
+                            />
+                          </td>
+                          <td className={`whitespace-nowrap ${counselorListTdCompactClass} text-center`}>
+                            <span className="font-mono tracking-wide text-cyan-300/95">
+                              {formatAccessCodeDisplay(row.accessCode)}
+                            </span>
+                          </td>
+                          <td className={`whitespace-nowrap ${counselorListTdCompactClass} text-center`}>
+                            <CounselorProgressMetricsInline
+                              totalClients={dispatchTotal}
+                              showTotalClients={false}
+                              items={[{ label: '검사완료', value: testComplete }]}
+                            />
+                          </td>
+                        </tr>
+                        <CounselorListSecondaryRow colSpan={permanentListColCount}>
+                          <CounselorListSecondaryField label="영구삭제일">
+                            {formatCounselorIssueDate(row.permanentlyDeletedAt)}
+                          </CounselorListSecondaryField>
+                          <CounselorListSecondaryField label="사용 종료일">
+                            <span className={expired ? 'text-red-400' : undefined}>
+                              {formatUsageEndDate(row.usageEndDate)}
+                            </span>
+                          </CounselorListSecondaryField>
+                          <CounselorListSecondaryField label="상담사">
+                            {row.counselorEmail?.trim() || '—'}
+                          </CounselorListSecondaryField>
+                        </CounselorListSecondaryRow>
+                      </React.Fragment>
                     );
                   })}
                 </tbody>
