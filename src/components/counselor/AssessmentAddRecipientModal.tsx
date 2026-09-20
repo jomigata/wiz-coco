@@ -619,6 +619,15 @@ export default function AssessmentAddRecipientModal({
                     const previewOpen = filePreviewFileName === batch.name && batch.rows.length > 0;
                     const visibleRows = batch.rows.slice(0, FILE_RECIPIENT_PREVIEW_MAX_VISIBLE);
                     const overflowCount = batch.rows.length - visibleRows.length;
+                    const previewHeader = `파일 내용 · ${batch.name} (${batch.rows.length.toLocaleString('ko-KR')}명)`;
+                    const previewWidthCh = Math.min(
+                      120,
+                      Math.max(
+                        12,
+                        previewHeader.length,
+                        ...visibleRows.map((row) => formatRecipientPreviewLine(row).length),
+                      ) + 1,
+                    );
 
                     return (
                       <div
@@ -628,50 +637,52 @@ export default function AssessmentAddRecipientModal({
                           setFilePreviewFileName((prev) => (prev === batch.name ? null : prev))
                         }
                       >
-                        <p className="text-sm leading-snug text-emerald-100">
-                          <span className="font-semibold tabular-nums">{batch.displayIndex}.</span>{' '}
-                          <span
-                            className="cursor-help break-all underline decoration-dotted decoration-emerald-400/60 underline-offset-2"
-                            onMouseEnter={(e) => openFilePreview(batch.name, e.currentTarget)}
-                            onFocus={(e) => openFilePreview(batch.name, e.currentTarget)}
-                            onBlur={() => setFilePreviewFileName(null)}
-                            tabIndex={0}
-                            role="button"
-                            aria-label={`${batch.name} 파일 내용 미리보기`}
-                          >
-                            {batch.name}
-                          </span>
-                          <span className="text-emerald-300/90">
-                            {' '}
-                            · 총 {batch.rows.length.toLocaleString('ko-KR')}명
-                          </span>
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="min-w-0 flex-1 text-sm leading-snug text-emerald-100">
+                            <span className="font-semibold tabular-nums">{batch.displayIndex}.</span>{' '}
+                            <span
+                              className="cursor-help break-all underline decoration-dotted decoration-emerald-400/60 underline-offset-2"
+                              onMouseEnter={(e) => openFilePreview(batch.name, e.currentTarget)}
+                              onFocus={(e) => openFilePreview(batch.name, e.currentTarget)}
+                              onBlur={() => setFilePreviewFileName(null)}
+                              tabIndex={0}
+                              role="button"
+                              aria-label={`${batch.name} 파일 내용 미리보기`}
+                            >
+                              {batch.name}
+                            </span>
+                            <span className="text-emerald-300/90">
+                              {' '}
+                              · 총 {batch.rows.length.toLocaleString('ko-KR')}명
+                            </span>
+                          </p>
                           <button
                             type="button"
                             onClick={() => removeFileBatchesByName(batch.name)}
-                            className="ml-2 font-medium text-red-400 hover:text-red-300"
+                            className="shrink-0 font-medium text-red-400 hover:text-red-300"
                             disabled={addLoading}
                           >
                             삭제
                           </button>
-                        </p>
+                        </div>
                         {previewOpen ? (
                           <div
-                            className={`pointer-events-none absolute left-0 right-0 z-[200] max-w-full rounded-lg border border-sky-500/40 bg-slate-950 p-2.5 text-left shadow-2xl ${
+                            className={`pointer-events-none absolute left-[3ch] z-[200] w-max max-w-[92vw] rounded-lg border border-sky-500/40 bg-slate-950 p-2.5 text-left shadow-2xl ${
                               filePreviewPlacement === 'above'
                                 ? 'bottom-full mb-0.5'
                                 : 'top-full mt-0.5'
                             }`}
+                            style={{ minWidth: `${previewWidthCh}ch` }}
                             role="tooltip"
                           >
-                            <p className="mb-1.5 truncate text-xs font-semibold text-sky-300">
-                              파일 내용 · {batch.name} ({batch.rows.length.toLocaleString('ko-KR')}명)
+                            <p className="mb-1.5 whitespace-nowrap text-xs font-semibold text-sky-300">
+                              {previewHeader}
                             </p>
-                            <ul className="max-h-52 space-y-0.5 overflow-hidden">
+                            <ul className="max-h-52 space-y-0.5 overflow-y-auto overflow-x-visible">
                               {visibleRows.map((row, idx) => (
                                 <li
                                   key={`${batch.name}-${idx}-${row.displayName}-${row.phone}`}
-                                  className="truncate font-mono text-[11px] leading-snug text-slate-200 sm:text-xs"
-                                  title={formatRecipientPreviewLine(row)}
+                                  className="whitespace-nowrap font-mono text-[11px] leading-snug text-slate-200 sm:text-xs"
                                 >
                                   {formatRecipientPreviewLine(row)}
                                 </li>
