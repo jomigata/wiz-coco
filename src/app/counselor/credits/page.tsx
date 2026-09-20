@@ -166,7 +166,6 @@ function CreditsContent() {
       title="검사 포인트"
       dense
       className="flex min-h-0 flex-1"
-      description={`내담자 1명(포털 1개) 발급 = 10포인트(100원). 잔액은 협회 Admin에서 지급·조정합니다.`}
       toolbar={<TabBar tab={tab} setTab={setTab} />}
     >
       {payMessage && (
