@@ -45,7 +45,6 @@ import {
   type DispatchRecipient,
   type DispatchTestResult,
 } from '@/lib/clientPortalApi';
-import { useAssessmentDispatchRealtime } from '@/hooks/useAssessmentDispatchRealtime';
 import {
   readAnyCachedDispatchStatus,
   writeCachedDispatchStatus,
@@ -72,13 +71,6 @@ import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import CounselorSlashInfoCell from '@/components/counselor/CounselorSlashInfoCell';
 import CounselorListSearchInput from '@/components/counselor/CounselorListSearchInput';
 import CounselorProgressMetricsInline from '@/components/counselor/CounselorProgressMetricsInline';
-import {
-  readDispatchLiveRefreshPref,
-  writeDispatchLiveRefreshPref,
-} from '@/lib/dispatchRealtimePref';
-
-const DISPATCH_PAGE_SIZE = 50;
-const DISPATCH_IDLE_POLL_MS = 45_000;
 import { stripAssessmentTitleDispatchCountSuffix } from '@/lib/counselorAssessmentResultDisplay';
 import { replaceWithAuthSession } from '@/utils/authSessionLifecycle';
 import { buildAssessmentListHref, writeAssessmentListSearch, buildAssessmentProgressHref } from '@/lib/counselorAssessmentListSearch';
@@ -104,6 +96,10 @@ import AssessmentAddRecipientModal, {
 } from '@/components/counselor/AssessmentAddRecipientModal';
 import CounselorRecipientContactEditModal from '@/components/counselor/CounselorRecipientContactEditModal';
 import { LoadingMessage } from '@/components/ui/LoadingMessage';
+
+const DISPATCH_PAGE_SIZE = 50;
+/** 탭 재포커스 시 silent load 최소 간격 */
+const DISPATCH_VISIBILITY_REFRESH_MS = 60_000;
 
 function myCodeWithOriginSuffix(
   r: DispatchRecipient,
@@ -585,7 +581,8 @@ export default function AssessmentDispatchPanel({
   const [sortDir, setSortDir] = useState<SortDirection>('desc');
   const [nameSortPhase, setNameSortPhase] = useState<NameSortPhase>('name-asc');
   const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
-  const [liveRefreshEnabled, setLiveRefreshEnabled] = useState(false);
+  const [dispatchLastUpdatedAt, setDispatchLastUpdatedAt] = useState<Date | null>(null);
+  const dispatchLastFetchedMsRef = useRef(0);
   const [dispatchNextCursor, setDispatchNextCursor] = useState<string | null>(null);
   const [dispatchTotalCount, setDispatchTotalCount] = useState<number | null>(null);
   const [loadingMoreDispatch, setLoadingMoreDispatch] = useState(false);
@@ -611,10 +608,6 @@ export default function AssessmentDispatchPanel({
 
   useRedirectOnLoginRequiredError(error);
   useRedirectOnLoginRequiredError(detailError);
-
-  useEffect(() => {
-    setLiveRefreshEnabled(readDispatchLiveRefreshPref());
-  }, []);
 
   useEffect(() => {
     if (!pendingIssue) {
@@ -643,6 +636,8 @@ export default function AssessmentDispatchPanel({
     setData(initial);
     setLoading(!initial?.recipients?.length && !initial);
     setError('');
+    setDispatchLastUpdatedAt(null);
+    dispatchLastFetchedMsRef.current = 0;
   }, [assessmentId, user?.uid]);
 
   const autoOpenAddRecipientHandled = useRef(false);
@@ -684,6 +679,8 @@ export default function AssessmentDispatchPanel({
       };
       writeCachedDispatchStatus(fetchId, nextData, user?.uid);
       setData(nextData);
+      setDispatchLastUpdatedAt(new Date());
+      dispatchLastFetchedMsRef.current = Date.now();
       expandedTestsLoadedRef.current.clear();
       setDispatchNextCursor(result.nextCursor ?? null);
       setDispatchTotalCount(result.totalRecipientCount ?? nextData.recipients.length);
@@ -851,26 +848,7 @@ export default function AssessmentDispatchPanel({
     void load({ silent: Boolean(cached?.recipients?.length) });
   }, [load, authPending, isAuthenticated, assessmentId, user?.uid]);
 
-  const realtimeAssessmentId = resolveDispatchFetchId(assessmentId) || assessmentId;
-  const portalIdsForLive = useMemo(
-    () => (data?.recipients || []).map((r) => r.portalId).filter(Boolean),
-    [data?.recipients],
-  );
-  const realtimeEnabled =
-    liveRefreshEnabled &&
-    isAuthenticated &&
-    !authPending &&
-    Boolean(realtimeAssessmentId) &&
-    !isPendingDispatchAssessmentId(realtimeAssessmentId);
-
-  const { data: liveData } = useAssessmentDispatchRealtime(
-    realtimeAssessmentId,
-    data,
-    realtimeEnabled,
-    portalIdsForLive,
-  );
-
-  const displayData = liveData ?? data;
+  const displayData = data;
   const issuingPhase = isDispatchIssuingPhase(assessmentId, displayData);
 
   const visibleData = useMemo(() => {
@@ -932,29 +910,20 @@ export default function AssessmentDispatchPanel({
   }, [authPending, isAuthenticated, needsLiveRefresh, assessmentId, user?.uid]);
 
   useEffect(() => {
-    if (liveRefreshEnabled || authPending || !isAuthenticated) return;
-    if (needsLiveRefresh || hasSendingNotify) return;
+    if (authPending || !isAuthenticated) return;
 
-    const pollIfVisible = () => {
+    const refreshIfStale = () => {
       if (document.visibilityState !== 'visible') return;
+      const elapsed = Date.now() - dispatchLastFetchedMsRef.current;
+      if (dispatchLastFetchedMsRef.current > 0 && elapsed < DISPATCH_VISIBILITY_REFRESH_MS) {
+        return;
+      }
       void load({ silent: true });
     };
-    pollIfVisible();
-    const timer = window.setInterval(pollIfVisible, DISPATCH_IDLE_POLL_MS);
-    const onVisibility = () => pollIfVisible();
-    document.addEventListener('visibilitychange', onVisibility);
-    return () => {
-      window.clearInterval(timer);
-      document.removeEventListener('visibilitychange', onVisibility);
-    };
-  }, [
-    liveRefreshEnabled,
-    needsLiveRefresh,
-    hasSendingNotify,
-    load,
-    authPending,
-    isAuthenticated,
-  ]);
+
+    document.addEventListener('visibilitychange', refreshIfStale);
+    return () => document.removeEventListener('visibilitychange', refreshIfStale);
+  }, [load, authPending, isAuthenticated]);
 
   useEffect(() => {
     if (!data?.recipients?.length) return;
@@ -1014,9 +983,6 @@ export default function AssessmentDispatchPanel({
       return;
     }
     if (authPending || !isAuthenticated) return;
-    if (liveRefreshEnabled && !hasSendingNotify && !pendingIssue && !issuingPhase) {
-      return;
-    }
     if (sendingStartedAtRef.current === null) sendingStartedAtRef.current = Date.now();
     const maxActiveMs = 120_000;
     void load({ silent: true });
@@ -1034,7 +1000,6 @@ export default function AssessmentDispatchPanel({
     hasSendingNotify,
     pendingIssue,
     issuingPhase,
-    liveRefreshEnabled,
     load,
     authPending,
     isAuthenticated,
@@ -1527,32 +1492,19 @@ export default function AssessmentDispatchPanel({
             placeholder="이름 · 이메일 · 휴대폰 · 나의코드 검색"
             className="sm:max-w-xs"
           />
-          <span className="inline-flex flex-wrap items-center gap-2 rounded-md border border-white/10 bg-slate-900/40 px-2 py-1">
-            <button
-              type="button"
-              onClick={() => void load({ silent: false, refresh: true })}
-              disabled={loading}
-              className="rounded-md border border-white/15 bg-white/[0.04] px-2 py-1 text-xs text-sky-200 transition-colors hover:border-sky-400/40 hover:bg-sky-500/10 disabled:opacity-50"
+          {dispatchLastUpdatedAt ? (
+            <span
+              className="inline-flex items-center rounded-md border border-white/10 bg-slate-900/40 px-2 py-1 text-[11px] tabular-nums text-slate-400 sm:text-xs"
+              title="목록 데이터 기준 시각 (발송·알림 처리 중에는 자동으로 갱신됩니다)"
             >
-              {loading ? '새로고침…' : '새로고침'}
-            </button>
-            <label className="inline-flex cursor-pointer items-center gap-1.5 text-xs text-slate-400">
-              <input
-                type="checkbox"
-                className="rounded border-white/20 bg-slate-900"
-                checked={liveRefreshEnabled}
-                onChange={(e) => {
-                  const next = e.target.checked;
-                  setLiveRefreshEnabled(next);
-                  writeDispatchLiveRefreshPref(next);
-                }}
-              />
-              실시간 갱신
-            </label>
-            <span className="hidden text-[10px] text-slate-500 sm:inline" title="Firestore read 비용">
-              (켜면 read 증가)
+              반영{' '}
+              {dispatchLastUpdatedAt.toLocaleTimeString('ko-KR', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+              })}
             </span>
-          </span>
+          ) : null}
           {showBulkToolbar ? (
             <span className="ml-auto inline-flex shrink-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
               <button
