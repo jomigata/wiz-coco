@@ -4,6 +4,8 @@ import React from 'react';
 import type { DispatchTestResult } from '@/lib/clientPortalApi';
 import { formatNotifyDate } from '@/lib/dispatchRecipientDisplay';
 
+import CounselorListTableScroll from '@/components/counselor/CounselorListTableScroll';
+
 function testStatusLabel(status: DispatchTestResult['status']): { text: string; className: string } {
   if (status === 'completed') return { text: '완료', className: 'text-emerald-300' };
   if (status === 'in_progress') return { text: '진행 중', className: 'text-amber-300' };
@@ -37,7 +39,7 @@ export default function CounselorRecipientTestsExpandRow({
         {tests.length === 0 ? (
           <p className="text-sm text-slate-500">배정된 검사 항목이 없습니다.</p>
         ) : (
-          <div className="overflow-x-auto rounded-lg border border-slate-700/50">
+          <CounselorListTableScroll className="rounded-lg border border-slate-700/50">
             <table className="w-full min-w-[28rem] text-sm">
               <thead>
                 <tr className="border-b border-slate-700/80 text-xs text-slate-400">
@@ -86,7 +88,7 @@ export default function CounselorRecipientTestsExpandRow({
                 })}
               </tbody>
             </table>
-          </div>
+          </CounselorListTableScroll>
         )}
       </td>
     </tr>

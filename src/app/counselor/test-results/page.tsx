@@ -14,11 +14,10 @@ import {
 } from '@/lib/assessmentReportPrint';
 import AssessmentAiInterpretButton from '@/components/counselor/AssessmentAiInterpretButton';
 import AssessmentComprehensiveReportButton from '@/components/counselor/AssessmentComprehensiveReportButton';
+import CounselorListTableScroll from '@/components/counselor/CounselorListTableScroll';
 import CounselorListPagination from '@/components/counselor/CounselorListPagination';
 import {
   counselorListNoThClass,
-  counselorListTableWrapperClass,
-  counselorListTableClass,
   counselorListTdClass,
   counselorListThClass,
   counselorListTheadClass,
@@ -198,8 +197,8 @@ export default function TestResultsPage() {
           <div className="text-white/70 text-sm">표시할 결과가 없습니다.</div>
         ) : (
           <>
-            <div className={counselorListTableWrapperClass}>
-              <table className={`${counselorListTableClass} text-white/90`}>
+            <CounselorListTableScroll>
+              <table className="w-max min-w-full table-fixed text-sm text-white/90">
                 <thead className={counselorListTheadClass}>
                   <tr>
                     <th className={counselorListNoThClass}>No.</th>
@@ -279,7 +278,7 @@ export default function TestResultsPage() {
                 ))}
               </tbody>
             </table>
-          </div>
+          </CounselorListTableScroll>
           <CounselorListPagination
             page={page}
             totalPages={totalPages}

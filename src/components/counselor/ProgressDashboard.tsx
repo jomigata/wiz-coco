@@ -1,6 +1,7 @@
 ﻿'use client';
 
 import React, { useCallback, useMemo, useState } from 'react';
+import CounselorListTableScroll from '@/components/counselor/CounselorListTableScroll';
 import { LoadingMessage } from '@/components/ui/LoadingMessage';
 import { getCounselorResult, type ProgressByClient, type CounselorResultDetail } from '@/lib/assessmentApi';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
@@ -204,8 +205,8 @@ export default function ProgressDashboard({
                   </div>
                 </button>
                 {isOpen ? (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left">
+                  <CounselorListTableScroll>
+                    <table className="w-full min-w-[36rem] text-left">
                       <thead>
                         <tr className="border-b border-slate-600 text-slate-400 text-sm">
                           <th className="px-4 py-2 font-medium w-[28%]">
@@ -278,7 +279,7 @@ export default function ProgressDashboard({
                         ))}
                       </tbody>
                     </table>
-                  </div>
+                  </CounselorListTableScroll>
                 ) : (
                   <div className="px-4 py-2.5 bg-slate-900/40 text-sm text-slate-400 border-t border-slate-700/50">
                     제출 {client.results.length}건 · 완료 {completed}건

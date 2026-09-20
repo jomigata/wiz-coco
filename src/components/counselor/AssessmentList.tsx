@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import AuthLink from '@/components/auth/AuthLink';
+import CounselorListTableScroll from '@/components/counselor/CounselorListTableScroll';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -42,8 +43,6 @@ import {
   counselorListSelectThClass,
   counselorListSortActiveClass,
   counselorListSortIdleClass,
-  counselorListTableWrapperClass,
-  counselorListTableClass,
   counselorListTdCompactClass,
   counselorListThClass,
   counselorListTheadClass,
@@ -59,12 +58,7 @@ import {
 import { exportCounselorAssessments } from '@/lib/counselorAssessmentListExport';
 import { matchesWildcardFields } from '@/lib/wildcardSearch';
 import { getAppRoleSync, isAdmin } from '@/utils/roleUtils';
-import { compareCounselorEmail } from '@/components/counselor/CounselorAdminEmailColumn';
-import {
-  CounselorListSecondaryField,
-  CounselorListSecondaryRow,
-  counselorListRowSpanCellClass,
-} from '@/components/counselor/CounselorListTwoLineRow';
+import { CounselorAdminEmailSortHeader, CounselorAdminEmailTd, compareCounselorEmail } from '@/components/counselor/CounselorAdminEmailColumn';
 type ListSortKey = 'createdAt' | 'counselInfo' | 'accessCode' | 'usageEndDate' | 'counselorEmail';
 type SortDirection = 'asc' | 'desc';
 type CounselSortPhase = 'org-asc' | 'org-desc' | 'title-asc' | 'title-desc';
@@ -635,8 +629,6 @@ export default function AssessmentList({
     }
   };
 
-  const assessmentListColCount = 5;
-
   return (
     <CounselorPageSection
       showHierarchyBreadcrumb
@@ -743,8 +735,8 @@ export default function AssessmentList({
         </div>
       ) : (
         <>
-          <div className={`min-h-0 flex-1 ${counselorListTableWrapperClass}`}>
-            <table className={counselorListTableClass}>
+          <CounselorListTableScroll className="flex-1">
+            <table className="w-max min-w-full table-fixed text-sm">
               <thead className={counselorListTheadClass}>
                 <tr className={counselorListHeaderRowClass}>
                   <th className={counselorListNoThClass}>No.</th>
@@ -779,6 +771,31 @@ export default function AssessmentList({
                   <th scope="col" className={`${counselorListThClass} whitespace-nowrap text-center`}>
                     <span className="block">진행현황</span>
                   </th>
+                  <SortableColumnHeader
+                    label="생성일시"
+                    sortKey="createdAt"
+                    activeKey={sortKey}
+                    direction={sortDir}
+                    onSort={toggleSort}
+                    className="whitespace-nowrap"
+                  />
+                  <SortableColumnHeader
+                    label="사용 종료일"
+                    sortKey="usageEndDate"
+                    activeKey={sortKey}
+                    direction={sortDir}
+                    onSort={toggleSort}
+                    className="whitespace-nowrap text-center"
+                  />
+                  <th scope="col" className={`${counselorListThClass} text-center`}>기타</th>
+                  {adminUser ? (
+                    <CounselorAdminEmailSortHeader
+                      emailSortKey="counselorEmail"
+                      activeKey={sortKey}
+                      direction={sortDir}
+                      onSort={toggleSort}
+                    />
+                  ) : null}
                 </tr>
               </thead>
               <tbody>
@@ -789,19 +806,11 @@ export default function AssessmentList({
                   const isSelected = selected.has(a.id);
 
                   return (
-                    <React.Fragment key={a.id}>
-                    <tr className={`${counselorListBodyRowClassAt(idx)} ${isSelected ? 'bg-white/[0.04]' : ''}`}>
-                      <td
-                        rowSpan={2}
-                        className={`${counselorListTdCompactClass} ${counselorListRowSpanCellClass} tabular-nums text-slate-500`}
-                      >
+                    <tr key={a.id} className={`${counselorListBodyRowClassAt(idx)} ${isSelected ? 'bg-white/[0.04]' : ''}`}>
+                      <td className={`${counselorListTdCompactClass} tabular-nums text-slate-500`}>
                         {startIndex + idx + 1}
                       </td>
-                      <td
-                        rowSpan={2}
-                        className={`${counselorListSelectTdClass} ${counselorListRowSpanCellClass}`}
-                        onClick={(e) => e.stopPropagation()}
-                      >
+                      <td className={counselorListSelectTdClass} onClick={(e) => e.stopPropagation()}>
                         <input
                           type="checkbox"
                           checked={isSelected}
@@ -848,50 +857,45 @@ export default function AssessmentList({
                           ]}
                         />
                       </td>
+                      <td
+                        className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer text-white`}
+                        onClick={() => goToProgress(a.id)}
+                      >
+                        {a.createdAt
+                          ? new Date(a.createdAt).toLocaleString('ko-KR')
+                          : '—'}
+                      </td>
+                      <td
+                        className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer text-center ${expired ? 'text-red-400' : ''}`}
+                        onClick={() => goToProgress(a.id)}
+                      >
+                        {formatUsageEndDate(a.usageEndDate)}
+                      </td>
+                      <td className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-default text-center`}>
+                        <div className="inline-flex flex-wrap items-center justify-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => openAddRecipient(a)}
+                            className="inline-flex items-center justify-center rounded bg-sky-800/50 px-2 py-0.5 text-xs font-medium text-sky-100 hover:bg-sky-700/60"
+                          >
+                            내담자추가
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => openEdit(a)}
+                            className="inline-flex min-w-0 items-center justify-center rounded bg-emerald-800/50 px-2 py-0.5 text-xs font-medium text-emerald-100 hover:bg-emerald-700/60"
+                          >
+                            수정
+                          </button>
+                        </div>
+                      </td>
+                      {adminUser ? <CounselorAdminEmailTd email={a.counselorEmail} /> : null}
                     </tr>
-                    <CounselorListSecondaryRow colSpan={assessmentListColCount}>
-                      <CounselorListSecondaryField label="생성일시">
-                        <button
-                          type="button"
-                          className="text-left hover:text-white"
-                          onClick={() => goToProgress(a.id)}
-                        >
-                          {a.createdAt ? new Date(a.createdAt).toLocaleString('ko-KR') : '—'}
-                        </button>
-                      </CounselorListSecondaryField>
-                      <CounselorListSecondaryField label="사용 종료일">
-                        <span className={expired ? 'text-red-400' : undefined}>
-                          {formatUsageEndDate(a.usageEndDate)}
-                        </span>
-                      </CounselorListSecondaryField>
-                      <span className="inline-flex flex-wrap items-center gap-1">
-                        <button
-                          type="button"
-                          onClick={() => openAddRecipient(a)}
-                          className="inline-flex items-center justify-center rounded bg-sky-800/50 px-2 py-0.5 text-xs font-medium text-sky-100 hover:bg-sky-700/60"
-                        >
-                          내담자추가
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => openEdit(a)}
-                          className="inline-flex min-w-0 items-center justify-center rounded bg-emerald-800/50 px-2 py-0.5 text-xs font-medium text-emerald-100 hover:bg-emerald-700/60"
-                        >
-                          수정
-                        </button>
-                      </span>
-                      {adminUser ? (
-                        <CounselorListSecondaryField label="상담사">
-                          {a.counselorEmail?.trim() || '—'}
-                        </CounselorListSecondaryField>
-                      ) : null}
-                    </CounselorListSecondaryRow>
-                    </React.Fragment>
                   );
                 })}
               </tbody>
             </table>
-          </div>
+          </CounselorListTableScroll>
           <CounselorListPagination
             page={page}
             totalPages={totalPages}

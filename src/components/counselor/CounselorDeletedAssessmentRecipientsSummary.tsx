@@ -5,6 +5,7 @@ import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import { formatPhoneDisplay } from '@/lib/phoneFormat';
 import type { DispatchRecipient } from '@/lib/clientPortalApi';
 import { dispatchStatusDisplay, testSummary } from '@/lib/dispatchRecipientDisplay';
+import CounselorListTableScroll from '@/components/counselor/CounselorListTableScroll';
 import DispatchStatusText from '@/components/counselor/DispatchStatusText';
 
 type Props = {
@@ -36,7 +37,7 @@ export default function CounselorDeletedAssessmentRecipientsSummary({
         ) : recipients.length === 0 ? (
           <p className="text-sm text-slate-500">등록된 내담자가 없습니다.</p>
         ) : (
-          <div className="overflow-x-auto rounded-lg border border-slate-700/50">
+          <CounselorListTableScroll className="rounded-lg border border-slate-700/50">
             <table className="w-full min-w-[32rem] text-sm">
               <thead>
                 <tr className="border-b border-slate-700/80 text-xs text-slate-400">
@@ -77,7 +78,7 @@ export default function CounselorDeletedAssessmentRecipientsSummary({
                 })}
               </tbody>
             </table>
-          </div>
+          </CounselorListTableScroll>
         )}
       </td>
     </tr>

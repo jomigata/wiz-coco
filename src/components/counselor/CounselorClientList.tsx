@@ -7,6 +7,7 @@ import { FaUsers } from 'react-icons/fa';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import AuthLink from '@/components/auth/AuthLink';
 import CounselorLiveStatusBadge from '@/components/counselor/CounselorLiveStatusBadge';
+import CounselorListTableScroll from '@/components/counselor/CounselorListTableScroll';
 import CounselorListPagination from '@/components/counselor/CounselorListPagination';
 import CounselorListSearchInput from '@/components/counselor/CounselorListSearchInput';
 import CounselorSlashInfoCell from '@/components/counselor/CounselorSlashInfoCell';
@@ -24,8 +25,6 @@ import {
   counselorListSelectThClass,
   counselorListSortActiveClass,
   counselorListSortIdleClass,
-  counselorListTableWrapperClass,
-  counselorListTableClass,
   counselorListTdClass,
   counselorListThClass,
   counselorListTheadClass,
@@ -79,12 +78,7 @@ import { applyRealtimeToClientList } from '@/lib/clientPortalRealtime';
 import { useCounselorTestResultsRealtime } from '@/hooks/useCounselorTestResultsRealtime';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { getAppRoleSync, isAdmin } from '@/utils/roleUtils';
-import { compareCounselorEmail } from '@/components/counselor/CounselorAdminEmailColumn';
-import {
-  CounselorListSecondaryField,
-  CounselorListSecondaryRow,
-  counselorListRowSpanCellClass,
-} from '@/components/counselor/CounselorListTwoLineRow';
+import { CounselorAdminEmailSortHeader, CounselorAdminEmailTd, compareCounselorEmail } from '@/components/counselor/CounselorAdminEmailColumn';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
 import {
   fetchPermanentlyDeletedRecords,
@@ -1189,9 +1183,8 @@ export default function CounselorClientList({
 
   const rowExpandable = !permanentlyDeletedMode;
   const showContactEditColumn = !adminUser && !deletedMode && !permanentlyDeletedMode;
-  const clientListPrimaryColCount = 5;
   const expandLeadingColSpan = 2;
-  const expandDetailColSpan = clientListPrimaryColCount - expandLeadingColSpan;
+  const expandDetailColSpan = showContactEditColumn ? 7 : 6;
 
   const toggleExpand = useCallback((portalId: string) => {
     setExpandedId((prev) => (prev === portalId ? null : portalId));
@@ -1441,8 +1434,8 @@ export default function CounselorClientList({
           </div>
         ) : (
           <>
-            <div className={counselorListTableWrapperClass}>
-              <table className={counselorListTableClass}>
+            <CounselorListTableScroll>
+              <table className="w-max min-w-full table-fixed text-sm">
                 <thead className={counselorListTheadClass}>
                   <tr className={counselorListHeaderRowClass}>
                     <th className={`${counselorListNoThClass} w-12 tabular-nums`}>No.</th>
@@ -1475,6 +1468,14 @@ export default function CounselorClientList({
                       onSortRight={() => toggleCounselFieldSort('title')}
                     />
                     <SortableColumnHeader
+                      label={dateColumnLabel}
+                      sortKey="notifyAt"
+                      activeKey={sortKey}
+                      direction={sortDir}
+                      onSort={toggleSort}
+                      className="whitespace-nowrap"
+                    />
+                    <SortableColumnHeader
                       label="검사 진행현황"
                       sortKey="progress"
                       activeKey={sortKey}
@@ -1482,6 +1483,38 @@ export default function CounselorClientList({
                       onSort={toggleSort}
                       className="whitespace-nowrap"
                     />
+                    <SortableColumnHeader
+                      label="발송현황"
+                      sortKey="notifyStatus"
+                      activeKey={sortKey}
+                      direction={sortDir}
+                      onSort={toggleSort}
+                      className="whitespace-nowrap"
+                    />
+                    <SortableColumnHeader
+                      label="연락처"
+                      sortKey="phone"
+                      activeKey={sortKey}
+                      direction={sortDir}
+                      onSort={toggleSort}
+                      className="whitespace-nowrap"
+                    />
+                    {!showContactEditColumn ? null : (
+                      <th
+                        scope="col"
+                        className={`${counselorListThClass} w-[4.5rem] whitespace-nowrap text-center text-xs font-medium text-slate-400`}
+                      >
+                        연락처 수정
+                      </th>
+                    )}
+                    {adminUser ? (
+                      <CounselorAdminEmailSortHeader
+                        emailSortKey="counselorEmail"
+                        activeKey={sortKey}
+                        direction={sortDir}
+                        onSort={toggleSort}
+                      />
+                    ) : null}
                   </tr>
                 </thead>
                 <tbody>
@@ -1545,16 +1578,10 @@ export default function CounselorClientList({
                         aria-expanded={rowExpandable ? isOpen : undefined}
                         className={`${rowClass} ${isSelected || isOpen ? 'bg-white/[0.04]' : ''} ${locked ? 'opacity-70' : ''} ${rowExpandable ? 'cursor-pointer' : ''}`}
                       >
-                        <td
-                          rowSpan={2}
-                          className={`${counselorListTdClass} ${counselorListRowSpanCellClass} tabular-nums text-slate-500`}
-                        >
+                        <td className={`${counselorListTdClass} tabular-nums text-slate-500`}>
                           {startIndex + idx + 1}
                         </td>
-                        <td
-                          rowSpan={2}
-                          className={`${counselorListTdClass} ${counselorListRowSpanCellClass} text-center`}
-                        >
+                        <td className={`${counselorListTdClass} text-center`}>
                           {locked && (deletedMode || permanentlyDeletedMode) && !adminUser ? (
                             <span className="group/check relative inline-flex">
                               <input
@@ -1612,43 +1639,37 @@ export default function CounselorClientList({
                             <span className="text-slate-500">—</span>
                           )}
                         </td>
+                        <td
+                          className={`whitespace-nowrap ${counselorListTdClass} text-slate-200 tabular-nums`}
+                        >
+                          {formatNotifyDate(item.notifyAt)}
+                        </td>
                         <td className={counselorListTdClass}>
                           <div className={`text-sm ${progress.className}`}>{progress.text}</div>
                           {counselMoveProgressNote(item)}
                         </td>
-                      </tr>
-                      <CounselorListSecondaryRow colSpan={clientListPrimaryColCount}>
-                        <CounselorListSecondaryField label={dateColumnLabel}>
-                          {formatNotifyDate(item.notifyAt)}
-                        </CounselorListSecondaryField>
-                        <CounselorListSecondaryField label="발송현황">
+                        <td className={`max-w-[10rem] ${counselorListTdClass}`} title={dispatchView.title}>
                           <DispatchStatusText value={dispatchView} />
-                        </CounselorListSecondaryField>
-                        <CounselorListSecondaryField label="연락처">
-                          <RecipientContactCell
-                            phone={item.phone}
-                            email={item.email}
-                            masked={!deletedMode && !permanentlyDeletedMode}
-                          />
-                        </CounselorListSecondaryField>
+                        </td>
+                        <td className={`max-w-[14rem] ${counselorListTdClass}`}>
+                          <RecipientContactCell phone={item.phone} email={item.email} masked={!deletedMode && !permanentlyDeletedMode} />
+                        </td>
                         {showContactEditColumn ? (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setContactEditItem(item);
-                            }}
-                            className="rounded-md border border-white/15 bg-white/[0.04] px-2 py-1 text-xs text-sky-200 transition-colors hover:border-sky-400/40 hover:bg-sky-500/10"
+                          <td
+                            className={`${counselorListTdClass} text-center`}
+                            onClick={(e) => e.stopPropagation()}
                           >
-                            연락처 수정
-                          </button>
+                            <button
+                              type="button"
+                              onClick={() => setContactEditItem(item)}
+                              className="rounded-md border border-white/15 bg-white/[0.04] px-2 py-1 text-xs text-sky-200 transition-colors hover:border-sky-400/40 hover:bg-sky-500/10"
+                            >
+                              연락처 수정
+                            </button>
+                          </td>
                         ) : null}
-                        {adminUser ? (
-                          <CounselorListSecondaryField label="상담사">
-                            {item.counselorEmail?.trim() || '—'}
-                          </CounselorListSecondaryField>
-                        ) : null}
-                      </CounselorListSecondaryRow>
+                        {adminUser ? <CounselorAdminEmailTd email={item.counselorEmail} /> : null}
+                      </tr>
                       {isOpen && rowExpandable ? (
                         expandDetailState === 'loading' ? (
                           <tr>
@@ -1700,7 +1721,7 @@ export default function CounselorClientList({
                   })}
                 </tbody>
               </table>
-            </div>
+            </CounselorListTableScroll>
             <CounselorListPagination
               page={page}
               totalPages={totalPages}
