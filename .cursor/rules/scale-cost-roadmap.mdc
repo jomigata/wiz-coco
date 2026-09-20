@@ -1,0 +1,21 @@
+---
+description: Firestore/SMS/AI scale and cost roadmap — agent must follow task doc order
+globs:
+  - docs/scale-cost-*.md
+  - backend/utils/assessment_dispatch.py
+  - src/hooks/useAssessment*Realtime*
+  - src/components/counselor/AssessmentDispatchPanel.tsx
+---
+
+# Scale & cost work (WizCoCo)
+
+When implementing **Firestore cost**, **SMS**, **AI limits**, or **Postgres hybrid**:
+
+1. Open **`docs/scale-cost-roadmap-agent-tasks-ko.md`** and find the next unchecked TASK.
+2. Complete **all** `- [ ]` items in that TASK before starting the next.
+3. Respect **Phase order** and **선행 (prerequisites)** in the doc.
+4. Do **not** import Emulator data into prod Firestore.
+5. Commit message prefix: `TASK-0xx:` (English description).
+6. Update checkboxes in the task doc when TASK is done (`- [x]`).
+
+Index: `docs/scale-cost-roadmap-README.md`
