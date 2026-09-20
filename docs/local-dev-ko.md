@@ -33,6 +33,25 @@ npm run dev
 | Health | http://localhost:5000/api/health |
 | Emulator UI | http://localhost:4000 |
 
+### Cursor — 프로젝트 열 때 (자동)
+
+워크스페이스를 열면 **자동 작업**이 한 번 실행됩니다 (`.vscode/tasks.json`, `task.allowAutomaticTasks: on`).
+
+1. `3000` 포트에 dev가 없으면 **`npm run dev`** 를 백그라운드로 시작  
+2. UI(3000)·Emulator UI(4000) 준비까지 대기  
+3. Auth Emulator **테스트 계정 시드** (`dev:seed-auth`, 이미 있으면 건너뜀)  
+4. **Simple Browser 탭 3개** (우측 내장 브라우저):
+   - http://localhost:3000/
+   - http://localhost:3000/admin/counselor-management
+   - http://127.0.0.1:4000/auth
+
+처음 폴더를 열 때 Cursor가 **「Allow Automatic Tasks in Folder」** 를 물으면 **Allow** 를 선택하세요.  
+수동만 쓰려면: `npm run dev:workspace:open`
+
+**Emulator 데이터 유지:** `npm run dev` 종료 시 Firestore·Auth 상태가 **`.firebase/emulator-data`** 에 export 되고, 다음 `dev` 시작 시 import 됩니다 (git 제외, 로컬 디스크에만 저장). 상담사 신청·승인·Firestore 문서는 재시작 후에도 이어서 테스트할 수 있습니다.
+
+**Simple Browser CLI:** 탭이 안 열리면 Cursor 명령 팔레트 → **Shell Command: Install 'cursor' command in PATH** 실행 후 워크스페이스를 다시 엽니다.
+
 저장하면 Next는 **HMR**로 바로 반영됩니다. Flask는 `FLASK_ENV=development`로 코드 변경 시 재시작합니다.
 
 ## 개별 실행

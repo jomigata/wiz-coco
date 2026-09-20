@@ -5,7 +5,8 @@
   "scripts": {
     "prebuild": "node scripts/write-build-version.js",
     "dev": "concurrently -k -n emu,api,web -c blue,green,magenta \"npm run dev:emulators\" \"npm run dev:flask:wait\" \"npm run dev:next:wait\"",
-    "dev:emulators": "firebase emulators:start --only auth,firestore --project wiz-coco",
+    "dev:emulators": "node scripts/run-firebase-emulators-persist.js",
+    "dev:workspace:open": "node scripts/local-dev-workspace-on-open.js",
     "dev:flask": "node scripts/run-flask-dev.js",
     "dev:flask:wait": "wait-on tcp:127.0.0.1:8080 && npm run dev:flask",
     "dev:next": "cross-env SKIP_DB_INIT=true NEXT_PUBLIC_USE_FIREBASE_EMULATOR=true NEXT_PUBLIC_FLASK_API_URL=http://localhost:5000 next dev -p 3000",

@@ -1,4 +1,5 @@
 {
+  "task.allowAutomaticTasks": "on",
   "git.confirmSync": false,
   "git.confirmEmptyCommits": false,
   "git.confirmForcePush": false,
