@@ -201,7 +201,7 @@ export default function CounselorNotifyConfirmDialog({
                 </p>
                 {kind === 'add_recipient' ? (
                   <p className="mt-1 text-xs text-white/90">
-                    (내담자 1명 추가 시 {formatPoints(POINT_COST_PORTAL_RECIPIENT)}가 차감됩니다.)
+                    (내담자1명 - {formatPoints(POINT_COST_PORTAL_RECIPIENT)} 사용)
                   </p>
                 ) : null}
               </>

@@ -115,7 +115,7 @@ export function formatNotifyPointSummary(
           : null,
       ].filter(Boolean) as string[];
   const footerLine = options?.perRecipient
-    ? `총 추가 ${recipientCount}명 / ${formatPoints(usePoints)} 차감 / 잔여 ${formatPoints(balanceAfter)}`
+    ? `총 추가 ${recipientCount}명 / ${formatPoints(usePoints)} 사용 / 잔여 ${formatPoints(balanceAfter)}`
     : `사용 ${formatPoints(usePoints)} / 잔여 ${formatPoints(balanceAfter)}`;
   return { usePoints, balanceAfter, detailLines, footerLine };
 }
