@@ -18,6 +18,11 @@ import { clearClientPortalSessionWithBroadcast } from '@/lib/clientPortalSession
 import { AccountIntegrationManager } from '@/utils/accountIntegration';
 import { getBootstrapRoleForEmail } from '@/constants/bootstrapAccounts';
 import { getAppRoleSync } from '@/utils/roleUtils';
+import {
+  isDevLoginRememberEnabled,
+  loadDevLoginRemember,
+  saveDevLoginRemember,
+} from '@/utils/devLoginRemember';
 
 const LoadingLogin = () => (
   <div className="min-h-screen bg-[#060a12] flex flex-col">
@@ -47,8 +52,10 @@ const LoginContent = () => {
     return resolvePostLoginRedirectForRole(redirectUrl, role);
   };
 
+  const devRememberEnabled = isDevLoginRememberEnabled();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberLogin, setRememberLogin] = useState(devRememberEnabled);
   const [loginError, setLoginError] = useState('');
   const [registrationSuccess, setRegistrationSuccess] = useState(registered);
   const [emailVerificationMessage, setEmailVerificationMessage] = useState('');
@@ -56,6 +63,14 @@ const LoginContent = () => {
 
   useLayoutEffect(() => {
     markCounselorLoginPageSession();
+  }, []);
+
+  useEffect(() => {
+    const stored = loadDevLoginRemember();
+    if (!stored) return;
+    setRememberLogin(true);
+    if (stored.email) setEmail(stored.email);
+    if (stored.password) setPassword(stored.password);
   }, []);
 
   useEffect(() => {
@@ -97,6 +112,7 @@ const LoginContent = () => {
       const result = await AccountIntegrationManager.unifiedSignIn(email, password);
 
       if (result.success && result.user) {
+        saveDevLoginRemember(email, password, rememberLogin);
         clearClientPortalSessionWithBroadcast();
         primeFirebaseAuthSessionCache(result.user);
         const { auth } = initializeFirebase();
@@ -165,15 +181,15 @@ const LoginContent = () => {
             </div>
           )}
 
-          <form className="space-y-3" onSubmit={handleLogin} autoComplete="off">
+          <form className="space-y-3" onSubmit={handleLogin} autoComplete="on">
             <label htmlFor="email" className="sr-only">
               이메일
             </label>
             <input
               id="email"
-              name="wizcoco-login-email"
+              name="email"
               type="email"
-              autoComplete="email"
+              autoComplete="username email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -185,7 +201,7 @@ const LoginContent = () => {
             </label>
             <input
               id="password"
-              name="wizcoco-login-password"
+              name="password"
               type="password"
               autoComplete="current-password"
               required
@@ -194,6 +210,17 @@ const LoginContent = () => {
               className="w-full px-3 py-2.5 text-sm border border-white/15 bg-[#121f38]/95 placeholder-slate-500 text-slate-100 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500/40 focus:border-sky-400/60"
               placeholder="비밀번호"
             />
+            {devRememberEnabled && (
+              <label className="flex items-center gap-2 text-xs text-slate-400 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={rememberLogin}
+                  onChange={(e) => setRememberLogin(e.target.checked)}
+                  className="rounded border-white/20 bg-[#121f38]/95 text-sky-500 focus:ring-sky-500/40"
+                />
+                로그인 정보 기억 (로컬 개발·Emulator)
+              </label>
+            )}
             <button
               type="submit"
               className="w-full py-2.5 text-sm font-medium rounded-md text-white bg-sky-600 border border-sky-500/40 hover:bg-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/50 disabled:opacity-60"

@@ -62,6 +62,15 @@ Auth Emulator는 **빈 DB**에서 시작합니다.
 2. 또는 앱 회원가입/로그인 UI로 Emulator 계정 생성  
 3. `backend/.env`의 `BOOTSTRAP_ADMIN_EMAILS` 이메일이면 상담사/관리자 bootstrap 가능
 
+### Cursor 내장 브라우저 / 로그인 기억
+
+- Cursor **내장 브라우저**는 Chrome 확장·1Password/NordPass **자동완성은 지원하지 않습니다** (공식 한계).
+- Firebase 로그인 세션은 워크스페이스별로 **localStorage/IndexedDB에 유지**되는 경우가 많습니다. 한 번 로그인하면 재방문 시 로그인 유지될 수 있습니다.
+- **로컬 전용**: `/login` 에서 `NEXT_PUBLIC_USE_FIREBASE_EMULATOR=true` 또는 `localhost` 일 때 **「로그인 정보 기억」** 체크 → 이메일·비밀번호를 `localStorage`에 저장 (Emulator 테스트용, prod 배포 산출물에도 코드는 있으나 prod 호스트에서는 UI 비표시).
+- Cursor **앱 자체** 로그인·설정이 재시작마다 풀리면 `%APPDATA%\\Cursor\\argv.json` 에 `"password-store": "basic"` (Windows) — Electron 키링 대신 디스크 저장. **Cursor 완전 종료 후 재실행** 필요. 공유 PC에서는 보안상 비권장.
+
+- 외부 Chrome에서 테스트하려면 http://localhost:3000 을 일반 Chrome으로 열면 **비밀번호 관리자·자동완성** 사용 가능.
+
 ## prod 데이터가 꼭 필요할 때 (비용 주의)
 
 `backend/.env`에서:
