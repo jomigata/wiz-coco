@@ -58,9 +58,21 @@ npm run dev:next        # API 5000 떠 있으면 Next만
 
 Auth Emulator는 **빈 DB**에서 시작합니다.
 
+```powershell
+npm run dev:seed-auth
+```
+
+- 기본 비밀번호: `wizcoco1` (환경변수 `DEV_EMULATOR_PASSWORD`로 변경 가능)
+- `jomigata@gmail.com` → 관리자 bootstrap
+- `jomigata@naver.com` → 로컬 로그인 테스트 (상담사 role은 별도 등록·승인)
+
+또는:
+
 1. http://localhost:4000 → Authentication에서 테스트 사용자 추가  
-2. 또는 앱 회원가입/로그인 UI로 Emulator 계정 생성  
+2. 또는 앱 **전문가·상담사 등록** UI로 Emulator 계정 생성  
 3. `backend/.env`의 `BOOTSTRAP_ADMIN_EMAILS` 이메일이면 상담사/관리자 bootstrap 가능
+
+**주의:** prod(실서비스) 비밀번호는 Emulator에서 통하지 않습니다. 「로그인 정보 기억」에 예전 비밀번호가 남아 있으면 체크 해제 후 다시 입력하세요.
 
 ### Cursor 내장 브라우저 / 로그인 기억
 
