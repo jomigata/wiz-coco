@@ -10,27 +10,31 @@ type Props = {
 
 const SCROLL_EDGE_THRESHOLD = 6;
 const HOVER_SCROLL_PX_PER_FRAME = 10;
+/** 가로 스크롤바(8px) 위 여백 */
+const SCROLLBAR_GUTTER_PX = 12;
 
-function TallScrollChevron({ side }: { side: 'left' | 'right' }) {
+function SmallScrollChevron({ side }: { side: 'left' | 'right' }) {
   const isLeft = side === 'left';
   return (
     <svg
-      className={`h-full w-full min-h-[3rem] max-w-[0.85rem] text-sky-300/95 drop-shadow-[0_0_6px_rgba(56,189,248,0.35)] ${
+      className={`h-3.5 w-3.5 shrink-0 text-sky-300/95 ${
         isLeft ? 'counselor-scroll-hint-nudge-left' : 'counselor-scroll-hint-nudge-right'
       }`}
-      viewBox="0 0 24 200"
-      preserveAspectRatio="none"
+      viewBox="0 0 20 20"
+      fill="currentColor"
       aria-hidden
     >
       {isLeft ? (
         <path
-          fill="currentColor"
-          d="M20 4 L6 100 L20 196 L14 196 L2 100 L14 4 Z"
+          fillRule="evenodd"
+          d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z"
+          clipRule="evenodd"
         />
       ) : (
         <path
-          fill="currentColor"
-          d="M4 4 L18 100 L4 196 L10 196 L22 100 L10 4 Z"
+          fillRule="evenodd"
+          d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.25 4.5a.75.75 0 010 1.08l-4.25 4.25a.75.75 0 01-1.06-.02z"
+          clipRule="evenodd"
         />
       )}
     </svg>
@@ -62,26 +66,26 @@ function ScrollEdge({
       onMouseLeave={onLeave}
       onFocus={onEnter}
       onBlur={onLeave}
-      className={`pointer-events-auto absolute inset-y-0 z-20 flex w-12 shrink-0 items-stretch justify-center border-0 bg-transparent p-0 outline-none ${
+      className={`pointer-events-auto absolute inset-y-0 z-20 flex w-9 shrink-0 items-stretch justify-center border-0 bg-transparent p-0 outline-none ${
         isLeft ? 'left-0' : 'right-0'
       } ${active ? 'cursor-grabbing' : 'cursor-pointer'}`}
     >
       <span
-        className={`pointer-events-none absolute inset-y-0 w-14 ${
+        className={`pointer-events-none absolute inset-y-0 w-10 ${
           isLeft
-            ? 'left-0 bg-gradient-to-r from-[#0b1120]/92 via-[#0b1120]/45 to-transparent'
-            : 'right-0 bg-gradient-to-l from-[#0b1120]/92 via-[#0b1120]/45 to-transparent'
+            ? 'left-0 bg-gradient-to-r from-[#0b1120]/90 via-[#0b1120]/40 to-transparent'
+            : 'right-0 bg-gradient-to-l from-[#0b1120]/90 via-[#0b1120]/40 to-transparent'
         }`}
         aria-hidden
       />
       <span
-        className={`relative my-1 flex h-[calc(100%-0.5rem)] w-8 flex-col items-center justify-center rounded-lg border transition-colors ${
+        className={`relative flex h-full w-5 flex-col items-center justify-center rounded-md border transition-colors ${
           active
-            ? 'border-sky-400/55 bg-sky-500/15 shadow-[inset_0_0_12px_rgba(56,189,248,0.2)]'
-            : 'border-sky-400/30 bg-sky-950/75 hover:border-sky-400/45 hover:bg-sky-900/80'
+            ? 'border-sky-400/50 bg-sky-500/12 shadow-[inset_0_0_8px_rgba(56,189,248,0.15)]'
+            : 'border-sky-400/25 bg-sky-950/70 hover:border-sky-400/40 hover:bg-sky-900/75'
         }`}
       >
-        <TallScrollChevron side={side} />
+        <SmallScrollChevron side={side} />
       </span>
     </button>
   );
@@ -95,6 +99,16 @@ export default function CounselorListTableScroll({ children, className = '' }: P
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
   const [hoverSide, setHoverSide] = useState<'left' | 'right' | null>(null);
+  const [edgeLayout, setEdgeLayout] = useState({ top: 0, bottom: SCROLLBAR_GUTTER_PX });
+
+  const measureEdgeLayout = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const thead = el.querySelector('thead');
+    const top =
+      thead instanceof HTMLElement ? Math.max(0, Math.round(thead.getBoundingClientRect().height)) : 0;
+    setEdgeLayout({ top, bottom: SCROLLBAR_GUTTER_PX });
+  }, []);
 
   const updateScrollHints = useCallback(() => {
     const el = scrollRef.current;
@@ -103,6 +117,7 @@ export default function CounselorListTableScroll({ children, className = '' }: P
       setCanScrollRight(false);
       return;
     }
+    measureEdgeLayout();
     const { scrollLeft, scrollWidth, clientWidth } = el;
     const overflow = scrollWidth - clientWidth > SCROLL_EDGE_THRESHOLD;
     if (!overflow) {
@@ -112,7 +127,7 @@ export default function CounselorListTableScroll({ children, className = '' }: P
     }
     setCanScrollLeft(scrollLeft > SCROLL_EDGE_THRESHOLD);
     setCanScrollRight(scrollLeft + clientWidth < scrollWidth - SCROLL_EDGE_THRESHOLD);
-  }, []);
+  }, [measureEdgeLayout]);
 
   const stopHoverScroll = useCallback(() => {
     hoverDirectionRef.current = null;
@@ -168,6 +183,8 @@ export default function CounselorListTableScroll({ children, className = '' }: P
     ro.observe(el);
     const content = el.firstElementChild;
     if (content) ro.observe(content);
+    const thead = el.querySelector('thead');
+    if (thead) ro.observe(thead);
 
     const mo = new MutationObserver(() => updateScrollHints());
     mo.observe(el, { childList: true, subtree: true });
@@ -192,7 +209,8 @@ export default function CounselorListTableScroll({ children, className = '' }: P
         {children}
       </div>
       <div
-        className="pointer-events-none absolute inset-0 z-10 flex items-stretch justify-between"
+        className="pointer-events-none absolute left-0 right-0 z-10"
+        style={{ top: edgeLayout.top, bottom: edgeLayout.bottom }}
         aria-hidden={!canScrollLeft && !canScrollRight}
       >
         <ScrollEdge
