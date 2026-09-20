@@ -824,24 +824,7 @@ export default function AssessmentAddRecipientModal({
             </section>
           </div>
 
-          {invalidBulkDeleteOffer && invalidRecipientCount > 0 ? (
-            <div
-              className="flex items-center justify-between gap-3 rounded-lg border border-red-500/35 bg-red-950/35 px-3 py-2"
-              role="alert"
-            >
-              <p className="min-w-0 text-sm leading-relaxed text-red-200">
-                추가 목록에 {invalidRecipientCount.toLocaleString('ko-KR')}개의 부적합 항목이 있습니다.
-              </p>
-              <button
-                type="button"
-                onClick={removeAllInvalidRecipients}
-                disabled={addLoading}
-                className="shrink-0 text-sm font-semibold text-red-300 underline decoration-red-400/70 underline-offset-2 hover:text-red-100 disabled:opacity-50"
-              >
-                (일괄 삭제 - {invalidRecipientCount.toLocaleString('ko-KR')}개)
-              </button>
-            </div>
-          ) : addError ? (
+          {addError ? (
             <div
               className="rounded-lg border border-red-500/35 bg-red-950/35 px-3 py-2 text-sm leading-relaxed text-red-200"
               role="alert"
@@ -879,6 +862,21 @@ export default function AssessmentAddRecipientModal({
                     이메일
                     <span className="text-[10px] text-slate-500">{targetSortArrow('email')}</span>
                   </button>
+                  {combinedRows.length > 0 && invalidRecipientCount > 0 ? (
+                    <>
+                      <span className="text-[11px] font-medium text-red-400">
+                        부적합 항목 - {invalidRecipientCount.toLocaleString('ko-KR')}개
+                      </span>
+                      <button
+                        type="button"
+                        onClick={removeAllInvalidRecipients}
+                        disabled={addLoading}
+                        className="text-[11px] font-semibold text-red-300 underline decoration-red-400/60 underline-offset-2 hover:text-red-100 disabled:opacity-50"
+                      >
+                        일괄삭제
+                      </button>
+                    </>
+                  ) : null}
                 </span>
               </div>
               <span className="rounded-full bg-white/5 px-2 py-0.5 text-sm font-semibold text-slate-300">
