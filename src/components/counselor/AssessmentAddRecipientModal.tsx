@@ -211,6 +211,52 @@ function targetRowInvalid(row: RecipientRow): boolean {
   return false;
 }
 
+function recipientPreviewPhoneInvalid(row: RecipientRow): boolean {
+  const raw = (row.phone || '').trim();
+  if (!raw) return false;
+  if (raw.includes('@')) return true;
+  const normalized = normalizeRecipientPhone(row.phone);
+  if (!normalized) return true;
+  return !isValidKrMobilePhone(normalized);
+}
+
+function recipientPreviewEmailInvalid(row: RecipientRow): boolean {
+  const email = (row.email || '').trim();
+  if (!email) return false;
+  return !isValidEmailAddress(email);
+}
+
+function recipientPreviewMissingContact(row: RecipientRow): boolean {
+  return !normalizeRecipientPhone(row.phone) && !(row.email || '').trim();
+}
+
+function FilePreviewRecipientLine({ row }: { row: RecipientRow }) {
+  const name = row.displayName.trim() || '—';
+  const phoneRaw = (row.phone || '').trim();
+  const normalizedPhone = normalizeRecipientPhone(row.phone);
+  const phoneDisplay = phoneRaw
+    ? normalizedPhone
+      ? formatPhoneDisplay(normalizedPhone)
+      : phoneRaw
+    : '—';
+  const emailRaw = (row.email || '').trim();
+  const emailDisplay = emailRaw ? emailRaw.toLowerCase() : '—';
+
+  const missingContact = recipientPreviewMissingContact(row);
+  const phoneInvalid = phoneRaw ? recipientPreviewPhoneInvalid(row) : missingContact;
+  const emailInvalid = emailRaw ? recipientPreviewEmailInvalid(row) : missingContact;
+
+  return (
+    <span className="whitespace-nowrap font-mono text-[11px] leading-snug sm:text-xs">
+      <span className="text-slate-200">{name}</span>
+      <span className="text-slate-500"> · </span>
+      <span className={phoneInvalid ? 'text-red-400' : 'text-slate-200'}>{phoneDisplay}</span>
+      <span className="text-slate-500"> · </span>
+      <span className={emailInvalid ? 'text-red-400' : 'text-slate-200'}>{emailDisplay}</span>
+    </span>
+  );
+}
+
 export default function AssessmentAddRecipientModal({
   open,
   onClose,
@@ -887,11 +933,8 @@ export default function AssessmentAddRecipientModal({
               </p>
               <ul className="max-h-52 space-y-0.5 overflow-y-auto overflow-x-auto">
                 {filePreviewTooltip.visibleRows.map((row, idx) => (
-                  <li
-                    key={`preview-${filePreviewTooltip.batch.name}-${idx}-${row.displayName}-${row.phone}`}
-                    className="whitespace-nowrap font-mono text-[11px] leading-snug text-slate-200 sm:text-xs"
-                  >
-                    {formatRecipientPreviewLine(row)}
+                  <li key={`preview-${filePreviewTooltip.batch.name}-${idx}-${row.displayName}-${row.phone}`}>
+                    <FilePreviewRecipientLine row={row} />
                   </li>
                 ))}
               </ul>
