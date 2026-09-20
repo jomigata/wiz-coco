@@ -203,11 +203,7 @@ function CreditsContent() {
             )}
             {data.enforceCredits ? (
               <p className="text-xs text-amber-300 mt-2">포인트 부족 시 일괄 발송이 차단됩니다.</p>
-            ) : (
-              <p className="text-xs text-slate-400 mt-2">
-                파일럿 모드: 포인트 부족 시에도 발송 가능(협회 정책 전환 예정).
-              </p>
-            )}
+            ) : null}
           </div>
 
           <div className="flex flex-wrap gap-3 mb-8">
