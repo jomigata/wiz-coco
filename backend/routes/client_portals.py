@@ -1064,12 +1064,18 @@ def get_dispatch_status(assessment_id):
     except ValueError:
         limit = None
     cursor = (request.args.get("cursor") or "").strip() or None
+    expand_tests = (request.args.get("expandTests") or "true").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    )
     data = get_assessment_dispatch_status(
         db,
         assessment_id,
         scope_counselor_uid(),
         limit=limit,
         cursor=cursor,
+        expand_tests=expand_tests,
     )
     if not data:
         return jsonify({"error": "Not Found", "message": "상담(코드)를 찾을 수 없습니다."}), 404

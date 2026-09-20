@@ -10,4 +10,6 @@
 | 2026-09-20 | TASK-050~052 | prod AI_CREDITS_ENFORCE, AI policy docs |
 | 2026-09-20 | TASK-060~062 | local dev / deploy policy docs |
 | 2026-09-20 | TASK-070~074 | postgres design, docker schema, DISPATCH_LIST_SOURCE stub |
-| 2026-09-20 | TASK-080 | baseline After snapshot |
+| 2026-09-20 | TASK-012b | Firestore ordered portal pagination + composite indexes |
+| 2026-09-20 | TASK-020b | dispatchSummary write on notify/test + conditional read patch |
+| 2026-09-20 | TASK-072b | Postgres dispatch list reader (DATABASE_URL) |

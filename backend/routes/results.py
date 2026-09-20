@@ -274,6 +274,24 @@ def submit_result():
             data["clientEmail"] = client_email
     ref = db.collection(TEST_RESULTS_COLLECTION).document()
     ref.set(data)
+    portal_id_for_summary = (data.get("portalId") or "").strip()
+    if portal_id_for_summary:
+        try:
+            from utils.portal_dispatch_summary import refresh_portal_test_summary
+
+            required = {
+                str(t.get("testId") or "").strip()
+                for t in (ass_data.get("testList") or [])
+                if t and str(t.get("testId") or "").strip()
+            }
+            refresh_portal_test_summary(
+                db,
+                portal_id=portal_id_for_summary,
+                assessment_id=assessment_id,
+                required_test_ids=required,
+            )
+        except Exception:
+            pass
     try:
         from utils.assessment_list_stats import touch_assessment_list_stats
 

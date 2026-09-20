@@ -37,7 +37,7 @@
 
 | 지표 | Before | After | 날짜 |
 |------|--------|-------|------|
-| dispatch API reads/req (limit=50) | N portals + bulk | ~50 + α join | 2026-09-20 |
+| dispatch API reads/req (limit=50) | N portals + bulk | **~limit + α** (ordered page query) | 2026-09-20 |
 | Realtime default (상담진행) | ON (full testResults) | **OFF** + opt-in; scoped portalIds | 2026-09-20 |
 | idle poll (progress) | 1–3s | 45s visible-only | 2026-09-20 |
 | dispatch session cache TTL | 24h fresh gate | **45s** | 2026-09-20 |

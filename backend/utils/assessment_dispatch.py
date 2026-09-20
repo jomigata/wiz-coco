@@ -430,6 +430,147 @@ def _collect_portals_for_assessment(
     return rows
 
 
+def _portal_sort_key(item: tuple[str, dict]) -> tuple:
+    pid, pdata = item
+    return ((pdata.get("displayName") or "").casefold(), pid)
+
+
+def _is_active_portal_row(pdata: dict) -> bool:
+    return (pdata.get("status") or "active") == "active"
+
+
+def _firestore_query_count(q) -> int | None:
+    try:
+        agg = q.count().get()
+        return int(agg[0][0].value)
+    except Exception:
+        return None
+
+
+def _fetch_archived_portal_rows(
+    db,
+    *,
+    assessment_id: str,
+    scope_uid: str | None,
+) -> list[tuple[str, dict]]:
+    aid = (assessment_id or "").strip()
+    if not aid:
+        return []
+    q = db.collection(CLIENT_PORTALS_COLLECTION).where(
+        "archivedFromAssessmentId", "==", aid
+    )
+    if scope_uid:
+        q = q.where("counselorId", "==", scope_uid)
+    rows: list[tuple[str, dict]] = []
+    for doc in q.stream():
+        pdata = doc.to_dict() or {}
+        if _is_active_portal_row(pdata):
+            rows.append((doc.id, pdata))
+    rows.sort(key=_portal_sort_key)
+    return rows
+
+
+def _fetch_active_portal_rows_ordered(
+    db,
+    *,
+    assessment_id: str,
+    scope_uid: str | None,
+    fetch_limit: int,
+    start_after_portal_id: str | None = None,
+) -> list[tuple[str, dict]]:
+    aid = (assessment_id or "").strip()
+    if not aid or fetch_limit <= 0:
+        return []
+    q = db.collection(CLIENT_PORTALS_COLLECTION).where(
+        "assignedAssessmentIds", "array_contains", aid
+    )
+    if scope_uid:
+        q = q.where("counselorId", "==", scope_uid)
+    q = q.order_by("displayName").order_by("__name__")
+    if start_after_portal_id:
+        anchor = db.collection(CLIENT_PORTALS_COLLECTION).document(start_after_portal_id).get()
+        if anchor.exists:
+            q = q.start_after(anchor)
+    rows: list[tuple[str, dict]] = []
+    overfetch = max(fetch_limit * 3, fetch_limit + 10)
+    for doc in q.limit(overfetch).stream():
+        pdata = doc.to_dict() or {}
+        if not _is_active_portal_row(pdata):
+            continue
+        rows.append((doc.id, pdata))
+        if len(rows) >= fetch_limit:
+            break
+    return rows
+
+
+def _estimate_assessment_portal_count(
+    db,
+    *,
+    assessment_id: str,
+    scope_uid: str | None,
+) -> int | None:
+    aid = (assessment_id or "").strip()
+    if not aid:
+        return 0
+    q_active = db.collection(CLIENT_PORTALS_COLLECTION).where(
+        "assignedAssessmentIds", "array_contains", aid
+    )
+    q_arch = db.collection(CLIENT_PORTALS_COLLECTION).where(
+        "archivedFromAssessmentId", "==", aid
+    )
+    if scope_uid:
+        q_active = q_active.where("counselorId", "==", scope_uid)
+        q_arch = q_arch.where("counselorId", "==", scope_uid)
+    active_n = _firestore_query_count(q_active)
+    arch_n = _firestore_query_count(q_arch)
+    if active_n is not None and arch_n is not None:
+        return active_n + arch_n
+    return None
+
+
+def _paginated_portals_for_assessment(
+    db,
+    *,
+    counselor_uid: str | None,
+    assessment_id: str,
+    owner_uid: str | None,
+    limit: int,
+    cursor: str | None,
+) -> tuple[list[tuple[str, dict]], int | None, str | None]:
+    """Firestore ordered page — avoids loading all portal docs (TASK-012)."""
+    scope_uid = (counselor_uid or owner_uid or "").strip() or None
+    cursor_id = (cursor or "").strip() or None
+    total = _estimate_assessment_portal_count(
+        db, assessment_id=assessment_id, scope_uid=scope_uid
+    )
+
+    if not cursor_id:
+        archived = _fetch_archived_portal_rows(
+            db, assessment_id=assessment_id, scope_uid=scope_uid
+        )
+        active = _fetch_active_portal_rows_ordered(
+            db,
+            assessment_id=assessment_id,
+            scope_uid=scope_uid,
+            fetch_limit=limit + 1,
+        )
+        combined = sorted(archived + active, key=_portal_sort_key)
+        page = combined[:limit]
+        next_cursor = page[-1][0] if len(combined) > limit and page else None
+        return page, total, next_cursor
+
+    active = _fetch_active_portal_rows_ordered(
+        db,
+        assessment_id=assessment_id,
+        scope_uid=scope_uid,
+        fetch_limit=limit + 1,
+        start_after_portal_id=cursor_id,
+    )
+    page = active[:limit]
+    next_cursor = active[limit][0] if len(active) > limit else None
+    return page, total, next_cursor
+
+
 def _accumulate_assessment_stats_for_portals(
     stats: dict[str, dict],
     *,
@@ -637,6 +778,7 @@ def get_assessment_dispatch_status(
     *,
     limit: int | None = None,
     cursor: str | None = None,
+    expand_tests: bool = True,
 ) -> dict | None:
     ass_ref = db.collection(ASSESSMENTS_COLLECTION).document(assessment_id)
     ass_doc = ass_ref.get()
@@ -664,13 +806,55 @@ def get_assessment_dispatch_status(
     else:
         portal_scope_uid = None
 
-    rows = _collect_portals_for_assessment(
-        db,
-        counselor_uid=portal_scope_uid,
-        assessment_id=assessment_id,
-        owner_uid=owner_uid,
-    )
-    rows = [(pid, pdata) for pid, pdata in rows if (pdata.get("status") or "active") == "active"]
+    from config import DISPATCH_LIST_SOURCE, LOG_FIRESTORE_READS
+
+    if DISPATCH_LIST_SOURCE == "postgres":
+        try:
+            from utils.dispatch_list_postgres import try_get_dispatch_from_postgres
+
+            pg_payload = try_get_dispatch_from_postgres(
+                assessment_id=assessment_id,
+                counselor_uid=portal_scope_uid,
+                limit=limit,
+                cursor=cursor,
+                expand_tests=expand_tests,
+                assessment_meta={
+                    "title": ass.get("title") or "",
+                    "cohortName": ass.get("cohortName") or "",
+                    "joinAccessCode": join_access_code,
+                    "testList": test_list,
+                },
+            )
+            if pg_payload is not None:
+                return pg_payload
+        except Exception:
+            logger.exception("postgres dispatch list failed; falling back to firestore")
+
+    use_paginated = limit is not None and limit > 0
+    if use_paginated:
+        page_rows, total_recipient_count, next_cursor = _paginated_portals_for_assessment(
+            db,
+            counselor_uid=portal_scope_uid,
+            assessment_id=assessment_id,
+            owner_uid=owner_uid,
+            limit=limit,
+            cursor=cursor,
+        )
+        rows = page_rows
+        page_start = 0
+        cursor_id = (cursor or "").strip()
+    else:
+        rows = _collect_portals_for_assessment(
+            db,
+            counselor_uid=portal_scope_uid,
+            assessment_id=assessment_id,
+            owner_uid=owner_uid,
+        )
+        rows = [(pid, pdata) for pid, pdata in rows if _is_active_portal_row(pdata)]
+        page_start = 0
+        cursor_id = ""
+        total_recipient_count = len(rows)
+        next_cursor = None
 
     sending_portal_data = {
         pid: pdata
@@ -699,38 +883,45 @@ def get_assessment_dispatch_status(
                 refreshed.append((pid, pdata))
         rows = refreshed
 
-    rows.sort(
-        key=lambda item: (
-            (item[1].get("displayName") or "").casefold(),
-            item[0],
-        )
-    )
-    total_recipient_count = len(rows)
-    page_start = 0
-    cursor_id = (cursor or "").strip()
-    if cursor_id:
-        for idx, (pid, _) in enumerate(rows):
-            if pid == cursor_id:
-                page_start = idx + 1
-                break
-    if limit is not None and limit > 0:
-        page_rows = rows[page_start : page_start + limit]
-        next_cursor = (
-            page_rows[-1][0]
-            if page_rows and page_start + len(page_rows) < total_recipient_count
-            else None
-        )
+    if not use_paginated:
+        rows.sort(key=_portal_sort_key)
+        total_recipient_count = len(rows)
+        cursor_id = (cursor or "").strip()
+        if cursor_id:
+            page_start = 0
+            for idx, (pid, _) in enumerate(rows):
+                if pid == cursor_id:
+                    page_start = idx + 1
+                    break
+        if limit is not None and limit > 0:
+            page_rows = rows[page_start : page_start + limit]
+            next_cursor = (
+                page_rows[-1][0]
+                if page_rows and page_start + len(page_rows) < total_recipient_count
+                else None
+            )
+        else:
+            page_rows = rows
+            next_cursor = None
     else:
         page_rows = rows
-        next_cursor = None
 
     portal_ids = [pid for pid, _ in page_rows]
 
     notify_map = _latest_notify_by_portal(db, set(portal_ids))
-    completion_map = _bulk_completed_tests_by_portal_assessment(
-        db, portal_ids, {assessment_id}
+    completion_map = (
+        _bulk_completed_tests_by_portal_assessment(db, portal_ids, {assessment_id})
+        if expand_tests
+        else {}
     )
-    test_results_map = _bulk_test_results_by_portal_assessment(db, portal_ids, assessment_id)
+    test_results_map = (
+        _bulk_test_results_by_portal_assessment(db, portal_ids, assessment_id)
+        if expand_tests
+        else {}
+    )
+    from utils.portal_dispatch_summary import build_dispatch_summary, patch_portal_dispatch_summary
+
+    required_count = len(required)
     recipients = []
     for portal_id, pdata in page_rows:
         notify = notify_map.get(portal_id) or {}
@@ -741,8 +932,21 @@ def get_assessment_dispatch_status(
             notify, pdata, email=email, phone=phone
         )
         notify_at = _resolve_notify_at(notify, pdata, notify_status)
+        summary = pdata.get("dispatchSummary") or {}
         completed = completion_map.get((portal_id, assessment_id), set())
-        test_info = _test_status_from_completed(completed, required)
+        if expand_tests or not summary:
+            test_info = _test_status_from_completed(completed, required)
+        else:
+            test_info = {
+                "testStatus": (summary.get("testStatus") or "not_started").strip(),
+                "completedCount": int(summary.get("completedCount") or 0),
+                "requiredCount": int(summary.get("requiredCount") or required_count),
+            }
+        tests_payload = (
+            _test_detail_rows_from_map(test_results_map.get(portal_id) or {}, test_list)
+            if expand_tests
+            else []
+        )
         recipients.append(
             {
                 "portalId": portal_id,
@@ -760,13 +964,28 @@ def get_assessment_dispatch_status(
                 "notifyKind": notify_snap.get("notifyKind") or "initial",
                 "notifyEmailChannel": notify_snap.get("emailChannel") or "",
                 "notifyPhoneChannel": notify_snap.get("phoneChannel") or "",
-                "tests": _test_detail_rows_from_map(
-                    test_results_map.get(portal_id) or {},
-                    test_list,
-                ),
+                "tests": tests_payload,
                 **test_info,
             }
         )
+        try:
+            if (
+                not summary
+                or (summary.get("notifyStatus") or "") != notify_status
+                or int(summary.get("requiredCount") or 0) != required_count
+            ):
+                patch_portal_dispatch_summary(
+                    db,
+                    portal_id,
+                    build_dispatch_summary(
+                        notify_status=notify_status,
+                        test_status=test_info.get("testStatus") or "not_started",
+                        completed_count=test_info.get("completedCount") or 0,
+                        required_count=test_info.get("requiredCount") or required_count,
+                    ),
+                )
+        except Exception:
+            logger.debug("dispatchSummary patch skipped portal=%s", portal_id, exc_info=True)
 
     recipients.sort(key=lambda r: (r.get("displayName") or "", r.get("portalId") or ""))
 
@@ -800,21 +1019,17 @@ def get_assessment_dispatch_status(
         payload["totalRecipientCount"] = total_recipient_count
         payload["nextCursor"] = next_cursor
 
-    from config import LOG_FIRESTORE_READS, DISPATCH_LIST_SOURCE
-
-    if DISPATCH_LIST_SOURCE == "postgres":
-        logger.debug(
-            "DISPATCH_LIST_SOURCE=postgres requested; firestore path used until TASK-072 parity"
-        )
     if LOG_FIRESTORE_READS:
         page_portals = len(page_rows)
-        read_estimate = 1 + len(rows) + page_portals * 3 + (len(to_confirm) if to_confirm else 0)
+        read_estimate = 1 + page_portals * (4 if expand_tests else 2)
+        if not use_paginated:
+            read_estimate = 1 + len(rows) + page_portals * (4 if expand_tests else 2)
         logger.info(
-            "firestore_read_estimate op=dispatch_status assessment=%s limit=%s page=%s total_portals=%s estimate=%s",
+            "firestore_read_estimate op=dispatch_status assessment=%s limit=%s paginated=%s page=%s estimate=%s",
             assessment_id,
             limit,
+            use_paginated,
             page_portals,
-            total_recipient_count,
             read_estimate,
         )
     return payload

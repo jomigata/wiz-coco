@@ -174,6 +174,30 @@ def _apply_notify_snapshot(
     portal_ref.update(payload)
 
     try:
+        from firebase_init import get_firestore
+        from utils.portal_dispatch_summary import build_dispatch_summary, patch_portal_dispatch_summary
+
+        existing = {}
+        try:
+            snap = portal_ref.get()
+            if snap.exists:
+                existing = (snap.to_dict() or {}).get("dispatchSummary") or {}
+        except Exception:
+            existing = {}
+        patch_portal_dispatch_summary(
+            get_firestore(),
+            portal_ref.id,
+            build_dispatch_summary(
+                notify_status=status,
+                test_status=(existing.get("testStatus") or "not_started"),
+                completed_count=int(existing.get("completedCount") or 0),
+                required_count=int(existing.get("requiredCount") or 0),
+            ),
+        )
+    except Exception:
+        logger.debug("dispatchSummary notify patch failed portal=%s", portal_ref.id, exc_info=True)
+
+    try:
         from utils.assessment_list_stats import touch_assessments_for_portal_ref
 
         touch_assessments_for_portal_ref(portal_ref)

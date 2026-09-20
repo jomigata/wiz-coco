@@ -41,6 +41,24 @@
       ]
     },
     {
+      "collectionGroup": "clientPortals",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "assignedAssessmentIds", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "counselorId", "order": "ASCENDING" },
+        { "fieldPath": "displayName", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "clientPortals",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "archivedFromAssessmentId", "order": "ASCENDING" },
+        { "fieldPath": "counselorId", "order": "ASCENDING" },
+        { "fieldPath": "displayName", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "testResults",
       "queryScope": "COLLECTION",
       "fields": [

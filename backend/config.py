@@ -114,6 +114,7 @@ AI_CREDITS_ENFORCE = os.getenv("AI_CREDITS_ENFORCE", "false").lower() in ("1", "
 
 # Scale/cost (TASK-030, TASK-072)
 LOG_FIRESTORE_READS = os.getenv("LOG_FIRESTORE_READS", "0").lower() in ("1", "true", "yes")
+DATABASE_URL = (os.getenv("DATABASE_URL") or "").strip()
 DISPATCH_LIST_SOURCE = (os.getenv("DISPATCH_LIST_SOURCE", "firestore") or "firestore").strip().lower()
 
 # SMS queue (TASK-040)
