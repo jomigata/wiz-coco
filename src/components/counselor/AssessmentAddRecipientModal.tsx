@@ -303,6 +303,11 @@ export default function AssessmentAddRecipientModal({
     [pendingRows, importedFileRows],
   );
 
+  const invalidRecipientCount = useMemo(
+    () => combinedRows.filter((r) => targetRowInvalid(r)).length,
+    [combinedRows],
+  );
+
   const displayFileBatches = useMemo(() => groupFileBatchesByName(fileBatches), [fileBatches]);
 
   const filePreviewTooltip = useMemo(() => {
@@ -389,6 +394,12 @@ export default function AssessmentAddRecipientModal({
     const t = window.setTimeout(() => nameInputRef.current?.focus(), 120);
     return () => window.clearTimeout(t);
   }, [open, context?.assessmentId]);
+
+  useEffect(() => {
+    if (invalidBulkDeleteOffer && invalidRecipientCount === 0) {
+      setInvalidBulkDeleteOffer(false);
+    }
+  }, [invalidBulkDeleteOffer, invalidRecipientCount]);
 
   const resetForm = () => {
     setDraftName('');
@@ -520,10 +531,10 @@ export default function AssessmentAddRecipientModal({
       setAddError('개별 입력 또는 파일에서 내담자 1명 이상을 추가해 주세요.');
       return;
     }
-    const invalid = rows.find((r) => targetRowInvalid(r));
-    if (invalid) {
+    const invalidCount = rows.filter((r) => targetRowInvalid(r)).length;
+    if (invalidCount > 0) {
       setInvalidBulkDeleteOffer(true);
-      setAddError(`추가 목록에 부적합 항목이 있습니다. 「${invalid.displayName}」님의 연락처를 확인해 주세요.`);
+      setAddError('');
       return;
     }
     setAddError('');
@@ -813,22 +824,29 @@ export default function AssessmentAddRecipientModal({
             </section>
           </div>
 
-          {addError ? (
+          {invalidBulkDeleteOffer && invalidRecipientCount > 0 ? (
+            <div
+              className="flex items-center justify-between gap-3 rounded-lg border border-red-500/35 bg-red-950/35 px-3 py-2"
+              role="alert"
+            >
+              <p className="min-w-0 text-sm leading-relaxed text-red-200">
+                추가 목록에 {invalidRecipientCount.toLocaleString('ko-KR')}개의 부적합 항목이 있습니다.
+              </p>
+              <button
+                type="button"
+                onClick={removeAllInvalidRecipients}
+                disabled={addLoading}
+                className="shrink-0 text-sm font-semibold text-red-300 underline decoration-red-400/70 underline-offset-2 hover:text-red-100 disabled:opacity-50"
+              >
+                (일괄 삭제 - {invalidRecipientCount.toLocaleString('ko-KR')}개)
+              </button>
+            </div>
+          ) : addError ? (
             <div
               className="rounded-lg border border-red-500/35 bg-red-950/35 px-3 py-2 text-sm leading-relaxed text-red-200"
               role="alert"
             >
-              <span>{addError}</span>
-              {invalidBulkDeleteOffer ? (
-                <button
-                  type="button"
-                  onClick={removeAllInvalidRecipients}
-                  disabled={addLoading}
-                  className="ml-0.5 inline font-semibold text-red-300 underline decoration-red-400/70 underline-offset-2 hover:text-red-100 disabled:opacity-50"
-                >
-                  (부적합 일괄 삭제)
-                </button>
-              ) : null}
+              {addError}
             </div>
           ) : null}
 
