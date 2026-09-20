@@ -51,7 +51,6 @@ export default function Navigation() {
   const [selectedCounselingSubcategory, setSelectedCounselingSubcategory] = useState<string | null>(null);
   const [selectedAdminMainCategory, setSelectedAdminMainCategory] = useState<string | null>(null);
   const [selectedAdminSubcategory, setSelectedAdminSubcategory] = useState<string | null>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const counselingTriggerRef = useRef<HTMLDivElement>(null);
   const counselingPanelRef = useRef<HTMLDivElement>(null);
   const counselingLeftColRef = useRef<HTMLDivElement>(null);
@@ -73,8 +72,9 @@ export default function Navigation() {
   // 드롭다운 닫기 지연 타이머 (grace period: 150ms)
   // onPointerLeave 즉시 닫으면 메뉴 이동/아래서 접근 시 깜빡임 발생
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  
-  // 스크롤 상태 관리
+  /** 로그인·role 반영 직후 nav에 마우스가 있을 때 의도치 않은 mega menu open 방지 */
+  const suppressMegaMenuHoverRef = useRef(false);
+  const desktopNavRef = useRef<HTMLDivElement>(null);
   const [scrollStates, setScrollStates] = useState<{[key: string]: {canScrollUp: boolean, canScrollDown: boolean}}>({});
   const [scrollIntervals, setScrollIntervals] = useState<{[key: string]: NodeJS.Timeout | null}>({});
   
@@ -142,11 +142,20 @@ export default function Navigation() {
   );
 
   const openMenu = useCallback((menuId: string) => {
+    if (suppressMegaMenuHoverRef.current) return;
     if (closeTimerRef.current) {
       clearTimeout(closeTimerRef.current);
       closeTimerRef.current = null;
     }
     setActiveMenu(menuId);
+  }, []);
+
+  const closeAllMenus = useCallback(() => {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+    setActiveMenu(null);
   }, []);
 
   const scheduleClose = useCallback(() => {
@@ -155,6 +164,10 @@ export default function Navigation() {
       closeTimerRef.current = null;
     }, 220);
   }, []);
+
+  useEffect(() => {
+    closeAllMenus();
+  }, [pathname, closeAllMenus]);
 
   const { auth: firebaseAuth } = initializeFirebase();
   const sessionFirebaseUser = firebaseAuth?.currentUser ?? null;
@@ -196,6 +209,16 @@ export default function Navigation() {
     () => withAdminMenuBadges(adminMenuCategories, pendingCounselorCount),
     [pendingCounselorCount]
   );
+
+  useEffect(() => {
+    if (!showCounselorMenu && !showAdminMenu && !showPsychologyTestsMenu) return;
+    suppressMegaMenuHoverRef.current = true;
+    closeAllMenus();
+    const t = window.setTimeout(() => {
+      suppressMegaMenuHoverRef.current = false;
+    }, 450);
+    return () => window.clearTimeout(t);
+  }, [showCounselorMenu, showAdminMenu, showPsychologyTestsMenu, closeAllMenus]);
 
   useEffect(() => {
     if (!showPsychologyTestsMenu && activeMenu === 'psychology-tests') {
@@ -311,17 +334,18 @@ export default function Navigation() {
 
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setActiveMenu(null);
+      const root = desktopNavRef.current;
+      if (root && !root.contains(event.target as Node)) {
+        closeAllMenus();
       }
     };
 
-    document.addEventListener("mousedown", handleOutsideClick);
-    
+    document.addEventListener('mousedown', handleOutsideClick);
+
     return () => {
-      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener('mousedown', handleOutsideClick);
     };
-  }, [activeMenu]);
+  }, [closeAllMenus]);
 
   useEffect(() => {
     if (isMobileMenuOpen) {
@@ -348,6 +372,7 @@ export default function Navigation() {
   const handleNavLinkClick = (href: string, e: React.MouseEvent) => {
     markInternalNavigation();
     setActiveItem(href);
+    closeAllMenus();
   };
 
   const handlePortalStartNav = (e: React.MouseEvent, href: string) => {
@@ -392,7 +417,7 @@ export default function Navigation() {
 
   return (
     <>
-      <NavMegaMenuBackdrop open={hasDesktopMegaMenu} onClose={() => setActiveMenu(null)} />
+      <NavMegaMenuBackdrop open={hasDesktopMegaMenu} onClose={closeAllMenus} />
       <style jsx>{`
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(-10px); }
@@ -441,7 +466,7 @@ export default function Navigation() {
 
           {/* Desktop Navigation — compact 모드에서는 브랜드만 표시 */}
           {!compactHeader ? (
-          <div className="hidden min-h-0 md:flex min-w-0 flex-1 items-center justify-end gap-3 xl:gap-5">
+          <div ref={desktopNavRef} className="hidden min-h-0 md:flex min-w-0 flex-1 items-center justify-end gap-3 xl:gap-5">
             <div className="flex min-w-0 flex-1 flex-nowrap items-center justify-end gap-0.5 sm:gap-1 lg:gap-1.5">
               {/* 검사시작 — 나의코드 로그인 또는 내 검사실 */}
               <Link
@@ -726,7 +751,7 @@ export default function Navigation() {
                             dropdownAlign={counselorPlacement.dropdownAlign}
                             menuDataAttribute="counselor"
                             categories={counselorMenuCategories}
-                            onCloseMenu={() => setActiveMenu(null)}
+                            onCloseMenu={closeAllMenus}
                           />
                         )}
                       </div>
