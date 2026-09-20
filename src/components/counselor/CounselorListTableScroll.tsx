@@ -12,6 +12,8 @@ const SCROLL_EDGE_THRESHOLD = 6;
 const HOVER_SCROLL_PX_PER_FRAME = 10;
 /** 가로 스크롤바(8px) 위 여백 */
 const SCROLLBAR_GUTTER_PX = 12;
+/** 섹션 좌·우 패딩(공백)까지 hover 스크롤 영역 확장 */
+const EDGE_HOVER_EXTEND_PX = 20;
 
 function SmallScrollChevron({ side }: { side: 'left' | 'right' }) {
   const isLeft = side === 'left';
@@ -66,16 +68,18 @@ function ScrollEdge({
       onMouseLeave={onLeave}
       onFocus={onEnter}
       onBlur={onLeave}
-      className={`pointer-events-auto absolute inset-y-0 z-20 flex w-9 shrink-0 items-stretch justify-center border-0 bg-transparent p-0 outline-none ${
+      className={`pointer-events-auto absolute inset-y-0 z-20 flex shrink-0 items-stretch justify-center border-0 bg-transparent p-0 outline-none ${
         isLeft ? 'left-0' : 'right-0'
       } ${active ? 'cursor-grabbing' : 'cursor-pointer'}`}
+      style={{ width: 36 + EDGE_HOVER_EXTEND_PX }}
     >
       <span
-        className={`pointer-events-none absolute inset-y-0 w-10 ${
+        className={`pointer-events-none absolute inset-y-0 ${
           isLeft
             ? 'left-0 bg-gradient-to-r from-[#0b1120]/90 via-[#0b1120]/40 to-transparent'
             : 'right-0 bg-gradient-to-l from-[#0b1120]/90 via-[#0b1120]/40 to-transparent'
         }`}
+        style={{ width: 40 + EDGE_HOVER_EXTEND_PX }}
         aria-hidden
       />
       <span
@@ -209,8 +213,13 @@ export default function CounselorListTableScroll({ children, className = '' }: P
         {children}
       </div>
       <div
-        className="pointer-events-none absolute left-0 right-0 z-10"
-        style={{ top: edgeLayout.top, bottom: edgeLayout.bottom }}
+        className="pointer-events-none absolute z-10"
+        style={{
+          top: edgeLayout.top,
+          bottom: edgeLayout.bottom,
+          left: -EDGE_HOVER_EXTEND_PX,
+          right: -EDGE_HOVER_EXTEND_PX,
+        }}
         aria-hidden={!canScrollLeft && !canScrollRight}
       >
         <ScrollEdge
