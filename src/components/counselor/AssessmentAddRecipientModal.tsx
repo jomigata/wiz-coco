@@ -124,6 +124,7 @@ export default function AssessmentAddRecipientModal({
   const [draftPhone, setDraftPhone] = useState('');
   const [draftEmail, setDraftEmail] = useState('');
   const nameInputRef = useRef<HTMLInputElement>(null);
+  const bulkRecipientFileRef = useRef<HTMLInputElement>(null);
   const [pendingRows, setPendingRows] = useState<RecipientRow[]>([]);
   const [addSendNow, setAddSendNow] = useState(true);
   const [addLoading, setAddLoading] = useState(false);
@@ -162,6 +163,13 @@ export default function AssessmentAddRecipientModal({
     () => fileBatches.map((batch, index) => ({ ...batch, displayIndex: index + 1 })),
     [fileBatches],
   );
+
+  const bulkFileStatusLabel = useMemo(() => {
+    if (fileBatches.length === 0) return '선택된 파일 없음';
+    const names = fileBatches.map((b) => b.name);
+    if (names.length === 1) return names[0];
+    return `${names.length}개 파일 · ${names.join(', ')}`;
+  }, [fileBatches]);
 
   const indexedTargetRows = useMemo(
     () => combinedRows.map((row, originalIndex) => ({ row, originalIndex })),
@@ -492,8 +500,9 @@ export default function AssessmentAddRecipientModal({
                 <p className="mt-1 text-sm font-semibold text-amber-300">복수 파일 가능</p>
               </div>
               <div className="rounded-xl border border-dashed border-white/15 bg-black/25 p-3">
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
                 <input
+                  ref={bulkRecipientFileRef}
                   type="file"
                   multiple
                   accept=".csv,.txt,.tsv,.xlsx,.xls,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
@@ -502,8 +511,22 @@ export default function AssessmentAddRecipientModal({
                     void handleAddRecipientFiles(e.target.files);
                     e.target.value = '';
                   }}
-                  className="block w-full text-sm text-slate-300 file:mr-2 file:rounded-lg file:border-0 file:bg-emerald-700/90 file:px-3 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-emerald-600"
+                  className="sr-only"
                 />
+                <button
+                  type="button"
+                  disabled={addLoading}
+                  onClick={() => bulkRecipientFileRef.current?.click()}
+                  className="shrink-0 rounded-lg bg-emerald-700/90 px-3 py-2 text-sm font-medium text-white transition hover:bg-emerald-600 disabled:opacity-50"
+                >
+                  파일 선택
+                </button>
+                <p
+                  className="min-w-0 flex-1 text-sm text-slate-400 truncate"
+                  title={bulkFileStatusLabel}
+                >
+                  {bulkFileStatusLabel}
+                </p>
               </div>
               </div>
               <div
