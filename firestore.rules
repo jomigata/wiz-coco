@@ -19,10 +19,14 @@ service cloud.firestore {
         && request.auth.uid == userId
         && request.resource.data.role == 'user';
 
-      // 본인 업데이트는 role 변경 금지
+      // 본인 업데이트는 role 변경 금지 (role 필드 없는 레거시 문서는 user로만 보강)
       allow update: if request.auth != null
         && request.auth.uid == userId
-        && request.resource.data.role == resource.data.role;
+        && (
+          !('role' in resource.data)
+            ? request.resource.data.role == 'user'
+            : request.resource.data.role == resource.data.role
+        );
 
       // admin은 어떤 문서든 수정 가능
       allow update, delete: if isAdmin();

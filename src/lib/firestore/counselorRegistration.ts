@@ -149,10 +149,20 @@ async function writeCounselorProfileFields(
 ) {
   const db = getDb();
   const now = new Date().toISOString();
+  const userRef = doc(db, 'users', uid);
+  const existing = await getDoc(userRef);
+  const priorRole = existing.exists()
+    ? String((existing.data() as { role?: string }).role || '').trim().toLowerCase()
+    : '';
+  const role =
+    priorRole === 'admin' || priorRole === 'counselor' || priorRole === 'org_admin'
+      ? priorRole
+      : 'user';
 
   await setDoc(
-    doc(db, 'users', uid),
+    userRef,
     {
+      role,
       counselorProfileComplete: options.profileComplete,
       counselorProfile: profile,
       name: profile.name,
