@@ -283,7 +283,7 @@ export default function CounselorQuickSendForm({
 
     if (templateId === 'custom') {
       if (!groupName.trim()) {
-        setError('그룹/기관명을 1자 이상 입력해 주세요.');
+        setError('그룹/기관명을 입력해 주세요.');
         return;
       }
       if (!affiliationTitle.trim()) {
