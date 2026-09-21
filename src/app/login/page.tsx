@@ -52,10 +52,11 @@ const LoginContent = () => {
     return resolvePostLoginRedirectForRole(redirectUrl, role);
   };
 
-  const devRememberEnabled = isDevLoginRememberEnabled();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [rememberLogin, setRememberLogin] = useState(devRememberEnabled);
+  const [rememberLogin, setRememberLogin] = useState(false);
+  /** SSR/첫 paint와 동일하게 false — 마운트 후에만 localhost·Emulator 체크박스 표시 */
+  const [devRememberUi, setDevRememberUi] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [registrationSuccess, setRegistrationSuccess] = useState(registered);
   const [emailVerificationMessage, setEmailVerificationMessage] = useState('');
@@ -66,6 +67,8 @@ const LoginContent = () => {
   }, []);
 
   useEffect(() => {
+    if (!isDevLoginRememberEnabled()) return;
+    setDevRememberUi(true);
     const stored = loadDevLoginRemember();
     if (!stored) return;
     setRememberLogin(true);
@@ -210,7 +213,7 @@ const LoginContent = () => {
               className="w-full px-3 py-2.5 text-sm border border-white/15 bg-[#121f38]/95 placeholder-slate-500 text-slate-100 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500/40 focus:border-sky-400/60"
               placeholder="비밀번호"
             />
-            {devRememberEnabled && (
+            {devRememberUi && (
               <label className="flex items-center gap-2 text-xs text-slate-400 cursor-pointer select-none">
                 <input
                   type="checkbox"
