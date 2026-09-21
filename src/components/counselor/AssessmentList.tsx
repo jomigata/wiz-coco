@@ -906,7 +906,7 @@ export default function AssessmentList({
             onPageSizeChange={setPageSize}
             unit="건"
             footerAction={
-              <div className="flex flex-nowrap items-center gap-2">
+              <>
                 <button
                   type="button"
                   onClick={handleAssessmentDownload}
@@ -933,7 +933,7 @@ export default function AssessmentList({
                     {bulkDeleteLoading ? '삭제 중…' : `삭제 (${selected.size})`}
                   </button>
                 ) : null}
-              </div>
+              </>
             }
           />
         </>

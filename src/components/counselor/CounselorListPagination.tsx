@@ -79,14 +79,17 @@ export default function CounselorListPagination({
     </div>
   );
 
+  const actionWrapClass =
+    'flex w-full min-w-0 flex-row flex-wrap items-center justify-end gap-x-2 gap-y-1.5 [&_button]:shrink-0 sm:w-max sm:max-w-none';
+
   return (
     <div className="mt-2 shrink-0 border-t border-white/5 pt-2 pb-1">
       {/*
-        sm+: auto | 1fr | auto — 가운데 1fr 안에서 페이지를 중앙 정렬
-        (= 좌측 블록 끝 ~ 우측 블록 시작 사이의 중앙)
+        sm+: auto | 1fr | auto — 가운데 1fr 안에서 페이지 중앙 (= 좌측 끝 ~ 우측 시작 사이)
+        좁은 화면: 건수 → 페이지 → 버튼(가로 줄바꿈, 세로 1열 스택 방지)
       */}
-      <div className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-2 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:gap-y-0">
-        <div className="col-start-1 row-start-1 flex min-w-0 flex-nowrap items-center gap-2 justify-self-start">
+      <div className="grid w-full grid-cols-1 gap-y-2 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-start sm:gap-x-2 sm:gap-y-1">
+        <div className="flex min-w-0 flex-nowrap items-center gap-2 justify-self-start sm:col-start-1 sm:row-start-1">
           <span className="whitespace-nowrap text-sm text-slate-500">
             {currentCount}
             {unit}/총{totalCount}
@@ -111,17 +114,15 @@ export default function CounselorListPagination({
           ) : null}
         </div>
 
-        <div className="col-start-2 row-start-1 flex min-w-0 max-w-full justify-self-end sm:col-start-3 sm:max-w-[min(100%,50%)] sm:justify-self-end">
-          {footerAction ? (
-            <div className="flex max-w-full flex-nowrap items-center justify-end gap-1.5 overflow-x-auto sm:gap-2">
-              {footerAction}
-            </div>
-          ) : null}
-        </div>
-
-        <div className="col-span-2 row-start-2 flex min-w-0 justify-center sm:col-span-1 sm:col-start-2 sm:row-start-1 sm:px-1">
+        <div className="flex min-w-0 justify-center sm:col-start-2 sm:row-start-1 sm:px-1">
           {paginationControls}
         </div>
+
+        {footerAction ? (
+          <div className="min-w-0 justify-self-stretch sm:col-start-3 sm:row-start-1 sm:justify-self-end">
+            <div className={actionWrapClass}>{footerAction}</div>
+          </div>
+        ) : null}
       </div>
     </div>
   );

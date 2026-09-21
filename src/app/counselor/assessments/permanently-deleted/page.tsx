@@ -550,7 +550,7 @@ export default function PermanentlyDeletedAssessmentsPage() {
               pageSize={pageSize}
               onPageSizeChange={setPageSize}
               footerAction={
-                <div className="flex flex-nowrap items-center gap-2">
+                <>
                   <button
                     type="button"
                     onClick={handleAssessmentDownload}
@@ -575,7 +575,7 @@ export default function PermanentlyDeletedAssessmentsPage() {
                   >
                     {restoring ? '복구 중…' : `삭제된 상담코드로 복구 (${selected.size})`}
                   </button>
-                </div>
+                </>
               }
             />
           </>

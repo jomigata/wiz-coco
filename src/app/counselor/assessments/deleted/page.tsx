@@ -656,7 +656,7 @@ export default function DeletedAssessmentsPage() {
               pageSize={pageSize}
               onPageSizeChange={setPageSize}
               footerAction={
-                <div className="flex flex-nowrap items-center gap-2">
+                <>
                   <button
                     type="button"
                     onClick={handleAssessmentDownload}
@@ -693,7 +693,7 @@ export default function DeletedAssessmentsPage() {
                       {deleting ? '처리 중…' : `영구 삭제 (${selected.size})`}
                     </button>
                   ) : null}
-                </div>
+                </>
               }
             />
           </>

@@ -1761,7 +1761,7 @@ export default function CounselorClientList({
               onPageSizeChange={setPageSize}
               footerAction={
                 deletedMode || permanentlyDeletedMode ? (
-                  <div className="flex flex-nowrap items-center gap-2">
+                  <div className="contents">
                     {(adminUser && deletedMode) || permanentlyDeletedMode ? (
                       <>
                         <button
@@ -1808,7 +1808,7 @@ export default function CounselorClientList({
                     ) : null}
                   </div>
                 ) : (
-                  <div className="flex flex-nowrap items-center gap-2">
+                  <div className="contents">
                     <button
                       type="button"
                       onClick={handleClientDownload}
