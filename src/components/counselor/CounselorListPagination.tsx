@@ -39,7 +39,7 @@ export default function CounselorListPagination({
       : pages.filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 1);
 
   const paginationControls = (
-    <div className="flex flex-wrap items-center justify-center gap-1">
+    <div className="flex shrink-0 flex-nowrap items-center justify-center gap-1">
       <button
         type="button"
         disabled={page <= 1}
@@ -81,15 +81,16 @@ export default function CounselorListPagination({
 
   return (
     <div className="mt-2 shrink-0 border-t border-white/5 pt-2 pb-1">
-      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-2 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-center">
-        <div className="col-start-1 row-start-1 flex min-w-0 flex-wrap items-center gap-2 justify-self-start">
+      {/* sm+: 한 줄 — 좌(건수·개수) | 중앙(페이지) | 우(버튼) — 1fr·auto·1fr 로 좌우 사이 중앙 */}
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-2 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:gap-y-0">
+        <div className="col-start-1 row-start-1 flex min-w-0 flex-nowrap items-center gap-2 justify-self-start">
           <span className="whitespace-nowrap text-sm text-slate-500">
             {currentCount}
             {unit}/총{totalCount}
             {unit}
           </span>
           {pageSize != null && onPageSizeChange ? (
-            <label className="inline-flex items-center gap-1.5 text-sm text-slate-400">
+            <label className="inline-flex shrink-0 items-center gap-1.5 text-sm text-slate-400">
               <span className="sr-only">페이지당 표시</span>
               <select
                 value={pageSize}
@@ -107,14 +108,15 @@ export default function CounselorListPagination({
           ) : null}
         </div>
 
-        <div className="col-start-2 row-start-1 flex min-w-0 flex-wrap items-center justify-end gap-2 justify-self-end sm:col-start-3">
-          {footerAction}
-          <span className="whitespace-nowrap text-xs tabular-nums text-slate-600">
-            {page}/{totalPages}페이지
-          </span>
+        <div className="col-start-2 row-start-1 flex min-w-0 max-w-full items-center justify-end justify-self-end sm:col-start-3 sm:max-w-none">
+          {footerAction ? (
+            <div className="flex max-w-full flex-nowrap items-center justify-end gap-1.5 overflow-x-auto sm:gap-2">
+              {footerAction}
+            </div>
+          ) : null}
         </div>
 
-        <div className="col-span-2 row-start-2 flex justify-center sm:col-span-1 sm:col-start-2 sm:row-start-1 sm:justify-self-center">
+        <div className="col-span-2 row-start-2 flex justify-center sm:col-span-1 sm:col-start-2 sm:row-start-1">
           {paginationControls}
         </div>
       </div>
