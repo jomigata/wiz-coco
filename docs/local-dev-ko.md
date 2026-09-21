@@ -35,18 +35,19 @@ npm run dev
 
 ### Cursor — 프로젝트 열 때 (자동)
 
-워크스페이스를 열면 **자동 작업**이 한 번 실행됩니다 (`.vscode/tasks.json`, `task.allowAutomaticTasks: on`).
+워크스페이스를 열면 **자동 작업**이 한 번 실행됩니다 (`.vscode/tasks.json`, `.vscode/settings.json`의 `task.allowAutomaticTasks: on`).
 
-1. `3000` 포트에 dev가 없으면 **`npm run dev`** 를 백그라운드로 시작  
-2. UI(3000)·Emulator UI(4000) 준비까지 대기  
-3. Auth Emulator **테스트 계정 시드** (`dev:seed-auth`, 이미 있으면 건너뜀)  
-4. **Simple Browser 탭 3개** (우측 내장 브라우저):
+1. **8080 / 4000 / 5000 / 3000** 이 모두 떠 있지 않으면 **`npm run dev`** 를 백그라운드로 시작 (로그: `.firebase/local-dev-server.log`)  
+2. Emulator·Flask·Next 준비까지 대기 (최대 4분)  
+3. 터미널에 **로컬 스택 상태 표** 출력 (Emulator / `/api/health` / Next URL)  
+4. Auth Emulator **테스트 계정 시드** (`dev:seed-auth`, 이미 있으면 건너뜀)  
+5. **Simple Browser 탭 3개** (우측 내장 브라우저, `WIZCOCO_DEV_SKIP_BROWSER=1` 이면 생략):
    - http://localhost:3000/
    - http://localhost:3000/admin/counselor-management
    - http://127.0.0.1:4000/auth
 
 처음 폴더를 열 때 Cursor가 **「Allow Automatic Tasks in Folder」** 를 물으면 **Allow** 를 선택하세요.  
-수동만 쓰려면: `npm run dev:workspace:open`
+수동 실행: `npm run dev:workspace:open`
 
 **Emulator 데이터 유지 (회원·Firestore):**
 

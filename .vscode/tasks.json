@@ -7,10 +7,11 @@
       "script": "dev:workspace:open",
       "problemMatcher": [],
       "presentation": {
-        "reveal": "never",
-        "panel": "shared",
-        "close": true,
-        "showReuseMessage": false
+        "reveal": "silent",
+        "panel": "dedicated",
+        "close": false,
+        "showReuseMessage": false,
+        "focus": false
       },
       "runOptions": {
         "runOn": "folderOpen"
