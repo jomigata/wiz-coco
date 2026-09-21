@@ -81,8 +81,11 @@ export default function CounselorListPagination({
 
   return (
     <div className="mt-2 shrink-0 border-t border-white/5 pt-2 pb-1">
-      {/* sm+: 한 줄 — 좌(건수·개수) | 중앙(페이지) | 우(버튼) — 1fr·auto·1fr 로 좌우 사이 중앙 */}
-      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-2 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:gap-y-0">
+      {/*
+        sm+: auto | 1fr | auto — 가운데 1fr 안에서 페이지를 중앙 정렬
+        (= 좌측 블록 끝 ~ 우측 블록 시작 사이의 중앙)
+      */}
+      <div className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-2 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:gap-y-0">
         <div className="col-start-1 row-start-1 flex min-w-0 flex-nowrap items-center gap-2 justify-self-start">
           <span className="whitespace-nowrap text-sm text-slate-500">
             {currentCount}
@@ -108,7 +111,7 @@ export default function CounselorListPagination({
           ) : null}
         </div>
 
-        <div className="col-start-2 row-start-1 flex min-w-0 max-w-full items-center justify-end justify-self-end sm:col-start-3 sm:max-w-none">
+        <div className="col-start-2 row-start-1 flex min-w-0 max-w-full justify-self-end sm:col-start-3 sm:max-w-[min(100%,50%)] sm:justify-self-end">
           {footerAction ? (
             <div className="flex max-w-full flex-nowrap items-center justify-end gap-1.5 overflow-x-auto sm:gap-2">
               {footerAction}
@@ -116,7 +119,7 @@ export default function CounselorListPagination({
           ) : null}
         </div>
 
-        <div className="col-span-2 row-start-2 flex justify-center sm:col-span-1 sm:col-start-2 sm:row-start-1">
+        <div className="col-span-2 row-start-2 flex min-w-0 justify-center sm:col-span-1 sm:col-start-2 sm:row-start-1 sm:px-1">
           {paginationControls}
         </div>
       </div>

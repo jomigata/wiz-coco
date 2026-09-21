@@ -656,7 +656,7 @@ export default function DeletedAssessmentsPage() {
               pageSize={pageSize}
               onPageSizeChange={setPageSize}
               footerAction={
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-nowrap items-center gap-2">
                   <button
                     type="button"
                     onClick={handleAssessmentDownload}
