@@ -196,7 +196,7 @@ export default function CounselorDispatchRecipientExpandRow({
   ...contentProps
 }: ExpandRowProps) {
   return (
-    <tr>
+    <tr data-counselor-list-expand-row>
       <CounselorRecipientExpandLeadingCells
         leadingColSpan={leadingColSpan}
         portalId={contentProps.recipient.portalId}

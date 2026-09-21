@@ -1700,7 +1700,7 @@ export default function CounselorClientList({
                       </tr>
                       {isOpen && rowExpandable ? (
                         expandDetailState === 'loading' ? (
-                          <tr>
+                          <tr data-counselor-list-expand-row>
                             <CounselorRecipientExpandLeadingCells
                               leadingColSpan={expandLeadingColSpan}
                               portalId={item.portalId}
@@ -1713,7 +1713,7 @@ export default function CounselorClientList({
                             </td>
                           </tr>
                         ) : expandDetailState === 'error' ? (
-                          <tr>
+                          <tr data-counselor-list-expand-row>
                             <CounselorRecipientExpandLeadingCells
                               leadingColSpan={expandLeadingColSpan}
                               portalId={item.portalId}

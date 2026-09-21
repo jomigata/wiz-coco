@@ -178,7 +178,7 @@ export default function ArchivedRecipientsTable({
     : (showAssessmentColumns ? 9 : showArchivedAtColumn ? 7 : 6);
 
   const renderTestExpandRow = (row: ArchivedDispatchRecipient, tests: DispatchTestResult[]) => (
-    <tr>
+    <tr data-counselor-list-expand-row>
       <CounselorRecipientExpandLeadingCells
         leadingColSpan={expandLeadingColSpan}
         portalId={row.portalId}

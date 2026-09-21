@@ -1812,7 +1812,7 @@ export default function AssessmentDispatchPanel({
                       ) : null}
                     </tr>
                     {isOpen ? (
-                      <tr>
+                      <tr data-counselor-list-expand-row>
                         <CounselorRecipientExpandLeadingCells
                           leadingColSpan={leadingDetailSpacerColSpan}
                           portalId={r.portalId}

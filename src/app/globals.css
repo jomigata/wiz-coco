@@ -356,10 +356,10 @@ body.dropdown-open {
   scroll-behavior: smooth;
 }
 
-/* 상담사 목록 테이블 가로 스크롤 */
+/* 상담사 목록 테이블 가로 스크롤 — thumb 항상 hover 수준 가시성 */
 .counselor-list-table-scroll {
   scrollbar-width: thin;
-  scrollbar-color: rgba(56, 189, 248, 0.45) rgba(15, 23, 42, 0.6);
+  scrollbar-color: rgba(56, 189, 248, 0.72) rgba(15, 23, 42, 0.55);
 }
 
 .counselor-list-table-scroll::-webkit-scrollbar {
@@ -367,13 +367,19 @@ body.dropdown-open {
 }
 
 .counselor-list-table-scroll::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.65);
+  background: rgba(15, 23, 42, 0.55);
   border-radius: 9999px;
 }
 
 .counselor-list-table-scroll::-webkit-scrollbar-thumb {
-  background: linear-gradient(90deg, rgba(56, 189, 248, 0.35), rgba(14, 165, 233, 0.55));
+  background: linear-gradient(90deg, rgba(56, 189, 248, 0.58), rgba(14, 165, 233, 0.82));
+  border: 1px solid rgba(125, 211, 252, 0.38);
   border-radius: 9999px;
+}
+
+.counselor-list-table-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(90deg, rgba(56, 189, 248, 0.72), rgba(14, 165, 233, 0.92));
+  border-color: rgba(186, 230, 253, 0.45);
 }
 
 @keyframes counselor-scroll-hint-nudge-left {

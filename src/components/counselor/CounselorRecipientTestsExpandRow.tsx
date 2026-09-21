@@ -34,7 +34,7 @@ export default function CounselorRecipientTestsExpandRow({
   onOpenResult,
 }: Props) {
   return (
-    <tr>
+    <tr data-counselor-list-expand-row>
       <CounselorRecipientExpandLeadingCells leadingColSpan={leadingColSpan} portalId={portalId} />
       <td
         colSpan={detailColSpan}

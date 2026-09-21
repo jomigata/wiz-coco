@@ -108,10 +108,29 @@ export default function CounselorListTableScroll({ children, className = '' }: P
   const measureEdgeLayout = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
+    const elRect = el.getBoundingClientRect();
     const thead = el.querySelector('thead');
-    const top =
-      thead instanceof HTMLElement ? Math.max(0, Math.round(thead.getBoundingClientRect().height)) : 0;
-    setEdgeLayout({ top, bottom: SCROLLBAR_GUTTER_PX });
+    /** 펼침 상세 행 제외 — 목록 값(tr) 구간에만 좌·우 스크롤 힌트 */
+    const mainRows = el.querySelectorAll('tbody tr:not([data-counselor-list-expand-row])');
+
+    let top = 0;
+    let bottom = SCROLLBAR_GUTTER_PX;
+
+    if (mainRows.length > 0) {
+      const first = mainRows[0];
+      const last = mainRows[mainRows.length - 1];
+      if (first instanceof HTMLElement && last instanceof HTMLElement) {
+        const firstRect = first.getBoundingClientRect();
+        const lastRect = last.getBoundingClientRect();
+        top = Math.max(0, Math.round(firstRect.top - elRect.top));
+        const lastBottom = lastRect.bottom - elRect.top;
+        bottom = Math.max(SCROLLBAR_GUTTER_PX, Math.round(el.clientHeight - lastBottom));
+      }
+    } else if (thead instanceof HTMLElement) {
+      top = Math.max(0, Math.round(thead.getBoundingClientRect().height));
+    }
+
+    setEdgeLayout({ top, bottom });
   }, []);
 
   const updateScrollHints = useCallback(() => {
