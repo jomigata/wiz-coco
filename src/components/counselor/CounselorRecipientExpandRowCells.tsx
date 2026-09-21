@@ -7,6 +7,13 @@ import { counselorListSelectTdClass } from '@/lib/counselorListTableStyles';
 
 const expandCellBorder = 'border-b border-slate-700/60 bg-slate-900/20';
 
+/** 펼침 행 검사 목록·채팅 열 공통 패널 */
+const expandDetailPanelClass =
+  'overflow-hidden rounded-lg border border-slate-600/80 bg-slate-950/55 shadow-inner';
+
+const expandDetailPanelHeaderClass =
+  'border-b border-slate-700/70 bg-slate-900/40 text-xs font-medium text-slate-400';
+
 type ChatColumnProps = {
   portalId: string;
 };
@@ -19,17 +26,19 @@ export function CounselorRecipientExpandChatColumn({ portalId }: ChatColumnProps
       className={`${counselorListSelectTdClass} ${expandCellBorder} align-top pt-3 pb-4`}
       onClick={(e) => e.stopPropagation()}
     >
-      <div className="flex min-w-[2.5rem] flex-col items-center">
-        <div className="w-full border-b border-slate-700/70 bg-slate-900/40 px-1 py-2 text-center text-[11px] font-medium leading-tight text-slate-400">
-          1:1 채팅
+      <div className={`flex min-w-[2.75rem] flex-col ${expandDetailPanelClass}`}>
+        <div
+          className={`${expandDetailPanelHeaderClass} px-1 py-2 text-center leading-tight`}
+        >
+          채팅
         </div>
-        <div className="flex w-full justify-center px-1 py-2.5">
+        <div className="flex justify-center px-1 py-2.5">
           {id ? (
             <AuthLink
               href={buildCounselorPortalChatHref(id)}
               className="inline-flex items-center justify-center text-base leading-none opacity-90 transition hover:opacity-100"
-              title="1:1 채팅"
-              aria-label="1:1 채팅"
+              title="채팅"
+              aria-label="채팅"
               onClick={(e) => e.stopPropagation()}
             >
               <span aria-hidden>💬</span>
