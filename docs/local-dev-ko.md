@@ -48,7 +48,14 @@ npm run dev
 처음 폴더를 열 때 Cursor가 **「Allow Automatic Tasks in Folder」** 를 물으면 **Allow** 를 선택하세요.  
 수동만 쓰려면: `npm run dev:workspace:open`
 
-**Emulator 데이터 유지:** `npm run dev` 종료 시 Firestore·Auth 상태가 **`.firebase/emulator-data`** 에 export 되고, 다음 `dev` 시작 시 import 됩니다 (git 제외, 로컬 디스크에만 저장). 상담사 신청·승인·Firestore 문서는 재시작 후에도 이어서 테스트할 수 있습니다.
+**Emulator 데이터 유지 (회원·Firestore):**
+
+- 저장 위치: **`.firebase/emulator-data`** (git 제외, PC 로컬 디스크만)
+- **`npm run dev` 시작** 시 위 폴더가 있으면 **Auth·Firestore를 import** (이전 회원가입·로그인 계정·문서 복원)
+- **실행 중** 약 **2분마다** 자동 export (기본 120초, `DEV_EMULATOR_EXPORT_INTERVAL_SEC`로 변경)
+- **Ctrl+C로 dev 종료** 시 `--export-on-exit`으로 한 번 더 저장
+- PC **재부팅·강제 종료** 후에도 **마지막 자동 export** 시점까지 데이터 유지 (dev를 다시 `npm run dev`만 실행하면 됨)
+- 수동 백업: `npm run dev:emulators:export` (Emulator가 떠 있을 때)
 
 **Simple Browser CLI:** 탭이 안 열리면 Cursor 명령 팔레트 → **Shell Command: Install 'cursor' command in PATH** 실행 후 워크스페이스를 다시 엽니다.
 
@@ -75,7 +82,7 @@ npm run dev:next        # API 5000 떠 있으면 Next만
 
 ## Emulator 로그인
 
-Auth Emulator는 **빈 DB**에서 시작합니다.
+처음 설치·export 폴더가 없을 때만 Auth가 **빈 상태**입니다. 한 번 dev로 데이터를 쌓으면 **재시작·재부팅 후에도 import** 됩니다.
 
 ```powershell
 npm run dev:seed-auth

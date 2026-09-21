@@ -6,6 +6,7 @@
     "prebuild": "node scripts/write-build-version.js",
     "dev": "concurrently -k -n emu,api,web -c blue,green,magenta \"npm run dev:emulators\" \"npm run dev:flask:wait\" \"npm run dev:next:wait\"",
     "dev:emulators": "node scripts/run-firebase-emulators-persist.js",
+    "dev:emulators:export": "firebase emulators:export .firebase/emulator-data --project wiz-coco --force",
     "dev:workspace:open": "node scripts/local-dev-workspace-on-open.js",
     "dev:flask": "node scripts/run-flask-dev.js",
     "dev:flask:wait": "wait-on tcp:127.0.0.1:8080 && npm run dev:flask",
