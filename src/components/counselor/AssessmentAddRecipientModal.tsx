@@ -874,7 +874,7 @@ export default function AssessmentAddRecipientModal({
                         disabled={addLoading}
                         className="text-[11px] font-semibold text-white underline decoration-white/50 underline-offset-2 transition-colors hover:text-sky-200 hover:decoration-sky-300/70 disabled:opacity-50 disabled:hover:text-white"
                       >
-                        일괄삭제-{invalidRecipientCount.toLocaleString('ko-KR')}개
+                        일괄삭제 - ({invalidRecipientCount.toLocaleString('ko-KR')}개)
                       </button>
                     </>
                   ) : null}
