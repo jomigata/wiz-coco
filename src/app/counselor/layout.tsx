@@ -123,7 +123,7 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
       const from = resolveCounselorProgressFrom(path, search);
       if (from === 'clients') return '나의코드 현황';
       if (from === 'deleted-recipients') return '삭제된 코드현황';
-      if (from === 'deleted-assessments') return '삭제코드 현황';
+      if (from === 'deleted-assessments') return '삭제된 내담자';
       return '상담진행 현황';
     }
     if (path.startsWith('/counselor/assessments/dispatch')) return '진행현황';

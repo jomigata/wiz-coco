@@ -277,7 +277,7 @@ export function getAssessmentsParentSubmenuItems(options?: {
   if (showDeletedProgressMenu) {
     items.push({
       order: 91,
-      label: '삭제코드 현황',
+      label: '삭제된 내담자',
       href: buildProgressHref(assessmentId, options?.search || '?from=deleted-assessments'),
       isActive: (p) =>
         p.startsWith('/counselor/assessments/progress') &&
@@ -314,7 +314,7 @@ export function getClientsParentSubmenuItems(options?: {
   const items: CounselorParentSubmenuItem[] = [];
   items.push({
     order: 90,
-    label: '삭제된 내담자',
+    label: '삭제된 내담자 (전체)',
     href: DELETED_RECIPIENTS_HREF,
     isActive: isDeletedRecipientsPath,
     menuAlign: 'middle',

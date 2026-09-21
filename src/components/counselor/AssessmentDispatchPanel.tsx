@@ -1377,7 +1377,7 @@ export default function AssessmentDispatchPanel({
       : entryFrom === 'deleted-recipients'
         ? '삭제된 코드현황'
         : entryFrom === 'deleted-assessments'
-          ? '삭제코드 현황'
+          ? '삭제된 내담자'
           : '상담진행 현황';
 
   if (!displayData && loading) {
@@ -1404,7 +1404,7 @@ export default function AssessmentDispatchPanel({
   const contactAfterNotifyAt = entryFrom === 'deleted-assessments';
   const showContactEditColumn = !adminClientProgressView && entryFrom !== 'deleted-assessments';
   const showArchiveDeleteFooter = entryFrom === 'assessments' && !adminUser;
-  const showPermanentDeleteFooter = entryFrom === 'deleted-assessments' && !adminUser;
+  const showPermanentDeleteFooter = false;
   const showTableCheckbox = !adminClientProgressView && !clientsSimplifiedView;
   const showTableSort = !clientsSimplifiedView;
   const showBulkToolbar = entryFrom === 'assessments' && !adminUser;
@@ -1922,7 +1922,7 @@ export default function AssessmentDispatchPanel({
                     {deleteLoading ? '영구삭제 중…' : `영구삭제 (${selected.size})`}
                   </button>
                 ) : null}
-                {!adminUser ? (
+                {!adminUser && entryFrom !== 'deleted-assessments' ? (
                   <button
                     type="button"
                     onClick={() => setMoveOpen(true)}
