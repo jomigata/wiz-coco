@@ -26,30 +26,37 @@ export function CounselorRecipientExpandChatColumn({ portalId }: ChatColumnProps
       className={`${counselorListSelectTdClass} ${expandCellBorder} align-top pt-3 pb-4`}
       onClick={(e) => e.stopPropagation()}
     >
-      <div className={`flex min-w-[2.75rem] flex-col ${expandDetailPanelClass}`}>
-        <div
-          className={`${expandDetailPanelHeaderClass} px-1 py-2 text-center leading-tight`}
+      {id ? (
+        <AuthLink
+          href={buildCounselorPortalChatHref(id)}
+          className={`flex min-w-[2.75rem] flex-col text-inherit no-underline transition-colors hover:border-sky-500/35 hover:bg-slate-900/65 ${expandDetailPanelClass}`}
+          title="채팅"
+          aria-label="채팅"
+          onClick={(e) => e.stopPropagation()}
         >
-          채팅
-        </div>
-        <div className="flex justify-center px-1 py-2.5">
-          {id ? (
-            <AuthLink
-              href={buildCounselorPortalChatHref(id)}
-              className="inline-flex items-center justify-center text-base leading-none opacity-90 transition hover:opacity-100"
-              title="채팅"
-              aria-label="채팅"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <span aria-hidden>💬</span>
-            </AuthLink>
-          ) : (
+          <span
+            className={`${expandDetailPanelHeaderClass} block px-1 py-2 text-center leading-tight`}
+          >
+            채팅
+          </span>
+          <span className="flex flex-1 items-center justify-center px-1 py-2.5 text-base leading-none">
+            <span aria-hidden>💬</span>
+          </span>
+        </AuthLink>
+      ) : (
+        <div className={`flex min-w-[2.75rem] flex-col ${expandDetailPanelClass}`}>
+          <div
+            className={`${expandDetailPanelHeaderClass} px-1 py-2 text-center leading-tight`}
+          >
+            채팅
+          </div>
+          <div className="flex justify-center px-1 py-2.5">
             <span className="text-slate-600" aria-hidden>
               —
             </span>
-          )}
+          </div>
         </div>
-      </div>
+      )}
     </td>
   );
 }
