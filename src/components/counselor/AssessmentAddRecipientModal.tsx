@@ -24,7 +24,7 @@ import CounselorNotifyConfirmDialog from '@/components/counselor/CounselorNotify
 import type { NotifyRecipientContact } from '@/lib/counselorNotifyChannels';
 import { isValidEmailAddress } from '@/lib/emailValidation';
 
-type TargetSortKey = 'input' | 'name' | 'phone' | 'email';
+type TargetSortKey = 'input' | 'name' | 'phone' | 'email' | 'invalid';
 type TargetSortDir = 'asc' | 'desc';
 
 type ImportedFileBatch = {
@@ -346,6 +346,12 @@ export default function AssessmentAddRecipientModal({
     const list = [...indexedTargetRows];
     const mult = targetSortDir === 'asc' ? 1 : -1;
     list.sort((a, b) => {
+      if (targetSortKey === 'invalid') {
+        const ai = targetRowInvalid(a.row) ? 0 : 1;
+        const bi = targetRowInvalid(b.row) ? 0 : 1;
+        if (ai !== bi) return mult * (ai - bi);
+        return a.originalIndex - b.originalIndex;
+      }
       let av = '';
       let bv = '';
       if (targetSortKey === 'name') {
@@ -864,8 +870,19 @@ export default function AssessmentAddRecipientModal({
                   </button>
                   {combinedRows.length > 0 && invalidRecipientCount > 0 ? (
                     <>
-                      <span className="text-[11px] font-medium text-red-400">
-                        부적합 항목 - {invalidRecipientCount.toLocaleString('ko-KR')}개
+                      <span className="inline-flex items-center gap-0.5 text-[11px] font-medium text-red-400">
+                        <span>부적합 항목</span>
+                        <button
+                          type="button"
+                          className="inline-flex items-center text-red-300/90 hover:text-red-100"
+                          onClick={() => toggleTargetSort('invalid')}
+                          title="부적합 항목 우선 정렬"
+                          aria-label="부적합 항목 정렬"
+                        >
+                          <span className="text-[10px] text-red-400/80">
+                            {targetSortArrow('invalid')}
+                          </span>
+                        </button>
                       </span>
                       <button
                         type="button"
@@ -875,6 +892,9 @@ export default function AssessmentAddRecipientModal({
                       >
                         일괄삭제
                       </button>
+                      <span className="text-[11px] font-medium text-red-400">
+                        - {invalidRecipientCount.toLocaleString('ko-KR')}개
+                      </span>
                     </>
                   ) : null}
                 </span>
