@@ -875,7 +875,7 @@ export default function AssessmentAddRecipientModal({
                         type="button"
                         onClick={removeAllInvalidRecipients}
                         disabled={addLoading}
-                        className="text-[11px] font-semibold text-white underline decoration-white/50 underline-offset-2 hover:text-sky-100 disabled:opacity-50"
+                        className="text-[11px] font-semibold text-white underline decoration-white/50 underline-offset-2 transition-colors hover:text-sky-200 hover:decoration-sky-300/70 disabled:opacity-50 disabled:hover:text-white"
                       >
                         일괄삭제
                       </button>
