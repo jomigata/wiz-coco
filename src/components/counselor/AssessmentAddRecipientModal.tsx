@@ -870,20 +870,14 @@ export default function AssessmentAddRecipientModal({
                   </button>
                   {combinedRows.length > 0 && invalidRecipientCount > 0 ? (
                     <>
-                      <span className="inline-flex items-center gap-0.5 text-[11px] font-medium text-red-400">
-                        <span>부적합 항목</span>
-                        <button
-                          type="button"
-                          className="inline-flex items-center text-red-300/90 hover:text-red-100"
-                          onClick={() => toggleTargetSort('invalid')}
-                          title="부적합 항목 우선 정렬"
-                          aria-label="부적합 항목 정렬"
-                        >
-                          <span className="text-[10px] text-red-400/80">
-                            {targetSortArrow('invalid')}
-                          </span>
-                        </button>
-                      </span>
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-0.5 text-[11px] font-medium text-red-400 hover:text-red-200"
+                        onClick={() => toggleTargetSort('invalid')}
+                      >
+                        부적합 항목
+                        <span className="text-[10px] text-red-400/80">{targetSortArrow('invalid')}</span>
+                      </button>
                       <button
                         type="button"
                         onClick={removeAllInvalidRecipients}
