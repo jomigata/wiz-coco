@@ -907,16 +907,6 @@ export default function AssessmentList({
             unit="건"
             footerAction={
               <div className="flex flex-wrap items-center gap-2">
-                {adminUser ? (
-                  <button
-                    type="button"
-                    onClick={toggleAllOnPage}
-                    disabled={paginatedItems.length === 0 || bulkDeleteLoading}
-                    className="rounded-md border border-white/10 bg-[#101f38]/90 px-2.5 py-1 text-sm text-slate-300 transition-colors hover:bg-white/5 disabled:opacity-50"
-                  >
-                    {allPageSelected ? '전체 해제' : '전체 선택'}
-                  </button>
-                ) : null}
                 <button
                   type="button"
                   onClick={handleAssessmentDownload}

@@ -1509,14 +1509,6 @@ export default function AssessmentDispatchPanel({
             <span className="ml-auto inline-flex shrink-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
               <button
                 type="button"
-                onClick={toggleAll}
-                disabled={displayData.recipients.length === 0}
-                className="rounded-md border border-white/10 bg-[#101f38]/90 px-2.5 py-1.5 text-xs text-slate-300 transition-colors hover:bg-white/5 disabled:opacity-50 sm:text-sm"
-              >
-                {allSelected ? '전체 해제' : '전체 선택'}
-              </button>
-              <button
-                type="button"
                 onClick={() => setNotifyConfirmKind('remind')}
                 disabled={
                   remindLoading ||
@@ -1876,16 +1868,6 @@ export default function AssessmentDispatchPanel({
                 <span className="tabular-nums text-slate-300">{displayData.recipients.length}</span>명
               </p>
               <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                {adminUser ? (
-                  <button
-                    type="button"
-                    onClick={toggleAll}
-                    disabled={displayData.recipients.length === 0}
-                    className="rounded-md border border-white/10 bg-[#101f38]/90 px-2.5 py-1.5 text-xs text-slate-300 transition-colors hover:bg-white/5 disabled:opacity-50 sm:text-sm"
-                  >
-                    {allSelected ? '전체 해제' : '전체 선택'}
-                  </button>
-                ) : null}
                 <button
                   type="button"
                   onClick={handleDownloadSelected}

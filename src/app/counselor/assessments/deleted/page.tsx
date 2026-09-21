@@ -659,14 +659,6 @@ export default function DeletedAssessmentsPage() {
                 <div className="flex flex-wrap items-center gap-2">
                   <button
                     type="button"
-                    onClick={toggleAll}
-                    disabled={loading || items.length === 0}
-                    className="rounded-md border border-white/10 bg-[#101f38]/90 px-2.5 py-1 text-sm text-slate-300 transition-colors hover:bg-white/5 disabled:opacity-50"
-                  >
-                    {allSelected ? '전체 해제' : '전체 선택'}
-                  </button>
-                  <button
-                    type="button"
                     onClick={handleAssessmentDownload}
                     disabled={selected.size === 0}
                     className="rounded-md bg-emerald-700/90 px-2.5 py-1 text-sm font-medium text-white transition-colors hover:bg-emerald-600 disabled:opacity-50"

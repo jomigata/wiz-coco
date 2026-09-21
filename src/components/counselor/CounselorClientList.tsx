@@ -1356,14 +1356,6 @@ export default function CounselorClientList({
             <span className="ml-auto inline-flex shrink-0 flex-wrap items-center justify-end gap-1.5">
               <button
                 type="button"
-                onClick={toggleAllOnPage}
-                disabled={loading || paginatedItems.length === 0}
-                className="rounded-md border border-white/10 bg-[#101f38]/90 px-2.5 py-1.5 text-xs text-slate-300 transition-colors hover:bg-white/5 disabled:opacity-50 sm:text-sm"
-              >
-                {allPageSelected ? '전체 해제' : '전체 선택'}
-              </button>
-              <button
-                type="button"
                 disabled={selected.size === 0 || notifyDispatchLoading}
                 className="rounded-md bg-amber-600/90 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-amber-500 disabled:opacity-50 sm:text-sm"
                 onClick={() => openBulkNotifyConfirm('remind')}
@@ -1734,14 +1726,6 @@ export default function CounselorClientList({
               footerAction={
                 deletedMode || permanentlyDeletedMode ? (
                   <div className="flex flex-wrap items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={toggleAllOnPage}
-                      disabled={loading || selectableOnPage.length === 0}
-                      className="rounded-md border border-white/10 bg-[#101f38]/90 px-2.5 py-1 text-sm text-slate-300 transition-colors hover:bg-white/5 disabled:opacity-50"
-                    >
-                      {allPageSelected ? '전체 해제' : '전체 선택'}
-                    </button>
                     {(adminUser && deletedMode) || permanentlyDeletedMode ? (
                       <>
                         <button
@@ -1789,16 +1773,6 @@ export default function CounselorClientList({
                   </div>
                 ) : (
                   <div className="flex flex-wrap items-center gap-2">
-                    {adminUser ? (
-                      <button
-                        type="button"
-                        onClick={toggleAllOnPage}
-                        disabled={loading || paginatedItems.length === 0 || clientDeleteLoading}
-                        className="rounded-md border border-white/10 bg-[#101f38]/90 px-2.5 py-1 text-sm text-slate-300 transition-colors hover:bg-white/5 disabled:opacity-50"
-                      >
-                        {allPageSelected ? '전체 해제' : '전체 선택'}
-                      </button>
-                    ) : null}
                     <button
                       type="button"
                       onClick={handleClientDownload}

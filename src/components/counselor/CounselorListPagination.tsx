@@ -80,9 +80,9 @@ export default function CounselorListPagination({
   );
 
   return (
-    <div className="relative mt-2 shrink-0 border-t border-white/5 pt-2 pb-1">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 sm:min-h-[2.25rem]">
-        <div className="flex min-w-0 flex-wrap items-center gap-2">
+    <div className="mt-2 shrink-0 border-t border-white/5 pt-2 pb-1">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-2 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-center">
+        <div className="col-start-1 row-start-1 flex min-w-0 flex-wrap items-center gap-2 justify-self-start">
           <span className="whitespace-nowrap text-sm text-slate-500">
             {currentCount}
             {unit}/총{totalCount}
@@ -107,17 +107,14 @@ export default function CounselorListPagination({
           ) : null}
         </div>
 
-        <div className="flex min-w-0 flex-1 flex-wrap items-center justify-end gap-2 sm:ml-auto sm:flex-none">
+        <div className="col-start-2 row-start-1 flex min-w-0 flex-wrap items-center justify-end gap-2 justify-self-end sm:col-start-3">
           {footerAction}
-          <span className="whitespace-nowrap text-right text-xs tabular-nums text-slate-600">
+          <span className="whitespace-nowrap text-xs tabular-nums text-slate-600">
             {page}/{totalPages}페이지
           </span>
         </div>
-      </div>
 
-      {/* 좁은 화면·2줄 줄바꿈: 전체 너비 중앙 / 넓은 화면: 좌·우 사이 남은 공간 중앙 */}
-      <div className="mt-2 flex w-full justify-center sm:pointer-events-none sm:absolute sm:inset-y-0 sm:mt-0 sm:flex sm:items-center sm:justify-center">
-        <div className="pointer-events-auto sm:max-w-[min(100%,calc(100%-12rem))]">
+        <div className="col-span-2 row-start-2 flex justify-center sm:col-span-1 sm:col-start-2 sm:row-start-1 sm:justify-self-center">
           {paginationControls}
         </div>
       </div>
