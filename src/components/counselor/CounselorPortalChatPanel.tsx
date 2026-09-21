@@ -118,6 +118,8 @@ export default function CounselorPortalChatPanel() {
   const latestAnchorRef = useRef<HTMLDivElement>(null);
   const pendingScrollRef = useRef(false);
   const messageLoadSeqRef = useRef(0);
+  /** 목록에서 직접 고른 스레드 — deep link(portalId)로 덮어쓰지 않음 */
+  const userPickedThreadRef = useRef(false);
 
   const filteredThreads = useMemo(
     () => threads.filter((thread) => threadMatchesSearch(thread, searchQuery)),
@@ -170,7 +172,14 @@ export default function CounselorPortalChatPanel() {
       });
       if (keepSelection) {
         setSelectedPortalId((prev) => {
-          if (portalIdFromQuery && items.some((t) => t.portalId === portalIdFromQuery)) {
+          if (userPickedThreadRef.current && prev && items.some((t) => t.portalId === prev)) {
+            return prev;
+          }
+          if (
+            !userPickedThreadRef.current &&
+            portalIdFromQuery &&
+            items.some((t) => t.portalId === portalIdFromQuery)
+          ) {
             return portalIdFromQuery;
           }
           if (prev && items.some((t) => t.portalId === prev)) return prev;
@@ -238,11 +247,8 @@ export default function CounselorPortalChatPanel() {
   }, [loadThreads]);
 
   useEffect(() => {
-    if (loadingThreads || !portalIdFromQuery) return;
-    if (threads.some((t) => t.portalId === portalIdFromQuery)) {
-      setSelectedPortalId(portalIdFromQuery);
-    }
-  }, [loadingThreads, portalIdFromQuery, threads]);
+    userPickedThreadRef.current = false;
+  }, [portalIdFromQuery]);
 
   useEffect(() => {
     if (!selectedPortalId) {
@@ -302,6 +308,7 @@ export default function CounselorPortalChatPanel() {
 
   const handleSelectThread = (portalId: string) => {
     if (portalId === selectedPortalId) return;
+    userPickedThreadRef.current = true;
     const cached = readCachedPortalChatMessages('counselor', portalId) ?? [];
     setError('');
     setMessagesForPortalId(portalId);
