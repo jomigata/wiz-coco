@@ -464,7 +464,7 @@ def _fetch_archived_portal_rows(
     rows: list[tuple[str, dict]] = []
     for doc in q.stream():
         pdata = doc.to_dict() or {}
-        if _is_active_portal_row(pdata):
+        if (pdata.get("status") or "active") == "archived":
             rows.append((doc.id, pdata))
     rows.sort(key=_portal_sort_key)
     return rows
@@ -1067,7 +1067,8 @@ def get_dispatch_recipient_detail(
         return None
     if not _portal_in_assessment_scope(pdata, assessment_id):
         return None
-    if not _is_active_portal_row(pdata):
+    portal_status = (pdata.get("status") or "active").strip()
+    if portal_status not in ("active", "archived"):
         return None
 
     join_access_code = (ass.get("accessCode") or "").strip()

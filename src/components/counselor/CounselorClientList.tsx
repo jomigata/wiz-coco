@@ -1206,6 +1206,42 @@ export default function CounselorClientList({
           );
           return;
         }
+
+        const applyLocalArchivedExpand = () => {
+          const tests = archivedTestsToDispatchTests(item.archivedTests);
+          setExpandDetailByPortal((p) => ({
+            ...p,
+            [expandedId]: {
+              recipient: listItemToDispatchRecipient(item, tests),
+              tests,
+            },
+          }));
+        };
+
+        if (deletedMode) {
+          if (!assessmentId) {
+            applyLocalArchivedExpand();
+            return;
+          }
+          try {
+            const detail = await fetchDispatchRecipientDetail(assessmentId, expandedId);
+            const recipient = detail.recipient;
+            const tests =
+              recipient.tests?.map((t) => ({ ...t })) ??
+              archivedTestsToDispatchTests(item.archivedTests);
+            setExpandDetailByPortal((p) => ({
+              ...p,
+              [expandedId]: {
+                recipient: recipient ?? listItemToDispatchRecipient(item, tests),
+                tests,
+              },
+            }));
+          } catch {
+            applyLocalArchivedExpand();
+          }
+          return;
+        }
+
         if (!assessmentId) {
           const tests = archivedTestsToDispatchTests(item.archivedTests);
           setExpandDetailByPortal((p) => ({
@@ -1232,7 +1268,7 @@ export default function CounselorClientList({
 
       return { ...prev, [expandedId]: 'loading' };
     });
-  }, [permanentlyDeletedMode, expandedId, displayItems]);
+  }, [deletedMode, permanentlyDeletedMode, expandedId, displayItems]);
 
   useEffect(() => {
     if (!rowExpandable || loading) return;
