@@ -186,10 +186,7 @@ function TargetRowContactDisplay({ row }: { row: RecipientRow }) {
   }
   const parts: string[] = [];
   if (phone) parts.push(phone);
-  if (email) {
-    const emailInvalid = !isValidEmailAddress(email);
-    parts.push(emailInvalid ? `${email} (부적합)` : email);
-  }
+  if (email) parts.push(email);
   if (parts.length === 0) {
     return <span className="text-red-400"> (부적합)</span>;
   }
