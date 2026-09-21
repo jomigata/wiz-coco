@@ -11,6 +11,7 @@ import {
 import CounselorNextTestRecommendCard from '@/components/counselor/CounselorNextTestRecommendCard';
 import CounselorQuickCareRecommendCard from '@/components/counselor/CounselorQuickCareRecommendCard';
 import CounselorRecipientExpandTestName from '@/components/counselor/CounselorRecipientExpandTestName';
+import { CounselorRecipientExpandLeadingCells } from '@/components/counselor/CounselorRecipientExpandRowCells';
 import type { DispatchRecipient, DispatchTestResult } from '@/lib/clientPortalApi';
 
 function formatCompletedAt(iso: string | null | undefined): string {
@@ -142,11 +143,7 @@ export function CounselorDispatchRecipientExpandContent({
                       {testLetterLabel(testIndex)}
                     </td>
                     <td className="break-words px-3 py-2.5 align-top text-white">
-                      <CounselorRecipientExpandTestName
-                        portalId={r.portalId}
-                        testName={t.testName || ''}
-                        testId={t.testId}
-                      />
+                      <CounselorRecipientExpandTestName testName={t.testName || ''} testId={t.testId} />
                     </td>
                     <td className={`px-3 py-2.5 align-top ${st.className}`}>{st.text}</td>
                     <td className="px-3 py-2.5 align-top text-xs leading-relaxed text-slate-400">
@@ -200,10 +197,9 @@ export default function CounselorDispatchRecipientExpandRow({
 }: ExpandRowProps) {
   return (
     <tr>
-      <td
-        colSpan={leadingColSpan}
-        className="border-b border-slate-700/60 bg-slate-900/20 p-0"
-        aria-hidden="true"
+      <CounselorRecipientExpandLeadingCells
+        leadingColSpan={leadingColSpan}
+        portalId={contentProps.recipient.portalId}
       />
       <td
         colSpan={detailColSpan}

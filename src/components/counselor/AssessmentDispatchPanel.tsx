@@ -89,6 +89,7 @@ import {
   counselorListTheadClass,
 } from '@/lib/counselorListTableStyles';
 import { CounselorDispatchRecipientExpandContent } from '@/components/counselor/CounselorDispatchRecipientExpandDetail';
+import { CounselorRecipientExpandLeadingCells } from '@/components/counselor/CounselorRecipientExpandRowCells';
 import CounselorNotifyConfirmDialog from '@/components/counselor/CounselorNotifyConfirmDialog';
 import type { NotifyRecipientContact } from '@/lib/counselorNotifyChannels';
 import AssessmentAddRecipientModal, {
@@ -1812,10 +1813,9 @@ export default function AssessmentDispatchPanel({
                     </tr>
                     {isOpen ? (
                       <tr>
-                        <td
-                          colSpan={leadingDetailSpacerColSpan}
-                          className="border-b border-slate-700/60 bg-slate-900/20 p-0"
-                          aria-hidden="true"
+                        <CounselorRecipientExpandLeadingCells
+                          leadingColSpan={leadingDetailSpacerColSpan}
+                          portalId={r.portalId}
                         />
                         <td
                           colSpan={expandedDetailColSpan}

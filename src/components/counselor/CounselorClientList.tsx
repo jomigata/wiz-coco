@@ -71,6 +71,7 @@ import { stripAssessmentTitleDispatchCountSuffix } from '@/lib/counselorAssessme
 import { exportClientPortalItems } from '@/lib/clientPortalListExport';
 import RecipientContactCell from '@/components/counselor/RecipientContactCell';
 import CounselorDispatchRecipientExpandRow from '@/components/counselor/CounselorDispatchRecipientExpandDetail';
+import { CounselorRecipientExpandLeadingCells } from '@/components/counselor/CounselorRecipientExpandRowCells';
 import CounselorRecipientContactEditModal from '@/components/counselor/CounselorRecipientContactEditModal';
 import { dispatchStatusDisplay, formatNotifyDate, compareDispatchStatusSort, recipientProgressDisplay } from '@/lib/dispatchRecipientDisplay';
 import { INDIVIDUAL_COHORT_KEY } from '@/lib/monitoringRealtime';
@@ -1700,10 +1701,9 @@ export default function CounselorClientList({
                       {isOpen && rowExpandable ? (
                         expandDetailState === 'loading' ? (
                           <tr>
-                            <td
-                              colSpan={expandLeadingColSpan}
-                              className="border-b border-slate-700/60 bg-slate-900/20 p-0"
-                              aria-hidden
+                            <CounselorRecipientExpandLeadingCells
+                              leadingColSpan={expandLeadingColSpan}
+                              portalId={item.portalId}
                             />
                             <td
                               colSpan={expandDetailColSpan}
@@ -1714,10 +1714,9 @@ export default function CounselorClientList({
                           </tr>
                         ) : expandDetailState === 'error' ? (
                           <tr>
-                            <td
-                              colSpan={expandLeadingColSpan}
-                              className="border-b border-slate-700/60 bg-slate-900/20 p-0"
-                              aria-hidden
+                            <CounselorRecipientExpandLeadingCells
+                              leadingColSpan={expandLeadingColSpan}
+                              portalId={item.portalId}
                             />
                             <td
                               colSpan={expandDetailColSpan}

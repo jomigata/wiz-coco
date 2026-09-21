@@ -6,6 +6,7 @@ import { formatNotifyDate } from '@/lib/dispatchRecipientDisplay';
 
 import CounselorListTableScroll from '@/components/counselor/CounselorListTableScroll';
 import CounselorRecipientExpandTestName from '@/components/counselor/CounselorRecipientExpandTestName';
+import { CounselorRecipientExpandLeadingCells } from '@/components/counselor/CounselorRecipientExpandRowCells';
 
 function testStatusLabel(status: DispatchTestResult['status']): { text: string; className: string } {
   if (status === 'completed') return { text: '완료', className: 'text-emerald-300' };
@@ -34,7 +35,7 @@ export default function CounselorRecipientTestsExpandRow({
 }: Props) {
   return (
     <tr>
-      <td colSpan={leadingColSpan} className="border-b border-slate-700/60 bg-slate-900/20 p-0" aria-hidden />
+      <CounselorRecipientExpandLeadingCells leadingColSpan={leadingColSpan} portalId={portalId} />
       <td
         colSpan={detailColSpan}
         className="border-b border-slate-700/60 bg-slate-900/20 px-3 py-3 pb-4 align-top"
@@ -65,11 +66,7 @@ export default function CounselorRecipientTestsExpandRow({
                         {testLetterLabel(testIndex)}
                       </td>
                       <td className="break-words px-3 py-2.5 text-white align-middle">
-                        <CounselorRecipientExpandTestName
-                          portalId={portalId}
-                          testName={t.testName || ''}
-                          testId={t.testId}
-                        />
+                        <CounselorRecipientExpandTestName testName={t.testName || ''} testId={t.testId} />
                       </td>
                       <td className={`px-3 py-2.5 align-middle ${st.className}`}>{st.text}</td>
                       <td className="px-3 py-2.5 text-xs leading-relaxed text-slate-400 align-middle">
