@@ -1311,7 +1311,7 @@ export default function CounselorClientList({
   const pageTitle = permanentlyDeletedMode
     ? '영구삭제 내담자'
     : deletedMode
-      ? '삭제된 내담자'
+      ? '삭제된 내담자 (전체)'
       : '내담자 목록';
   const dateColumnLabel = permanentlyDeletedMode
     ? '영구삭제일'

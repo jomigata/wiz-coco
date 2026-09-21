@@ -116,7 +116,7 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
       const hubCategory = getCounselorCategoryBySlug(slug);
       if (hubCategory) return hubCategory.category;
     }
-    if (path.startsWith('/counselor/assessments/deleted-recipients')) return '삭제된 내담자';
+    if (path.startsWith('/counselor/assessments/deleted-recipients')) return '삭제된 내담자 (전체)';
     if (path.startsWith('/counselor/assessments/deleted')) return '삭제된 상담코드';
     if (path.startsWith('/counselor/assessments/new')) return '검사 보내기';
     if (path.startsWith('/counselor/assessments/progress')) {
