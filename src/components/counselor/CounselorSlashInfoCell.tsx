@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
+import CounselorListHoverTooltip from '@/components/counselor/CounselorListHoverTooltip';
 
 type Props = {
   primary: string;
@@ -38,16 +39,31 @@ export default function CounselorSlashInfoCell({
   className = '',
   onClick,
 }: Props) {
-  const [hover, setHover] = useState(false);
   const line = mid ? `${primary} / ${mid} / ${secondary}` : `${primary} / ${secondary}`;
-  const tooltipVisible =
-    showTooltip && hover && (hoverTypeLabel || hoverAccessCode || hoverExtra);
+  const tooltipEnabled =
+    showTooltip && Boolean(hoverTypeLabel || hoverAccessCode || hoverExtra);
+
+  const tooltipContent =
+    hoverTypeLabel || hoverAccessCode ? (
+      <>
+        <p className="font-medium text-slate-700">
+          ({hoverTypeLabel || '—'}) ({hoverAccessCode || '—'})
+        </p>
+        <p className="mt-0.5 text-slate-600">
+          {primary || '—'} / {secondary || '—'}
+        </p>
+      </>
+    ) : (
+      <p className="font-medium text-slate-700">{hoverExtra}</p>
+    );
 
   return (
-    <div
-      className={`relative ${className}`}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
+    <CounselorListHoverTooltip
+      enabled={tooltipEnabled}
+      content={tooltipContent}
+      align="start"
+      tooltipClassName="px-3 py-2 text-sm"
+      wrapperClassName={`relative min-w-0 max-w-full ${className}`}
       onClick={onClick}
     >
       <span className="block max-w-full truncate">
@@ -61,26 +77,7 @@ export default function CounselorSlashInfoCell({
         ) : null}
         <span className={`${normalWeight || normalSecondary ? 'font-normal' : ''} text-slate-200`}>{secondary || '—'}</span>
       </span>
-      {tooltipVisible ? (
-        <div
-          className="pointer-events-none absolute bottom-full left-0 z-30 mb-1.5 min-w-[10rem] max-w-xs rounded-md border border-slate-200 bg-white px-3 py-2 text-sm leading-snug text-slate-800 shadow-lg"
-          role="tooltip"
-        >
-          {hoverTypeLabel || hoverAccessCode ? (
-            <>
-              <p className="font-medium text-slate-700">
-                ({hoverTypeLabel || '—'}) ({hoverAccessCode || '—'})
-              </p>
-              <p className="mt-0.5 text-slate-600">
-                {primary || '—'} / {secondary || '—'}
-              </p>
-            </>
-          ) : (
-            <p className="font-medium text-slate-700">{hoverExtra}</p>
-          )}
-        </div>
-      ) : null}
       <span className="sr-only">{line}</span>
-    </div>
+    </CounselorListHoverTooltip>
   );
 }

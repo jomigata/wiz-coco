@@ -3,6 +3,7 @@
 import React, { useMemo, useState } from 'react';
 import CounselorListTableScroll from '@/components/counselor/CounselorListTableScroll';
 import CounselorListPagination from '@/components/counselor/CounselorListPagination';
+import CounselorListHoverTooltip from '@/components/counselor/CounselorListHoverTooltip';
 import { getCounselorResult, type CounselorResultDetail } from '@/lib/assessmentApi';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import { displayContactEmail, displayContactPhone } from '@/lib/contactPrivacy';
@@ -439,18 +440,19 @@ export default function ArchivedRecipientsTable({
                         className={isDispatchLayout ? counselorListSelectTdClass : `${counselorListTdClass} align-top`}
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <input
-                          type="checkbox"
-                          checked={selected.has(row.portalId)}
-                          disabled={selectionLocked}
-                          onChange={() => onToggleOne(row.portalId)}
-                          className="rounded text-blue-500 disabled:cursor-not-allowed disabled:opacity-40"
-                          title={
-                            selectionLocked
-                              ? '삭제된 상담코드에 연결된 내담자는 여기서 선택할 수 없습니다. 상담코드 복구 시 함께 복구됩니다.'
-                              : undefined
-                          }
-                        />
+                        <CounselorListHoverTooltip
+                          enabled={selectionLocked}
+                          content="삭제된 상담코드에 연결된 내담자는 여기서 선택할 수 없습니다. 상담코드 복구 시 함께 복구됩니다."
+                          tooltipClassName="max-w-[16rem] whitespace-normal px-2.5 py-2 font-normal"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selected.has(row.portalId)}
+                            disabled={selectionLocked}
+                            onChange={() => onToggleOne(row.portalId)}
+                            className="rounded text-blue-500 disabled:cursor-not-allowed disabled:opacity-40"
+                          />
+                        </CounselorListHoverTooltip>
                       </td>
                     ) : null}
                     {isDispatchLayout ? (

@@ -9,6 +9,7 @@ import AuthLink from '@/components/auth/AuthLink';
 import CounselorLiveStatusBadge from '@/components/counselor/CounselorLiveStatusBadge';
 import CounselorListTableScroll from '@/components/counselor/CounselorListTableScroll';
 import CounselorListPagination from '@/components/counselor/CounselorListPagination';
+import CounselorListHoverTooltip from '@/components/counselor/CounselorListHoverTooltip';
 import CounselorListSearchInput from '@/components/counselor/CounselorListSearchInput';
 import CounselorSlashInfoCell from '@/components/counselor/CounselorSlashInfoCell';
 import DispatchStatusText from '@/components/counselor/DispatchStatusText';
@@ -1611,7 +1612,11 @@ export default function CounselorClientList({
                         </td>
                         <td className={`${counselorListTdClass} text-center`}>
                           {locked && (deletedMode || permanentlyDeletedMode) && !adminUser ? (
-                            <span className="group/check relative inline-flex">
+                            <CounselorListHoverTooltip
+                              content={
+                                permanentlyDeletedMode ? '영구삭제된 상담코드' : '삭제된 상담코드'
+                              }
+                            >
                               <input
                                 type="checkbox"
                                 checked={isSelected}
@@ -1621,13 +1626,7 @@ export default function CounselorClientList({
                                 aria-label={`${item.displayName || '내담자'} 선택`}
                                 onClick={(e) => e.stopPropagation()}
                               />
-                              <span
-                                className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-800 opacity-0 shadow-md transition-none group-hover/check:opacity-100"
-                                role="tooltip"
-                              >
-                                {permanentlyDeletedMode ? '영구삭제된 상담코드' : '삭제된 상담코드'}
-                              </span>
-                            </span>
+                            </CounselorListHoverTooltip>
                           ) : (
                             <input
                               type="checkbox"
