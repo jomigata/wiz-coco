@@ -10,6 +10,7 @@ import {
 } from '@/lib/counselorListTableStyles';
 import CounselorNextTestRecommendCard from '@/components/counselor/CounselorNextTestRecommendCard';
 import CounselorQuickCareRecommendCard from '@/components/counselor/CounselorQuickCareRecommendCard';
+import CounselorRecipientExpandTestName from '@/components/counselor/CounselorRecipientExpandTestName';
 import type { DispatchRecipient, DispatchTestResult } from '@/lib/clientPortalApi';
 
 function formatCompletedAt(iso: string | null | undefined): string {
@@ -141,7 +142,11 @@ export function CounselorDispatchRecipientExpandContent({
                       {testLetterLabel(testIndex)}
                     </td>
                     <td className="break-words px-3 py-2.5 align-top text-white">
-                      {t.testName || t.testId}
+                      <CounselorRecipientExpandTestName
+                        portalId={r.portalId}
+                        testName={t.testName || ''}
+                        testId={t.testId}
+                      />
                     </td>
                     <td className={`px-3 py-2.5 align-top ${st.className}`}>{st.text}</td>
                     <td className="px-3 py-2.5 align-top text-xs leading-relaxed text-slate-400">

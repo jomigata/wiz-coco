@@ -285,6 +285,13 @@ export function threadMatchesSearch(thread: PortalChatThread, query: string): bo
   return hay.includes(q);
 }
 
+/** 상담사 1:1 채팅 — 특정 내담자(portal) 스레드 열기 */
+export function buildCounselorPortalChatHref(portalId: string): string {
+  const id = portalId.trim();
+  const params = new URLSearchParams({ portalId: id });
+  return `/counselor/chat?${params.toString()}`;
+}
+
 export function counselorChatProgressHref(thread: PortalChatThread): string | null {
   const assessmentId = (thread.primaryAssessmentId || '').trim();
   if (!assessmentId) return null;

@@ -4,6 +4,7 @@ import React, { useMemo, useState } from 'react';
 import CounselorListTableScroll from '@/components/counselor/CounselorListTableScroll';
 import CounselorListPagination from '@/components/counselor/CounselorListPagination';
 import CounselorListHoverTooltip from '@/components/counselor/CounselorListHoverTooltip';
+import CounselorRecipientExpandTestName from '@/components/counselor/CounselorRecipientExpandTestName';
 import { getCounselorResult, type CounselorResultDetail } from '@/lib/assessmentApi';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import { displayContactEmail, displayContactPhone } from '@/lib/contactPrivacy';
@@ -214,7 +215,11 @@ export default function ArchivedRecipientsTable({
                         {testLetterLabel(testIndex)}
                       </td>
                       <td className="break-words px-3 py-2.5 text-white align-top">
-                        {t.testName || t.testId}
+                        <CounselorRecipientExpandTestName
+                          portalId={row.portalId}
+                          testName={t.testName || ''}
+                          testId={t.testId}
+                        />
                       </td>
                       <td className={`px-3 py-2.5 align-top ${st.className}`}>{st.text}</td>
                       <td className="px-3 py-2.5 text-xs leading-relaxed text-slate-400 align-top">

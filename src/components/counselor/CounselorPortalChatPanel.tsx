@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import AuthLink from '@/components/auth/AuthLink';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import { counselorClientProgressHref } from '@/lib/counselorClientRoutes';
@@ -96,6 +97,8 @@ function SortArrowButton({
 }
 
 export default function CounselorPortalChatPanel() {
+  const searchParams = useSearchParams();
+  const portalIdFromQuery = searchParams.get('portalId')?.trim() || '';
   const [threads, setThreads] = useState<PortalChatThread[]>([]);
   const [selectedPortalId, setSelectedPortalId] = useState<string | null>(null);
   const [messages, setMessages] = useState<PortalChatMessage[]>([]);
@@ -167,6 +170,9 @@ export default function CounselorPortalChatPanel() {
       });
       if (keepSelection) {
         setSelectedPortalId((prev) => {
+          if (portalIdFromQuery && items.some((t) => t.portalId === portalIdFromQuery)) {
+            return portalIdFromQuery;
+          }
           if (prev && items.some((t) => t.portalId === prev)) return prev;
           return items[0]?.portalId || null;
         });
@@ -176,7 +182,7 @@ export default function CounselorPortalChatPanel() {
     } finally {
       setLoadingThreads(false);
     }
-  }, []);
+  }, [portalIdFromQuery]);
 
   const dismissThreadUnread = useCallback((portalId: string) => {
     setDismissedUnreadPortalIds((prev) => {
@@ -230,6 +236,13 @@ export default function CounselorPortalChatPanel() {
   useEffect(() => {
     void loadThreads();
   }, [loadThreads]);
+
+  useEffect(() => {
+    if (loadingThreads || !portalIdFromQuery) return;
+    if (threads.some((t) => t.portalId === portalIdFromQuery)) {
+      setSelectedPortalId(portalIdFromQuery);
+    }
+  }, [loadingThreads, portalIdFromQuery, threads]);
 
   useEffect(() => {
     if (!selectedPortalId) {

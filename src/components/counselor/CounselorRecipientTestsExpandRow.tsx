@@ -5,6 +5,7 @@ import type { DispatchTestResult } from '@/lib/clientPortalApi';
 import { formatNotifyDate } from '@/lib/dispatchRecipientDisplay';
 
 import CounselorListTableScroll from '@/components/counselor/CounselorListTableScroll';
+import CounselorRecipientExpandTestName from '@/components/counselor/CounselorRecipientExpandTestName';
 
 function testStatusLabel(status: DispatchTestResult['status']): { text: string; className: string } {
   if (status === 'completed') return { text: '완료', className: 'text-emerald-300' };
@@ -17,6 +18,7 @@ function testLetterLabel(index: number): string {
 }
 
 type Props = {
+  portalId: string;
   tests: DispatchTestResult[];
   leadingColSpan: number;
   detailColSpan: number;
@@ -24,6 +26,7 @@ type Props = {
 };
 
 export default function CounselorRecipientTestsExpandRow({
+  portalId,
   tests,
   leadingColSpan,
   detailColSpan,
@@ -62,7 +65,11 @@ export default function CounselorRecipientTestsExpandRow({
                         {testLetterLabel(testIndex)}
                       </td>
                       <td className="break-words px-3 py-2.5 text-white align-middle">
-                        {t.testName || t.testId}
+                        <CounselorRecipientExpandTestName
+                          portalId={portalId}
+                          testName={t.testName || ''}
+                          testId={t.testId}
+                        />
                       </td>
                       <td className={`px-3 py-2.5 align-middle ${st.className}`}>{st.text}</td>
                       <td className="px-3 py-2.5 text-xs leading-relaxed text-slate-400 align-middle">
