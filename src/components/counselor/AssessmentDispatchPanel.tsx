@@ -582,7 +582,6 @@ export default function AssessmentDispatchPanel({
   const [sortDir, setSortDir] = useState<SortDirection>('desc');
   const [nameSortPhase, setNameSortPhase] = useState<NameSortPhase>('name-asc');
   const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
-  const [dispatchLastUpdatedAt, setDispatchLastUpdatedAt] = useState<Date | null>(null);
   const dispatchLastFetchedMsRef = useRef(0);
   const [dispatchNextCursor, setDispatchNextCursor] = useState<string | null>(null);
   const [dispatchTotalCount, setDispatchTotalCount] = useState<number | null>(null);
@@ -637,7 +636,6 @@ export default function AssessmentDispatchPanel({
     setData(initial);
     setLoading(!initial?.recipients?.length && !initial);
     setError('');
-    setDispatchLastUpdatedAt(null);
     dispatchLastFetchedMsRef.current = 0;
   }, [assessmentId, user?.uid]);
 
@@ -680,7 +678,6 @@ export default function AssessmentDispatchPanel({
       };
       writeCachedDispatchStatus(fetchId, nextData, user?.uid);
       setData(nextData);
-      setDispatchLastUpdatedAt(new Date());
       dispatchLastFetchedMsRef.current = Date.now();
       expandedTestsLoadedRef.current.clear();
       setDispatchNextCursor(result.nextCursor ?? null);
@@ -1493,19 +1490,6 @@ export default function AssessmentDispatchPanel({
             placeholder="이름 · 이메일 · 휴대폰 · 나의코드 검색"
             className="sm:max-w-xs"
           />
-          {dispatchLastUpdatedAt ? (
-            <span
-              className="inline-flex items-center rounded-md border border-white/10 bg-slate-900/40 px-2 py-1 text-[11px] tabular-nums text-slate-400 sm:text-xs"
-              title="목록 데이터 기준 시각 (발송·알림 처리 중에는 자동으로 갱신됩니다)"
-            >
-              반영{' '}
-              {dispatchLastUpdatedAt.toLocaleTimeString('ko-KR', {
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-              })}
-            </span>
-          ) : null}
           {showBulkToolbar ? (
             <span className="ml-auto inline-flex shrink-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
               <button
