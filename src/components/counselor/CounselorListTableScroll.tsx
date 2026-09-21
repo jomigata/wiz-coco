@@ -10,8 +10,6 @@ type Props = {
 
 const SCROLL_EDGE_THRESHOLD = 6;
 const HOVER_SCROLL_PX_PER_FRAME = 10;
-/** 가로 스크롤바(8px) 위 여백 */
-const SCROLLBAR_GUTTER_PX = 12;
 /** 섹션 좌·우 패딩(공백)까지 hover 스크롤 영역 확장 */
 const EDGE_HOVER_EXTEND_PX = 20;
 
@@ -19,7 +17,7 @@ function SmallScrollChevron({ side }: { side: 'left' | 'right' }) {
   const isLeft = side === 'left';
   return (
     <svg
-      className={`h-3.5 w-3.5 shrink-0 text-sky-300/95 ${
+      className={`h-4 w-4 shrink-0 text-sky-200 ${
         isLeft ? 'counselor-scroll-hint-nudge-left' : 'counselor-scroll-hint-nudge-right'
       }`}
       viewBox="0 0 20 20"
@@ -83,10 +81,10 @@ function ScrollEdge({
         aria-hidden
       />
       <span
-        className={`relative flex h-full w-5 flex-col items-center justify-center rounded-md border transition-colors ${
+        className={`relative flex h-full w-6 flex-col items-center justify-center rounded-md border shadow-[0_0_12px_rgba(56,189,248,0.2)] transition-colors ${
           active
-            ? 'border-sky-400/50 bg-sky-500/12 shadow-[inset_0_0_8px_rgba(56,189,248,0.15)]'
-            : 'border-sky-400/25 bg-sky-950/70 hover:border-sky-400/40 hover:bg-sky-900/75'
+            ? 'border-sky-300/70 bg-sky-500/25 shadow-[inset_0_0_10px_rgba(56,189,248,0.25)]'
+            : 'border-sky-400/55 bg-sky-950/85 hover:border-sky-300/65 hover:bg-sky-900/90'
         }`}
       >
         <SmallScrollChevron side={side} />
@@ -97,24 +95,25 @@ function ScrollEdge({
 
 /** 상담사 목록 테이블 — 가로 스크롤 시 좌·우 끝 세로 화살표 + hover 연속 스크롤 */
 export default function CounselorListTableScroll({ children, className = '' }: Props) {
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const hoverRafRef = useRef<number | null>(null);
   const hoverDirectionRef = useRef<'left' | 'right' | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
   const [hoverSide, setHoverSide] = useState<'left' | 'right' | null>(null);
-  const [edgeLayout, setEdgeLayout] = useState({ top: 0, bottom: SCROLLBAR_GUTTER_PX });
+  const [edgeLayout, setEdgeLayout] = useState({ top: 0, height: 0 });
 
   const measureEdgeLayout = useCallback(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const elRect = el.getBoundingClientRect();
-    const thead = el.querySelector('thead');
-    /** 펼침 상세 행 제외 — 목록 값(tr) 구간에만 좌·우 스크롤 힌트 */
-    const mainRows = el.querySelectorAll('tbody tr:not([data-counselor-list-expand-row])');
+    const wrapper = wrapperRef.current;
+    const scrollEl = scrollRef.current;
+    if (!wrapper || !scrollEl) return;
+    const wrapperRect = wrapper.getBoundingClientRect();
+    /** 펼침 상세 행 제외 — 첫·마지막 목록 값(tr) 높이와 동일 */
+    const mainRows = scrollEl.querySelectorAll('tbody tr:not([data-counselor-list-expand-row])');
 
     let top = 0;
-    let bottom = SCROLLBAR_GUTTER_PX;
+    let height = 0;
 
     if (mainRows.length > 0) {
       const first = mainRows[0];
@@ -122,15 +121,12 @@ export default function CounselorListTableScroll({ children, className = '' }: P
       if (first instanceof HTMLElement && last instanceof HTMLElement) {
         const firstRect = first.getBoundingClientRect();
         const lastRect = last.getBoundingClientRect();
-        top = Math.max(0, Math.round(firstRect.top - elRect.top));
-        const lastBottom = lastRect.bottom - elRect.top;
-        bottom = Math.max(SCROLLBAR_GUTTER_PX, Math.round(el.clientHeight - lastBottom));
+        top = Math.max(0, Math.round(firstRect.top - wrapperRect.top));
+        height = Math.max(0, Math.round(lastRect.bottom - firstRect.top));
       }
-    } else if (thead instanceof HTMLElement) {
-      top = Math.max(0, Math.round(thead.getBoundingClientRect().height));
     }
 
-    setEdgeLayout({ top, bottom });
+    setEdgeLayout({ top, height });
   }, []);
 
   const updateScrollHints = useCallback(() => {
@@ -208,23 +204,27 @@ export default function CounselorListTableScroll({ children, className = '' }: P
     if (content) ro.observe(content);
     const thead = el.querySelector('thead');
     if (thead) ro.observe(thead);
+    const tbody = el.querySelector('tbody');
+    if (tbody) ro.observe(tbody);
 
     const mo = new MutationObserver(() => updateScrollHints());
     mo.observe(el, { childList: true, subtree: true });
 
     window.addEventListener('resize', updateScrollHints);
+    window.addEventListener('scroll', updateScrollHints, true);
 
     return () => {
       el.removeEventListener('scroll', onScroll);
       ro.disconnect();
       mo.disconnect();
       window.removeEventListener('resize', updateScrollHints);
+      window.removeEventListener('scroll', updateScrollHints, true);
       stopHoverScroll();
     };
   }, [updateScrollHints, stopHoverScroll, children]);
 
   return (
-    <div className={`relative min-h-0 ${className}`.trim()}>
+    <div ref={wrapperRef} className={`relative min-h-0 ${className}`.trim()}>
       <div
         ref={scrollRef}
         className="counselor-list-table-scroll min-h-0 max-w-full overflow-x-auto overflow-y-visible scroll-smooth"
@@ -235,7 +235,7 @@ export default function CounselorListTableScroll({ children, className = '' }: P
         className="pointer-events-none absolute z-10"
         style={{
           top: edgeLayout.top,
-          bottom: edgeLayout.bottom,
+          height: edgeLayout.height,
           left: -EDGE_HOVER_EXTEND_PX,
           right: -EDGE_HOVER_EXTEND_PX,
         }}

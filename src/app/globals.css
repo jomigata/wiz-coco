@@ -356,30 +356,33 @@ body.dropdown-open {
   scroll-behavior: smooth;
 }
 
-/* 상담사 목록 테이블 가로 스크롤 — thumb 항상 hover 수준 가시성 */
+/* 상담사 목록 테이블 가로 스크롤 — 항상 선명한 thumb·track */
 .counselor-list-table-scroll {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(56, 189, 248, 0.72) rgba(15, 23, 42, 0.55);
+  scrollbar-width: auto;
+  scrollbar-color: rgb(56, 189, 248) rgba(15, 23, 42, 0.85);
 }
 
 .counselor-list-table-scroll::-webkit-scrollbar {
-  height: 8px;
+  height: 10px;
 }
 
 .counselor-list-table-scroll::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.55);
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(56, 189, 248, 0.35);
   border-radius: 9999px;
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.35);
 }
 
 .counselor-list-table-scroll::-webkit-scrollbar-thumb {
-  background: linear-gradient(90deg, rgba(56, 189, 248, 0.58), rgba(14, 165, 233, 0.82));
-  border: 1px solid rgba(125, 211, 252, 0.38);
+  background: linear-gradient(90deg, rgb(56, 189, 248), rgb(14, 165, 233));
+  border: 1px solid rgba(224, 242, 254, 0.55);
   border-radius: 9999px;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.45);
 }
 
 .counselor-list-table-scroll::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(90deg, rgba(56, 189, 248, 0.72), rgba(14, 165, 233, 0.92));
-  border-color: rgba(186, 230, 253, 0.45);
+  background: linear-gradient(90deg, rgb(125, 211, 252), rgb(56, 189, 248));
+  border-color: rgba(255, 255, 255, 0.65);
 }
 
 @keyframes counselor-scroll-hint-nudge-left {
