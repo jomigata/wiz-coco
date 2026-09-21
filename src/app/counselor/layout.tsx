@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import React, { Suspense, useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useLayoutEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { pushWithAuthSession } from '@/utils/authSessionLifecycle';
@@ -9,6 +9,10 @@ import RoleGuard from '@/components/RoleGuard';
 import CounselorManageShell from '@/components/counselor/CounselorManageShell';
 import { getCounselorCategoryBySlug } from '@/data/counselorMenu';
 import { isCounselorManageShellRoute } from '@/lib/counselorManageShell';
+import {
+  resetCounselorListPageScroll,
+  shouldResetCounselorListScrollOnNavigate,
+} from '@/lib/counselorListPageScroll';
 import { resolveCounselorProgressFrom } from '@/lib/counselorNestedNav';
 import { counselorHubClasses } from '@/components/layout/appChromeTheme';
 import { CounselorPageBody } from '@/components/counselor/CounselorPageSection';
@@ -175,12 +179,26 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
   const isDashboardHome = pathname === '/counselor' || pathname === '/counselor/';
   const useManageShell = isCounselorManageShellRoute(pathname || '', routeSearch);
 
+  useLayoutEffect(() => {
+    if (!useManageShell) return;
+    if (!shouldResetCounselorListScrollOnNavigate(pathname || '', routeSearch)) return;
+    resetCounselorListPageScroll();
+    const id = window.requestAnimationFrame(() => resetCounselorListPageScroll());
+    return () => window.cancelAnimationFrame(id);
+  }, [pathname, routeSearch, useManageShell]);
+
   return (
     <RoleGuard allowedRoles={['counselor', 'admin']}>
-    <div className={`flex min-h-[100dvh] flex-col text-white ${isHubPage ? counselorHubClasses.page : 'bg-[#0b1120]'}`}>
-      <div className="flex flex-1 flex-col">
+    <div
+      className={`flex flex-col text-white ${
+        useManageShell ? 'h-[calc(100dvh-4rem)] min-h-0 overflow-hidden' : 'min-h-[100dvh]'
+      } ${isHubPage ? counselorHubClasses.page : 'bg-[#0b1120]'}`}
+    >
+      <div className={`flex flex-1 flex-col ${useManageShell ? 'min-h-0 overflow-hidden' : ''}`}>
         <main
           className={`relative flex flex-col ${
+            useManageShell ? 'min-h-0 flex-1 overflow-hidden' : ''
+          } ${
             isHubPage ? counselorHubClasses.page : 'bg-gradient-to-b from-slate-950 via-[#0f172a] to-slate-950'
           }`}
         >
@@ -190,7 +208,9 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
               : 'bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(59,130,246,0.1),transparent)]'
           }`} />
           <div
-            className={`relative z-10 mx-auto w-full flex-col ${
+            className={`relative z-10 mx-auto flex w-full flex-col ${
+              useManageShell ? 'h-full min-h-0 flex-1 overflow-hidden' : ''
+            } ${
               useManageShell
                 ? 'max-w-[1920px] px-3 py-0.5 sm:px-4 sm:py-1'
                 : isHubPage

@@ -122,6 +122,7 @@ export default function CounselorPageSection({
           className={`min-h-0 flex-1 overflow-y-auto overscroll-contain ${
             sendStepTheme ? 'bg-transparent' : 'bg-[#0f1d33]/60'
           } ${bodyPad} ${bodyClassName}`}
+          data-counselor-page-scroll
         >
           {children}
         </div>

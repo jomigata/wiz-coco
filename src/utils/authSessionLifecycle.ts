@@ -427,9 +427,12 @@ export function pushWithAuthSession(router: { push: (href: string) => void }, hr
 }
 
 /** Next.js router.replace — 탭/브라우저 종료 오탐 로그아웃 방지 */
-export function replaceWithAuthSession(router: { replace: (href: string) => void }, href: string): void {
+export function replaceWithAuthSession(
+  router: { replace: (href: string, options?: { scroll?: boolean }) => void },
+  href: string,
+): void {
   markInternalNavigation();
-  router.replace(href);
+  router.replace(href, { scroll: true });
 }
 
 /** Next.js router.back / history.back — 뒤로가기 시 세션 유지 */
