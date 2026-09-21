@@ -89,7 +89,8 @@ npm run dev:next        # API 5000 떠 있으면 Next만
 npm run dev:seed-auth
 ```
 
-- 기본 비밀번호: `wizcoco1` (환경변수 `DEV_EMULATOR_PASSWORD`로 변경 가능)
+- 기본 비밀번호: `wizcoco1` (`DEV_EMULATOR_PASSWORD`, `.env.local`)
+- **관리자** `jomigata@gmail.com`: `.env.local`에 `DEV_EMULATOR_ADMIN_PASSWORD=…` 설정 후 `npm run dev:seed-auth` (기존 Emulator 계정 비밀번호 동기화)
 - `jomigata@gmail.com` → 관리자 bootstrap
 - `jomigata@naver.com` → 로컬 로그인 테스트 (상담사 role은 별도 등록·승인)
 
