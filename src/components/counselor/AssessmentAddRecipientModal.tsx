@@ -208,6 +208,11 @@ function targetRowInvalid(row: RecipientRow): boolean {
   return false;
 }
 
+/** `mergeRecipients`와 동일 — 목록 인덱스·삭제 매칭용 */
+function recipientRowMergeKey(row: RecipientRow): string {
+  return `${row.displayName.trim()}|${normalizeRecipientPhone(row.phone)}`.toLowerCase();
+}
+
 function recipientPreviewPhoneInvalid(row: RecipientRow): boolean {
   const raw = (row.phone || '').trim();
   if (!raw) return false;
@@ -445,31 +450,19 @@ export default function AssessmentAddRecipientModal({
     setDraftEmail('');
   };
 
-  const removePendingRow = (idx: number) => {
-    setPendingRows((prev) => prev.filter((_, i) => i !== idx));
-  };
-
-  const removeTargetRow = (idx: number) => {
-    const pendingLen = pendingRows.length;
-    if (idx < pendingLen) {
-      removePendingRow(idx);
-      return;
-    }
-    let offset = idx - pendingLen;
-    setFileBatches((prev) => {
-      const next: ImportedFileBatch[] = [];
-      for (const batch of prev) {
-        if (offset >= batch.rows.length) {
-          offset -= batch.rows.length;
-          next.push(batch);
-          continue;
-        }
-        const rows = batch.rows.filter((_, rowIdx) => rowIdx !== offset);
-        offset = -1;
-        if (rows.length > 0) next.push({ ...batch, rows });
-      }
-      return next;
-    });
+  const removeTargetRow = (combinedIndex: number) => {
+    const target = combinedRows[combinedIndex];
+    if (!target) return;
+    const key = recipientRowMergeKey(target);
+    setPendingRows((prev) => prev.filter((r) => recipientRowMergeKey(r) !== key));
+    setFileBatches((prev) =>
+      prev
+        .map((batch) => ({
+          ...batch,
+          rows: batch.rows.filter((r) => recipientRowMergeKey(r) !== key),
+        }))
+        .filter((batch) => batch.rows.length > 0),
+    );
   };
 
   const handleAddRecipientFiles = async (fileList: FileList | null) => {
@@ -875,17 +868,17 @@ export default function AssessmentAddRecipientModal({
                         부적합 항목
                         <span className="text-[10px] text-red-400/80">{targetSortArrow('invalid')}</span>
                       </button>
+                      <span className="text-[11px] font-medium text-red-400">
+                        ({invalidRecipientCount.toLocaleString('ko-KR')}개)
+                      </span>
                       <button
                         type="button"
                         onClick={removeAllInvalidRecipients}
                         disabled={addLoading}
-                        className="text-[11px] font-semibold text-red-300 underline decoration-red-400/60 underline-offset-2 hover:text-red-100 disabled:opacity-50"
+                        className="text-[11px] font-semibold text-white underline decoration-white/50 underline-offset-2 hover:text-sky-100 disabled:opacity-50"
                       >
                         일괄삭제
                       </button>
-                      <span className="text-[11px] font-medium text-red-400">
-                        - {invalidRecipientCount.toLocaleString('ko-KR')}개
-                      </span>
                     </>
                   ) : null}
                 </span>
@@ -902,7 +895,7 @@ export default function AssessmentAddRecipientModal({
               <ul className="max-h-40 space-y-1 overflow-y-auto pr-1">
                 {displayedTargetRows.map(({ row, originalIndex }) => (
                   <li
-                    key={`target-${originalIndex}-${row.displayName}-${row.phone}-${row.email}`}
+                    key={`target-${recipientRowMergeKey(row)}-${originalIndex}`}
                     className="flex items-center justify-between gap-2 rounded-md border border-white/5 bg-slate-900/40 px-2.5 py-1.5 text-sm leading-snug"
                   >
                     <span className="min-w-0 break-words text-white">
