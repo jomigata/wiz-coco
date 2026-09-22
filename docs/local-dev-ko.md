@@ -76,9 +76,16 @@ npm run dev:next        # API 5000 떠 있으면 Next만
 |------|------|
 | `.env.local` | `NEXT_PUBLIC_USE_FIREBASE_EMULATOR=true`, API URL |
 | `backend/.env` | `USE_FIREBASE_EMULATOR=true`, `COST_SAVER_MODE=true` |
+| `backend/.env.smtp.local` | **로컬 이메일 실발송** (Git 제외, GitHub Secrets `SMTP_*` 와 동일 값) |
 
 - **Firestore/Auth Emulator**: prod GCP Firestore·Auth **과금·데이터 오염 없음**
-- **COST_SAVER_MODE**: Solapi/SMS **실발송 스킵**
+- **COST_SAVER_MODE**: Solapi/SMS **실발송 스킵** (이메일 SMTP는 별도 — 아래 참고)
+- **나의코드 전달·내담자 추가(코드 발송) 이메일**: `backend/.env.smtp.local`에 SMTP 설정 시 **실제 수신함까지 발송**
+  1. `copy backend\.env.smtp.local.example backend\.env.smtp.local`
+  2. GitHub → Settings → Secrets → `SMTP_HOST`, `SMTP_USER`, `SMTP_PASSWORD`, `MAIL_FROM` 값을 붙여넣기 (Gmail은 **앱 비밀번호** 16자)
+  3. `npm run smtp:local:check` → OK 확인 후 **`npm run dev` 재시작** (Flask)
+  4. `http://localhost:5000/api/health` → `"emailConfigured": true`
+  5. UI에서 **이메일** 채널 선택(또는 내담자 추가 시 이메일 있는 행) 후 발송
 - CORS: `localhost:3000` 허용 (`backend/utils/cors_config.py`)
 
 ## Emulator 로그인

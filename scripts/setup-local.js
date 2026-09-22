@@ -73,6 +73,11 @@ copyIfMissing(
   path.join(backendDir, '.env'),
   'backend/.env',
 );
+copyIfMissing(
+  path.join(backendDir, '.env.smtp.local.example'),
+  path.join(backendDir, '.env.smtp.local'),
+  'backend/.env.smtp.local (SMTP real send)',
+);
 
 console.log('\nOptional: prod Firestore 데이터가 필요하면 backend/.env 에');
 console.log('FIREBASE_CREDENTIALS_PATH=../Firebase_GitHub/<service-account>.json');

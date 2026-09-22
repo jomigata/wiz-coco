@@ -103,7 +103,12 @@ def create_app():
 
     @app.route("/api/health", methods=["GET"])
     def health():
-        return {"status": "ok", "service": "wizcoco-api"}
+        from config import USE_FIREBASE_EMULATOR, is_email_configured
+
+        payload = {"status": "ok", "service": "wizcoco-api"}
+        if USE_FIREBASE_EMULATOR or FLASK_ENV == "development":
+            payload["emailConfigured"] = is_email_configured()
+        return payload
 
     return app
 

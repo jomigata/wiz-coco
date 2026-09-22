@@ -108,6 +108,7 @@ backend/__pycache__/
 backend/**/__pycache__/
 backend/.env
 backend/.env.solapi
+backend/.env.smtp.local
 .env.cloudflare
 backend/*.pyc
 

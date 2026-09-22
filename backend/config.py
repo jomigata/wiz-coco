@@ -4,7 +4,10 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-load_dotenv()
+_BASE_DIR = Path(__file__).resolve().parent
+load_dotenv(_BASE_DIR / ".env")
+# Git 제외 — prod와 동일 SMTP (GitHub Secrets 값을 로컬에 복사)
+load_dotenv(_BASE_DIR / ".env.smtp.local", override=True)
 
 # 로컬 Emulator (Firestore/Auth) — GCP 과금·prod DB 접근 없음
 USE_FIREBASE_EMULATOR = os.getenv("USE_FIREBASE_EMULATOR", "").lower() in ("1", "true", "yes")
