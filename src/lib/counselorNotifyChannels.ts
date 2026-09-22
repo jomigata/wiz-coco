@@ -1,4 +1,5 @@
 import { normalizeRecipientPhone } from '@/lib/phoneFormat';
+import { isValidEmailAddress } from '@/lib/emailValidation';
 import {
   POINT_COST_PORTAL_RECIPIENT,
   assessmentCreditsToPoints,
@@ -24,7 +25,7 @@ export type NotifyRecipientContact = {
 export function defaultNotifyChannelSelection(
   recipients: NotifyRecipientContact[],
 ): NotifyChannelSelection {
-  const hasEmail = recipients.some((r) => Boolean((r.email || '').trim()));
+  const hasEmail = recipients.some((r) => isValidEmailAddress((r.email || '').trim()));
   const hasPhone = recipients.some((r) => Boolean(normalizeRecipientPhone(r.phone || '')));
   return {
     email: hasEmail,
@@ -47,7 +48,9 @@ export function validateNotifyChannelSelection(
     return '이메일 또는 휴대폰(1포인트) 중 최소 1개를 선택해 주세요.';
   }
   if (selection.email) {
-    const emailCount = recipients.filter((r) => (r.email || '').trim()).length;
+    const emailCount = recipients.filter((r) =>
+      isValidEmailAddress((r.email || '').trim()),
+    ).length;
     if (emailCount === 0) {
       return '선택한 내담자 중 이메일 주소가 있는 대상이 없습니다.';
     }
@@ -66,7 +69,7 @@ export function countNotifyTargets(
   selection: NotifyChannelSelection,
 ): { emailCount: number; phoneCount: number; recipientCount: number } {
   const emailCount = selection.email
-    ? recipients.filter((r) => (r.email || '').trim()).length
+    ? recipients.filter((r) => isValidEmailAddress((r.email || '').trim())).length
     : 0;
   const phoneCount = selection.phone
     ? recipients.filter((r) => normalizeRecipientPhone(r.phone || '')).length
