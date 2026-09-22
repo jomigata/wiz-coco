@@ -11,14 +11,25 @@ const net = require('net');
 const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
-const importDir = path.join(ROOT, '.firebase', 'emulator-data');
+/** repo 루트 기준 상대 경로 (경로 공백 시 firebase CLI 인자 깨짐 방지) */
+const importDirRel = path.join('.firebase', 'emulator-data');
+const importDirAbs = path.join(ROOT, importDirRel);
 const exportIntervalSec = Math.max(
   30,
   parseInt(process.env.DEV_EMULATOR_EXPORT_INTERVAL_SEC || '120', 10) || 120,
 );
 
 const isWin = process.platform === 'win32';
-const firebaseCmd = isWin ? 'firebase.cmd' : 'firebase';
+const firebaseJs = path.join(ROOT, 'node_modules', 'firebase-tools', 'lib', 'bin', 'firebase.js');
+
+function runFirebase(args, inherit = true) {
+  return spawnSync(process.execPath, [firebaseJs, ...args], {
+    cwd: ROOT,
+    stdio: inherit ? 'inherit' : 'pipe',
+    shell: false,
+    windowsHide: true,
+  });
+}
 
 function portOpen(port, host = '127.0.0.1') {
   return new Promise((resolve) => {
@@ -35,14 +46,10 @@ function portOpen(port, host = '127.0.0.1') {
 }
 
 function runExport(label) {
-  fs.mkdirSync(path.dirname(importDir), { recursive: true });
-  const r = spawnSync(
-    firebaseCmd,
-    ['emulators:export', importDir, '--project', 'wiz-coco', '--force'],
-    { cwd: ROOT, stdio: 'inherit', shell: isWin },
-  );
+  fs.mkdirSync(path.dirname(importDirAbs), { recursive: true });
+  const r = runFirebase(['emulators:export', importDirRel, '--project', 'wiz-coco', '--force']);
   if (r.status === 0) {
-    console.log(`[emulator-persist] ✓ export (${label}) → ${path.relative(ROOT, importDir)}`);
+    console.log(`[emulator-persist] ✓ export (${label}) → ${importDirRel}`);
   } else {
     console.warn(`[emulator-persist] export skipped/failed (${label})`);
   }
@@ -55,20 +62,21 @@ const args = [
   '--project',
   'wiz-coco',
   '--export-on-exit',
-  importDir,
+  importDirRel,
 ];
 
-if (fs.existsSync(importDir)) {
-  args.push('--import', importDir);
-  console.log(`[emulator-persist] import → ${path.relative(ROOT, importDir)}`);
+if (fs.existsSync(importDirAbs)) {
+  args.push('--import', importDirRel);
+  console.log(`[emulator-persist] import → ${importDirRel}`);
 } else {
   console.log(`[emulator-persist] no prior export — empty emulator (data will be saved here)`);
 }
 
-const child = spawn(firebaseCmd, args, {
+const child = spawn(process.execPath, [firebaseJs, ...args], {
   stdio: 'inherit',
-  shell: isWin,
+  shell: false,
   cwd: ROOT,
+  windowsHide: true,
 });
 
 let exportTimer = null;

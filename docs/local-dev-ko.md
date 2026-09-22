@@ -7,8 +7,8 @@
 
 - **Node.js** 18+ (프로젝트 `engines` 참고)
 - **Python** 3.10+ (`python` / `python3`)
-- **Java JDK 11+** (Firestore Emulator용 — `java -version` 확인)  
-  - Windows 미설치 시: `winget install --id Microsoft.OpenJDK.17 -e` 후 **터미널 재시작**
+- **Java JDK 21+** (Firestore Emulator용 — `java -version` 확인)  
+  - Windows: `winget install --id Microsoft.OpenJDK.21 -e` 후 **터미널 재시작** (firebase-tools는 Java 21 미만 미지원)
 
 ## 1회 설정
 
