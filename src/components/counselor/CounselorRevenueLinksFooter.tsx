@@ -2,6 +2,7 @@
 
 import React from 'react';
 import AuthLink from '@/components/auth/AuthLink';
+import { isAssessmentBalanceLow } from '@/lib/pointsCatalog';
 
 type Props = {
   creditBalance: number | null;
@@ -10,7 +11,7 @@ type Props = {
 
 /** 7단계 — 수익·충전 링크 (오늘 화면 하단, 업무 중앙 아님) */
 export default function CounselorRevenueLinksFooter({ creditBalance, orgLiaisonCount = 0 }: Props) {
-  const lowCredits = creditBalance !== null && creditBalance < 20;
+  const lowCredits = isAssessmentBalanceLow(creditBalance);
 
   return (
     <div className="border-t border-white/[0.06] px-2.5 py-3 sm:px-3">

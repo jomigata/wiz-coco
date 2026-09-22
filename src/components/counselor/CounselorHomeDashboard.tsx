@@ -38,6 +38,7 @@ import {
   aiCreditsToPoints,
   assessmentCreditsToPoints,
   formatPoints,
+  isAssessmentBalanceLow,
 } from '@/lib/pointsCatalog';
 
 function needsSend(a: CounselorAssessment): boolean {
@@ -199,7 +200,7 @@ export default function CounselorHomeDashboard() {
   const newResultCount = recentResults.length;
   const remainingLabel =
     creditBalance === null ? '—' : formatPoints(assessmentCreditsToPoints(creditBalance));
-  const creditsLow = creditBalance !== null && creditBalance < 20;
+  const creditsLow = isAssessmentBalanceLow(creditBalance);
   const aiPointsLabel =
     aiCreditBalance === null ? null : formatPoints(aiCreditsToPoints(aiCreditBalance));
 

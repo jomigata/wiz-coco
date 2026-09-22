@@ -17,6 +17,7 @@ import {
   formatPoints,
   formatPointsDelta,
   resolvePointsBalance,
+  ASSESSMENT_LOW_BALANCE_WARNING_POINTS,
 } from '@/lib/pointsCatalog';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
@@ -179,7 +180,7 @@ function CreditsContent() {
         </div>
       )}
 
-      {data && pointsBalance < 200 ? (
+      {data && pointsBalance < ASSESSMENT_LOW_BALANCE_WARNING_POINTS ? (
         <div className="mb-4 rounded-lg border border-amber-500/35 bg-amber-950/30 p-4 text-sm text-amber-100">
           검사 포인트가 {formatPoints(pointsBalance)} 남았습니다. 필요할 때만 아래에서 충전하세요.
         </div>

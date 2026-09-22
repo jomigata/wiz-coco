@@ -18,6 +18,14 @@ export const POINT_COST_PUBLIC_CLAIM_EMAIL = 0;
 /** 휴대폰(알림톡/문자) 허용 최소 보유 포인트 — 미만이면 내담자 claim 시 이메일로 전환 */
 export const PUBLIC_CLAIM_PHONE_MIN_BALANCE_POINTS = 1;
 
+/** 대시보드·충전 화면 — "포인트가 적습니다" / 충전 유도 기준 (포인트 단위) */
+export const ASSESSMENT_LOW_BALANCE_WARNING_POINTS = 200;
+
+export function isAssessmentBalanceLow(credits: number | null): boolean {
+  if (credits === null) return false;
+  return assessmentCreditsToPoints(credits) < ASSESSMENT_LOW_BALANCE_WARNING_POINTS;
+}
+
 export const PUBLIC_CLAIM_PHONE_POINT_COST = POINT_COST_PUBLIC_CLAIM_PHONE;
 export const PUBLIC_CLAIM_PHONE_CREDIT_COST = 1;
 
