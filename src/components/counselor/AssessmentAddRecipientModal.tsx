@@ -287,6 +287,8 @@ export default function AssessmentAddRecipientModal({
   const [notifyConfirmOpen, setNotifyConfirmOpen] = useState(false);
   const [targetSortKey, setTargetSortKey] = useState<TargetSortKey>('input');
   const [targetSortDir, setTargetSortDir] = useState<TargetSortDir>('asc');
+  /** 개별·파일 추가 후 부적합이 있을 때 부적합 열 정렬 — 세션당 1회 */
+  const autoInvalidSortAppliedRef = useRef(false);
 
   const samplePreviewText = useMemo(() => getGroupRecipientSamplePreviewText(), []);
   const samplePreviewLayout = useMemo(() => {
@@ -380,6 +382,14 @@ export default function AssessmentAddRecipientModal({
     }
   };
 
+  const applyInitialInvalidSortIfNeeded = (merged: RecipientRow[]) => {
+    if (autoInvalidSortAppliedRef.current) return;
+    if (!merged.some((r) => targetRowInvalid(r))) return;
+    autoInvalidSortAppliedRef.current = true;
+    setTargetSortKey('invalid');
+    setTargetSortDir('asc');
+  };
+
   const targetSortArrow = (key: Exclude<TargetSortKey, 'input'>) => {
     if (targetSortKey !== key) return '↕';
     return targetSortDir === 'asc' ? '▲' : '▼';
@@ -409,6 +419,12 @@ export default function AssessmentAddRecipientModal({
     }
   }, [invalidBulkDeleteOffer, invalidRecipientCount]);
 
+  useEffect(() => {
+    if (invalidRecipientCount === 0) {
+      autoInvalidSortAppliedRef.current = false;
+    }
+  }, [invalidRecipientCount]);
+
   const resetForm = () => {
     setDraftName('');
     setDraftPhone('');
@@ -422,6 +438,7 @@ export default function AssessmentAddRecipientModal({
     setSamplePreviewKind(null);
     setTargetSortKey('input');
     setTargetSortDir('asc');
+    autoInvalidSortAppliedRef.current = false;
   };
 
   const handleClose = () => {
@@ -441,10 +458,10 @@ export default function AssessmentAddRecipientModal({
     }
     setAddError('');
     setInvalidBulkDeleteOffer(false);
-    setPendingRows((prev) => [
-      ...prev,
-      { displayName: name, phone: phone ? formatPhoneDisplay(phone) : '', email },
-    ]);
+    const newRow = { displayName: name, phone: phone ? formatPhoneDisplay(phone) : '', email };
+    const nextPending = [...pendingRows, newRow];
+    applyInitialInvalidSortIfNeeded(mergeRecipients(nextPending, importedFileRows));
+    setPendingRows(nextPending);
     setDraftName('');
     setDraftPhone('');
     setDraftEmail('');
@@ -479,7 +496,10 @@ export default function AssessmentAddRecipientModal({
           rows: parsed,
         });
       }
-      setFileBatches((prev) => [...prev, ...additions]);
+      const nextBatches = [...fileBatches, ...additions];
+      const nextImported = nextBatches.flatMap((batch) => batch.rows);
+      applyInitialInvalidSortIfNeeded(mergeRecipients(pendingRows, nextImported));
+      setFileBatches(nextBatches);
     } catch (err) {
       setInvalidBulkDeleteOffer(false);
       setAddError(err instanceof Error ? err.message : '파일을 읽지 못했습니다.');
