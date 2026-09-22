@@ -2,34 +2,23 @@
 /**
  * Auth + Firestore Emulator — 디스크 영속 (.firebase/emulator-data)
  * - 시작: 기존 export 가 있으면 --import
- * - 종료: --export-on-exit (Ctrl+C 등 정상 종료)
- * - 실행 중: 주기 export (재부팅·강제 종료 후에도 마지막 스냅샷 복원)
+ * - 종료: 명시 export 후 --export-on-exit (Ctrl+C·강제 종료 대비)
+ * - 실행 중: 주기 export + Flask API 변경 시 debounce export
  */
-const { spawn, spawnSync } = require('child_process');
+const { spawn } = require('child_process');
 const fs = require('fs');
 const net = require('net');
 const path = require('path');
+const { importDirAbs, importDirRel, runFirebaseExport } = require('./lib/emulator-export');
 
 const ROOT = path.resolve(__dirname, '..');
-/** repo 루트 기준 상대 경로 (경로 공백 시 firebase CLI 인자 깨짐 방지) */
-const importDirRel = path.join('.firebase', 'emulator-data');
-const importDirAbs = path.join(ROOT, importDirRel);
 const exportIntervalSec = Math.max(
   30,
-  parseInt(process.env.DEV_EMULATOR_EXPORT_INTERVAL_SEC || '120', 10) || 120,
+  parseInt(process.env.DEV_EMULATOR_EXPORT_INTERVAL_SEC || '60', 10) || 60,
 );
 
 const isWin = process.platform === 'win32';
 const firebaseJs = path.join(ROOT, 'node_modules', 'firebase-tools', 'lib', 'bin', 'firebase.js');
-
-function runFirebase(args, inherit = true) {
-  return spawnSync(process.execPath, [firebaseJs, ...args], {
-    cwd: ROOT,
-    stdio: inherit ? 'inherit' : 'pipe',
-    shell: false,
-    windowsHide: true,
-  });
-}
 
 function portOpen(port, host = '127.0.0.1') {
   return new Promise((resolve) => {
@@ -43,16 +32,6 @@ function portOpen(port, host = '127.0.0.1') {
     socket.on('timeout', () => done(false));
     socket.on('error', () => done(false));
   });
-}
-
-function runExport(label) {
-  fs.mkdirSync(path.dirname(importDirAbs), { recursive: true });
-  const r = runFirebase(['emulators:export', importDirRel, '--project', 'wiz-coco', '--force']);
-  if (r.status === 0) {
-    console.log(`[emulator-persist] ✓ export (${label}) → ${importDirRel}`);
-  } else {
-    console.warn(`[emulator-persist] export skipped/failed (${label})`);
-  }
 }
 
 const args = [
@@ -85,9 +64,9 @@ let shuttingDown = false;
 async function startPeriodicExport() {
   const ready = await portOpen(8080);
   if (!ready || shuttingDown) return;
-  runExport('startup');
+  runFirebaseExport('startup');
   exportTimer = setInterval(() => {
-    if (!shuttingDown) runExport('interval');
+    if (!shuttingDown) runFirebaseExport('interval');
   }, exportIntervalSec * 1000);
   console.log(
     `[emulator-persist] auto-export every ${exportIntervalSec}s (DEV_EMULATOR_EXPORT_INTERVAL_SEC)`,
@@ -100,9 +79,14 @@ function shutdown(signal) {
   if (shuttingDown) return;
   shuttingDown = true;
   if (exportTimer) clearInterval(exportTimer);
-  console.log(`\n[emulator-persist] ${signal} — waiting for export-on-exit…`);
+  console.log(`\n[emulator-persist] ${signal} — saving emulator snapshot…`);
+  runFirebaseExport('shutdown');
   if (child && !child.killed) {
-    child.kill(isWin ? undefined : 'SIGINT');
+    if (isWin) {
+      child.kill('SIGINT');
+    } else {
+      child.kill('SIGINT');
+    }
   }
 }
 

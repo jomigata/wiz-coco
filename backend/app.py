@@ -110,6 +110,27 @@ def create_app():
             payload["emailConfigured"] = is_email_configured()
         return payload
 
+    @app.after_request
+    def persist_emulator_after_api_writes(response):
+        """로컬 Emulator: 상담사·내담자·포인트 등 Firestore 변경 후 디스크 export (debounce)."""
+        from config import USE_FIREBASE_EMULATOR
+
+        if not USE_FIREBASE_EMULATOR:
+            return response
+        if request.method not in ("POST", "PUT", "PATCH", "DELETE"):
+            return response
+        if response.status_code >= 400:
+            return response
+        path = (request.path or "").rstrip("/") or "/"
+        if not path.startswith("/api/"):
+            return response
+        if path in ("/api/health",):
+            return response
+        from utils.emulator_persist_dev import schedule_emulator_export
+
+        schedule_emulator_export(f"{request.method} {path}")
+        return response
+
     return app
 
 
@@ -123,4 +144,16 @@ if __name__ == "__main__":
             f"[wizcoco-api] Emulator mode — SMTP email: {'ON' if is_email_configured() else 'OFF (backend/.env.smtp.local)'}",
             flush=True,
         )
-    app.run(host="0.0.0.0", port=int(os.getenv("PORT", "5000")), debug=(FLASK_ENV == "development"))
+    debug = FLASK_ENV == "development"
+    # 리로더가 종료되면 concurrently -k 로 Emulator까지 내려가므로 Emulator 모드에서는 비활성
+    use_reloader = debug and os.getenv("USE_FIREBASE_EMULATOR", "").lower() not in (
+        "1",
+        "true",
+        "yes",
+    )
+    app.run(
+        host="0.0.0.0",
+        port=int(os.getenv("PORT", "5000")),
+        debug=debug,
+        use_reloader=use_reloader,
+    )

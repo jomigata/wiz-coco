@@ -49,14 +49,16 @@ npm run dev
 처음 폴더를 열 때 Cursor가 **「Allow Automatic Tasks in Folder」** 를 물으면 **Allow** 를 선택하세요.  
 수동 실행: `npm run dev:workspace:open`
 
-**Emulator 데이터 유지 (회원·Firestore):**
+**Emulator 데이터 유지 (회원·Firestore — 상담사 권한·포인트·내담자·검사 기록):**
 
 - 저장 위치: **`.firebase/emulator-data`** (git 제외, PC 로컬 디스크만)
-- **`npm run dev` 시작** 시 위 폴더가 있으면 **Auth·Firestore를 import** (이전 회원가입·로그인 계정·문서 복원)
-- **실행 중** 약 **2분마다** 자동 export (기본 120초, `DEV_EMULATOR_EXPORT_INTERVAL_SEC`로 변경)
-- **Ctrl+C로 dev 종료** 시 `--export-on-exit`으로 한 번 더 저장
-- PC **재부팅·강제 종료** 후에도 **마지막 자동 export** 시점까지 데이터 유지 (dev를 다시 `npm run dev`만 실행하면 됨)
-- 수동 백업: `npm run dev:emulators:export` (Emulator가 떠 있을 때)
+- **`npm run dev` 시작** 시 위 폴더가 있으면 **Auth·Firestore를 import** (이전 데이터 복원)
+- **API로 데이터 변경** (권한·포인트 지급·내담자 추가·발송 등) 후 **약 3초 뒤** 자동 export (`DEV_EMULATOR_EXPORT_DEBOUNCE_SEC`)
+- **실행 중** **60초마다** 자동 export (기본, `DEV_EMULATOR_EXPORT_INTERVAL_SEC`로 변경)
+- **Ctrl+C로 dev 종료** 시 종료 직전 **명시 export** + Firebase `--export-on-exit`
+- PC **재부팅·강제 종료** 후에도 **마지막 자동 export** 시점까지 유지 → 다시 `npm run dev`만 실행
+- 수동 백업: `npm run dev:emulators:export` (Emulator 8080 떠 있을 때)
+- **Postgres dispatch** (`DATABASE_URL` + Docker) 사용 시 DB는 **`wizcoco_pg_data` 볼륨**에 별도 영속 — Firestore Emulator와 함께 쓰는 dual-write 설정은 [Postgres dual-write](#postgres-dual-write-로컬-task-071073) 참고
 
 **Simple Browser CLI:** 탭이 안 열리면 Cursor 명령 팔레트 → **Shell Command: Install 'cursor' command in PATH** 실행 후 워크스페이스를 다시 엽니다.
 
