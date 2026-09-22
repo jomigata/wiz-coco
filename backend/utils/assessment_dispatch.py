@@ -1278,21 +1278,33 @@ def resend_portal_credentials(
         portal_status = (pdata.get("lastNotifyStatus") or "not_sent").strip()
         notify_kind = "initial" if portal_status == "not_sent" else "resend"
 
-        result = deliver_portal_credentials(
-            email=email,
-            phone=phone,
-            access_code=portal_access_code,
-            pin=new_pin,
-            magic_path=magic_path,
-            display_name=(pdata.get("displayName") or "").strip(),
-            join_access_code=join_access_code,
-            cohort_name=(ass.get("cohortName") or "").strip(),
-            assessment_title=(ass.get("title") or "").strip(),
-            welcome_message=(ass.get("welcomeMessage") or "").strip(),
-            portal_ref=pref,
-            notify_kind=notify_kind,
-            allowed_channels=channels,
-        )
+        try:
+            result = deliver_portal_credentials(
+                email=email,
+                phone=phone,
+                access_code=portal_access_code,
+                pin=new_pin,
+                magic_path=magic_path,
+                display_name=(pdata.get("displayName") or "").strip(),
+                join_access_code=join_access_code,
+                cohort_name=(ass.get("cohortName") or "").strip(),
+                assessment_title=(ass.get("title") or "").strip(),
+                welcome_message=(ass.get("welcomeMessage") or "").strip(),
+                portal_ref=pref,
+                notify_kind=notify_kind,
+                allowed_channels=channels,
+            )
+        except Exception as exc:
+            failed += 1
+            details.append(
+                {
+                    "portalId": pid,
+                    "status": "failed",
+                    "myCode": portal_access_code,
+                    "message": str(exc)[:240],
+                }
+            )
+            continue
         status = result.get("status") or "failed"
         result_errors = result.get("errors") or []
         if status == "sent":
@@ -1366,6 +1378,9 @@ def update_dispatch_recipient_contact(
         raise ValueError("휴대폰 또는 이메일 중 하나는 입력해야 합니다.")
     if norm_phone and not is_valid_kr_mobile_phone(norm_phone):
         raise ValueError("휴대폰 번호는 11자리(010 등) 형식이어야 합니다.")
+    from utils.email_validation import validate_recipient_email_or_raise
+
+    norm_email = validate_recipient_email_or_raise(norm_email)
 
     pref.update({"phone": norm_phone, "email": norm_email})
     try:

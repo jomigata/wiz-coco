@@ -232,21 +232,24 @@ def create_portal_for_row(
         if immediate_notify and not scheduled_at_iso:
             from utils.notification_worker import deliver_portal_credentials
 
-            result = deliver_portal_credentials(
-                email=email,
-                phone=phone,
-                access_code=portal_access_code,
-                pin=pin,
-                magic_path=magic_path,
-                display_name=display_name,
-                join_access_code=join_access_code,
-                cohort_name=cohort_name,
-                assessment_title=assessment_title,
-                welcome_message=welcome_message,
-                portal_ref=portal_ref,
-                notify_kind="initial",
-                allowed_channels=notify_channels,
-            )
+            try:
+                result = deliver_portal_credentials(
+                    email=email,
+                    phone=phone,
+                    access_code=portal_access_code,
+                    pin=pin,
+                    magic_path=magic_path,
+                    display_name=display_name,
+                    join_access_code=join_access_code,
+                    cohort_name=cohort_name,
+                    assessment_title=assessment_title,
+                    welcome_message=welcome_message,
+                    portal_ref=portal_ref,
+                    notify_kind="initial",
+                    allowed_channels=notify_channels,
+                )
+            except Exception as exc:
+                result = {"status": "failed", "errors": [str(exc)[:240]]}
             status = result.get("status") or "failed"
             notify_errors = list(result.get("errors") or [])
             if status == "sent":

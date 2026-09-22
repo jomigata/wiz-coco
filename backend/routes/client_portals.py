@@ -760,6 +760,43 @@ def bulk_create():
         for row in rows
     ]
 
+    from utils.email_validation import is_valid_recipient_email
+    from utils.phone_format import is_valid_kr_mobile_phone
+
+    for idx, row in enumerate(normalized_rows, start=1):
+        email = (row.get("email") or "").strip()
+        phone = (row.get("phone") or "").strip()
+        if not email and not phone:
+            return (
+                jsonify(
+                    {
+                        "error": "Bad Request",
+                        "message": f"{idx}번째 내담자: 휴대폰 또는 이메일 중 하나는 필요합니다.",
+                    }
+                ),
+                400,
+            )
+        if email and not is_valid_recipient_email(email):
+            return (
+                jsonify(
+                    {
+                        "error": "Bad Request",
+                        "message": f"{idx}번째 내담자 이메일 형식 오류 ({email}). 연속 점(..) 등을 확인해 주세요.",
+                    }
+                ),
+                400,
+            )
+        if phone and not is_valid_kr_mobile_phone(phone):
+            return (
+                jsonify(
+                    {
+                        "error": "Bad Request",
+                        "message": f"{idx}번째 내담자 휴대폰 번호 형식 오류 ({phone}).",
+                    }
+                ),
+                400,
+            )
+
     any_notify = any(bool(r.get("queueNotify")) for r in normalized_rows)
     from utils.assessment_dispatch import (
         _apply_notify_channels_to_contact,

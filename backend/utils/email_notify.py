@@ -1,5 +1,6 @@
 """관리자 알림 이메일 (SMTP 설정 시 발송)."""
 import html
+import logging
 import smtplib
 from datetime import datetime, timedelta, timezone
 from email.mime.base import MIMEBase
@@ -21,6 +22,18 @@ from config import (
     SMTP_USER,
     is_email_configured,
 )
+
+logger = logging.getLogger(__name__)
+
+
+def _smtp_send(server, from_addr: str, to_addrs: list[str], message_str: str) -> bool:
+    try:
+        server.sendmail(from_addr, to_addrs, message_str)
+        return True
+    except smtplib.SMTPException as exc:
+        logger.warning("SMTP send failed to %s: %s", to_addrs, exc)
+        return False
+
 
 _KST = timezone(timedelta(hours=9))
 
@@ -183,9 +196,7 @@ https://wizcoco.com/admin/counselor-verification/
     with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
         server.starttls()
         server.login(SMTP_USER, SMTP_PASSWORD)
-        server.sendmail(MAIL_FROM, [COUNSELOR_ADMIN_NOTIFY_EMAIL], msg.as_string())
-
-    return True
+        return _smtp_send(server, MAIL_FROM, [COUNSELOR_ADMIN_NOTIFY_EMAIL], msg.as_string())
 
 
 def send_counselor_application_result_email(
@@ -248,9 +259,7 @@ WizCoCo 팀
     with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
         server.starttls()
         server.login(SMTP_USER, SMTP_PASSWORD)
-        server.sendmail(MAIL_FROM, [email], msg.as_string())
-
-    return True
+        return _smtp_send(server, MAIL_FROM, [email], msg.as_string())
 
 
 def _format_pin_display(pin: str) -> str:
@@ -274,12 +283,13 @@ def send_portal_credentials_email(
     if not is_email_configured():
         return False
 
-    email = (to_email or "").strip().lower()
-    if not email or "@" not in email:
+    from utils.email_validation import is_valid_recipient_email, normalize_recipient_email
+
+    email = normalize_recipient_email(to_email)
+    if not email or not is_valid_recipient_email(email):
         return False
 
     name = (display_name or "").strip() or "내담자"
-    join_code = (join_access_code or "").strip().upper()
     my_code = (access_code or "").strip().upper()
     pin_display = _format_pin_display(pin)
     login_url = f"{PUBLIC_SITE_URL.rstrip('/')}/portal/login/"
@@ -327,9 +337,7 @@ WizCoCo
     with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
         server.starttls()
         server.login(SMTP_USER, SMTP_PASSWORD)
-        server.sendmail(MAIL_FROM, [email], msg.as_string())
-
-    return True
+        return _smtp_send(server, MAIL_FROM, [email], msg.as_string())
 
 
 def send_test_reminder_email(
@@ -392,9 +400,7 @@ WizCoCo
     with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
         server.starttls()
         server.login(SMTP_USER, SMTP_PASSWORD)
-        server.sendmail(MAIL_FROM, [email], msg.as_string())
-
-    return True
+        return _smtp_send(server, MAIL_FROM, [email], msg.as_string())
 
 
 def send_care_assignment_email(
@@ -456,9 +462,7 @@ WizCoCo
     with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
         server.starttls()
         server.login(SMTP_USER, SMTP_PASSWORD)
-        server.sendmail(MAIL_FROM, [email], msg.as_string())
-
-    return True
+        return _smtp_send(server, MAIL_FROM, [email], msg.as_string())
 
 
 def send_portal_invite_email(*, to_email: str, access_code: str, magic_url: str) -> bool:
@@ -496,9 +500,7 @@ WizCoCo
     with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
         server.starttls()
         server.login(SMTP_USER, SMTP_PASSWORD)
-        server.sendmail(MAIL_FROM, [email], msg.as_string())
-
-    return True
+        return _smtp_send(server, MAIL_FROM, [email], msg.as_string())
 
 
 def send_portal_pin_reset_email(*, to_email: str, reset_url: str, access_code: str) -> bool:
@@ -534,9 +536,7 @@ WizCoCo
     with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
         server.starttls()
         server.login(SMTP_USER, SMTP_PASSWORD)
-        server.sendmail(MAIL_FROM, [email], msg.as_string())
-
-    return True
+        return _smtp_send(server, MAIL_FROM, [email], msg.as_string())
 
 
 def send_personal_purchase_inquiry_email(
@@ -591,6 +591,4 @@ def send_personal_purchase_inquiry_email(
     with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
         server.starttls()
         server.login(SMTP_USER, SMTP_PASSWORD)
-        server.sendmail(MAIL_FROM, recipients, msg.as_string())
-
-    return True
+        return _smtp_send(server, MAIL_FROM, recipients, msg.as_string())

@@ -571,7 +571,7 @@ export default function AssessmentAddRecipientModal({
     setInvalidBulkDeleteOffer(false);
     setNotifyConfirmOpen(false);
     try {
-      await bulkCreateClientPortals({
+      const result = await bulkCreateClientPortals({
         assessmentId: context.assessmentId,
         cohortName,
         title: context.title || cohortName,
@@ -585,13 +585,27 @@ export default function AssessmentAddRecipientModal({
         queueNotify: addSendNow,
         notifyChannels: addSendNow ? notifyChannels : undefined,
       });
-      setAddComplete({
-        title: addSendNow ? '발송 완료' : '추가 완료',
-        message: addSendNow
-          ? `${rows.length}명에게 접속 정보를 발송했습니다.`
-          : `${rows.length}명을 추가했습니다.`,
-        sent: addSendNow,
-      });
+      const createdCount = result.created?.length ?? rows.length;
+      const sent = result.notifySent ?? 0;
+      const failed = result.notifyFailed ?? 0;
+      if (addSendNow && failed > 0) {
+        setAddComplete({
+          title: sent > 0 ? '일부 발송 실패' : '발송 실패',
+          message:
+            `내담자 ${createdCount}명 추가 · 발송 성공 ${sent}명 · 실패 ${failed}명.` +
+            ' 이메일 형식(연속 .. 등)·연락처를 확인한 뒤 상담진행 현황에서 재발송하세요.',
+          sent: addSendNow,
+          error: sent === 0,
+        });
+      } else {
+        setAddComplete({
+          title: addSendNow ? '발송 완료' : '추가 완료',
+          message: addSendNow
+            ? `${createdCount}명에게 접속 정보를 발송했습니다.`
+            : `${createdCount}명을 추가했습니다.`,
+          sent: addSendNow,
+        });
+      }
     } catch (err) {
       setAddComplete({
         title: addSendNow ? '발송 실패' : '추가 실패',

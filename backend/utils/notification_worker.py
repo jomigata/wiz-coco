@@ -927,7 +927,12 @@ def deliver_portal_credentials(
         )
 
     if email:
-        if is_email_configured():
+        from utils.email_validation import is_valid_recipient_email
+
+        if not is_valid_recipient_email(email):
+            email_channel = _notify_channel_state(True, ok=False)
+            errors.append("invalid_email")
+        elif is_email_configured():
             email_ok = send_portal_credentials_email(
                 to_email=email,
                 access_code=access_code,
