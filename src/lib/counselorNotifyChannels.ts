@@ -1,7 +1,8 @@
 import { normalizeRecipientPhone } from '@/lib/phoneFormat';
 import { isValidEmailAddress } from '@/lib/emailValidation';
 import {
-  POINT_COST_PORTAL_RECIPIENT,
+  POINT_COST_INITIAL_RECIPIENT_DISPATCH,
+  POINT_COST_RESEND_PHONE,
   assessmentCreditsToPoints,
   formatPoints,
 } from '@/lib/pointsCatalog';
@@ -81,24 +82,32 @@ export function countNotifyTargets(
   };
 }
 
-/** 휴대폰 채널 1건당 1포인트 (이메일 0) */
+/** 최초 발송(내담자 1명) 성공 시 5포인트 · 재전송은 휴대폰 1건당 1포인트 */
 export function estimateNotifyPointCost(
   recipients: NotifyRecipientContact[],
   selection: NotifyChannelSelection,
-  options?: { perRecipient?: boolean },
+  options?: { perRecipient?: boolean; resend?: boolean },
 ): number {
-  if (options?.perRecipient) {
-    return recipients.length * POINT_COST_PORTAL_RECIPIENT;
+  if (options?.resend) {
+    const { phoneCount } = countNotifyTargets(recipients, selection);
+    return phoneCount * POINT_COST_RESEND_PHONE;
   }
-  const { phoneCount } = countNotifyTargets(recipients, selection);
-  return phoneCount * POINT_COST_PORTAL_RECIPIENT;
+  if (options?.perRecipient) {
+    return recipients.length * POINT_COST_INITIAL_RECIPIENT_DISPATCH;
+  }
+  const { emailCount, phoneCount } = countNotifyTargets(recipients, selection);
+  const notifyCount = Math.max(emailCount, phoneCount, 0);
+  if (notifyCount === 0 && recipients.length > 0) {
+    return recipients.length * POINT_COST_INITIAL_RECIPIENT_DISPATCH;
+  }
+  return notifyCount * POINT_COST_INITIAL_RECIPIENT_DISPATCH;
 }
 
 export function formatNotifyPointSummary(
   recipients: NotifyRecipientContact[],
   selection: NotifyChannelSelection,
   balancePoints: number,
-  options?: { perRecipient?: boolean; targetOnly?: boolean },
+  options?: { perRecipient?: boolean; targetOnly?: boolean; resend?: boolean },
 ): {
   usePoints: number;
   balanceAfter: number;
@@ -108,18 +117,25 @@ export function formatNotifyPointSummary(
   const { emailCount, phoneCount, recipientCount } = countNotifyTargets(recipients, selection);
   const usePoints = estimateNotifyPointCost(recipients, selection, options);
   const balanceAfter = Math.max(0, balancePoints - usePoints);
+  const isResend = Boolean(options?.resend);
   const detailLines = options?.targetOnly
     ? [`대상: ${recipientCount}명`]
     : [
         `대상: ${recipientCount}명`,
-        selection.email ? `이메일 ${emailCount}건` : null,
+        selection.email ? `이메일 ${emailCount}건 (0포인트)` : null,
         selection.phone
-          ? `휴대폰 ${phoneCount}건 (${formatPoints(POINT_COST_PORTAL_RECIPIENT)}/건)`
-          : null,
+          ? isResend
+            ? `휴대폰 ${phoneCount}건 (${formatPoints(POINT_COST_RESEND_PHONE)}/건)`
+            : `발송 ${recipientCount}명 (${formatPoints(POINT_COST_INITIAL_RECIPIENT_DISPATCH)}/명, 성공 시)`
+          : !isResend && recipientCount > 0
+            ? `발송 ${recipientCount}명 (${formatPoints(POINT_COST_INITIAL_RECIPIENT_DISPATCH)}/명, 성공 시)`
+            : null,
       ].filter(Boolean) as string[];
   const footerLine = options?.perRecipient
-    ? `총 추가 ${recipientCount}명 / ${formatPoints(usePoints)} 사용 / 잔여 ${formatPoints(balanceAfter)}`
-    : `사용 ${formatPoints(usePoints)} / 잔여 ${formatPoints(balanceAfter)}`;
+    ? `최대 ${formatPoints(usePoints)} (발송 성공 시) / 잔여 ${formatPoints(balanceAfter)}`
+    : isResend
+      ? `사용 ${formatPoints(usePoints)} (휴대폰 성공 시) / 잔여 ${formatPoints(balanceAfter)}`
+      : `최대 ${formatPoints(usePoints)} (발송 성공 시) / 잔여 ${formatPoints(balanceAfter)}`;
   return { usePoints, balanceAfter, detailLines, footerLine };
 }
 

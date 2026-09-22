@@ -200,6 +200,9 @@ def claim_my_code_public(
         point_cost = POINT_COST_PUBLIC_CLAIM_PHONE
 
     if COMMERCE_CREDITS_ENFORCE and point_cost > 0:
+        from utils.points_display import POINT_COST_INITIAL_RECIPIENT_DISPATCH
+
+        point_cost = POINT_COST_INITIAL_RECIPIENT_DISPATCH
         points_available = get_points_available(db, counselor_uid)
         if points_available < point_cost:
             return {
@@ -239,23 +242,6 @@ def claim_my_code_public(
             "message": _notify_failure_message(notify_errors),
             "notifyErrors": notify_errors,
         }
-
-    if point_cost > 0:
-        try:
-            consume_portal_points(
-                db,
-                counselor_uid,
-                point_cost,
-                reason="public_portal_claim",
-                actor_uid=None,
-                metadata={
-                    "assessmentId": ass_doc.id,
-                    "portalId": created_row.get("portalId", ""),
-                    "channel": channel,
-                },
-            )
-        except InsufficientCreditsError:
-            pass
 
     return {
         "ok": True,

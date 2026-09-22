@@ -227,6 +227,29 @@ function CreditsContent() {
             </Link>
           </div>
 
+          <p className="mb-3 text-sm font-semibold text-slate-300">포인트 lot (유효기간)</p>
+          <ul className="mb-8 space-y-2 text-sm">
+            {(data.creditLots || []).length === 0 && (
+              <li className="text-slate-500">등록된 유효기간 lot이 없습니다.</li>
+            )}
+            {(data.creditLots || []).map((lot) => (
+              <li
+                key={lot.id}
+                className="flex flex-wrap justify-between gap-2 rounded-lg border border-white/5 bg-white/5 px-4 py-3 text-slate-300"
+              >
+                <span>
+                  잔여 {formatPoints(lot.pointsRemaining ?? 0)} · 지급{' '}
+                  {formatPoints(lot.pointsGranted ?? 0)}
+                </span>
+                <span className="text-slate-500">
+                  {lot.expiresAt
+                    ? `만료 ${String(lot.expiresAt).slice(0, 10)}`
+                    : '기한 없음'}
+                </span>
+              </li>
+            ))}
+          </ul>
+
           <p className="mb-3 text-sm font-semibold text-slate-300">최근 내역</p>
           <ul className="space-y-2 text-sm">
             {(data.ledger || []).length === 0 && (

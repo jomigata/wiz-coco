@@ -11,7 +11,9 @@ POINTS_PER_ASSESSMENT_CREDIT = 100
 POINTS_PER_AI_CREDIT = 100
 
 # --- 검사(포털) 차감 ---
-POINT_COST_PORTAL_RECIPIENT = 1  # 내담자 1명 추가·발송
+POINT_COST_INITIAL_RECIPIENT_DISPATCH = 5  # 내담자 생성 후 이메일/휴대폰 발송 성공 시
+POINT_COST_RESEND_PHONE = 1  # 나의코드 재전송 — 휴대폰만
+POINT_COST_PORTAL_RECIPIENT = POINT_COST_INITIAL_RECIPIENT_DISPATCH  # 하위 호환
 POINT_COST_PUBLIC_CLAIM_PHONE = 1
 POINT_COST_PUBLIC_CLAIM_EMAIL = 0
 # 휴대폰(알림톡/문자) 허용 최소 보유 포인트 — 미만이면 내담자 claim 시 이메일로 전환
@@ -92,7 +94,13 @@ def enrich_assessment_wallet_response(payload: dict, *, ledger_key: str = "ledge
         balance = int(out.get("balance") or 0)
     except (TypeError, ValueError):
         balance = 0
-    out["pointsBalance"] = assessment_credits_to_points(balance)
+    if "pointsAvailable" in out:
+        try:
+            out["pointsBalance"] = max(0, int(out["pointsAvailable"]))
+        except (TypeError, ValueError):
+            out["pointsBalance"] = assessment_credits_to_points(balance)
+    else:
+        out["pointsBalance"] = assessment_credits_to_points(balance)
     out["pointsUnit"] = "assessment"
     out["wonPerPoint"] = WON_PER_POINT
     out["pointsPerAssessmentCredit"] = POINTS_PER_ASSESSMENT_CREDIT

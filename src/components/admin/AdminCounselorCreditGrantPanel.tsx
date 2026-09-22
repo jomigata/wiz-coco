@@ -11,6 +11,7 @@ import {
   grantCounselorCredits,
   lookupCounselorCredits,
   type CreditLedgerEntry,
+  type CounselorCreditLot,
 } from '@/lib/commerceApi';
 
 const PRESET_POINT_AMOUNTS = [1, 10, 50, 100, 1000] as const;
@@ -29,12 +30,15 @@ type LookupState = {
   role?: string;
   balance: number;
   ledger: CreditLedgerEntry[];
+  creditLots: CounselorCreditLot[];
 };
 
 export default function AdminCounselorCreditGrantPanel() {
   const [email, setEmail] = useState('');
   const [counselorUid, setCounselorUid] = useState('');
   const [grantPoints, setGrantPoints] = useState(0);
+  const [validityDays, setValidityDays] = useState(0);
+  const [expiresAtDate, setExpiresAtDate] = useState('');
   const [reason, setReason] = useState('admin_grant');
   const [lookup, setLookup] = useState<LookupState | null>(null);
   const [message, setMessage] = useState('');
@@ -50,6 +54,7 @@ export default function AdminCounselorCreditGrantPanel() {
       role: detail.role,
       balance: detail.balance,
       ledger: detail.ledger || [],
+      creditLots: detail.creditLots || [],
     });
     setCounselorUid(uid);
   };
@@ -73,6 +78,7 @@ export default function AdminCounselorCreditGrantPanel() {
         role: detail.role,
         balance: detail.balance,
         ledger: detail.ledger || [],
+        creditLots: detail.creditLots || [],
       });
       setCounselorUid(detail.counselorUid);
     } catch (err) {
@@ -125,6 +131,10 @@ export default function AdminCounselorCreditGrantPanel() {
         counselorEmail: uid ? undefined : targetEmail,
         amount: creditAmount,
         reason,
+        validityDays: expiresAtDate ? undefined : validityDays > 0 ? validityDays : undefined,
+        expiresAt: expiresAtDate
+          ? new Date(`${expiresAtDate}T23:59:59+09:00`).toISOString()
+          : undefined,
       });
       setMessage(
         `지급 완료: ${formatPointsDelta(assessmentCreditsToPoints(result.granted))} → 잔액 ${formatPoints(assessmentCreditsToPoints(result.balance))}`,
@@ -140,6 +150,7 @@ export default function AdminCounselorCreditGrantPanel() {
           role: detail.role,
           balance: detail.balance,
           ledger: detail.ledger || [],
+          creditLots: detail.creditLots || [],
         });
         setCounselorUid(detail.counselorUid);
       }
@@ -253,6 +264,55 @@ export default function AdminCounselorCreditGrantPanel() {
         </div>
 
         <div>
+          <label className="mb-2 block text-sm text-slate-400">사용 유효일</label>
+          <div className="mb-2 flex flex-wrap gap-2">
+            {(
+              [
+                { days: 1, label: '+1일' },
+                { days: 7, label: '+7일' },
+                { days: 30, label: '+1달' },
+              ] as const
+            ).map(({ days, label }) => (
+              <button
+                key={days}
+                type="button"
+                onClick={() => {
+                  setExpiresAtDate('');
+                  setValidityDays((prev) => prev + days);
+                }}
+                className="rounded-lg border border-white/15 px-3 py-1.5 text-sm font-medium text-slate-300 hover:border-emerald-400/40 hover:bg-emerald-500/10 hover:text-white"
+              >
+                {label}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => {
+                setValidityDays(0);
+                setExpiresAtDate('');
+              }}
+              className="rounded-lg border border-white/10 px-3 py-1.5 text-sm text-slate-500 hover:bg-white/5"
+            >
+              유효일 초기화
+            </button>
+          </div>
+          <p className="mb-2 text-xs text-slate-500">
+            버튼을 반복 누르면 유효일이 누적됩니다 (지급 시점 + {validityDays}일).
+            비우면 기한 없음.
+          </p>
+          <label className="mb-1 block text-xs text-slate-500">또는 만료일 (캘린더)</label>
+          <input
+            type="date"
+            value={expiresAtDate}
+            onChange={(e) => {
+              setExpiresAtDate(e.target.value);
+              if (e.target.value) setValidityDays(0);
+            }}
+            className="w-full rounded-lg border border-white/10 bg-slate-800 px-3 py-2 text-sm text-white"
+          />
+        </div>
+
+        <div>
           <label className="mb-1 block text-sm text-slate-400">사유</label>
           <select
             value={reason}
@@ -298,7 +358,7 @@ export default function AdminCounselorCreditGrantPanel() {
 
       {lookup && lookup.ledger.length > 0 ? (
         <div className="rounded-xl border border-white/10 bg-white/5 p-6">
-          <h3 className="mb-3 text-sm font-medium text-blue-200">최근 내역</h3>
+          <h3 className="mb-3 text-sm font-medium text-blue-200">최근 사용 내역</h3>
           <ul className="space-y-2 text-sm">
             {lookup.ledger.map((row) => (
               <li
@@ -310,6 +370,30 @@ export default function AdminCounselorCreditGrantPanel() {
                 </span>
                 <span className="text-slate-500">
                   잔액 {formatPoints(assessmentCreditsToPoints(row.balanceAfter))}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      {lookup && lookup.creditLots.length > 0 ? (
+        <div className="rounded-xl border border-white/10 bg-white/5 p-6">
+          <h3 className="mb-3 text-sm font-medium text-emerald-200">포인트 lot (유효기간)</h3>
+          <ul className="space-y-2 text-sm">
+            {lookup.creditLots.map((lot) => (
+              <li
+                key={lot.id}
+                className="flex flex-wrap justify-between gap-2 border-b border-white/5 pb-2 text-slate-300"
+              >
+                <span>
+                  잔여 {formatPoints(lot.pointsRemaining ?? 0)} / 지급{' '}
+                  {formatPoints(lot.pointsGranted ?? 0)}
+                </span>
+                <span className="text-slate-500">
+                  {lot.expiresAt
+                    ? `만료 ${String(lot.expiresAt).slice(0, 10)}`
+                    : '기한 없음'}
                 </span>
               </li>
             ))}

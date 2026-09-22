@@ -223,6 +223,59 @@ def _apply_notify_snapshot(
         queue_ref.update(q_payload)
 
 
+def _maybe_charge_portal_delivery_points(
+    portal_ref,
+    *,
+    notify_kind: str,
+    status: str,
+    email_channel: str,
+    phone_channel: str,
+    email: str,
+    phone: str,
+) -> None:
+    if status not in ("sent", "partial") or status == "sending":
+        return
+    if portal_ref is None:
+        return
+    try:
+        from firebase_init import get_firestore
+        from utils.counselor_credits import charge_initial_dispatch_success, consume_portal_points
+        from utils.points_display import POINT_COST_RESEND_PHONE
+
+        db = get_firestore()
+        snap = portal_ref.get()
+        if not snap.exists:
+            return
+        pdata = snap.to_dict() or {}
+        counselor_uid = (pdata.get("counselorId") or "").strip()
+        if not counselor_uid:
+            return
+        assigned = list(pdata.get("assignedAssessmentIds") or [])
+        assessment_id = str(assigned[0]).strip() if assigned else ""
+        portal_id = snap.id
+
+        if notify_kind == "initial":
+            charge_initial_dispatch_success(
+                db,
+                counselor_uid=counselor_uid,
+                portal_id=portal_id,
+                assessment_id=assessment_id,
+                actor_uid=counselor_uid,
+            )
+            return
+        if notify_kind == "resend" and phone and phone_channel == CHANNEL_SENT:
+            consume_portal_points(
+                db,
+                counselor_uid,
+                POINT_COST_RESEND_PHONE,
+                reason="notify_resend_phone",
+                actor_uid=counselor_uid,
+                metadata={"portalId": portal_id, "assessmentId": assessment_id or None},
+            )
+    except Exception:
+        logger.debug("portal delivery point charge skipped portal=%s", portal_ref.id, exc_info=True)
+
+
 def _finalize_delivery_result(
     *,
     email: str,
@@ -1088,6 +1141,15 @@ def deliver_portal_credentials(
             sent_via=result.get("sentVia"),
             notify_kind=notify_kind,
             solapi_group_id=solapi_group_id,
+        )
+        _maybe_charge_portal_delivery_points(
+            portal_ref,
+            notify_kind=notify_kind,
+            status=result["status"],
+            email_channel=email_channel,
+            phone_channel=phone_channel,
+            email=email,
+            phone=phone,
         )
 
     return result

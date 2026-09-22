@@ -13,7 +13,8 @@ from config import (
     PLATFORM_FEE_RATE,
 )
 from data.commerce_products import get_product, public_catalog
-from utils.counselor_credits import get_balance, grant_credits, list_ledger, is_first_send_trial_eligible
+from utils.counselor_credits import get_balance, grant_credits, list_ledger, is_first_send_trial_eligible, get_points_available
+from utils.counselor_credit_lots import list_credit_lots, parse_grant_expires_at
 from utils.counselor_lookup import resolve_counselor_by_email, counselor_display_name
 from utils.commerce_orders import create_pending_order, get_order, mark_order_paid, order_buyer_uid
 from utils.toss_payments import (
@@ -113,6 +114,7 @@ def credits_me():
     uid = g.counselor_uid
     balance = get_balance(db, uid)
     ledger = list_ledger(db, uid, limit=int(request.args.get("limit", 20)))
+    lots = list_credit_lots(db, uid, limit=int(request.args.get("lotLimit", 30)))
     sub_doc = db.collection("subscriptions").document(uid).get()
     subscription = sub_doc.to_dict() if sub_doc.exists else None
     return jsonify(
@@ -120,6 +122,8 @@ def credits_me():
             {
                 "counselorUid": uid,
                 "balance": balance,
+                "pointsAvailable": get_points_available(db, uid),
+                "creditLots": lots,
                 "enforceCredits": COMMERCE_CREDITS_ENFORCE,
                 "firstSendTrialEligible": is_first_send_trial_eligible(db, uid),
                 "subscription": subscription,
@@ -142,6 +146,7 @@ def credits_for_counselor(counselor_uid: str):
         return jsonify({"error": "Bad Request", "message": "counselorUid required"}), 400
     balance = get_balance(db, uid)
     ledger = list_ledger(db, uid, limit=int(request.args.get("limit", 30)))
+    lots = list_credit_lots(db, uid, limit=int(request.args.get("lotLimit", 30)))
     user_doc = db.collection(USERS_COLLECTION).document(uid).get()
     user_data = user_doc.to_dict() if user_doc.exists else {}
     sub_doc = db.collection("subscriptions").document(uid).get()
@@ -150,6 +155,8 @@ def credits_for_counselor(counselor_uid: str):
             {
                 "counselorUid": uid,
                 "balance": balance,
+                "pointsAvailable": get_points_available(db, uid),
+                "creditLots": lots,
                 "email": user_data.get("email") or "",
                 "displayName": counselor_display_name(user_data),
                 "role": user_data.get("role") or "",
@@ -195,6 +202,7 @@ def credits_lookup():
     limit = int(request.args.get("limit", 20))
     balance = get_balance(db, counselor_uid)
     ledger = list_ledger(db, counselor_uid, limit=limit)
+    lots = list_credit_lots(db, counselor_uid, limit=int(request.args.get("lotLimit", 30)))
     return jsonify(
         enrich_assessment_wallet_response(
             {
@@ -203,6 +211,8 @@ def credits_lookup():
                 "displayName": counselor_display_name(user_data),
                 "role": role,
                 "balance": balance,
+                "pointsAvailable": get_points_available(db, counselor_uid),
+                "creditLots": lots,
                 "ledger": ledger,
             }
         )
@@ -220,6 +230,12 @@ def credits_grant():
     except (TypeError, ValueError):
         amount = 0
     reason = (body.get("reason") or "admin_grant").strip()
+
+    expires_at = None
+    try:
+        expires_at = parse_grant_expires_at(body)
+    except ValueError as exc:
+        return jsonify({"error": "Bad Request", "message": str(exc)}), 400
 
     db = get_firestore()
     if not counselor_uid and counselor_email:
@@ -255,6 +271,7 @@ def credits_grant():
             reason=reason,
             actor_uid=g.admin_uid,
             metadata={"source": "admin_api", "targetEmail": counselor_email or None},
+            expires_at=expires_at,
         )
     except ValueError as exc:
         return jsonify({"error": "Bad Request", "message": str(exc)}), 400

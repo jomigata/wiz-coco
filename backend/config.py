@@ -65,6 +65,7 @@ BULK_PORTAL_JOBS_COLLECTION = "bulkPortalJobs"
 # 상담사 검사 크레딧 (1단계 파일럿)
 COUNSELOR_CREDITS_COLLECTION = "counselorCredits"
 COUNSELOR_CREDIT_LEDGER_COLLECTION = "counselorCreditLedger"
+COUNSELOR_CREDIT_LOTS_COLLECTION = "counselorCreditLots"
 COMMERCE_CREDITS_ENFORCE = os.getenv("COMMERCE_CREDITS_ENFORCE", "false").lower() in (
     "1",
     "true",

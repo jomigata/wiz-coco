@@ -24,7 +24,14 @@ def _credits_ref(db, counselor_uid: str):
 
 
 _PORTAL_CHARGE_REASONS = frozenset(
-    {"bulk_portal_sync", "bulk_portal_async", "portal_assessment_push", "public_portal_claim"}
+    {
+        "bulk_portal_sync",
+        "bulk_portal_async",
+        "portal_assessment_push",
+        "public_portal_claim",
+        "initial_dispatch_success",
+        "notify_resend_phone",
+    }
 )
 
 
@@ -115,9 +122,51 @@ def _get_point_reserve(db, counselor_uid: str) -> int:
 
 
 def get_points_available(db, counselor_uid: str) -> int:
+    from utils.counselor_credit_lots import expire_stale_lots
+
+    expire_stale_lots(db, counselor_uid)
     balance = get_balance(db, counselor_uid)
     reserve = _get_point_reserve(db, counselor_uid)
     return max(0, balance * POINTS_PER_ASSESSMENT_CREDIT - reserve)
+
+
+def forfeit_points_without_lots(
+    db,
+    counselor_uid: str,
+    points: int,
+    *,
+    reason: str,
+    actor_uid: str | None = None,
+) -> None:
+    """만료 lot 등 — FEFO lot 재차감 없이 지갑에서만 포인트 차감."""
+    if points <= 0:
+        return
+    balance = get_balance(db, counselor_uid)
+    reserve = _get_point_reserve(db, counselor_uid)
+    new_reserve = reserve + points
+    credit_delta = 0
+    while new_reserve >= POINTS_PER_ASSESSMENT_CREDIT:
+        new_reserve -= POINTS_PER_ASSESSMENT_CREDIT
+        credit_delta += 1
+    new_balance = max(0, balance - credit_delta)
+    _credits_ref(db, counselor_uid).set(
+        {
+            "counselorUid": counselor_uid,
+            "balance": new_balance,
+            "pointReserve": new_reserve,
+            "updatedAt": SERVER_TIMESTAMP,
+        },
+        merge=True,
+    )
+    _append_ledger(
+        db,
+        counselor_uid=counselor_uid,
+        delta=-credit_delta,
+        balance_after=new_balance,
+        reason=reason,
+        actor_uid=actor_uid,
+        metadata={"pointsForfeited": points},
+    )
 
 
 def consume_portal_points(
@@ -144,6 +193,8 @@ def consume_portal_points(
     should_enforce = COMMERCE_CREDITS_ENFORCE if enforce is None else enforce
     balance = get_balance(db, counselor_uid)
     reserve = _get_point_reserve(db, counselor_uid)
+    from utils.counselor_credit_lots import consume_from_lots_fefo
+
     available = balance * POINTS_PER_ASSESSMENT_CREDIT - reserve
     if available < points:
         if should_enforce:
@@ -159,6 +210,7 @@ def consume_portal_points(
             "pointsAvailable": available,
         }
 
+    from_lots, lot_deltas = consume_from_lots_fefo(db, counselor_uid, points)
     new_reserve = reserve + points
     credit_delta = 0
     while new_reserve >= POINTS_PER_ASSESSMENT_CREDIT:
@@ -175,8 +227,11 @@ def consume_portal_points(
         },
         merge=True,
     )
+
     ledger_meta = dict(metadata or {})
     ledger_meta["pointsCharged"] = points
+    if lot_deltas:
+        ledger_meta["lotConsumptions"] = lot_deltas
     if credit_delta > 0:
         _append_ledger(
             db,
@@ -238,9 +293,12 @@ def grant_credits(
     reason: str,
     actor_uid: str,
     metadata: dict | None = None,
+    expires_at=None,
 ) -> dict:
     if amount <= 0:
         raise ValueError("amount must be positive")
+    from utils.counselor_credit_lots import create_credit_lot
+
     ref = _credits_ref(db, counselor_uid)
     doc = ref.get()
     current = 0
@@ -255,6 +313,23 @@ def grant_credits(
         },
         merge=True,
     )
+    grant_points = amount * POINTS_PER_ASSESSMENT_CREDIT
+    lot_meta = dict(metadata or {})
+    lot_id = create_credit_lot(
+        db,
+        counselor_uid=counselor_uid,
+        points=grant_points,
+        expires_at=expires_at,
+        reason=reason,
+        actor_uid=actor_uid,
+        metadata=lot_meta,
+    )
+    lot_meta["lotId"] = lot_id
+    if expires_at is not None:
+        if hasattr(expires_at, "isoformat"):
+            lot_meta["expiresAt"] = expires_at.isoformat()
+        else:
+            lot_meta["expiresAt"] = str(expires_at)
     _append_ledger(
         db,
         counselor_uid=counselor_uid,
@@ -262,9 +337,15 @@ def grant_credits(
         balance_after=new_balance,
         reason=reason,
         actor_uid=actor_uid,
-        metadata=metadata,
+        metadata=lot_meta,
     )
-    return {"counselorUid": counselor_uid, "balance": new_balance, "granted": amount}
+    return {
+        "counselorUid": counselor_uid,
+        "balance": new_balance,
+        "granted": amount,
+        "lotId": lot_id,
+        "pointsGranted": grant_points,
+    }
 
 
 def consume_credits(
@@ -339,3 +420,54 @@ def list_ledger(db, counselor_uid: str, *, limit: int = 30) -> list[dict]:
         rows.append(d)
     rows.sort(key=lambda x: x.get("createdAt") or "", reverse=True)
     return rows[:limit]
+
+
+def charge_initial_dispatch_success(
+    db,
+    *,
+    counselor_uid: str | None,
+    portal_id: str,
+    assessment_id: str = "",
+    actor_uid: str | None = None,
+    enforce: bool | None = None,
+) -> dict | None:
+    """내담자 최초 발송(이메일/휴대폰) 성공 시 1회 5포인트."""
+    from config import CLIENT_PORTALS_COLLECTION
+    from utils.points_display import POINT_COST_INITIAL_RECIPIENT_DISPATCH
+
+    if not counselor_uid or not portal_id:
+        return None
+    portal_ref = db.collection(CLIENT_PORTALS_COLLECTION).document(portal_id)
+    snap = portal_ref.get()
+    if not snap.exists:
+        return None
+    pdata = snap.to_dict() or {}
+    if pdata.get("initialDispatchPointsCharged"):
+        return None
+    org_prepaid = bool(pdata.get("prepaidByOrg"))
+    if org_prepaid:
+        portal_ref.set({"initialDispatchPointsCharged": True}, merge=True)
+        return {"skipped": "org_prepaid"}
+
+    if is_first_send_trial_eligible(db, counselor_uid) and not pdata.get("firstSendTrialApplied"):
+        mark_first_send_trial_used(
+            db,
+            counselor_uid,
+            portal_id=portal_id,
+            assessment_id=assessment_id or "",
+            actor_uid=actor_uid or counselor_uid,
+        )
+        portal_ref.set({"initialDispatchPointsCharged": True, "firstSendTrialApplied": True}, merge=True)
+        return {"trial": True, "pointsConsumed": 0}
+
+    result = consume_portal_points(
+        db,
+        counselor_uid,
+        POINT_COST_INITIAL_RECIPIENT_DISPATCH,
+        reason="initial_dispatch_success",
+        actor_uid=actor_uid or counselor_uid,
+        metadata={"portalId": portal_id, "assessmentId": assessment_id or None},
+        enforce=enforce,
+    )
+    portal_ref.set({"initialDispatchPointsCharged": True}, merge=True)
+    return result

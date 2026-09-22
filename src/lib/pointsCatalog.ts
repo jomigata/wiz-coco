@@ -1,6 +1,6 @@
 /**
  * WizCoCo 포인트 단가표 — UI·API·차감은 **포인트** 기준, Firestore는 검사/AI **크레딧(정수)** 유지
- * 1포인트 = 100원 · 내담자 1명 = 1포인트 · DB 크레딧 1건 = 100포인트
+ * 1포인트 = 100원 · 내담자 1명 발송 성공 = 5포인트 · 재전송(휴대폰) = 1포인트
  */
 
 export const WON_PER_POINT = 100;
@@ -13,7 +13,12 @@ export const POINTS_PER_AI_CREDIT = 100;
 export const POINTS_PER_CREDIT = POINTS_PER_ASSESSMENT_CREDIT;
 
 // --- 검사(포털) ---
-export const POINT_COST_PORTAL_RECIPIENT = 1;
+/** 내담자 생성 후 이메일/휴대폰 발송 성공 시 (1명당) */
+export const POINT_COST_INITIAL_RECIPIENT_DISPATCH = 5;
+/** 나의코드 재전송 — 휴대폰만 */
+export const POINT_COST_RESEND_PHONE = 1;
+/** @deprecated POINT_COST_INITIAL_RECIPIENT_DISPATCH */
+export const POINT_COST_PORTAL_RECIPIENT = POINT_COST_INITIAL_RECIPIENT_DISPATCH;
 export const POINT_COST_PUBLIC_CLAIM_PHONE = 1;
 export const POINT_COST_PUBLIC_CLAIM_EMAIL = 0;
 /** 휴대폰(알림톡/문자) 허용 최소 보유 포인트 — 미만이면 내담자 claim 시 이메일로 전환 */

@@ -1164,11 +1164,11 @@ def _apply_notify_channels_to_contact(
 def _ensure_notify_phone_credits(db, counselor_uid: str | None, phone_send_count: int) -> None:
     from config import COMMERCE_CREDITS_ENFORCE
     from utils.counselor_credits import get_points_available
-    from utils.points_display import POINT_COST_PORTAL_RECIPIENT
+    from utils.points_display import POINT_COST_RESEND_PHONE
 
     if not COMMERCE_CREDITS_ENFORCE or phone_send_count <= 0 or not counselor_uid:
         return
-    points_required = phone_send_count * POINT_COST_PORTAL_RECIPIENT
+    points_required = phone_send_count * POINT_COST_RESEND_PHONE
     points_balance = get_points_available(db, counselor_uid)
     if points_balance < points_required:
         raise ValueError(
@@ -1186,14 +1186,14 @@ def _consume_notify_phone_credit(
 ) -> None:
     from config import COMMERCE_CREDITS_ENFORCE
     from utils.counselor_credits import consume_portal_points
-    from utils.points_display import POINT_COST_PORTAL_RECIPIENT
+    from utils.points_display import POINT_COST_RESEND_PHONE
 
     if not COMMERCE_CREDITS_ENFORCE or not counselor_uid:
         return
     consume_portal_points(
         db,
         counselor_uid,
-        POINT_COST_PORTAL_RECIPIENT,
+        POINT_COST_RESEND_PHONE,
         reason=reason,
         actor_uid=counselor_uid,
         metadata={"portalId": portal_id, "assessmentId": assessment_id},
@@ -1307,17 +1307,9 @@ def resend_portal_credentials(
             continue
         status = result.get("status") or "failed"
         result_errors = result.get("errors") or []
-        if status == "sent":
+        if status in ("sent", "partial"):
             pref.update({"pinHash": hash_password(new_pin)})
             sent += 1
-            if _will_use_phone_channel(email, phone, channels):
-                _consume_notify_phone_credit(
-                    db,
-                    counselor_uid=counselor_uid,
-                    portal_id=pid,
-                    assessment_id=assessment_id,
-                    reason="dispatch_resend_phone",
-                )
         elif status == "sending":
             sent += 0
         else:

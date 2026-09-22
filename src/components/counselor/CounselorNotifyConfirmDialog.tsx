@@ -11,7 +11,8 @@ import {
   type NotifyRecipientContact,
 } from '@/lib/counselorNotifyChannels';
 import {
-  POINT_COST_PORTAL_RECIPIENT,
+  POINT_COST_INITIAL_RECIPIENT_DISPATCH,
+  POINT_COST_RESEND_PHONE,
   formatPoints,
   resolvePointsBalance,
 } from '@/lib/pointsCatalog';
@@ -88,6 +89,7 @@ export default function CounselorNotifyConfirmDialog({
     () =>
       formatNotifyPointSummary(recipients, effectiveChannels, balancePoints, {
         perRecipient: kind === 'add_recipient',
+        resend: kind === 'resend',
         targetOnly: kind === 'add_recipient',
       }),
     [recipients, effectiveChannels, balancePoints, kind],
@@ -142,11 +144,18 @@ export default function CounselorNotifyConfirmDialog({
             <p className="mt-1 text-sm text-slate-400">
               등록된 연락처로 나의코드·안내가 발송됩니다.
             </p>
+          ) : kind === 'resend' ? (
+            <p className="mt-1 text-sm text-slate-400">
+              이메일(0포인트) · 휴대폰 성공 시{' '}
+              <span className="text-amber-300">{formatPoints(POINT_COST_RESEND_PHONE)}</span>/건
+            </p>
           ) : (
             <p className="mt-1 text-sm text-slate-400">
-              이메일(무료) · 휴대폰(
-              <span className="text-amber-300">{formatPoints(POINT_COST_PORTAL_RECIPIENT)}</span>
-              /건) 발송을 확인해 주세요.
+              이메일·휴대폰 발송 성공 시 내담자 1명당{' '}
+              <span className="text-amber-300">
+                {formatPoints(POINT_COST_INITIAL_RECIPIENT_DISPATCH)}
+              </span>
+              가 차감됩니다.
             </p>
           )}
         </div>
@@ -180,7 +189,7 @@ export default function CounselorNotifyConfirmDialog({
                   <span className="font-semibold text-white">휴대폰</span>
                   <span className="text-amber-300">
                     {' '}
-                    ({formatPoints(POINT_COST_PORTAL_RECIPIENT)}/건)
+                    ({kind === 'resend' ? formatPoints(POINT_COST_RESEND_PHONE) : '0포인트'}/건)
                   </span>
                 </span>
               </label>
@@ -201,7 +210,7 @@ export default function CounselorNotifyConfirmDialog({
                 </p>
                 {kind === 'add_recipient' ? (
                   <p className="mt-1 text-xs text-white/90">
-                    (내담자1명 - {formatPoints(POINT_COST_PORTAL_RECIPIENT)} 사용)
+                    (발송 성공 시 {formatPoints(POINT_COST_INITIAL_RECIPIENT_DISPATCH)})
                   </p>
                 ) : null}
               </>

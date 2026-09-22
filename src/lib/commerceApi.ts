@@ -36,6 +36,18 @@ export interface CreditLedgerEntry {
   reason: string;
   createdAt?: string;
   actorUid?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface CounselorCreditLot {
+  id: string;
+  counselorUid?: string;
+  pointsGranted?: number;
+  pointsRemaining?: number;
+  expiresAt?: string | null;
+  reason?: string;
+  createdAt?: string;
+  expiredAt?: string | null;
 }
 
 export interface CounselorSubscription {
@@ -70,6 +82,7 @@ export interface CounselorCreditsResponse {
   pilotFreeCredits?: number;
   pilotFreePoints?: number;
   firstSendTrialEligible?: boolean;
+  creditLots?: CounselorCreditLot[];
   ledger: CreditLedgerEntry[];
   subscription?: CounselorSubscription | null;
   payments?: {
@@ -150,6 +163,7 @@ export async function lookupCounselorCredits(params: {
   role?: string;
   balance: number;
   ledger: CreditLedgerEntry[];
+  creditLots?: CounselorCreditLot[];
 }> {
   const search = new URLSearchParams();
   if (params.email?.trim()) search.set('email', params.email.trim().toLowerCase());
@@ -169,6 +183,8 @@ export async function grantCounselorCredits(params: {
   counselorEmail?: string;
   amount: number;
   reason?: string;
+  validityDays?: number;
+  expiresAt?: string;
 }): Promise<{ ok: boolean; balance: number; granted: number }> {
   const res = await commerceFetch('/api/commerce/credits/grant', {
     method: 'POST',
@@ -177,6 +193,8 @@ export async function grantCounselorCredits(params: {
       counselorEmail: params.counselorEmail,
       amount: params.amount,
       reason: params.reason || 'admin_grant',
+      validityDays: params.validityDays,
+      expiresAt: params.expiresAt,
     }),
   });
   if (!res.ok) {
