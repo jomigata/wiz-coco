@@ -15,6 +15,7 @@
     "dev:seed-auth": "node scripts/seed-auth-emulator.js",
     "smtp:local:check": "node scripts/check-smtp-local.js",
     "secrets:smtp": "node scripts/set-smtp-secrets.js",
+    "smtp:local:test": "node scripts/run-smtp-test-send.js",
     "setup:local": "node scripts/setup-local.js",
     "postgres:up": "docker compose -f docker-compose.postgres.yml up -d",
     "postgres:migrate": "node scripts/postgres-migrate.js",
