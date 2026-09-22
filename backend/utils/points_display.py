@@ -1,10 +1,10 @@
 """포인트 표기 — DB는 검사/AI '크레딧' 정수 유지, API·UI는 포인트 노출."""
 from __future__ import annotations
 
-# 1포인트 = 1원
-WON_PER_POINT = 1
+# UI·차감 단위: 포인트 · 1포인트 = 100원
+WON_PER_POINT = 100
 
-# 검사 지갑: DB 크레딧 1건 = 100포인트 (= 100원)
+# 검사 지갑: DB 크레딧 1건 = 100포인트 (= 10,000원)
 POINTS_PER_ASSESSMENT_CREDIT = 100
 
 # AI 지갑: DB AI크레딧 1건 = 100포인트 (동일 환산)

@@ -1,10 +1,11 @@
 /**
- * WizCoCo 포인트 단가표 — DB는 검사/AI 크레딧(정수) 유지, UI·API는 포인트 표기
- * 1포인트 = 1원 · 내담자 1명 = 1포인트
+ * WizCoCo 포인트 단가표 — UI·API·차감은 **포인트** 기준, Firestore는 검사/AI **크레딧(정수)** 유지
+ * 1포인트 = 100원 · 내담자 1명 = 1포인트 · DB 크레딧 1건 = 100포인트
  */
 
-export const WON_PER_POINT = 1;
+export const WON_PER_POINT = 100;
 
+/** DB 검사 크레딧 1건 ↔ 포인트 (원장 단위, 포인트 잔액 = balance × 이 값 − reserve) */
 export const POINTS_PER_ASSESSMENT_CREDIT = 100;
 export const POINTS_PER_AI_CREDIT = 100;
 
@@ -21,9 +22,10 @@ export const PUBLIC_CLAIM_PHONE_MIN_BALANCE_POINTS = 1;
 /** 대시보드·충전 화면 — "포인트가 적습니다" / 충전 유도 기준 (포인트 단위) */
 export const ASSESSMENT_LOW_BALANCE_WARNING_POINTS = 200;
 
-export function isAssessmentBalanceLow(credits: number | null): boolean {
-  if (credits === null) return false;
-  return assessmentCreditsToPoints(credits) < ASSESSMENT_LOW_BALANCE_WARNING_POINTS;
+/** 포인트 잔액 기준 — UI는 크레딧이 아닌 포인트로 판단 */
+export function isAssessmentBalanceLow(points: number | null): boolean {
+  if (points === null) return false;
+  return points < ASSESSMENT_LOW_BALANCE_WARNING_POINTS;
 }
 
 export const PUBLIC_CLAIM_PHONE_POINT_COST = POINT_COST_PUBLIC_CLAIM_PHONE;
@@ -101,6 +103,10 @@ export const creditsToPoints = assessmentCreditsToPoints;
 export function pointsToWon(points: number): number {
   const n = Number.isFinite(points) ? points : 0;
   return Math.max(0, Math.round(n * WON_PER_POINT));
+}
+
+export function formatWonFromPoints(points: number): string {
+  return `${pointsToWon(points).toLocaleString('ko-KR')}원`;
 }
 
 export function formatPoints(points: number): string {

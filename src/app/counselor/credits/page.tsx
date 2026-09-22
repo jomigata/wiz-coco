@@ -18,6 +18,8 @@ import {
   formatPointsDelta,
   resolvePointsBalance,
   ASSESSMENT_LOW_BALANCE_WARNING_POINTS,
+  WON_PER_POINT,
+  formatWonFromPoints,
 } from '@/lib/pointsCatalog';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
@@ -193,6 +195,9 @@ function CreditsContent() {
           <div className="rounded-xl border border-blue-500/30 bg-blue-950/30 p-6 mb-6">
             <p className="text-sm text-blue-200 mb-1">보유 검사 포인트</p>
             <p className="text-4xl font-bold text-white">{formatPoints(pointsBalance)}</p>
+            <p className="text-xs text-slate-400 mt-1">
+              1포인트 = {WON_PER_POINT.toLocaleString('ko-KR')}원 · 환산 {formatWonFromPoints(pointsBalance)}
+            </p>
             {data.subscription?.planId && (
               <p className="text-sm text-indigo-200 mt-2">
                 구독: {data.subscription.planId} · 월{' '}

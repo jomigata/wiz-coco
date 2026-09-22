@@ -36,9 +36,9 @@ import {
 import CounselorRevenueLinksFooter from '@/components/counselor/CounselorRevenueLinksFooter';
 import {
   aiCreditsToPoints,
-  assessmentCreditsToPoints,
   formatPoints,
   isAssessmentBalanceLow,
+  resolvePointsBalance,
 } from '@/lib/pointsCatalog';
 
 function needsSend(a: CounselorAssessment): boolean {
@@ -123,7 +123,7 @@ export default function CounselorHomeDashboard() {
   );
   const [liaisons, setLiaisons] = useState<CounselorOrgLiaison[]>(() => initialCache?.liaisons ?? []);
   const [assessments, setAssessments] = useState<CounselorAssessment[]>([]);
-  const [creditBalance, setCreditBalance] = useState<number | null>(null);
+  const [assessmentPointsBalance, setAssessmentPointsBalance] = useState<number | null>(null);
   const [aiCreditBalance, setAiCreditBalance] = useState<number | null>(null);
   const [loading, setLoading] = useState(() => !initialCache?.hub && !initialCache?.cohorts);
   const [revalidating, setRevalidating] = useState(false);
@@ -149,7 +149,7 @@ export default function CounselorHomeDashboard() {
       setCohorts(cohortData);
       setLiaisons(liaisonData);
       setAssessments(assessmentData.assessments || []);
-      setCreditBalance(credits ? credits.balance : null);
+      setAssessmentPointsBalance(credits ? resolvePointsBalance(credits, 'assessment') : null);
       setAiCreditBalance(aiCredits ? aiCredits.balance : null);
       writeCachedCounselorDashboard(
         { hub: hubData, cohorts: cohortData, liaisons: liaisonData },
@@ -199,8 +199,8 @@ export default function CounselorHomeDashboard() {
       : (summary?.inProgressRecipients ?? 0) + (summary?.notStartedRecipients ?? 0);
   const newResultCount = recentResults.length;
   const remainingLabel =
-    creditBalance === null ? '—' : formatPoints(assessmentCreditsToPoints(creditBalance));
-  const creditsLow = isAssessmentBalanceLow(creditBalance);
+    assessmentPointsBalance === null ? '—' : formatPoints(assessmentPointsBalance);
+  const creditsLow = isAssessmentBalanceLow(assessmentPointsBalance);
   const aiPointsLabel =
     aiCreditBalance === null ? null : formatPoints(aiCreditsToPoints(aiCreditBalance));
 
@@ -392,7 +392,10 @@ export default function CounselorHomeDashboard() {
           )}
         </div>
       </motion.div>
-      <CounselorRevenueLinksFooter creditBalance={creditBalance} orgLiaisonCount={liaisons.length} />
+      <CounselorRevenueLinksFooter
+        assessmentPointsBalance={assessmentPointsBalance}
+        orgLiaisonCount={liaisons.length}
+      />
     </CounselorPageSection>
   );
 }
