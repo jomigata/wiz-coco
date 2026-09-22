@@ -85,7 +85,8 @@ npm run dev:next        # API 5000 떠 있으면 Next만
   2. GitHub → Settings → Secrets → `SMTP_*`, `MAIL_FROM` (발송: **wizcocoai@gmail.com** + 앱 비밀번호)
   3. `npm run smtp:local:check` → OK 확인 후 **`npm run dev` 재시작** (Flask)
   4. `http://localhost:5000/api/health` → `"emailConfigured": true`
-  5. UI에서 **이메일** 채널 선택(또는 내담자 추가 시 이메일 있는 행) 후 발송
+  5. **`npm run dev` 재시작** (Flask가 `.env.smtp.local` 을 읽음 — `/api/notifications/status` → `email.configured: true`)
+  6. UI에서 **이메일** 채널 선택(또는 내담자 추가 시 이메일 있는 행) 후 발송
 - CORS: `localhost:3000` 허용 (`backend/utils/cors_config.py`)
 
 ## Emulator 로그인

@@ -116,4 +116,11 @@ def create_app():
 app = create_app()
 
 if __name__ == "__main__":
+    if os.getenv("USE_FIREBASE_EMULATOR", "").lower() in ("1", "true", "yes"):
+        from config import is_email_configured
+
+        print(
+            f"[wizcoco-api] Emulator mode — SMTP email: {'ON' if is_email_configured() else 'OFF (backend/.env.smtp.local)'}",
+            flush=True,
+        )
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", "5000")), debug=(FLASK_ENV == "development"))

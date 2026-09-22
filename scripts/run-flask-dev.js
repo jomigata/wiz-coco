@@ -15,6 +15,15 @@ const venvPython = path.join(
 dotenv.config({ path: path.join(backendDir, '.env') });
 dotenv.config({ path: path.join(backendDir, '.env.smtp.local'), override: true });
 
+const smtpEnvKeys = [
+  'SMTP_HOST',
+  'SMTP_PORT',
+  'SMTP_USER',
+  'SMTP_PASSWORD',
+  'MAIL_FROM',
+  'COUNSELOR_ADMIN_NOTIFY_EMAIL',
+];
+
 const env = {
   ...process.env,
   USE_FIREBASE_EMULATOR: 'true',
@@ -25,6 +34,15 @@ const env = {
   FIREBASE_AUTH_EMULATOR_HOST: '127.0.0.1:9099',
   FIREBASE_PROJECT_ID: 'wiz-coco',
 };
+for (const key of smtpEnvKeys) {
+  if (process.env[key]) env[key] = process.env[key];
+}
+
+if (env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASSWORD) {
+  console.log('[dev:flask] SMTP email send enabled:', env.SMTP_USER);
+} else {
+  console.warn('[dev:flask] SMTP not configured — copy backend/.env.smtp.local.example');
+}
 
 const child = spawn(venvPython, ['app.py'], {
   cwd: backendDir,
