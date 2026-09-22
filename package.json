@@ -14,6 +14,7 @@
     "dev:next:wait": "wait-on tcp:127.0.0.1:5000 && npm run dev:next",
     "dev:seed-auth": "node scripts/seed-auth-emulator.js",
     "smtp:local:check": "node scripts/check-smtp-local.js",
+    "secrets:smtp": "node scripts/set-smtp-secrets.js",
     "setup:local": "node scripts/setup-local.js",
     "postgres:up": "docker compose -f docker-compose.postgres.yml up -d",
     "postgres:migrate": "node scripts/postgres-migrate.js",
