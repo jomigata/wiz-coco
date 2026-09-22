@@ -1382,7 +1382,15 @@ def update_dispatch_recipient_contact(
 
     norm_email = validate_recipient_email_or_raise(norm_email)
 
-    pref.update({"phone": norm_phone, "email": norm_email})
+    prev_email = (pdata.get("email") or "").strip().lower()
+    prev_phone = normalize_recipient_phone((pdata.get("phone") or "").strip())
+    patch: dict = {"phone": norm_phone, "email": norm_email}
+    if norm_email != prev_email:
+        patch["lastNotifyEmailChannel"] = "idle"
+    if norm_phone != prev_phone:
+        patch["lastNotifyPhoneChannel"] = "idle"
+
+    pref.update(patch)
     try:
         from utils.dispatch_postgres_sync import sync_portal_dispatch_to_postgres
 

@@ -157,43 +157,6 @@ function dispatchStatusSortKey(r: DispatchDisplayRecipient): string {
   return `${String(tier1).padStart(3, '0')}|${tier23}|${view.mainText}`;
 }
 
-function emailChannelOutcome(
-  status: string,
-  via: ReturnType<typeof parseSentViaFlags>,
-  failed: ReturnType<typeof parseNotifyErrors>,
-): 'ok' | 'fail' | 'pending' | 'idle' {
-  if (failed.emailFailed) return 'fail';
-  if (status === 'sent') return via.emailOk ? 'ok' : 'ok';
-  if (status === 'partial') {
-    if (failed.phoneFailed && !failed.emailFailed) return 'ok';
-    if (via.emailOk) return 'ok';
-    return 'fail';
-  }
-  if (status === 'failed') return 'fail';
-  if (status === 'pending' || status === 'sending') return 'pending';
-  if (status === 'not_sent') return 'idle';
-  return 'fail';
-}
-
-function phoneChannelOutcome(
-  status: string,
-  via: ReturnType<typeof parseSentViaFlags>,
-  failed: ReturnType<typeof parseNotifyErrors>,
-): 'ok' | 'fail' | 'pending' | 'idle' {
-  const phoneOk = via.alimtalkOk || via.smsOk;
-  if (failed.phoneFailed) return 'fail';
-  if (status === 'sent') return phoneOk || !via.emailOk ? 'ok' : 'fail';
-  if (status === 'partial') {
-    if (failed.emailFailed && !failed.phoneFailed) return phoneOk ? 'ok' : 'fail';
-    if (phoneOk) return 'ok';
-    return 'fail';
-  }
-  if (status === 'failed') return 'fail';
-  if (status === 'pending' || status === 'sending') return 'pending';
-  if (status === 'not_sent') return 'idle';
-  return 'fail';
-}
-
 export type ChannelDetailPart = { text: string; failed: boolean };
 
 export type DispatchStatusView = {
@@ -268,7 +231,83 @@ function pushChannelFromExplicitState(
   if (legacyOutcome === 'ok') pushChannelPart(parts, `${label}✓`, false);
   else if (legacyOutcome === 'fail') pushChannelPart(parts, `${label}✗`, true);
   else if (legacyOutcome === 'pending') pushChannelPart(parts, `${label}…`, false);
-  else pushChannelPart(parts, `${label}·`, false);
+  // idle — 한 번도 발송 시도하지 않은 채널은 표시하지 않음
+}
+
+function emailLegacyOutcome(
+  r: DispatchDisplayRecipient,
+  status: string,
+  via: ReturnType<typeof parseSentViaFlags>,
+  failed: ReturnType<typeof parseNotifyErrors>,
+): 'ok' | 'fail' | 'pending' | 'idle' {
+  const ch = (r.notifyEmailChannel || '').trim().toLowerCase();
+  if (failed.emailFailed) return 'fail';
+  if (ch === 'sent' || via.emailOk) return 'ok';
+  if (ch === 'failed') return 'fail';
+  if (status === 'sending' || ch === 'sending') return 'pending';
+  return 'idle';
+}
+
+function phoneLegacyOutcome(
+  r: DispatchDisplayRecipient,
+  status: string,
+  via: ReturnType<typeof parseSentViaFlags>,
+  failed: ReturnType<typeof parseNotifyErrors>,
+): 'ok' | 'fail' | 'pending' | 'idle' {
+  const ch = (r.notifyPhoneChannel || '').trim().toLowerCase();
+  const phoneOk = via.alimtalkOk || via.smsOk;
+  if (failed.phoneFailed) return 'fail';
+  if (ch === 'sent' || phoneOk) return 'ok';
+  if (ch === 'failed') return 'fail';
+  if (status === 'sending' || ch === 'sending') return 'pending';
+  return 'idle';
+}
+
+function channelWasAttempted(
+  explicit: string | null | undefined,
+  legacy: 'ok' | 'fail' | 'pending' | 'idle',
+): boolean {
+  const ch = (explicit || '').trim().toLowerCase();
+  if (ch === 'sent' || ch === 'failed' || ch === 'sending') return true;
+  return legacy !== 'idle';
+}
+
+function appendPhoneChannelParts(
+  parts: ChannelDetailPart[],
+  r: DispatchDisplayRecipient,
+  status: string,
+  via: ReturnType<typeof parseSentViaFlags>,
+  failed: ReturnType<typeof parseNotifyErrors>,
+  terminal: boolean,
+): void {
+  const legacy = phoneLegacyOutcome(r, status, via, failed);
+  if (!channelWasAttempted(r.notifyPhoneChannel, legacy)) return;
+
+  const showAlimtalk =
+    via.alimtalkOk ||
+    (r.notifySentVia || '').toLowerCase().includes('kakao') ||
+    (r.notifySentVia || '').toLowerCase().includes('alimtalk');
+  const showSms =
+    via.smsOk ||
+    (r.notifySentVia || '').toLowerCase().includes('sms') ||
+    failed.phoneFailed;
+
+  if (showAlimtalk) {
+    let channelState = r.notifyPhoneChannel;
+    if (terminal && channelState === 'sending') channelState = undefined;
+    pushChannelFromExplicitState(parts, '알림톡', channelState, legacy);
+    return;
+  }
+  if (showSms) {
+    let channelState = r.notifyPhoneChannel;
+    if (terminal && channelState === 'sending') channelState = undefined;
+    pushChannelFromExplicitState(parts, '문자', channelState, legacy);
+    return;
+  }
+  const phoneLabel = phoneChannelLabel(via);
+  let channelState = r.notifyPhoneChannel;
+  if (terminal && channelState === 'sending') channelState = undefined;
+  pushChannelFromExplicitState(parts, phoneLabel, channelState, legacy);
 }
 
 function buildChannelDetailParts(r: DispatchDisplayRecipient): ChannelDetailPart[] {
@@ -282,77 +321,17 @@ function buildChannelDetailParts(r: DispatchDisplayRecipient): ChannelDetailPart
   const terminal = isTerminalNotifyStatus(status);
   const parts: ChannelDetailPart[] = [];
 
-  if (!hasPhone) {
-    if (hasEmail) {
-      const emailLegacy =
-        via.emailOk && !failed.emailFailed
-          ? 'ok'
-          : failed.emailFailed
-            ? 'fail'
-            : status === 'sending' || r.notifyEmailChannel === 'sending'
-              ? 'pending'
-              : via.emailOk || r.notifyEmailChannel === 'sent'
-                ? 'ok'
-                : r.notifyEmailChannel === 'failed'
-                  ? 'fail'
-                  : status === 'sent' || status === 'partial'
-                    ? 'ok'
-                    : 'idle';
+  if (hasEmail) {
+    const emailLegacy = emailLegacyOutcome(r, status, via, failed);
+    if (channelWasAttempted(r.notifyEmailChannel, emailLegacy)) {
       let emailState = r.notifyEmailChannel;
       if (terminal && emailState === 'sending') emailState = undefined;
       pushChannelFromExplicitState(parts, '이메일', emailState, emailLegacy);
     }
-    return parts;
   }
 
-  const showAlimtalk =
-    via.alimtalkOk ||
-    (r.notifySentVia || '').toLowerCase().includes('kakao') ||
-    (r.notifySentVia || '').toLowerCase().includes('alimtalk');
-  const showSms =
-    via.smsOk ||
-    (r.notifySentVia || '').toLowerCase().includes('sms') ||
-    failed.phoneFailed ||
-    (status === 'partial' && !via.alimtalkOk);
-
-  if (showAlimtalk) {
-    const legacy = phoneChannelOutcome(status, { ...via, smsOk: false, alimtalkOk: true }, failed);
-    let channelState = r.notifyPhoneChannel;
-    if (terminal && channelState === 'sending') channelState = undefined;
-    pushChannelFromExplicitState(parts, '알림톡', channelState, legacy);
-  }
-  if (showSms && (via.smsOk || failed.phoneFailed || status === 'partial')) {
-    const legacy = phoneChannelOutcome(status, { ...via, alimtalkOk: false, smsOk: true }, failed);
-    let channelState = r.notifyPhoneChannel;
-    if (terminal && channelState === 'sending') channelState = undefined;
-    pushChannelFromExplicitState(parts, '문자', channelState, legacy);
-  }
-  if (!parts.length && hasPhone) {
-    const phoneLabel = phoneChannelLabel(via);
-    const legacy = phoneChannelOutcome(status, via, failed);
-    let channelState = r.notifyPhoneChannel;
-    if (terminal && channelState === 'sending') channelState = undefined;
-    pushChannelFromExplicitState(parts, phoneLabel, channelState, legacy);
-  }
-
-  if (hasEmail) {
-    const emailLegacy =
-      via.emailOk && !failed.emailFailed
-        ? 'ok'
-        : failed.emailFailed
-          ? 'fail'
-          : status === 'sending' || r.notifyEmailChannel === 'sending'
-            ? 'pending'
-            : via.emailOk || r.notifyEmailChannel === 'sent'
-              ? 'ok'
-              : r.notifyEmailChannel === 'failed'
-                ? 'fail'
-                : status === 'sent' || status === 'partial'
-                  ? 'ok'
-                  : 'idle';
-    let emailState = r.notifyEmailChannel;
-    if (terminal && emailState === 'sending') emailState = undefined;
-    pushChannelFromExplicitState(parts, '이메일', emailState, emailLegacy);
+  if (hasPhone) {
+    appendPhoneChannelParts(parts, r, status, via, failed, terminal);
   }
 
   return parts;
