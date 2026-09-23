@@ -2,10 +2,18 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
+import {
+  counselorListScrollEdgeButtonClass,
+  counselorListScrollEdgeChevronClass,
+  type CounselorListScrollEdgeAccent,
+} from '@/lib/counselorListTableStyles';
+
 type Props = {
   children: React.ReactNode;
   /** outer wrapper (e.g. flex-1) */
   className?: string;
+  /** CounselorPageSection titleAccent와 맞춤 (기본 progress) */
+  edgeAccent?: CounselorListScrollEdgeAccent;
 };
 
 const SCROLL_EDGE_THRESHOLD = 6;
@@ -13,11 +21,17 @@ const HOVER_SCROLL_PX_PER_FRAME = 10;
 /** 섹션 좌·우 패딩(공백)까지 hover 스크롤 영역 확장 */
 const EDGE_HOVER_EXTEND_PX = 20;
 
-function SmallScrollChevron({ side }: { side: 'left' | 'right' }) {
+function SmallScrollChevron({
+  side,
+  edgeAccent,
+}: {
+  side: 'left' | 'right';
+  edgeAccent: CounselorListScrollEdgeAccent;
+}) {
   const isLeft = side === 'left';
   return (
     <svg
-      className={`h-4 w-4 shrink-0 text-sky-200 ${
+      className={`h-4 w-4 shrink-0 ${counselorListScrollEdgeChevronClass(edgeAccent)} ${
         isLeft ? 'counselor-scroll-hint-nudge-left' : 'counselor-scroll-hint-nudge-right'
       }`}
       viewBox="0 0 20 20"
@@ -45,12 +59,14 @@ function ScrollEdge({
   side,
   visible,
   active,
+  edgeAccent,
   onEnter,
   onLeave,
 }: {
   side: 'left' | 'right';
   visible: boolean;
   active: boolean;
+  edgeAccent: CounselorListScrollEdgeAccent;
   onEnter: () => void;
   onLeave: () => void;
 }) {
@@ -81,20 +97,20 @@ function ScrollEdge({
         aria-hidden
       />
       <span
-        className={`relative flex h-full w-6 flex-col items-center justify-center rounded-md border shadow-[0_0_12px_rgba(56,189,248,0.2)] transition-colors ${
-          active
-            ? 'border-sky-300/70 bg-sky-500/25 shadow-[inset_0_0_10px_rgba(56,189,248,0.25)]'
-            : 'border-sky-400/55 bg-sky-950/85 hover:border-sky-300/65 hover:bg-sky-900/90'
-        }`}
+        className={counselorListScrollEdgeButtonClass(edgeAccent, active)}
       >
-        <SmallScrollChevron side={side} />
+        <SmallScrollChevron side={side} edgeAccent={edgeAccent} />
       </span>
     </button>
   );
 }
 
 /** 상담사 목록 테이블 — 가로 스크롤 시 좌·우 끝 세로 화살표 + hover 연속 스크롤 */
-export default function CounselorListTableScroll({ children, className = '' }: Props) {
+export default function CounselorListTableScroll({
+  children,
+  className = '',
+  edgeAccent = 'progress',
+}: Props) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const hoverRafRef = useRef<number | null>(null);
@@ -232,7 +248,9 @@ export default function CounselorListTableScroll({ children, className = '' }: P
         {children}
       </div>
       <div
-        className="pointer-events-none absolute z-10"
+        className={`pointer-events-none absolute z-10 ${
+          edgeLayout.height <= 0 ? 'hidden' : ''
+        }`}
         style={{
           top: edgeLayout.top,
           height: edgeLayout.height,
@@ -245,6 +263,7 @@ export default function CounselorListTableScroll({ children, className = '' }: P
           side="left"
           visible={canScrollLeft}
           active={hoverSide === 'left'}
+          edgeAccent={edgeAccent}
           onEnter={() => startHoverScroll('left')}
           onLeave={stopHoverScroll}
         />
@@ -252,6 +271,7 @@ export default function CounselorListTableScroll({ children, className = '' }: P
           side="right"
           visible={canScrollRight}
           active={hoverSide === 'right'}
+          edgeAccent={edgeAccent}
           onEnter={() => startHoverScroll('right')}
           onLeave={stopHoverScroll}
         />
