@@ -22,7 +22,7 @@ Cursor 에이전트가 사용자 개입 없이 완전 자동으로 GitHub 배포
 - Git 상태 자동 확인 및 처리
 
 ### **4. 배포 프로세스**
-- GitHub Actions 자동 실행 확인 (`AUTO_DEPLOY_ON_PUSH=true` — Firebase + Cloud Run)
+- GitHub Actions: push 시 **CI 검증**; prod 배포는 **`AUTO_DEPLOY_ON_PUSH=false`** + 수동 (`npm run deploy:prod:*`)
 - **Build & Deploy** / **deploy-backend** job 성공까지 모니터링
 - `https://wiz-coco.web.app/build-version.json` SHA로 반영 확인
 - 완료 알림 자동 생성

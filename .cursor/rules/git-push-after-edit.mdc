@@ -22,24 +22,24 @@ alwaysApply: true
 
 **Auto-Run allowlist**: 위 명령은 **`cd …;` 없이** 저장소 루트에서 `git`만 단독 실행한다 (`cd` 접두사만 있으면 allowlist에 `git`이 매칭되지 않아 Run 확인이 뜰 수 있음).
 
-### 배포 (GitHub Actions 자동)
+### 배포 (GitHub Actions — 비용 절감 모드)
 
-- **`main` 브랜치에 `origin`으로 푸시되면** GitHub Actions가 CI·배포 파이프라인을 실행한다.
-- 저장소 Variable **`AUTO_DEPLOY_ON_PUSH=true`** 이면 push 후 **Firebase Hosting**(`deploy.yml`)·**Cloud Run API**(`deploy-backend.yml`)가 실제 배포까지 진행한다.
-- 에이전트는 **로컬 `firebase deploy`를 사용자에게 요구하지 않는다.** 푸시 후 Actions로 배포한다.
+- 저장소 Variable **`AUTO_DEPLOY_ON_PUSH=false`** (기본) → **`main` push는 CI만**, Firebase/Cloud Run **자동 배포 없음**
+- prod 확인이 필요할 때: `npm run deploy:prod:hosting` / `deploy:prod:api` 또는 Actions 수동 Run ([`docs/gcp-cost-saver-ko.md`](./gcp-cost-saver-ko.md))
+- 에이전트는 **로컬 `firebase deploy`를 사용자에게 요구하지 않는다.**
 
-### 푸시·배포 후 필수 점검 (에이전트)
+### 푸시·배포 후 점검 (에이전트, prod 수동 배포한 경우만)
 
-코드·백엔드·프론트 등 **사이트에서 확인 가능한 변경**을 포함한 작업을 마친 뒤:
+코드를 **prod에 올린 뒤** 사이트에서 확인할 때:
 
 1. `git push origin HEAD` 완료 후 **`gh run list --limit 5 --branch main`** 으로 최근 run 확인  
-2. 아래 워크플로가 **실패(빨간 X)** 가 아닌지, **gate만 성공하고 deploy job이 0초 스킵**이 아닌지 확인  
+2. 아래는 **수동 prod 배포를 실행한 경우에만** 확인 (push만이면 CI success면 충분)  
    - `🚀 WizCoCo Deploy (Firebase)` — job **🏗️ Build & Deploy** 성공  
-   - `🚀 Deploy Flask API to Cloud Run` — job **deploy-backend** 성공 (`backend/**` 변경 시)  
+   - `🚀 Deploy Flask API to Cloud Run` — job **deploy-backend** 성공  
 3. `deploy.yml` 워크플로 파일 오류(Invalid workflow file)면 **푸시 전에 수정**하고 재푸시  
-4. `backend/**`만 변경되어 Firebase deploy가 안 뜬 경우: **`gh workflow run deploy-backend.yml`** 로 API 배포  
-5. 배포 성공 후 **`https://wiz-coco.web.app/build-version.json`** 의 `sha`가 방금 푸시한 커밋 SHA(앞 7자 이상 일치)인지 확인  
-6. 사용자에게 **「사이트에서 테스트 가능」** 은 위 점검 통과 후에만 안내한다. 실패·스킵 시 원인과 조치를 보고한다.
+4. `backend/**`만 변경·prod API 반영 필요: **`npm run deploy:prod:api`** 또는 **`gh workflow run deploy-backend.yml`**  
+5. prod 배포 성공 후 **`https://wiz-coco.web.app/build-version.json`** 의 `sha`가 배포 대상 커밋과 일치하는지 확인  
+6. 사용자에게 **「사이트에서 테스트 가능」** 은 위 prod 배포·점검 통과 후에만 안내
 
 ### 푸시를 반드시 직접 실행하는 이유
 

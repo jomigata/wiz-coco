@@ -170,9 +170,18 @@ Staging parity: [staging-dispatch-postgres-parity-ko.md](./staging-dispatch-post
 
 ## prod 배포와 분리
 
-- 개발: **`npm run dev`** 만 사용 → GitHub Actions / Cloud Build / Hosting 배포 **없음**
-- 확인: Variable **`AUTO_DEPLOY_ON_PUSH=false`** ([비용 절감 가이드](./gcp-cost-saver-ko.md))
-- 배포: 주 1~2회 수동 workflow 또는 오픈 전에만 `true`
+- 개발: **`npm run dev`** + 로컬 타입 검사 → GitHub Actions / Hosting / Cloud Run **자동 배포 없음**
+- **`git push`:** 원격 저장소 동기화 + **✅ CI (no GCP deploy)** 만 실행
+- Variable: **`AUTO_DEPLOY_ON_PUSH=false`** ([비용 절감 가이드](./gcp-cost-saver-ko.md))
+- **온라인(prod) 확인이 필요할 때만** 수동 배포:
+
+```powershell
+npm run deploy:prod:hosting   # 프론트만
+npm run deploy:prod:api         # 백엔드만
+npm run deploy:prod:status      # Variable · 최근 run 확인
+```
+
+배포 후: https://wiz-coco.web.app/build-version.json 의 `sha`가 push한 커밋과 일치하는지 확인
 
 ## CI·로컬 빌드
 

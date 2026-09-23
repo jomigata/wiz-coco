@@ -18,7 +18,8 @@
 ### 원리
 
 - `deploy.yml`, `deploy-backend.yml`은 push 시 **Variable `AUTO_DEPLOY_ON_PUSH=true`** 이면 자동 배포
-- **현재 저장소 정책: `AUTO_DEPLOY_ON_PUSH=true`** — 에이전트·개발 push 후 사이트에서 바로 확인 (비용 절감 시 GitHub Variables에서 `false`로 되돌림)
+- **현재 저장소 정책: `AUTO_DEPLOY_ON_PUSH=false`** — push는 **CI만** (GCP 배포 없음). 온라인 확인 시 Actions 수동 Run 또는 `npm run deploy:prod:*`
+- 자동 배포 복구: GitHub Variables에서 `true` (오픈·릴리스 주기에만 권장)
 
 ### 설정 위치
 
@@ -26,11 +27,29 @@ GitHub → **Settings** → **Secrets and variables** → **Actions** → **Vari
 
 | Variable | 준비 단계 | 정식 오픈 후 |
 |----------|-----------|--------------|
-| `AUTO_DEPLOY_ON_PUSH` | **`true`** (사이트 즉시 반영) | 비용 절감 시 `false` + 수동 workflow |
+| `AUTO_DEPLOY_ON_PUSH` | **`false`** (비용 절감·로컬 1차 검증) | 릴리스 시 `true` 또는 수동 workflow |
 
 ---
 
-## 수동 배포 방법
+## 수동 배포 (로컬 검증 후)
+
+1. **로컬:** `npm run dev` · `npx tsc --noEmit` (필요 시 `npm run dev:build`)
+2. **코드 반영:** `git push origin main` → **CI만** 실행 (Hosting/Cloud Run 과금 없음)
+3. **prod 온라인 확인이 필요할 때** (터미널, `gh` 로그인 필요):
+
+| 명령 | 용도 |
+|------|------|
+| `npm run deploy:prod:hosting` | UI만 (`hosting-only`, 가장 저렴) |
+| `npm run deploy:prod:auto` | Firebase `auto` (변경 경로별) |
+| `npm run deploy:prod:api` | Flask → Cloud Run |
+| `npm run deploy:prod:all` | hosting-only + API |
+| `npm run deploy:prod:status` | Variable + 최근 Actions |
+
+GitHub UI: **Actions** → 해당 workflow → **Run workflow**
+
+---
+
+## 수동 배포 방법 (GitHub UI)
 
 ### 1) 프론트(UI)만 변경했을 때 — **hosting-only** (가장 저렴)
 
@@ -113,8 +132,7 @@ Console → **Cloud Storage** → `gcf-sources-*`, `gcf-artifacts-*`, `*_cloudbu
 ## `npm run deploy:auto` 와의 관계
 
 로컬 `deploy:auto`는 **git push**만 수행합니다.  
-저장소 Variable **`AUTO_DEPLOY_ON_PUSH=true`** 이면 push 후 Firebase·Cloud Run까지 자동 배포됩니다 (에이전트 작업 기본).  
-비용 절감 모드로 되돌리려면 Variable을 `false`로 두고 Actions에서 수동 Run 하세요.
+Variable **`AUTO_DEPLOY_ON_PUSH=false`** 이면 push 후 **CI만** 돌고 GCP 배포는 **수동** (`npm run deploy:prod:*` 또는 Actions Run).
 
 ---
 
