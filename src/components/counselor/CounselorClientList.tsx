@@ -1464,7 +1464,7 @@ export default function CounselorClientList({
           </div>
         ) : (
           <>
-            <CounselorListTableScroll edgeAccent="list">
+            <CounselorListTableScroll>
               <table className="w-max min-w-full table-fixed text-sm">
                 <thead className={counselorListTheadClass}>
                   <tr className={counselorListHeaderRowClass}>

@@ -1,33 +1,15 @@
 /** 신입생 목록(test-management)과 통일된 테이블 스타일 */
 
-/** CounselorPageSection titleAccent와 동일 — 가로 스크롤 버튼 테두리 */
-export type CounselorListScrollEdgeAccent = 'list' | 'progress' | 'deleted';
-
-export function counselorListScrollEdgeButtonClass(
-  accent: CounselorListScrollEdgeAccent,
-  active: boolean,
-): string {
-  const base = 'relative flex h-full w-6 flex-col items-center justify-center rounded-md border transition-colors';
-  if (accent === 'list') {
-    return active
-      ? `${base} border-yellow-300/70 bg-yellow-500/20 shadow-[0_0_12px_rgba(250,204,21,0.22),inset_0_0_10px_rgba(250,204,21,0.2)]`
-      : `${base} border-yellow-400/55 bg-yellow-950/85 shadow-[0_0_12px_rgba(250,204,21,0.18)] hover:border-yellow-300/65 hover:bg-yellow-900/90`;
-  }
-  if (accent === 'deleted') {
-    return active
-      ? `${base} border-orange-300/70 bg-orange-500/20 shadow-[0_0_12px_rgba(249,115,22,0.22),inset_0_0_10px_rgba(249,115,22,0.2)]`
-      : `${base} border-orange-400/55 bg-orange-950/85 shadow-[0_0_12px_rgba(249,115,22,0.18)] hover:border-orange-300/65 hover:bg-orange-900/90`;
-  }
+/** CounselorPageSection `titleAccent="list"` 상단선(border-t-yellow-400)과 동일 — 가로 스크롤 버튼 */
+export function counselorListScrollEdgeButtonClass(active: boolean): string {
+  const base =
+    'relative flex h-full w-6 flex-col items-center justify-center rounded-md border transition-colors';
   return active
-    ? `${base} border-sky-300/70 bg-sky-500/25 shadow-[0_0_12px_rgba(56,189,248,0.2),inset_0_0_10px_rgba(56,189,248,0.25)]`
-    : `${base} border-sky-400/55 bg-sky-950/85 shadow-[0_0_12px_rgba(56,189,248,0.2)] hover:border-sky-300/65 hover:bg-sky-900/90`;
+    ? `${base} border-yellow-300/70 bg-yellow-500/20 shadow-[0_0_12px_rgba(250,204,21,0.22),inset_0_0_10px_rgba(250,204,21,0.2)]`
+    : `${base} border-yellow-400/55 bg-yellow-950/85 shadow-[0_0_12px_rgba(250,204,21,0.18)] hover:border-yellow-300/65 hover:bg-yellow-900/90`;
 }
 
-export function counselorListScrollEdgeChevronClass(accent: CounselorListScrollEdgeAccent): string {
-  if (accent === 'list') return 'text-yellow-200';
-  if (accent === 'deleted') return 'text-orange-200';
-  return 'text-sky-200';
-}
+export const counselorListScrollEdgeChevronClass = 'text-yellow-200';
 
 /** @deprecated — CounselorListTableScroll 컴포넌트 사용 권장 */
 export const counselorListTableWrapperClass = 'min-h-0 overflow-x-auto';
