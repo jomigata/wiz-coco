@@ -71,7 +71,7 @@ function ScrollEdge({
       onMouseLeave={onLeave}
       onFocus={onEnter}
       onBlur={onLeave}
-      className={`pointer-events-auto absolute inset-y-0 z-20 flex shrink-0 items-stretch justify-center border-0 bg-transparent p-0 outline-none ${
+      className={`pointer-events-auto absolute inset-y-0 z-20 flex shrink-0 items-stretch justify-center border-0 bg-transparent p-0 outline-none focus-visible:ring-2 focus-visible:ring-yellow-400/70 ${
         isLeft ? 'left-0' : 'right-0'
       } ${active ? 'cursor-grabbing' : 'cursor-pointer'}`}
       style={{ width: 36 + EDGE_HOVER_EXTEND_PX }}
