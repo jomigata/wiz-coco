@@ -624,7 +624,7 @@ export default function AssessmentDispatchPanel({
         return;
       }
       const issueError = readPendingDispatchError(assessmentId);
-      if (issueError) setPendingIssueError(issueError);
+      setPendingIssueError(issueError || '');
     };
     syncPendingResolution();
     const timer = window.setInterval(syncPendingResolution, 3000);
@@ -695,9 +695,20 @@ export default function AssessmentDispatchPanel({
         setDispatchNextCursor(cached.nextCursor ?? null);
         setDispatchTotalCount(cached.totalRecipientCount ?? cached.recipients.length);
         setError('');
-      } else if (!opts?.silent) {
-        setData(null);
-        setError(err instanceof Error ? err.message : '불러오기 실패');
+      } else {
+        let keptExisting = false;
+        setData((prev) => {
+          if (prev?.recipients?.length) {
+            keptExisting = true;
+            return prev;
+          }
+          return opts?.silent ? prev : null;
+        });
+        if (keptExisting || opts?.silent) {
+          setError('');
+        } else {
+          setError(err instanceof Error ? err.message : '불러오기 실패');
+        }
       }
     } finally {
       if (!opts?.silent) {
@@ -1470,7 +1481,7 @@ export default function AssessmentDispatchPanel({
       dense
       description={
         <span className="inline-flex w-full flex-wrap items-center gap-2">
-          {pendingIssueError ? (
+          {pendingIssueError && !issuingPhase && !hasSendingNotify ? (
             <span className="inline-flex items-center gap-2 rounded-md border border-red-500/30 bg-red-950/40 px-2 py-1 text-sm text-red-200">
               발급/발송 처리 중 오류가 발생했습니다: {pendingIssueError} — 상담코드 목록에서 실제 발송 여부를 확인해 주세요.
             </span>

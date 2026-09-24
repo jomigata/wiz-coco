@@ -58,6 +58,12 @@ function notifyErrorHint(error: string | null | undefined): string | undefined {
   if (err.includes('no_recipient')) return '이메일·휴대폰 정보가 없습니다.';
   if (err.includes('email_send_failed')) return '이메일 발송에 실패했습니다.';
   if (err.includes('phone_send_failed')) return '문자·알림톡 발송에 실패했습니다.';
+  if (err.includes('sms_sender_equals_recipient') || err.includes('alimtalk_sender_equals_recipient')) {
+    return '발신번호와 수신번호가 같으면 발송할 수 없습니다. 다른 휴대폰 번호를 등록해 주세요.';
+  }
+  if (err.includes('sms_not_configured') || err.includes('solapi_sms_not_configured')) {
+    return '문자(SMS) 발송 설정이 되어 있지 않습니다. 관리자에게 문의해 주세요.';
+  }
   if (err.includes('solapi_delivery_timeout')) return '문자 발송 결과 확인 시간이 초과되었습니다.';
   return err;
 }
@@ -192,7 +198,7 @@ function resolveEffectiveNotifyStatus(r: DispatchDisplayRecipient): string {
 
   const via = parseSentViaFlags(r.notifySentVia);
   if (via.emailOk || via.alimtalkOk || via.smsOk) return 'sent';
-  if ((r.notifyError || '').trim()) return 'failed';
+  // 알림톡→SMS 단계에서 중간 오류 문자열이 있어도 status가 sending이면 실패로 바꾸지 않음
 
   const notifyAt = (r.notifyAt || '').trim();
   if (notifyAt) {

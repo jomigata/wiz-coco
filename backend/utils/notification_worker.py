@@ -1064,11 +1064,13 @@ def deliver_portal_credentials(
                 alimtalk_ok = True
                 phone_channel = CHANNEL_SENT
                 solapi_group_id = ""
-            elif outcome == "failed":
+            elif outcome in ("failed", "pending"):
                 alimtalk_ok = False
                 solapi_group_id = ""
                 if poll_err and poll_err not in errors:
                     errors.append(poll_err)
+                if outcome == "pending" and "alimtalk_confirm_timeout" not in errors:
+                    errors.append("alimtalk_confirm_timeout")
                 sms_ok, sms_err, pending_gid = send_portal_credentials_sms(
                     to_phone=phone,
                     access_code=access_code,
