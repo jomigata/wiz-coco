@@ -78,6 +78,7 @@ import CounselorListTableScroll from '@/components/counselor/CounselorListTableS
 import CounselorListPagination from '@/components/counselor/CounselorListPagination';
 import { useListPaginationWithExpand } from '@/hooks/useListPaginationWithExpand';
 import { useCounselorListPageSize } from '@/hooks/useCounselorListPageSize';
+import { COUNSELOR_LIST_PAGE_SIZE_AUTO } from '@/lib/counselorListAutoPageSize';
 import { DELETED_ASSESSMENTS_HREF } from '@/lib/counselorNestedNav';
 import { matchesWildcardFields } from '@/lib/wildcardSearch';
 import {
@@ -1081,6 +1082,7 @@ export default function AssessmentDispatchPanel({
     expandedId,
     scrollContainerRef,
     getRowId: (r) => r.portalId,
+    expandShiftEnabled: pageSizeSetting === COUNSELOR_LIST_PAGE_SIZE_AUTO,
   });
 
   useEffect(() => {

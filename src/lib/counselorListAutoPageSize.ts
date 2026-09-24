@@ -39,8 +39,8 @@ function rowMatchesExpandedId(row: HTMLElement, expandedId: string | null): bool
   return false;
 }
 
-/** 펼침 행 포함 — 스크롤 영역 안에 완전히 들어오는 본문 행 개수 */
-export function measureVisibleMainRowsInScroll(
+/** 펼침 시: 펼친 본문+세부(세부가 잘려도 유지)까지 포함하고, 그 아래 완전히 보이는 행만 현재 페이지에 둠 */
+export function measureFitCountWithExpand(
   scrollEl: HTMLElement,
   expandedId: string | null,
 ): number {
@@ -50,30 +50,49 @@ export function measureVisibleMainRowsInScroll(
   const mainRows = Array.from(
     scrollEl.querySelectorAll<HTMLElement>('tbody tr:not([data-counselor-list-expand-row])'),
   );
+  if (mainRows.length === 0) return 1;
 
-  let visible = 0;
-  for (const row of mainRows) {
-    const rowRect = row.getBoundingClientRect();
-    if (rowRect.top >= containerRect.bottom) break;
-
-    let blockBottom = rowRect.bottom;
-    const next = row.nextElementSibling;
-    if (
-      next instanceof HTMLElement &&
-      next.matches('[data-counselor-list-expand-row]') &&
-      rowMatchesExpandedId(row, expandedId)
-    ) {
-      blockBottom = next.getBoundingClientRect().bottom;
+  let expandedIndex = -1;
+  for (let i = 0; i < mainRows.length; i++) {
+    if (rowMatchesExpandedId(mainRows[i], expandedId)) {
+      expandedIndex = i;
+      break;
     }
+  }
 
-    if (blockBottom <= maxBottom) {
-      visible += 1;
+  if (expandedIndex < 0 || !expandedId) {
+    let visible = 0;
+    for (const row of mainRows) {
+      const rowRect = row.getBoundingClientRect();
+      if (rowRect.top >= containerRect.bottom) break;
+      if (rowRect.bottom <= maxBottom + 0.5) visible += 1;
+      else break;
+    }
+    return Math.max(1, visible);
+  }
+
+  // 펼친 본문 행까지는 항상 현재 페이지 (세부 행이 viewport 밖으로 잘려도 유지)
+  let fitCount = expandedIndex + 1;
+
+  for (let i = expandedIndex + 1; i < mainRows.length; i++) {
+    const rowRect = mainRows[i].getBoundingClientRect();
+    if (rowRect.top >= maxBottom) break;
+    if (rowRect.bottom <= maxBottom + 0.5) {
+      fitCount += 1;
     } else {
       break;
     }
   }
 
-  return Math.max(1, visible);
+  return Math.max(expandedIndex + 1, fitCount);
+}
+
+/** @deprecated use measureFitCountWithExpand */
+export function measureVisibleMainRowsInScroll(
+  scrollEl: HTMLElement,
+  expandedId: string | null,
+): number {
+  return measureFitCountWithExpand(scrollEl, expandedId);
 }
 
 export function computeExpandAwareTotalPages(

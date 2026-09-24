@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useMemo, useState, type RefObject } from 'r
 
 import {
   computeExpandAwareTotalPages,
-  measureVisibleMainRowsInScroll,
+  measureFitCountWithExpand,
   sliceExpandAwarePage,
 } from '@/lib/counselorListAutoPageSize';
 
@@ -16,6 +16,8 @@ type Options<T> = {
   expandedId: string | null;
   scrollContainerRef: RefObject<HTMLElement | null>;
   getRowId: (item: T) => string;
+  /** 목록 개수 「자동」일 때만 펼침 overflow 페이지 이동 */
+  expandShiftEnabled?: boolean;
 };
 
 export function useListPaginationWithExpand<T>({
@@ -24,6 +26,7 @@ export function useListPaginationWithExpand<T>({
   expandedId,
   scrollContainerRef,
   getRowId,
+  expandShiftEnabled = false,
 }: Options<T>) {
   const [page, setPage] = useState(1);
   const [fitCount, setFitCount] = useState<number | null>(null);
@@ -31,14 +34,17 @@ export function useListPaginationWithExpand<T>({
   const totalCount = items.length;
 
   const expandPage = useMemo(() => {
-    if (!expandedId) return null;
+    if (!expandShiftEnabled || !expandedId) return null;
     const idx = items.findIndex((item) => getRowId(item) === expandedId);
     if (idx < 0) return null;
     return Math.floor(idx / pageSize) + 1;
-  }, [items, expandedId, pageSize, getRowId]);
+  }, [items, expandedId, pageSize, getRowId, expandShiftEnabled]);
 
   const expandShiftActive =
-    expandPage != null && fitCount != null && fitCount < pageSize;
+    expandShiftEnabled &&
+    expandPage != null &&
+    fitCount != null &&
+    fitCount < pageSize;
 
   const totalPages = useMemo(
     () =>
@@ -62,7 +68,7 @@ export function useListPaginationWithExpand<T>({
   }, [page, totalPages]);
 
   useLayoutEffect(() => {
-    if (!expandedId || expandPage == null) {
+    if (!expandShiftEnabled || !expandedId || expandPage == null) {
       setFitCount(null);
       return;
     }
@@ -72,7 +78,7 @@ export function useListPaginationWithExpand<T>({
     if (!el) return;
 
     const measure = () => {
-      const next = measureVisibleMainRowsInScroll(el, expandedId);
+      const next = measureFitCountWithExpand(el, expandedId);
       setFitCount((prev) => (prev === next ? prev : next));
     };
 
@@ -83,7 +89,15 @@ export function useListPaginationWithExpand<T>({
     if (tbody) ro.observe(tbody);
 
     return () => ro.disconnect();
-  }, [expandedId, expandPage, page, scrollContainerRef, items, pageSize]);
+  }, [
+    expandShiftEnabled,
+    expandedId,
+    expandPage,
+    page,
+    scrollContainerRef,
+    items,
+    pageSize,
+  ]);
 
   const { startIndex, paginatedItems } = useMemo(
     () =>

@@ -33,6 +33,7 @@ import {
 import { matchesWildcardFields } from '@/lib/wildcardSearch';
 import { useListPaginationWithExpand } from '@/hooks/useListPaginationWithExpand';
 import { useCounselorListPageSize } from '@/hooks/useCounselorListPageSize';
+import { COUNSELOR_LIST_PAGE_SIZE_AUTO } from '@/lib/counselorListAutoPageSize';
 import CounselorPortalMoveDialog from '@/components/counselor/CounselorPortalMoveDialog';
 import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
 import CounselorActionCompleteModal from '@/components/counselor/CounselorActionCompleteModal';
@@ -944,6 +945,7 @@ export default function CounselorClientList({
     expandedId: !permanentlyDeletedMode ? expandedId : null,
     scrollContainerRef,
     getRowId: (item) => item.portalId,
+    expandShiftEnabled: pageSizeSetting === COUNSELOR_LIST_PAGE_SIZE_AUTO,
   });
 
   const stats = useMemo(() => {

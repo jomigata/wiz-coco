@@ -34,6 +34,7 @@ import {
 } from '@/lib/counselorListTableStyles';
 import { useListPaginationWithExpand } from '@/hooks/useListPaginationWithExpand';
 import { useCounselorListPageSize } from '@/hooks/useCounselorListPageSize';
+import { COUNSELOR_LIST_PAGE_SIZE_AUTO } from '@/lib/counselorListAutoPageSize';
 import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
 
 function SortableColumnHeader({
@@ -139,6 +140,7 @@ export default function ArchivedRecipientsTable({
     expandedId,
     scrollContainerRef,
     getRowId: (row) => row.portalId,
+    expandShiftEnabled: pageSizeSetting === COUNSELOR_LIST_PAGE_SIZE_AUTO,
   });
 
   const toggleSort = (key: RecipientSortKey) => {
