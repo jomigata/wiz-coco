@@ -11,9 +11,20 @@ export type CounselorDispatchCompleteSummary = {
 };
 
 /** 발송 완료 팝업 하단 안내 (발송 포함 시) */
-export const DISPATCH_COMPLETE_STATUS_HINT_LINE1 =
-  '실패/성공은 목록에서 발송현황을 참조하세요.';
-export const DISPATCH_COMPLETE_STATUS_HINT_LINE2 = '실패시 포인트는 실시간 재적립 됩니다.';
+function DispatchCompleteStatusHint() {
+  return (
+    <div className="rounded-xl border border-slate-500/30 bg-gradient-to-br from-slate-900/80 to-slate-950/60 px-3.5 py-3 ring-1 ring-white/5">
+      <p className="text-[11px] font-semibold leading-relaxed text-slate-300">
+        실패/성공은 목록에서{' '}
+        <span className="font-bold text-sky-300">발송현황</span>을 참조하세요.
+      </p>
+      <p className="mt-2 border-t border-white/10 pt-2 text-[11px] font-semibold leading-relaxed text-slate-300">
+        실패시 포인트는 실시간{' '}
+        <span className="font-bold text-amber-300">재적립</span> 됩니다.
+      </p>
+    </div>
+  );
+}
 
 type Props = {
   open: boolean;
@@ -83,12 +94,7 @@ function DispatchCompletePanel({ summary }: { summary: CounselorDispatchComplete
         </div>
       ) : null}
 
-      {showNotify ? (
-        <p className="border-t border-white/10 pt-3 text-[11px] leading-relaxed text-slate-400">
-          <span className="block font-semibold text-slate-300">{DISPATCH_COMPLETE_STATUS_HINT_LINE1}</span>
-          <span className="mt-1 block font-semibold text-slate-300">{DISPATCH_COMPLETE_STATUS_HINT_LINE2}</span>
-        </p>
-      ) : null}
+      {showNotify ? <DispatchCompleteStatusHint /> : null}
     </div>
   );
 }
