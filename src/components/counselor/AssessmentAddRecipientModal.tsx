@@ -229,7 +229,7 @@ function buildAddRecipientDispatchSummary(opts: {
   return {
     targetCount,
     notifySent: addSendNow,
-    addedCount: createdCount,
+    addedCount: createdCount ?? targetCount,
     excludedText,
   };
 }
@@ -692,9 +692,10 @@ export default function AssessmentAddRecipientModal({
     const excludedInvalid = rows.filter((r) => targetRowInvalid(r));
     const cohortName = (context.cohortName || context.title || '내담자').trim();
     const targetCount = validRows.length;
-    const pendingSummary = buildAddRecipientDispatchSummary({
+    const dispatchSummary = buildAddRecipientDispatchSummary({
       addSendNow,
       targetCount,
+      createdCount: targetCount,
       excludedInvalid,
     });
 
@@ -704,14 +705,13 @@ export default function AssessmentAddRecipientModal({
     setAddError('');
     setInvalidBulkDeleteOffer(false);
     setAddComplete({
-      loading: true,
       title: addSendNow ? '발송 완료' : '추가 완료',
       sent: addSendNow,
-      dispatchSummary: pendingSummary,
+      dispatchSummary,
     });
 
     try {
-      const result = await bulkCreateClientPortals({
+      await bulkCreateClientPortals({
         assessmentId: context.assessmentId,
         cohortName,
         title: context.title || cohortName,
@@ -725,41 +725,27 @@ export default function AssessmentAddRecipientModal({
         queueNotify: addSendNow,
         notifyChannels: addSendNow ? notifyChannels : undefined,
       });
-      const createdCount = result.created?.length ?? validRows.length;
-      const dispatchSummary = buildAddRecipientDispatchSummary({
-        addSendNow,
-        targetCount,
-        createdCount,
-        excludedInvalid,
-      });
-      setAddComplete({
-        loading: false,
-        title: addSendNow ? '발송 완료' : '추가 완료',
-        sent: addSendNow,
-        dispatchSummary,
-      });
+      onSuccess?.({ sent: addSendNow });
     } catch (err) {
-      setAddComplete({
-        loading: false,
-        title: addSendNow ? '발송 실패' : '추가 실패',
-        message: err instanceof Error ? err.message : '내담자 추가에 실패했습니다.',
-        sent: addSendNow,
-        error: true,
-        dispatchSummary: pendingSummary,
-      });
+      setAddComplete((prev) =>
+        prev
+          ? {
+              ...prev,
+              title: addSendNow ? '발송 실패' : '추가 실패',
+              message: err instanceof Error ? err.message : '내담자 추가에 실패했습니다.',
+              error: true,
+            }
+          : null,
+      );
     } finally {
       setAddLoading(false);
     }
   };
 
   const handleCompleteConfirm = () => {
-    const info = addComplete;
     setAddComplete(null);
     resetForm();
     onClose();
-    if (info && !info.error) {
-      onSuccess?.({ sent: info.sent });
-    }
   };
 
   if (!open || !context) return null;
@@ -1189,7 +1175,6 @@ export default function AssessmentAddRecipientModal({
         title={addComplete?.title ?? ''}
         message={addComplete?.message}
         error={addComplete?.error}
-        loading={addComplete?.loading}
         dispatchSummary={addComplete?.dispatchSummary}
         onConfirm={handleCompleteConfirm}
         zIndexClass="z-[150]"

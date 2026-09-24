@@ -10,6 +10,10 @@ export type CounselorDispatchCompleteSummary = {
   notifySent?: boolean;
 };
 
+/** 발송 완료 팝업 하단 안내 (발송 포함 시) */
+export const DISPATCH_COMPLETE_STATUS_HINT =
+  '실패/성공은 목록에서 발송현황을 참조하세요. 실패시 포인트는 실시간 재적립 됩니다.';
+
 type Props = {
   open: boolean;
   title: string;
@@ -54,59 +58,34 @@ function DispatchStatCard({
   );
 }
 
-function DispatchCompletePanel({
-  summary,
-  loading,
-}: {
-  summary: CounselorDispatchCompleteSummary;
-  loading: boolean;
-}) {
+function DispatchCompletePanel({ summary }: { summary: CounselorDispatchCompleteSummary }) {
   const showNotify = summary.notifySent !== false;
-  const pending = loading;
-  const addedDisplay = pending || summary.addedCount === undefined ? '—' : summary.addedCount;
+  const addedCount = summary.addedCount ?? summary.targetCount;
 
   return (
     <div className="space-y-3 px-4 pb-1 pt-2 text-left">
       {showNotify ? (
         <div className="grid grid-cols-2 gap-2">
           <DispatchStatCard label="발송 대상" value={summary.targetCount} suffix="명" tone="sky" />
-          <DispatchStatCard
-            label="내담자 추가"
-            value={addedDisplay}
-            suffix={pending ? '' : '명'}
-            tone={!pending ? 'success' : 'neutral'}
-          />
+          <DispatchStatCard label="내담자 추가" value={addedCount} suffix="명" tone="success" />
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-2">
           <DispatchStatCard label="추가 대상" value={summary.targetCount} suffix="명" tone="sky" />
-          <DispatchStatCard
-            label="추가 완료"
-            value={addedDisplay}
-            suffix={pending ? '' : '명'}
-            tone={!pending ? 'success' : 'neutral'}
-          />
+          <DispatchStatCard label="추가 완료" value={addedCount} suffix="명" tone="success" />
         </div>
       )}
-
-      {pending ? (
-        <div
-          className="flex items-center justify-center gap-2.5 rounded-xl border border-sky-400/25 bg-sky-950/40 px-3 py-3"
-          role="status"
-          aria-live="polite"
-        >
-          <span
-            className="inline-block h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-sky-400/30 border-t-sky-200"
-            aria-hidden="true"
-          />
-          <span className="text-sm font-medium text-sky-100">처리 중…</span>
-        </div>
-      ) : null}
 
       {summary.excludedText ? (
         <div className="rounded-xl border border-amber-500/30 bg-amber-950/35 px-3 py-2.5 text-xs leading-relaxed text-amber-100/95">
           {summary.excludedText}
         </div>
+      ) : null}
+
+      {showNotify ? (
+        <p className="border-t border-white/10 pt-3 text-[11px] leading-relaxed text-slate-400">
+          {DISPATCH_COMPLETE_STATUS_HINT}
+        </p>
       ) : null}
     </div>
   );
@@ -151,12 +130,7 @@ export default function CounselorActionCompleteModal({
         }`}
       >
         <div className={`px-5 py-5 text-center ${headerTone}`}>
-          {!premium && loading ? (
-            <div
-              className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-4 border-sky-500/25 border-t-sky-400"
-              aria-hidden="true"
-            />
-          ) : !loading && !error ? (
+          {!loading && !error ? (
             <div
               className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-400/30"
               aria-hidden="true"
@@ -165,6 +139,11 @@ export default function CounselorActionCompleteModal({
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
             </div>
+          ) : loading && !premium ? (
+            <div
+              className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-4 border-sky-500/25 border-t-sky-400"
+              aria-hidden="true"
+            />
           ) : !loading && error ? (
             <div
               className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-red-500/15 text-red-400 ring-1 ring-red-400/30"
@@ -190,15 +169,13 @@ export default function CounselorActionCompleteModal({
           ) : null}
         </div>
 
-        {premium && dispatchSummary ? (
-          <DispatchCompletePanel summary={dispatchSummary} loading={loading} />
-        ) : null}
+        {premium && dispatchSummary ? <DispatchCompletePanel summary={dispatchSummary} /> : null}
 
         {premium && message && !loading ? (
           <p className="px-4 pb-2 text-center text-sm text-red-200">{message}</p>
         ) : null}
 
-        {!loading ? (
+        {!loading || premium ? (
           <div className="flex justify-center border-t border-white/10 bg-black/20 px-5 py-4">
             <button
               type="button"
