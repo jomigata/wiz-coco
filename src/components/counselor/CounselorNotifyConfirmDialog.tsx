@@ -45,9 +45,115 @@ const KIND_LABELS: Record<CounselorNotifyConfirmKind, string> = {
   remind: '미실시 알림 발송 확인',
   resend: '나의코드 전달 확인',
   push: '검사 보내기 확인',
-  add_recipient: '내담자 추가·발송 확인',
+  add_recipient: '내담자 추가 · 발송 확인',
   care: '숙제 보내기 확인',
 };
+
+function AddRecipientConfirmSummary({
+  targetCount,
+  groupName,
+  affiliation,
+  perPersonLabel,
+  usePoints,
+  balancePoints,
+  balanceLoading,
+  extras,
+  insufficient,
+}: {
+  targetCount: number;
+  groupName: string;
+  affiliation: string;
+  perPersonLabel: string;
+  usePoints: number;
+  balancePoints: number;
+  balanceLoading: boolean;
+  extras: string[];
+  insufficient: boolean;
+}) {
+  return (
+    <div className="overflow-hidden rounded-2xl border border-sky-400/25 bg-gradient-to-br from-[#0c1628] via-[#0a1220] to-[#060d18] shadow-lg shadow-black/30 ring-1 ring-white/5">
+      <div className="border-b border-sky-500/20 bg-gradient-to-r from-sky-600/30 via-sky-500/10 to-emerald-600/10 px-4 py-3">
+        <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-sky-300/90">발송 요약</p>
+      </div>
+      <div className="space-y-3 p-4">
+        <div className="grid grid-cols-3 gap-2">
+          <div className="rounded-xl border border-sky-500/20 bg-sky-950/35 px-2.5 py-2 text-center">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-sky-400/90">대상</p>
+            <p className="mt-0.5 text-base font-bold tabular-nums text-white">{targetCount}명</p>
+          </div>
+          <div className="rounded-xl border border-white/10 bg-white/[0.04] px-2.5 py-2 text-center">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">그룹</p>
+            <p className="mt-0.5 truncate text-sm font-semibold text-slate-100" title={groupName}>
+              {groupName}
+            </p>
+          </div>
+          <div className="rounded-xl border border-white/10 bg-white/[0.04] px-2.5 py-2 text-center">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">소속</p>
+            <p className="mt-0.5 truncate text-sm font-semibold text-slate-100" title={affiliation}>
+              {affiliation}
+            </p>
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-emerald-500/20 bg-gradient-to-r from-emerald-950/40 to-slate-900/30 px-3.5 py-3">
+          <p className="text-[11px] font-semibold text-emerald-300/90">발송 내용</p>
+          <p className="mt-1.5 text-sm font-semibold leading-snug text-white">나의코드 · 비밀번호</p>
+          <p className="mt-1 text-xs leading-relaxed text-slate-300">
+            등록된 <span className="text-sky-200">이메일</span> ·{' '}
+            <span className="text-sky-200">휴대폰</span>으로 전달
+          </p>
+          <p className="mt-2 text-xs text-amber-200/90">
+            발송 성공 시 <span className="font-semibold tabular-nums">{perPersonLabel}</span>/명
+          </p>
+        </div>
+
+        {balanceLoading ? (
+          <div
+            className="flex items-center justify-center gap-2.5 rounded-xl border border-sky-400/30 bg-sky-950/50 px-3 py-3"
+            role="status"
+            aria-live="polite"
+          >
+            <span
+              className="inline-block h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-sky-400/30 border-t-sky-200"
+              aria-hidden="true"
+            />
+            <span className="text-sm font-medium text-sky-100">포인트 잔액 확인 중…</span>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-2">
+            <div className="rounded-xl border border-amber-400/25 bg-gradient-to-br from-amber-950/50 to-amber-900/15 px-3 py-2.5">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-amber-300/80">예상 차감</p>
+              <p className="mt-1 text-lg font-bold tabular-nums text-amber-50">
+                {formatPoints(usePoints)}
+              </p>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">잔여 포인트</p>
+              <p className="mt-1 text-lg font-bold tabular-nums text-white">
+                {formatPoints(balancePoints)}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {extras.map((line) => (
+          <div
+            key={line}
+            className="rounded-xl border border-amber-500/30 bg-amber-950/30 px-3 py-2.5 text-xs leading-relaxed text-amber-100/95"
+          >
+            {line}
+          </div>
+        ))}
+
+        {insufficient && !balanceLoading ? (
+          <p className="rounded-lg border border-red-500/35 bg-red-950/40 px-3 py-2 text-sm text-red-200" role="alert">
+            보유 포인트가 부족합니다. 충전 후 다시 시도해 주세요.
+          </p>
+        ) : null}
+      </div>
+    </div>
+  );
+}
 
 export default function CounselorNotifyConfirmDialog({
   open,
@@ -100,25 +206,7 @@ export default function CounselorNotifyConfirmDialog({
 
   const summaryLines = useMemo(() => {
     if (kind === 'add_recipient') {
-      const r = recipients[0];
-      const groupName = (r?.groupName || '').trim() || '—';
-      const affiliation = (r?.affiliation || '').trim() || '—';
-      const perPerson = formatPoints(POINT_COST_INITIAL_RECIPIENT_DISPATCH);
-      const lines = [
-        `대상 ${recipients.length}명 · 그룹 ${groupName} · 소속 ${affiliation}`,
-        `나의코드·비밀번호 → 등록 연락처(이메일·휴대폰)`,
-        `성공 시 ${perPerson}/명 · 다수 발송 시 1~2분 소요 가능`,
-      ];
-      if (!balanceLoading) {
-        lines.push(
-          `예상 ${formatPoints(pointSummary.usePoints)} · 잔여 ${formatPoints(balancePoints)}`,
-        );
-      }
-      for (const extra of addRecipientExtraLines || []) {
-        const t = extra.trim();
-        if (t) lines.push(t);
-      }
-      return lines;
+      return [];
     }
     if (pushCareSummary) {
       const lines: string[] = [`대상: ${recipients.length}명`];
@@ -131,16 +219,18 @@ export default function CounselorNotifyConfirmDialog({
       return lines;
     }
     return pointSummary.detailLines;
-  }, [
-    kind,
-    pushCareSummary,
-    recipients,
-    pointSummary.detailLines,
-    balanceLoading,
-    balancePoints,
-    pointSummary.usePoints,
-    addRecipientExtraLines,
-  ]);
+  }, [kind, pushCareSummary, recipients, pointSummary.detailLines]);
+
+  const addRecipientMeta = useMemo(() => {
+    if (kind !== 'add_recipient') return null;
+    const r = recipients[0];
+    return {
+      groupName: (r?.groupName || '').trim() || '—',
+      affiliation: (r?.affiliation || '').trim() || '—',
+      perPersonLabel: formatPoints(POINT_COST_INITIAL_RECIPIENT_DISPATCH),
+      extras: (addRecipientExtraLines || []).map((s) => s.trim()).filter(Boolean),
+    };
+  }, [kind, recipients, addRecipientExtraLines]);
 
   const showPointFooter = pushCareSummary || (kind !== 'add_recipient' && !channelUiHidden);
 
@@ -158,14 +248,30 @@ export default function CounselorNotifyConfirmDialog({
       }}
     >
       <div
-        className="flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-[#0f1a2e] to-[#0a1220] shadow-2xl"
+        className={`flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl border shadow-2xl ${
+          kind === 'add_recipient'
+            ? 'border-sky-400/25 bg-gradient-to-b from-[#0f1a2e] via-[#0a1220] to-[#060d18] ring-1 ring-sky-500/10'
+            : 'border-white/10 bg-gradient-to-b from-[#0f1a2e] to-[#0a1220]'
+        }`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="border-b border-white/10 px-5 py-4">
-          <h3 className="text-base font-semibold text-white">{title || KIND_LABELS[kind]}</h3>
+        <div
+          className={
+            kind === 'add_recipient'
+              ? 'border-b border-sky-400/20 bg-gradient-to-r from-sky-600/30 via-sky-500/10 to-transparent px-5 py-4'
+              : 'border-b border-white/10 px-5 py-4'
+          }
+        >
+          <h3 className="text-base font-bold tracking-tight text-white sm:text-lg">
+            {title || KIND_LABELS[kind]}
+          </h3>
           {description ? (
             <p className="mt-1 text-sm text-slate-400">{description}</p>
-          ) : kind === 'add_recipient' ? null : channelUiHidden ? (
+          ) : kind === 'add_recipient' ? (
+            <p className="mt-1.5 text-sm leading-relaxed text-sky-100/80">
+              선택한 내담자에게 접속 정보를 발송합니다.
+            </p>
+          ) : channelUiHidden ? (
             <p className="mt-1 text-sm text-slate-400">
               등록된 연락처로 나의코드·안내가 발송됩니다.
             </p>
@@ -221,6 +327,19 @@ export default function CounselorNotifyConfirmDialog({
             </div>
           ) : null}
 
+          {kind === 'add_recipient' && addRecipientMeta ? (
+            <AddRecipientConfirmSummary
+              targetCount={recipients.length}
+              groupName={addRecipientMeta.groupName}
+              affiliation={addRecipientMeta.affiliation}
+              perPersonLabel={addRecipientMeta.perPersonLabel}
+              usePoints={pointSummary.usePoints}
+              balancePoints={balancePoints}
+              balanceLoading={balanceLoading}
+              extras={addRecipientMeta.extras}
+              insufficient={insufficient}
+            />
+          ) : (
           <div className="rounded-xl border border-sky-500/20 bg-sky-950/25 px-3 py-3">
             <p className="text-xs font-semibold text-sky-200/90">발송 요약</p>
             <ul className="mt-2 space-y-1.5 text-sm leading-snug text-slate-200">
@@ -253,6 +372,7 @@ export default function CounselorNotifyConfirmDialog({
               </p>
             ) : null}
           </div>
+          )}
 
           {validationError ? (
             <p className="text-sm text-amber-300" role="alert">
@@ -261,12 +381,16 @@ export default function CounselorNotifyConfirmDialog({
           ) : null}
         </div>
 
-        <div className="flex justify-end gap-2 border-t border-white/10 px-5 py-4">
+        <div className="flex justify-end gap-2 border-t border-white/10 bg-black/20 px-5 py-4">
           <button
             type="button"
             disabled={loading || Boolean(validationError) || insufficient || balanceLoading}
             onClick={() => onConfirm(notifyChannelsToPayload(effectiveChannels))}
-            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-50"
+            className={`rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition-colors disabled:opacity-50 ${
+              kind === 'add_recipient'
+                ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 shadow-emerald-950/40 hover:from-emerald-500 hover:to-emerald-400'
+                : 'bg-emerald-600 hover:bg-emerald-500'
+            }`}
           >
             {loading ? '처리 중…' : confirmLabel}
           </button>
