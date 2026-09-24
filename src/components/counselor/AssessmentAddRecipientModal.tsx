@@ -257,11 +257,15 @@ function editDraftFieldInvalidFlags(draft: RecipientRow): {
   email: boolean;
 } {
   const name = !draft.displayName.trim();
-  const missingContact = recipientPreviewMissingContact(draft);
   const phoneRaw = (draft.phone || '').trim();
   const emailRaw = (draft.email || '').trim();
-  const phone = phoneRaw ? recipientPreviewPhoneInvalid(draft) : missingContact;
-  const email = emailRaw ? recipientPreviewEmailInvalid(draft) : missingContact;
+  const phoneNorm = normalizeRecipientPhone(draft.phone);
+  const hasValidPhone = Boolean(phoneNorm && isValidKrMobilePhone(phoneNorm));
+  const hasValidEmail = Boolean(emailRaw && isValidEmailAddress(emailRaw.toLowerCase()));
+  const needsContact = !hasValidPhone && !hasValidEmail;
+
+  const phone = phoneRaw ? recipientPreviewPhoneInvalid(draft) : needsContact;
+  const email = emailRaw ? recipientPreviewEmailInvalid(draft) : needsContact;
   return { name, phone, email };
 }
 
@@ -563,6 +567,7 @@ export default function AssessmentAddRecipientModal({
   };
 
   const startEditTargetRow = (row: RecipientRow) => {
+    if (addLoading) return;
     setEditingRowKey(recipientRowMergeKey(row));
     setEditDraft({
       displayName: row.displayName,
@@ -574,6 +579,7 @@ export default function AssessmentAddRecipientModal({
 
   const cancelEditTargetRow = () => {
     setEditingRowKey(null);
+    setEditDraft({ displayName: '', phone: '', email: '' });
   };
 
   const handleAddRecipientFiles = async (fileList: FileList | null) => {
@@ -1102,7 +1108,7 @@ export default function AssessmentAddRecipientModal({
                           <button
                             type="button"
                             onClick={() => startEditTargetRow(row)}
-                            disabled={addLoading || editingRowKey !== null}
+                            disabled={addLoading}
                             className="rounded border border-sky-500/35 bg-sky-950/40 px-2 py-0.5 text-xs font-medium text-sky-200 hover:bg-sky-900/50 disabled:opacity-50"
                           >
                             수정
