@@ -216,6 +216,11 @@ function formatExcludedInvalidSummary(invalid: RecipientRow[]): string {
   return `부적합 ${invalid.length}명 제외 (${namePart}${overflow})`;
 }
 
+function withEditInvalidInputClass(base: string, invalid: boolean): string {
+  if (!invalid) return base;
+  return `${base} border-red-500/55 text-red-200 placeholder:text-red-400/50 focus:border-red-400 focus:ring-red-500/25`;
+}
+
 /** `mergeRecipients`와 동일 — 목록 인덱스·삭제 매칭용 */
 function recipientRowMergeKey(row: RecipientRow): string {
   return `${row.displayName.trim()}|${normalizeRecipientPhone(row.phone)}`.toLowerCase();
@@ -238,6 +243,18 @@ function recipientPreviewEmailInvalid(row: RecipientRow): boolean {
 
 function recipientPreviewMissingContact(row: RecipientRow): boolean {
   return !normalizeRecipientPhone(row.phone) && !(row.email || '').trim();
+}
+
+function editDraftFieldInvalidFlags(draft: RecipientRow): {
+  name: boolean;
+  phone: boolean;
+  email: boolean;
+} {
+  const name = !draft.displayName.trim();
+  const missingContact = recipientPreviewMissingContact(draft);
+  const phone = missingContact || recipientPreviewPhoneInvalid(draft);
+  const email = missingContact || recipientPreviewEmailInvalid(draft);
+  return { name, phone, email };
 }
 
 function FilePreviewRecipientLine({ row }: { row: RecipientRow }) {
@@ -1003,10 +1020,13 @@ export default function AssessmentAddRecipientModal({
                   const rowKey = recipientRowMergeKey(row);
                   const isEditing = editingRowKey === rowKey;
                   const inlineInputClass = `${FORM_INPUT} min-w-0 flex-1 py-1 text-xs sm:text-sm`;
+                  const editInvalid = isEditing ? editDraftFieldInvalidFlags(editDraft) : null;
                   return (
                   <li
                     key={`target-${rowKey}-${originalIndex}`}
-                    className="flex items-start justify-between gap-2 rounded-md border border-white/5 bg-slate-900/40 px-2.5 py-1.5 text-sm leading-snug"
+                    className={`flex justify-between gap-2 rounded-md border border-white/5 bg-slate-900/40 px-2.5 py-1.5 text-sm leading-snug ${
+                      isEditing ? 'items-center' : 'items-start'
+                    }`}
                   >
                     {isEditing ? (
                       <div className="grid min-w-0 flex-1 grid-cols-1 gap-1.5 sm:grid-cols-3">
@@ -1017,7 +1037,7 @@ export default function AssessmentAddRecipientModal({
                             setEditDraft((d) => ({ ...d, displayName: e.target.value }))
                           }
                           placeholder="이름"
-                          className={inlineInputClass}
+                          className={withEditInvalidInputClass(inlineInputClass, editInvalid?.name ?? false)}
                           disabled={addLoading}
                         />
                         <input
@@ -1030,7 +1050,7 @@ export default function AssessmentAddRecipientModal({
                             }))
                           }
                           placeholder="휴대폰"
-                          className={inlineInputClass}
+                          className={withEditInvalidInputClass(inlineInputClass, editInvalid?.phone ?? false)}
                           disabled={addLoading}
                         />
                         <input
@@ -1040,7 +1060,7 @@ export default function AssessmentAddRecipientModal({
                             setEditDraft((d) => ({ ...d, email: e.target.value }))
                           }
                           placeholder="이메일"
-                          className={inlineInputClass}
+                          className={withEditInvalidInputClass(inlineInputClass, editInvalid?.email ?? false)}
                           disabled={addLoading}
                         />
                       </div>
@@ -1050,7 +1070,7 @@ export default function AssessmentAddRecipientModal({
                         <TargetRowContactDisplay row={row} />
                       </span>
                     )}
-                    <div className="flex shrink-0 items-center gap-1.5 pt-0.5">
+                    <div className="flex shrink-0 items-center gap-1.5 self-center">
                       {isEditing ? (
                         <>
                           <button
