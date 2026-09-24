@@ -637,7 +637,7 @@ export default function AssessmentAddRecipientModal({
     const validRows = rows.filter((r) => !targetRowInvalid(r));
     const excludedInvalid = rows.filter((r) => targetRowInvalid(r));
     const excludedNote =
-      excludedInvalid.length > 0 ? ` ${formatExcludedInvalidSummary(excludedInvalid)}` : '';
+      excludedInvalid.length > 0 ? `\n${formatExcludedInvalidSummary(excludedInvalid)}` : '';
     const cohortName = (context.cohortName || context.title || '내담자').trim();
     setProgressRecipientCount(validRows.length);
     setAddLoading(true);

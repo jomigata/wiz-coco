@@ -42,7 +42,9 @@ export default function CounselorActionCompleteModal({
           <h3 id="counselor-action-complete-title" className="text-base font-semibold text-white">
             {title}
           </h3>
-          {message ? <p className="mt-2 text-sm leading-relaxed text-slate-300">{message}</p> : null}
+          {message ? (
+            <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-slate-300">{message}</p>
+          ) : null}
         </div>
         <div className="flex justify-center px-5 py-4">
           <button
