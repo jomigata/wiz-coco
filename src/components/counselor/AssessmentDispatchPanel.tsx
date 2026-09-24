@@ -57,7 +57,6 @@ import {
   isPendingDispatchAssessmentId,
   mergeDispatchStatusWithCache,
   DISPATCH_CHECKING_LABEL,
-  DISPATCH_SENDING_LABEL,
   getDispatchRecipientFieldPending,
   pendingDispatchPlaceholder,
   readPendingDispatchError,
@@ -1778,13 +1777,9 @@ export default function AssessmentDispatchPanel({
                       ) : null}
                       <td
                         className="px-3 py-2.5 align-middle whitespace-nowrap text-sm"
-                        title={fieldPending.notifyStatus ? undefined : notify.title}
+                        title={notify.title}
                       >
-                        {fieldPending.notifyStatus ? (
-                          <span className="text-amber-300">{DISPATCH_SENDING_LABEL}</span>
-                        ) : (
-                          <DispatchStatusText value={notify} />
-                        )}
+                        <DispatchStatusText value={notify} />
                       </td>
                       <td className="px-3 py-2.5 align-middle whitespace-nowrap text-sm tabular-nums text-slate-400">
                         {fieldPending.notifyAt ? DISPATCH_CHECKING_LABEL : formatNotifyDate(r.notifyAt)}

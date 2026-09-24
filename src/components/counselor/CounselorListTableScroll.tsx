@@ -15,8 +15,9 @@ type Props = {
 
 const SCROLL_EDGE_THRESHOLD = 6;
 const HOVER_SCROLL_PX_PER_FRAME = 10;
-/** 섹션 좌·우 패딩(공백)까지 hover 스크롤 영역 확장 */
-const EDGE_HOVER_EXTEND_PX = 20;
+/** 좌·우 스크롤 힌트 — 테이블 안쪽에 완전히 보이도록 inset */
+const SCROLL_EDGE_INSET_PX = 8;
+const SCROLL_EDGE_HIT_WIDTH_PX = 40;
 
 function SmallScrollChevron({ side }: { side: 'left' | 'right' }) {
   const isLeft = side === 'left';
@@ -67,10 +68,15 @@ function ScrollEdge({
       onMouseLeave={onLeave}
       onFocus={onEnter}
       onBlur={onLeave}
-      className={`pointer-events-auto absolute inset-y-0 z-20 flex shrink-0 items-center justify-center border-0 bg-transparent p-0 outline-none focus-visible:ring-2 focus-visible:ring-yellow-400/70 ${
-        isLeft ? 'left-0' : 'right-0'
-      } ${active ? 'cursor-grabbing' : 'cursor-pointer'}`}
-      style={{ width: 36 + EDGE_HOVER_EXTEND_PX }}
+      className={`pointer-events-auto absolute z-20 flex shrink-0 items-center justify-center border-0 bg-transparent p-0 outline-none focus-visible:ring-2 focus-visible:ring-yellow-400/70 ${
+        active ? 'cursor-grabbing' : 'cursor-pointer'
+      }`}
+      style={{
+        top: 0,
+        bottom: 0,
+        width: SCROLL_EDGE_HIT_WIDTH_PX,
+        ...(isLeft ? { left: SCROLL_EDGE_INSET_PX } : { right: SCROLL_EDGE_INSET_PX }),
+      }}
     >
       <span
         className={`pointer-events-none absolute inset-y-0 ${
@@ -78,7 +84,7 @@ function ScrollEdge({
             ? 'left-0 bg-gradient-to-r from-[#0b1120]/90 via-[#0b1120]/40 to-transparent'
             : 'right-0 bg-gradient-to-l from-[#0b1120]/90 via-[#0b1120]/40 to-transparent'
         }`}
-        style={{ width: 40 + EDGE_HOVER_EXTEND_PX }}
+        style={{ width: SCROLL_EDGE_HIT_WIDTH_PX }}
         aria-hidden
       />
       <span className={counselorListScrollEdgeButtonClass(active)}>
@@ -233,8 +239,8 @@ export default function CounselorListTableScroll({ children, className = '' }: P
         style={{
           top: edgeLayout.top,
           height: edgeLayout.height,
-          left: -EDGE_HOVER_EXTEND_PX,
-          right: -EDGE_HOVER_EXTEND_PX,
+          left: 0,
+          right: 0,
         }}
         aria-hidden={!canScrollLeft && !canScrollRight}
       >

@@ -110,6 +110,37 @@ def _notify_channel_state(has_contact: bool, *, sending: bool = False, ok: bool 
     return CHANNEL_IDLE
 
 
+def _portal_notify_channel_states(
+    pdata: dict,
+    *,
+    email: str,
+    phone: str,
+) -> tuple[str, str]:
+    """Missing channel fields must not default to sending (email-only stuck on sending)."""
+    email_ch = (pdata.get("lastNotifyEmailChannel") or CHANNEL_IDLE).strip()
+    phone_ch = (pdata.get("lastNotifyPhoneChannel") or CHANNEL_IDLE).strip()
+    if not email:
+        email_ch = CHANNEL_IDLE
+    if not phone:
+        phone_ch = CHANNEL_IDLE
+    return email_ch, phone_ch
+
+
+def _queue_notify_channel_states(
+    data: dict,
+    *,
+    email: str,
+    phone: str,
+) -> tuple[str, str]:
+    email_ch = (data.get("emailChannel") or CHANNEL_IDLE).strip()
+    phone_ch = (data.get("phoneChannel") or CHANNEL_IDLE).strip()
+    if not email:
+        email_ch = CHANNEL_IDLE
+    if not phone:
+        phone_ch = CHANNEL_IDLE
+    return email_ch, phone_ch
+
+
 def _aggregate_status_from_channels(
     *,
     email: str,
@@ -644,8 +675,7 @@ def confirm_solapi_sending_for_portals(
             checked += 1
             email = (pdata.get("email") or "").strip().lower()
             phone = (pdata.get("phone") or "").strip()
-            email_ch = (pdata.get("lastNotifyEmailChannel") or CHANNEL_IDLE).strip()
-            phone_ch = (pdata.get("lastNotifyPhoneChannel") or CHANNEL_SENDING).strip()
+            email_ch, phone_ch = _portal_notify_channel_states(pdata, email=email, phone=phone)
             errors = [e for e in (pdata.get("lastNotifyError") or "").split("; ") if e]
             notify_kind = (pdata.get("lastNotifyKind") or "initial").strip()
             sent_via = (pdata.get("lastNotifySentVia") or "").strip()
@@ -782,8 +812,7 @@ def confirm_pending_solapi_notifications(*, limit: int = 40) -> dict:
         portal_id = (data.get("portalId") or "").strip()
         email = (data.get("email") or "").strip().lower()
         phone = (data.get("phone") or "").strip()
-        email_ch = (data.get("emailChannel") or CHANNEL_IDLE).strip()
-        phone_ch = (data.get("phoneChannel") or CHANNEL_SENDING).strip()
+        email_ch, phone_ch = _queue_notify_channel_states(data, email=email, phone=phone)
         errors = [e for e in (data.get("error") or "").split("; ") if e]
         notify_kind = (data.get("notifyKind") or "initial").strip()
         sent_via = (data.get("sentVia") or "").strip()

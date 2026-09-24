@@ -393,6 +393,21 @@ export function dispatchStatusDisplay(r: DispatchDisplayRecipient): DispatchStat
       if (status === 'failed') {
         return statusView('실패', detailParts, 'text-red-400', notifyErrorHint(r.notifyError));
       }
+      if (status === 'sending') {
+        const kindPrefix = notifyKindPrefix(r.notifyKind);
+        return statusView(
+          `${kindPrefix}발송중`.trim() || '발송중',
+          detailParts,
+          'text-amber-300',
+          notifyErrorHint(r.notifyError) || '발송 결과를 확인하는 중입니다.',
+        );
+      }
+      if (status === 'pending' || status === 'not_sent') {
+        return statusView('미발송', detailParts, 'text-slate-400');
+      }
+      if (status === 'skipped') {
+        return statusView('발송 생략', detailParts, 'text-slate-400', notifyErrorHint(r.notifyError));
+      }
     }
     return statusView(
       '연락처 없음',
