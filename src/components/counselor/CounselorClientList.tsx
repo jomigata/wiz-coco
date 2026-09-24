@@ -73,7 +73,7 @@ import RecipientContactCell from '@/components/counselor/RecipientContactCell';
 import CounselorDispatchRecipientExpandRow from '@/components/counselor/CounselorDispatchRecipientExpandDetail';
 import { CounselorRecipientExpandLeadingCells } from '@/components/counselor/CounselorRecipientExpandRowCells';
 import CounselorRecipientContactEditModal from '@/components/counselor/CounselorRecipientContactEditModal';
-import { dispatchStatusDisplay, formatNotifyDate, compareDispatchStatusSort, recipientProgressDisplay } from '@/lib/dispatchRecipientDisplay';
+import { dispatchStatusDisplay, formatNotifyDate, compareDispatchStatusSort, recipientProgressDisplay, canRemindIncompleteRecipient } from '@/lib/dispatchRecipientDisplay';
 import { INDIVIDUAL_COHORT_KEY } from '@/lib/monitoringRealtime';
 import { consumeCounselorListSkipReload } from '@/lib/counselorListNavigationCache';
 import { applyRealtimeToClientList } from '@/lib/clientPortalRealtime';
@@ -207,6 +207,17 @@ function progressLabel(item: CounselorClientPortalListItem): { text: string; cla
     };
   }
   return display;
+}
+
+function clientItemCanRemind(item: CounselorClientPortalListItem): boolean {
+  return canRemindIncompleteRecipient({
+    notifyStatus: item.notifyStatus,
+    progressLabel: item.progress.label,
+    completedCount: item.progress.completedTests,
+    requiredCount: item.progress.totalTests,
+    email: item.email,
+    phone: item.phone,
+  });
 }
 
 function counselMoveProgressNote(item: CounselorClientPortalListItem): React.ReactNode | null {
@@ -1099,8 +1110,16 @@ export default function CounselorClientList({
     [sortedFiltered, selected],
   );
 
+  const remindNotifyEnabled = useMemo(
+    () => selectedItems.length > 0 && selectedItems.every((item) => clientItemCanRemind(item)),
+    [selectedItems],
+  );
+
+  const remindNotifyButtonCount = remindNotifyEnabled ? selectedItems.length : 0;
+
   const openBulkNotifyConfirm = (kind: 'remind' | 'resend') => {
     if (selectedItems.length === 0) return;
+    if (kind === 'remind' && !remindNotifyEnabled) return;
     const groups = buildDispatchGroupsFromSelections(selectedItems);
     if (groups.length === 0) {
       setError('선택한 내담자에 연결된 상담코드가 없습니다.');
@@ -1394,11 +1413,11 @@ export default function CounselorClientList({
             <span className="ml-auto inline-flex shrink-0 flex-wrap items-center justify-end gap-1.5">
               <button
                 type="button"
-                disabled={selected.size === 0 || notifyDispatchLoading}
+                disabled={!remindNotifyEnabled || notifyDispatchLoading}
                 className="rounded-md bg-amber-600/90 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-amber-500 disabled:opacity-50 sm:text-sm"
                 onClick={() => openBulkNotifyConfirm('remind')}
               >
-                미실시 알림 ({selected.size})
+                미실시 알림 ({remindNotifyButtonCount})
               </button>
               <button
                 type="button"

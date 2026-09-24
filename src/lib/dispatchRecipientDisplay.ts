@@ -21,6 +21,45 @@ export const DISPATCH_SUCCESS_TEXT_CLASS = 'text-emerald-300';
 export const RECIPIENT_PROGRESS_COMPLETE_CLASS = 'text-emerald-300';
 export const RECIPIENT_PROGRESS_NOT_STARTED_CLASS = 'text-red-400';
 
+export function isNotifyDispatchSuccess(notifyStatus?: string | null): boolean {
+  const status = (notifyStatus || 'not_sent').trim();
+  return status === 'sent' || status === 'partial';
+}
+
+/** 미실시 알림: 발송 성공 + 검사 미완료 + 연락처 있음 */
+export function canRemindIncompleteRecipient(input: {
+  notifyStatus?: string | null;
+  testStatus?: string | null;
+  progressLabel?: string | null;
+  completedCount?: number | null;
+  requiredCount?: number | null;
+  email?: string | null;
+  phone?: string | null;
+  moveStatus?: string | null;
+  tests?: { status: string }[] | null;
+}): boolean {
+  if (input.moveStatus === 'moved_out') return false;
+  if (!isNotifyDispatchSuccess(input.notifyStatus)) return false;
+
+  const testStatus = (input.testStatus || '').trim();
+  if (testStatus === 'completed') return false;
+  if (input.progressLabel === 'completed') return false;
+
+  const required = input.requiredCount ?? 0;
+  const completed = input.completedCount ?? 0;
+  if (required > 0 && completed >= required) return false;
+
+  const testRows = input.tests ?? [];
+  if (testRows.length > 0) {
+    const pending = testRows.some((t) => t.status !== 'completed');
+    if (!pending) return false;
+  }
+
+  const email = (input.email || '').trim();
+  const phone = (input.phone || '').trim();
+  return Boolean(email || phone);
+}
+
 export function recipientProgressDisplay(input: {
   testStatus?: string | null;
   completedCount?: number | null;

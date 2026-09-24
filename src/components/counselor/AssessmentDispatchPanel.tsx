@@ -16,6 +16,7 @@ import DispatchStatusText from '@/components/counselor/DispatchStatusText';
 import {
   DISPATCH_SUCCESS_TEXT_CLASS,
   dispatchStatusDisplay,
+  canRemindIncompleteRecipient,
   formatNotifyDate,
   testSummary,
   type DispatchStatusView,
@@ -306,12 +307,16 @@ function dispatchStatusForRow(recipient: DispatchRecipient): DispatchStatusView 
 }
 
 function canSendReminder(r: DispatchRecipient): boolean {
-  if (isMovedOutRecipient(r)) return false;
-  if (!hasCredentialBeenSent(r)) return false;
-  if (r.testStatus === 'completed') return false;
-  const pending = (r.tests ?? []).some((t) => t.status !== 'completed');
-  if (!pending && r.requiredCount > 0) return false;
-  return Boolean(r.email || r.phone);
+  return canRemindIncompleteRecipient({
+    notifyStatus: r.notifyStatus,
+    testStatus: r.testStatus,
+    completedCount: r.completedCount,
+    requiredCount: r.requiredCount,
+    email: r.email,
+    phone: r.phone,
+    moveStatus: r.moveStatus,
+    tests: r.tests,
+  });
 }
 
 function testLetterLabel(index: number): string {
@@ -1055,15 +1060,22 @@ export default function AssessmentDispatchPanel({
     return list;
   }, [visibleData?.recipients, dispatchOverrides, sortKey, sortDir, nameSortPhase, searchQuery]);
 
-  const remindEligibleSelected = useMemo(
-    () => (visibleData?.recipients || []).filter((r) => selected.has(r.portalId) && canSendReminder(r)),
-    [visibleData?.recipients, selected],
-  );
-
   const selectedRecipients = useMemo(
     () => sortedRecipients.filter((r) => selected.has(r.portalId)),
     [sortedRecipients, selected],
   );
+
+  const remindEligibleSelected = useMemo(
+    () => selectedRecipients.filter((r) => canSendReminder(r)),
+    [selectedRecipients],
+  );
+
+  const remindActionEnabled = useMemo(
+    () => selectedRecipients.length > 0 && selectedRecipients.every((r) => canSendReminder(r)),
+    [selectedRecipients],
+  );
+
+  const remindButtonCount = remindActionEnabled ? selectedRecipients.length : 0;
 
   const movePortalSummaries = useMemo(
     () =>
@@ -1512,24 +1524,24 @@ export default function AssessmentDispatchPanel({
                   remindLoading ||
                   resendLoading ||
                   deleteLoading ||
-                  remindEligibleSelected.length === 0
+                  !remindActionEnabled
                 }
                 className="rounded-md bg-amber-600/90 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-amber-500 disabled:opacity-50 sm:text-sm"
                 title="미실시 검사자에게 현황·검사 링크 발송 (비밀번호 유지)"
               >
                 {remindLoading
                   ? '발송 중…'
-                  : `미실시 알림 (${remindEligibleSelected.length})`}
+                  : `미실시 알림 (${remindButtonCount})`}
               </button>
               <button
                 type="button"
                 onClick={() => setNotifyConfirmKind('resend')}
-                disabled={resendLoading || deleteLoading || credentialTargetSelected.length === 0}
+                disabled={resendLoading || deleteLoading || selected.size === 0}
                 className="rounded-md bg-sky-600/90 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-sky-500 disabled:opacity-50 sm:text-sm"
               >
                 {resendLoading
                   ? '발송 중…'
-                  : `${credentialSendModeLabel(credentialSendMode)} (${credentialTargetSelected.length})`}
+                  : `${credentialSendModeLabel(credentialSendMode)} (${selected.size})`}
               </button>
             </span>
           ) : null}
