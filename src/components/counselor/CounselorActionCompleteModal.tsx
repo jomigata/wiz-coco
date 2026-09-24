@@ -11,8 +11,9 @@ export type CounselorDispatchCompleteSummary = {
 };
 
 /** 발송 완료 팝업 하단 안내 (발송 포함 시) */
-export const DISPATCH_COMPLETE_STATUS_HINT =
-  '실패/성공은 목록에서 발송현황을 참조하세요. 실패시 포인트는 실시간 재적립 됩니다.';
+export const DISPATCH_COMPLETE_STATUS_HINT_LINE1 =
+  '실패/성공은 목록에서 발송현황을 참조하세요.';
+export const DISPATCH_COMPLETE_STATUS_HINT_LINE2 = '실패시 포인트는 실시간 재적립 됩니다.';
 
 type Props = {
   open: boolean;
@@ -84,7 +85,8 @@ function DispatchCompletePanel({ summary }: { summary: CounselorDispatchComplete
 
       {showNotify ? (
         <p className="border-t border-white/10 pt-3 text-[11px] leading-relaxed text-slate-400">
-          {DISPATCH_COMPLETE_STATUS_HINT}
+          <span className="block font-semibold text-slate-300">{DISPATCH_COMPLETE_STATUS_HINT_LINE1}</span>
+          <span className="mt-1 block">{DISPATCH_COMPLETE_STATUS_HINT_LINE2}</span>
         </p>
       ) : null}
     </div>
