@@ -18,7 +18,6 @@ import {
   parseRecipientFile,
   type RecipientRow,
 } from '@/lib/recipientImport';
-import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
 import CounselorActionCompleteModal from '@/components/counselor/CounselorActionCompleteModal';
 import CounselorNotifyConfirmDialog from '@/components/counselor/CounselorNotifyConfirmDialog';
 import type { NotifyRecipientContact } from '@/lib/counselorNotifyChannels';
@@ -216,6 +215,34 @@ function formatExcludedInvalidSummary(invalid: RecipientRow[]): string {
   return `부적합 ${invalid.length}명 제외 (${namePart}${overflow})`;
 }
 
+function buildAddRecipientCompleteMessage(opts: {
+  addSendNow: boolean;
+  targetCount: number;
+  createdCount: number;
+  sent: number;
+  failed: number;
+  excludedInvalid: RecipientRow[];
+}): string {
+  const { addSendNow, targetCount, createdCount, sent, failed, excludedInvalid } = opts;
+  const excludedLine =
+    excludedInvalid.length > 0 ? formatExcludedInvalidSummary(excludedInvalid) : '';
+  if (!addSendNow) {
+    const lines = [`${createdCount}명을 추가했습니다.`];
+    if (excludedLine) lines.push(excludedLine);
+    return lines.join('\n');
+  }
+  const countLabel = targetCount.toLocaleString('ko-KR');
+  const lines = [`${countLabel}명에게 접속 정보를 발송했습니다.`];
+  if (failed > 0) {
+    lines.push(`발송 성공 ${sent}명 · 실패 ${failed}명 · 추가 ${createdCount}명`);
+    lines.push('이메일 형식(연속 .. 등)·연락처를 확인한 뒤 상담진행 현황에서 재발송하세요.');
+  } else {
+    lines.push(`발송 성공 ${sent}명 · 내담자 ${createdCount}명 추가`);
+  }
+  if (excludedLine) lines.push(excludedLine);
+  return lines.join('\n');
+}
+
 const EDIT_INLINE_INPUT_SHARED =
   'w-full min-w-0 flex-1 rounded-lg border bg-[#101f38]/90 px-2 py-1 text-xs transition-[color,border-color,box-shadow] focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-55 sm:text-sm';
 
@@ -311,6 +338,9 @@ export default function AssessmentAddRecipientModal({
     message: string;
     sent: boolean;
     error?: boolean;
+    loading?: boolean;
+    hint?: string;
+    notice?: string;
   } | null>(null);
   const [addError, setAddError] = useState('');
   const [invalidBulkDeleteOffer, setInvalidBulkDeleteOffer] = useState(false);
@@ -490,7 +520,7 @@ export default function AssessmentAddRecipientModal({
   };
 
   const handleClose = () => {
-    if (addLoading) return;
+    if (addLoading || addComplete?.loading) return;
     resetForm();
     onClose();
   };
@@ -662,14 +692,23 @@ export default function AssessmentAddRecipientModal({
     const rows = combinedRows;
     const validRows = rows.filter((r) => !targetRowInvalid(r));
     const excludedInvalid = rows.filter((r) => targetRowInvalid(r));
-    const excludedNote =
-      excludedInvalid.length > 0 ? `\n${formatExcludedInvalidSummary(excludedInvalid)}` : '';
     const cohortName = (context.cohortName || context.title || '내담자').trim();
-    setProgressRecipientCount(validRows.length);
+    const targetCount = validRows.length;
+    setProgressRecipientCount(targetCount);
     setAddLoading(true);
     setAddError('');
     setInvalidBulkDeleteOffer(false);
     setNotifyConfirmOpen(false);
+    setAddComplete({
+      loading: true,
+      title: addSendNow ? '발송 진행 중…' : '내담자 추가 중…',
+      message: addSendNow
+        ? `${targetCount.toLocaleString('ko-KR')}명에게 접속 정보를 발송하고 있습니다.`
+        : `${targetCount.toLocaleString('ko-KR')}명을 추가하고 있습니다.`,
+      hint: '창을 닫지 말고 잠시만 기다려 주세요.',
+      notice: addSendNow ? '코드 발송량에 따라, 1~2분 이상 걸릴 수 있습니다.' : undefined,
+      sent: addSendNow,
+    });
     try {
       const result = await bulkCreateClientPortals({
         assessmentId: context.assessmentId,
@@ -688,22 +727,25 @@ export default function AssessmentAddRecipientModal({
       const createdCount = result.created?.length ?? validRows.length;
       const sent = result.notifySent ?? 0;
       const failed = result.notifyFailed ?? 0;
+      const completeMessage = buildAddRecipientCompleteMessage({
+        addSendNow,
+        targetCount,
+        createdCount,
+        sent,
+        failed,
+        excludedInvalid,
+      });
       if (addSendNow && failed > 0) {
         setAddComplete({
           title: sent > 0 ? '일부 발송 실패' : '발송 실패',
-          message:
-            `내담자 ${createdCount}명 추가 · 발송 성공 ${sent}명 · 실패 ${failed}명.` +
-            ' 이메일 형식(연속 .. 등)·연락처를 확인한 뒤 상담진행 현황에서 재발송하세요.' +
-            excludedNote,
+          message: completeMessage,
           sent: addSendNow,
           error: sent === 0,
         });
       } else {
         setAddComplete({
           title: addSendNow ? '발송 완료' : '추가 완료',
-          message: addSendNow
-            ? `${createdCount}명에게 접속 정보를 발송했습니다.${excludedNote}`
-            : `${createdCount}명을 추가했습니다.${excludedNote}`,
+          message: completeMessage,
           sent: addSendNow,
         });
       }
@@ -720,6 +762,7 @@ export default function AssessmentAddRecipientModal({
   };
 
   const handleCompleteConfirm = () => {
+    if (addComplete?.loading) return;
     const info = addComplete;
     setAddComplete(null);
     resetForm();
@@ -1151,29 +1194,16 @@ export default function AssessmentAddRecipientModal({
           </div>
         </div>
       </div>
-      <CounselorActionProgressOverlay
-        open={addLoading}
-        zIndexClass="z-[120]"
-        title={addSendNow ? '발송 진행 중…' : '내담자 추가 중…'}
-        message={
-          addSendNow
-            ? `${(progressRecipientCount || validRecipientCount).toLocaleString('ko-KR')}명에게 접속 정보를 발송하고 있습니다.`
-            : `${(progressRecipientCount || validRecipientCount).toLocaleString('ko-KR')}명을 추가하고 있습니다.`
-        }
-        hint="창을 닫지 말고 잠시만 기다려 주세요."
-        notice={
-          addSendNow
-            ? '코드 발송량에 따라,  1~2분 이상 걸릴 수 있습니다.'
-            : undefined
-        }
-      />
       <CounselorActionCompleteModal
         open={Boolean(addComplete)}
         title={addComplete?.title ?? ''}
         message={addComplete?.message}
         error={addComplete?.error}
+        loading={addComplete?.loading}
+        hint={addComplete?.hint}
+        notice={addComplete?.notice}
         onConfirm={handleCompleteConfirm}
-        zIndexClass="z-[130]"
+        zIndexClass="z-[150]"
       />
       <CounselorNotifyConfirmDialog
         open={notifyConfirmOpen}

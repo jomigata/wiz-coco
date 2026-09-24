@@ -208,11 +208,6 @@ export default function CounselorNotifyConfirmDialog({
                 <p className="mt-3 border-t border-white/10 pt-3 text-sm font-semibold tabular-nums text-amber-100">
                   {pointSummary.footerLine}
                 </p>
-                {kind === 'add_recipient' ? (
-                  <p className="mt-1 text-xs text-white/90">
-                    (발송 성공 시 {formatPoints(POINT_COST_INITIAL_RECIPIENT_DISPATCH)})
-                  </p>
-                ) : null}
               </>
             ) : null}
             {balanceLoading ? (
