@@ -53,7 +53,6 @@ function AddRecipientConfirmSummary({
   targetCount,
   groupName,
   affiliation,
-  perPersonLabel,
   usePoints,
   balancePoints,
   balanceLoading,
@@ -63,7 +62,6 @@ function AddRecipientConfirmSummary({
   targetCount: number;
   groupName: string;
   affiliation: string;
-  perPersonLabel: string;
   usePoints: number;
   balancePoints: number;
   balanceLoading: boolean;
@@ -97,13 +95,15 @@ function AddRecipientConfirmSummary({
 
         <div className="rounded-xl border border-emerald-500/20 bg-gradient-to-r from-emerald-950/40 to-slate-900/30 px-3.5 py-3">
           <p className="text-[11px] font-semibold text-emerald-300/90">발송 내용</p>
-          <p className="mt-1.5 text-sm font-semibold leading-snug text-white">나의코드 · 비밀번호</p>
-          <p className="mt-1 text-xs leading-relaxed text-slate-300">
-            등록된 <span className="text-sky-200">이메일</span> ·{' '}
-            <span className="text-sky-200">휴대폰</span>으로 전달
+          <p className="mt-1.5 text-sm font-semibold leading-relaxed text-white">
+            나의코드와 비밀번호를 등록된 이메일과 휴대폰으로 전달합니다.
           </p>
           <p className="mt-2 text-xs text-amber-200/90">
-            발송 성공 시 <span className="font-semibold tabular-nums">{perPersonLabel}</span>/명
+            발송 성공 시{' '}
+            <span className="font-semibold tabular-nums">
+              {formatPoints(POINT_COST_INITIAL_RECIPIENT_DISPATCH)}(1개)
+            </span>{' '}
+            차감합니다.
           </p>
         </div>
 
@@ -227,7 +227,6 @@ export default function CounselorNotifyConfirmDialog({
     return {
       groupName: (r?.groupName || '').trim() || '—',
       affiliation: (r?.affiliation || '').trim() || '—',
-      perPersonLabel: formatPoints(POINT_COST_INITIAL_RECIPIENT_DISPATCH),
       extras: (addRecipientExtraLines || []).map((s) => s.trim()).filter(Boolean),
     };
   }, [kind, recipients, addRecipientExtraLines]);
@@ -332,7 +331,6 @@ export default function CounselorNotifyConfirmDialog({
               targetCount={recipients.length}
               groupName={addRecipientMeta.groupName}
               affiliation={addRecipientMeta.affiliation}
-              perPersonLabel={addRecipientMeta.perPersonLabel}
               usePoints={pointSummary.usePoints}
               balancePoints={balancePoints}
               balanceLoading={balanceLoading}
