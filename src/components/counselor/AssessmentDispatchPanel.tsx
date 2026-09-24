@@ -1163,6 +1163,9 @@ export default function AssessmentDispatchPanel({
       displayName: r.displayName,
       email: r.email,
       phone: r.phone,
+      notifyStatus: r.notifyStatus,
+      initialDispatchPointsCharged: r.initialDispatchPointsCharged,
+      notifyResendSuccessCount: r.notifyResendSuccessCount,
     }));
   }, [notifyConfirmKind, remindEligibleSelected, credentialTargetSelected]);
 

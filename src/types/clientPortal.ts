@@ -123,6 +123,8 @@ export type CounselorClientPortalListItem = {
   notifyKind?: string | null;
   notifyEmailChannel?: string | null;
   notifyPhoneChannel?: string | null;
+  notifyResendSuccessCount?: number;
+  initialDispatchPointsCharged?: boolean;
   lastLoginAt?: string | null;
   createdAt?: string | null;
   counselorTags?: string[];

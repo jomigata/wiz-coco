@@ -16,6 +16,9 @@ export function buildDispatchGroupsFromSelections(
     displayName?: string | null;
     email?: string | null;
     phone?: string | null;
+    notifyStatus?: string | null;
+    initialDispatchPointsCharged?: boolean;
+    notifyResendSuccessCount?: number;
     assessments: { assessmentId: string }[];
   }>,
 ): DispatchNotifyGroup[] {
@@ -30,6 +33,9 @@ export function buildDispatchGroupsFromSelections(
         displayName: item.displayName,
         email: item.email,
         phone: item.phone,
+        notifyStatus: item.notifyStatus,
+        initialDispatchPointsCharged: item.initialDispatchPointsCharged,
+        notifyResendSuccessCount: item.notifyResendSuccessCount,
       });
     }
     map.set(assessmentId, existing);

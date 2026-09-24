@@ -204,6 +204,7 @@ export default function CounselorNotifyConfirmDialog({
       formatNotifyPointSummary(recipients, effectiveChannels, balancePoints, {
         perRecipient: kind === 'add_recipient',
         resend: kind === 'resend',
+        remind: kind === 'remind',
         targetOnly: kind === 'add_recipient',
       }),
     [recipients, effectiveChannels, balancePoints, kind],
@@ -281,8 +282,18 @@ export default function CounselorNotifyConfirmDialog({
             </p>
           ) : kind === 'resend' ? (
             <p className="mt-1 text-sm text-slate-400">
-              이메일(0포인트) · 휴대폰 성공 시{' '}
-              <span className="text-amber-300">{formatPoints(POINT_COST_RESEND_PHONE)}</span>/건
+              최초 전달(미발송·전체 실패)은 성공 시{' '}
+              <span className="text-amber-300">
+                {formatPoints(POINT_COST_INITIAL_RECIPIENT_DISPATCH)}
+              </span>
+              /명 · 재전송 1회 무료 · 2회째{' '}
+              <span className="text-amber-300">{formatPoints(POINT_COST_RESEND_PHONE)}</span>/명
+            </p>
+          ) : kind === 'remind' ? (
+            <p className="mt-1 text-sm text-slate-400">
+              미실시 알림 1회 무료 · 2회째부터 성공 시{' '}
+              <span className="text-amber-300">{formatPoints(POINT_COST_RESEND_PHONE)}</span>/명
+              (전 채널 실패 시 차감분 환불)
             </p>
           ) : (
             <p className="mt-1 text-sm text-slate-400">
@@ -324,7 +335,11 @@ export default function CounselorNotifyConfirmDialog({
                   <span className="font-semibold text-white">휴대폰</span>
                   <span className="text-amber-300">
                     {' '}
-                    ({kind === 'resend' ? formatPoints(POINT_COST_RESEND_PHONE) : '0포인트'}/건)
+                    (
+                    {kind === 'resend' || kind === 'remind'
+                      ? `2회째 ${formatPoints(POINT_COST_RESEND_PHONE)}`
+                      : '0포인트'}
+                    /건)
                   </span>
                 </span>
               </label>

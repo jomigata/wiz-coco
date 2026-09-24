@@ -21,7 +21,29 @@ export type NotifyRecipientContact = {
   myCode?: string | null;
   groupName?: string | null;
   affiliation?: string | null;
+  notifyStatus?: string | null;
+  initialDispatchPointsCharged?: boolean;
+  notifyResendSuccessCount?: number;
 };
+
+export function portalNeedsInitialCredentialCharge(r: NotifyRecipientContact): boolean {
+  if (r.initialDispatchPointsCharged) return false;
+  const status = (r.notifyStatus || 'not_sent').trim();
+  return status !== 'sent' && status !== 'partial';
+}
+
+export function estimateResendRemindPointForRecipient(r: NotifyRecipientContact): number {
+  const count = Math.max(0, Number(r.notifyResendSuccessCount) || 0);
+  if (count >= 1) return POINT_COST_RESEND_PHONE;
+  return 0;
+}
+
+export function estimateCredentialResendPointForRecipient(r: NotifyRecipientContact): number {
+  if (portalNeedsInitialCredentialCharge(r)) {
+    return POINT_COST_INITIAL_RECIPIENT_DISPATCH;
+  }
+  return estimateResendRemindPointForRecipient(r);
+}
 
 export function defaultNotifyChannelSelection(
   recipients: NotifyRecipientContact[],
@@ -82,15 +104,17 @@ export function countNotifyTargets(
   };
 }
 
-/** 최초 발송(내담자 1명) 성공 시 5포인트 · 재전송은 휴대폰 1건당 1포인트 */
+/** 최초 발송(내담자 1명) 성공 시 5포인트 · 재전송·미실시 알림은 1회 무료, 2회째부터 1포인트 */
 export function estimateNotifyPointCost(
   recipients: NotifyRecipientContact[],
   selection: NotifyChannelSelection,
-  options?: { perRecipient?: boolean; resend?: boolean },
+  options?: { perRecipient?: boolean; resend?: boolean; remind?: boolean },
 ): number {
+  if (options?.remind) {
+    return recipients.reduce((sum, r) => sum + estimateResendRemindPointForRecipient(r), 0);
+  }
   if (options?.resend) {
-    const { phoneCount } = countNotifyTargets(recipients, selection);
-    return phoneCount * POINT_COST_RESEND_PHONE;
+    return recipients.reduce((sum, r) => sum + estimateCredentialResendPointForRecipient(r), 0);
   }
   if (options?.perRecipient) {
     return recipients.length * POINT_COST_INITIAL_RECIPIENT_DISPATCH;
@@ -107,7 +131,7 @@ export function formatNotifyPointSummary(
   recipients: NotifyRecipientContact[],
   selection: NotifyChannelSelection,
   balancePoints: number,
-  options?: { perRecipient?: boolean; targetOnly?: boolean; resend?: boolean },
+  options?: { perRecipient?: boolean; targetOnly?: boolean; resend?: boolean; remind?: boolean },
 ): {
   usePoints: number;
   balanceAfter: number;
@@ -118,23 +142,26 @@ export function formatNotifyPointSummary(
   const usePoints = estimateNotifyPointCost(recipients, selection, options);
   const balanceAfter = Math.max(0, balancePoints - usePoints);
   const isResend = Boolean(options?.resend);
+  const isRemind = Boolean(options?.remind);
   const detailLines = options?.targetOnly
     ? [`대상: ${recipientCount}명`]
     : [
         `대상: ${recipientCount}명`,
         selection.email ? `이메일 ${emailCount}건 (0포인트)` : null,
         selection.phone
-          ? isResend
-            ? `휴대폰 ${phoneCount}건 (${formatPoints(POINT_COST_RESEND_PHONE)}/건)`
+          ? isResend || isRemind
+            ? `휴대폰 ${phoneCount}건 (재전송 1회 무료 · 2회째 ${formatPoints(POINT_COST_RESEND_PHONE)})`
             : `발송 ${recipientCount}명 (${formatPoints(POINT_COST_INITIAL_RECIPIENT_DISPATCH)}/명, 성공 시)`
-          : !isResend && recipientCount > 0
+          : !isResend && !isRemind && recipientCount > 0
             ? `발송 ${recipientCount}명 (${formatPoints(POINT_COST_INITIAL_RECIPIENT_DISPATCH)}/명, 성공 시)`
-            : null,
+            : isResend || isRemind
+              ? `재전송·알림 1회 무료 · 2회째 ${formatPoints(POINT_COST_RESEND_PHONE)}/명 (성공 시)`
+              : null,
       ].filter(Boolean) as string[];
   const footerLine = options?.perRecipient
     ? `최대 ${formatPoints(usePoints)} (발송 성공 시) / 잔여 ${formatPoints(balanceAfter)}`
-    : isResend
-      ? `사용 ${formatPoints(usePoints)} (휴대폰 성공 시) / 잔여 ${formatPoints(balanceAfter)}`
+    : isResend || isRemind
+      ? `최대 ${formatPoints(usePoints)} (성공 시) / 잔여 ${formatPoints(balanceAfter)}`
       : `최대 ${formatPoints(usePoints)} (발송 성공 시) / 잔여 ${formatPoints(balanceAfter)}`;
   return { usePoints, balanceAfter, detailLines, footerLine };
 }

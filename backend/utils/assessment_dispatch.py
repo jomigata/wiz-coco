@@ -964,6 +964,8 @@ def get_assessment_dispatch_status(
                 "notifyKind": notify_snap.get("notifyKind") or "initial",
                 "notifyEmailChannel": notify_snap.get("emailChannel") or "",
                 "notifyPhoneChannel": notify_snap.get("phoneChannel") or "",
+                "notifyResendSuccessCount": int(pdata.get("notifyResendSuccessCount") or 0),
+                "initialDispatchPointsCharged": bool(pdata.get("initialDispatchPointsCharged")),
                 "tests": tests_payload,
                 **test_info,
             }
@@ -1212,7 +1214,9 @@ def resend_portal_credentials(
     join_access_code = (ass.get("accessCode") or "").strip()
     channels = _normalize_notify_channels(notify_channels)
 
-    phone_send_count = 0
+    from utils.portal_notify_billing import ensure_portal_notify_credits, resolve_notify_kind_for_credentials
+
+    credit_payloads: list[dict] = []
     for portal_id in portal_ids:
         pid = (portal_id or "").strip()
         if not pid:
@@ -1226,9 +1230,8 @@ def resend_portal_credentials(
         email, phone = _apply_notify_channels_to_contact(email, phone, channels)
         if not email and not phone:
             continue
-        if _will_use_phone_channel(email, phone, channels):
-            phone_send_count += 1
-    _ensure_notify_phone_credits(db, counselor_uid, phone_send_count)
+        credit_payloads.append(pdata)
+    ensure_portal_notify_credits(db, counselor_uid, credit_payloads, mode="credential_resend")
 
     sent = 0
     failed = 0
@@ -1275,8 +1278,7 @@ def resend_portal_credentials(
             portal_id=pid,
         )
 
-        portal_status = (pdata.get("lastNotifyStatus") or "not_sent").strip()
-        notify_kind = "initial" if portal_status == "not_sent" else "resend"
+        notify_kind = resolve_notify_kind_for_credentials(pdata)
 
         try:
             result = deliver_portal_credentials(
@@ -1408,7 +1410,9 @@ def send_test_reminders(
     ass = _verify_assessment_owned(db, assessment_id, counselor_uid)
     channels = _normalize_notify_channels(notify_channels)
 
-    phone_send_count = 0
+    from utils.portal_notify_billing import ensure_portal_notify_credits
+
+    remind_payloads: list[dict] = []
     for portal_id in portal_ids:
         pid = (portal_id or "").strip()
         if not pid:
@@ -1422,9 +1426,8 @@ def send_test_reminders(
         email, phone = _apply_notify_channels_to_contact(email, phone, channels)
         if not email and not phone:
             continue
-        if _will_use_phone_channel(email, phone, channels):
-            phone_send_count += 1
-    _ensure_notify_phone_credits(db, counselor_uid, phone_send_count)
+        remind_payloads.append(pdata)
+    ensure_portal_notify_credits(db, counselor_uid, remind_payloads, mode="remind")
 
     join_access_code = (ass.get("accessCode") or "").strip()
     assessment_title = (ass.get("title") or "").strip()
@@ -1510,16 +1513,8 @@ def send_test_reminders(
         )
         status = result.get("status") or "failed"
         pref.update({"lastRemindStatus": status, "lastRemindAt": SERVER_TIMESTAMP})
-        if status == "sent":
+        if status in ("sent", "partial"):
             sent += 1
-            if _will_use_phone_channel(email, phone, channels):
-                _consume_notify_phone_credit(
-                    db,
-                    counselor_uid=counselor_uid,
-                    portal_id=pid,
-                    assessment_id=assessment_id,
-                    reason="dispatch_remind_phone",
-                )
         elif status == "skipped":
             skipped += 1
         else:

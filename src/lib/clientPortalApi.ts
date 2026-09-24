@@ -360,6 +360,8 @@ export type DispatchRecipient = {
   notifyKind?: string | null;
   notifyEmailChannel?: string | null;
   notifyPhoneChannel?: string | null;
+  notifyResendSuccessCount?: number;
+  initialDispatchPointsCharged?: boolean;
   testStatus: 'completed' | 'in_progress' | 'not_started';
   completedCount: number;
   requiredCount: number;

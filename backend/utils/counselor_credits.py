@@ -261,6 +261,64 @@ def consume_portal_points(
     }
 
 
+def refund_portal_points(
+    db,
+    counselor_uid: str,
+    points: int,
+    *,
+    reason: str,
+    actor_uid: str | None = None,
+    metadata: dict | None = None,
+) -> dict:
+    """포털 포인트 환불 — consume_portal_points의 역연산."""
+    if points <= 0:
+        balance = get_balance(db, counselor_uid)
+        return {
+            "counselorUid": counselor_uid,
+            "balance": balance,
+            "refundedCredits": 0,
+            "pointsRefunded": 0,
+            "pointsAvailable": get_points_available(db, counselor_uid),
+        }
+
+    balance = get_balance(db, counselor_uid)
+    reserve = _get_point_reserve(db, counselor_uid)
+    new_reserve = reserve - points
+    credit_refund = 0
+    while new_reserve < 0:
+        new_reserve += POINTS_PER_ASSESSMENT_CREDIT
+        credit_refund += 1
+    new_balance = balance + credit_refund
+    ref = _credits_ref(db, counselor_uid)
+    ref.set(
+        {
+            "counselorUid": counselor_uid,
+            "balance": new_balance,
+            "pointReserve": new_reserve,
+            "updatedAt": SERVER_TIMESTAMP,
+        },
+        merge=True,
+    )
+    ledger_meta = dict(metadata or {})
+    ledger_meta["pointsRefunded"] = points
+    _append_ledger(
+        db,
+        counselor_uid=counselor_uid,
+        delta=credit_refund,
+        balance_after=new_balance,
+        reason=reason,
+        actor_uid=actor_uid,
+        metadata=ledger_meta,
+    )
+    return {
+        "counselorUid": counselor_uid,
+        "balance": new_balance,
+        "refundedCredits": credit_refund,
+        "pointsRefunded": points,
+        "pointsAvailable": get_points_available(db, counselor_uid),
+    }
+
+
 def _append_ledger(
     db,
     *,
