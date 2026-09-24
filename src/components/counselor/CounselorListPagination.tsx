@@ -59,6 +59,9 @@ export default function CounselorListPagination({
             <button
               type="button"
               onClick={() => onPageChange(p)}
+              onMouseEnter={() => {
+                if (p !== page) onPageChange(p);
+              }}
               className={`min-w-[1.75rem] rounded border px-2 py-0.5 text-sm tabular-nums ${
                 p === page
                   ? 'border-sky-500/50 bg-sky-600/30 text-sky-200'
