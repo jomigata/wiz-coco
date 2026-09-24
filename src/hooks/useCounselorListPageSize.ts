@@ -103,6 +103,7 @@ export function useCounselorListPageSize(
 
   return {
     listScrollRef,
+    scrollContainerRef,
     pageSizeSetting,
     setPageSizeSetting,
     effectivePageSize,

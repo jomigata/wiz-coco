@@ -32,7 +32,7 @@ import {
   counselorListTdClass,
   counselorListThClass,
 } from '@/lib/counselorListTableStyles';
-import { useListPagination } from '@/hooks/useListPagination';
+import { useListPaginationWithExpand } from '@/hooks/useListPaginationWithExpand';
 import { useCounselorListPageSize } from '@/hooks/useCounselorListPageSize';
 import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
 
@@ -116,7 +116,7 @@ export default function ArchivedRecipientsTable({
   const [detail, setDetail] = useState<CounselorResultDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState('');
-  const { listScrollRef, pageSizeSetting, setPageSizeSetting, effectivePageSize } =
+  const { listScrollRef, scrollContainerRef, pageSizeSetting, setPageSizeSetting, effectivePageSize } =
     useCounselorListPageSize();
 
   const sortedItems = useMemo(() => {
@@ -133,7 +133,13 @@ export default function ArchivedRecipientsTable({
     startIndex,
     paginatedItems,
     currentCount,
-  } = useListPagination(sortedItems, effectivePageSize);
+  } = useListPaginationWithExpand({
+    items: sortedItems,
+    pageSize: effectivePageSize,
+    expandedId,
+    scrollContainerRef,
+    getRowId: (row) => row.portalId,
+  });
 
   const toggleSort = (key: RecipientSortKey) => {
     if (sortKey === key) {
@@ -417,6 +423,7 @@ export default function ArchivedRecipientsTable({
               return (
                 <React.Fragment key={row.portalId}>
                   <tr
+                    data-portal-id={row.portalId}
                     onClick={() => toggleExpand(row.portalId)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {

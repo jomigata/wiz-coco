@@ -114,6 +114,7 @@ const Pagination: React.FC<PaginationProps> = ({
             <button
               key={page}
               onClick={() => handlePageClick(page)}
+              onMouseEnter={() => handlePageClick(page)}
               className={`px-4 py-2 text-sm font-medium ${
                 page === currentPage
                   ? 'bg-blue-600 text-white'

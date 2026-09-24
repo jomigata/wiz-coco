@@ -31,7 +31,7 @@ import {
   counselorListTheadClass,
 } from '@/lib/counselorListTableStyles';
 import { matchesWildcardFields } from '@/lib/wildcardSearch';
-import { useListPagination } from '@/hooks/useListPagination';
+import { useListPaginationWithExpand } from '@/hooks/useListPaginationWithExpand';
 import { useCounselorListPageSize } from '@/hooks/useCounselorListPageSize';
 import CounselorPortalMoveDialog from '@/components/counselor/CounselorPortalMoveDialog';
 import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
@@ -681,7 +681,7 @@ export default function CounselorClientList({
   const [detail, setDetail] = useState<CounselorResultDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState('');
-  const { listScrollRef, pageSizeSetting, setPageSizeSetting, effectivePageSize } =
+  const { listScrollRef, scrollContainerRef, pageSizeSetting, setPageSizeSetting, effectivePageSize } =
     useCounselorListPageSize();
 
   const cacheKey = useMemo(
@@ -938,7 +938,13 @@ export default function CounselorClientList({
     startIndex,
     paginatedItems,
     currentCount,
-  } = useListPagination(sortedFiltered, effectivePageSize);
+  } = useListPaginationWithExpand({
+    items: sortedFiltered,
+    pageSize: effectivePageSize,
+    expandedId: !permanentlyDeletedMode ? expandedId : null,
+    scrollContainerRef,
+    getRowId: (item) => item.portalId,
+  });
 
   const stats = useMemo(() => {
     const completed = displayItems.filter((i) => i.progress.label === 'completed').length;

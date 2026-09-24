@@ -76,7 +76,7 @@ import { replaceWithAuthSession } from '@/utils/authSessionLifecycle';
 import { buildAssessmentListHref, writeAssessmentListSearch, buildAssessmentProgressHref } from '@/lib/counselorAssessmentListSearch';
 import CounselorListTableScroll from '@/components/counselor/CounselorListTableScroll';
 import CounselorListPagination from '@/components/counselor/CounselorListPagination';
-import { useListPagination } from '@/hooks/useListPagination';
+import { useListPaginationWithExpand } from '@/hooks/useListPaginationWithExpand';
 import { useCounselorListPageSize } from '@/hooks/useCounselorListPageSize';
 import { DELETED_ASSESSMENTS_HREF } from '@/lib/counselorNestedNav';
 import { matchesWildcardFields } from '@/lib/wildcardSearch';
@@ -1065,7 +1065,7 @@ export default function AssessmentDispatchPanel({
     return list;
   }, [visibleData?.recipients, dispatchOverrides, sortKey, sortDir, nameSortPhase, searchQuery]);
 
-  const { listScrollRef, pageSizeSetting, setPageSizeSetting, effectivePageSize } =
+  const { listScrollRef, scrollContainerRef, pageSizeSetting, setPageSizeSetting, effectivePageSize } =
     useCounselorListPageSize();
   const {
     page,
@@ -1075,7 +1075,13 @@ export default function AssessmentDispatchPanel({
     paginatedItems: paginatedRecipients,
     currentCount: paginatedCurrentCount,
     startIndex: recipientPageStartIndex,
-  } = useListPagination(sortedRecipients, effectivePageSize);
+  } = useListPaginationWithExpand({
+    items: sortedRecipients,
+    pageSize: effectivePageSize,
+    expandedId,
+    scrollContainerRef,
+    getRowId: (r) => r.portalId,
+  });
 
   useEffect(() => {
     if (!dispatchNextCursor || loadingMoreDispatch) return;
@@ -1762,6 +1768,7 @@ export default function AssessmentDispatchPanel({
                 return (
                   <React.Fragment key={r.portalId}>
                     <tr
+                      id={`dispatch-row-${r.portalId}`}
                       onClick={() => toggleExpand(r.portalId)}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
