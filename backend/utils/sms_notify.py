@@ -100,10 +100,10 @@ def send_test_reminder_sms(
 ) -> tuple[bool, str, str]:
     phone = (to_phone or "").strip()
     if not phone:
-        return False, "no_phone"
+        return False, "no_phone", ""
     if not is_sms_configured():
         logger.info("SMS skipped (no provider configured) for %s", phone[:4] + "****")
-        return False, "sms_not_configured"
+        return False, "sms_not_configured", ""
 
     name = (display_name or "").strip() or "내담자"
     portal_code = (my_code or "").strip().upper()
@@ -130,10 +130,10 @@ def send_care_assignment_sms(
 ) -> tuple[bool, str, str]:
     phone = (to_phone or "").strip()
     if not phone:
-        return False, "no_phone"
+        return False, "no_phone", ""
     if not is_sms_configured():
         logger.info("SMS skipped (no provider configured) for %s", phone[:4] + "****")
-        return False, "sms_not_configured"
+        return False, "sms_not_configured", ""
 
     name = (display_name or "").strip() or "내담자"
     title = (assignment_title or "").strip() or "새 치료·과제"
@@ -168,10 +168,10 @@ def send_portal_pin_reset_sms(*, to_phone: str, reset_url: str, access_code: str
 def send_portal_invite_sms(*, to_phone: str, access_code: str, magic_url: str) -> tuple[bool, str, str]:
     phone = (to_phone or "").strip()
     if not phone:
-        return False, "no_phone"
+        return False, "no_phone", ""
     if not is_sms_configured():
         logger.info("SMS skipped (no provider configured) for %s", phone[:4] + "****")
-        return False, "sms_not_configured"
+        return False, "sms_not_configured", ""
 
     body = (
         f"[WizCoCo] 심리검사 안내\n"
