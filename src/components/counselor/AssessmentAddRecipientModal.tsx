@@ -216,9 +216,15 @@ function formatExcludedInvalidSummary(invalid: RecipientRow[]): string {
   return `부적합 ${invalid.length}명 제외 (${namePart}${overflow})`;
 }
 
-function withEditInvalidInputClass(base: string, invalid: boolean): string {
-  if (!invalid) return base;
-  return `${base} border-red-500/55 text-red-200 placeholder:text-red-400/50 focus:border-red-400 focus:ring-red-500/25`;
+const EDIT_INLINE_INPUT_SHARED =
+  'w-full min-w-0 flex-1 rounded-lg border bg-[#101f38]/90 px-2 py-1 text-xs transition-[color,border-color,box-shadow] focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-55 sm:text-sm';
+
+/** 수정 중 — 부적합이면 빨간 글자·테두리, 해소되면 흰 글자로 복귀 */
+function editInlineInputClass(invalid: boolean): string {
+  if (invalid) {
+    return `${EDIT_INLINE_INPUT_SHARED} border-red-500/55 text-red-400 placeholder:text-red-400/45 focus:border-red-400 focus:ring-red-500/25`;
+  }
+  return `${EDIT_INLINE_INPUT_SHARED} border-white/10 text-white placeholder:text-slate-500 focus:border-sky-400/50 focus:ring-sky-500/30`;
 }
 
 /** `mergeRecipients`와 동일 — 목록 인덱스·삭제 매칭용 */
@@ -252,8 +258,10 @@ function editDraftFieldInvalidFlags(draft: RecipientRow): {
 } {
   const name = !draft.displayName.trim();
   const missingContact = recipientPreviewMissingContact(draft);
-  const phone = missingContact || recipientPreviewPhoneInvalid(draft);
-  const email = missingContact || recipientPreviewEmailInvalid(draft);
+  const phoneRaw = (draft.phone || '').trim();
+  const emailRaw = (draft.email || '').trim();
+  const phone = phoneRaw ? recipientPreviewPhoneInvalid(draft) : missingContact;
+  const email = emailRaw ? recipientPreviewEmailInvalid(draft) : missingContact;
   return { name, phone, email };
 }
 
@@ -1019,7 +1027,6 @@ export default function AssessmentAddRecipientModal({
                 {displayedTargetRows.map(({ row, originalIndex }) => {
                   const rowKey = recipientRowMergeKey(row);
                   const isEditing = editingRowKey === rowKey;
-                  const inlineInputClass = `${FORM_INPUT} min-w-0 flex-1 py-1 text-xs sm:text-sm`;
                   const editInvalid = isEditing ? editDraftFieldInvalidFlags(editDraft) : null;
                   return (
                   <li
@@ -1037,7 +1044,7 @@ export default function AssessmentAddRecipientModal({
                             setEditDraft((d) => ({ ...d, displayName: e.target.value }))
                           }
                           placeholder="이름"
-                          className={withEditInvalidInputClass(inlineInputClass, editInvalid?.name ?? false)}
+                          className={editInlineInputClass(editInvalid?.name ?? false)}
                           disabled={addLoading}
                         />
                         <input
@@ -1050,7 +1057,7 @@ export default function AssessmentAddRecipientModal({
                             }))
                           }
                           placeholder="휴대폰"
-                          className={withEditInvalidInputClass(inlineInputClass, editInvalid?.phone ?? false)}
+                          className={editInlineInputClass(editInvalid?.phone ?? false)}
                           disabled={addLoading}
                         />
                         <input
@@ -1060,7 +1067,7 @@ export default function AssessmentAddRecipientModal({
                             setEditDraft((d) => ({ ...d, email: e.target.value }))
                           }
                           placeholder="이메일"
-                          className={withEditInvalidInputClass(inlineInputClass, editInvalid?.email ?? false)}
+                          className={editInlineInputClass(editInvalid?.email ?? false)}
                           disabled={addLoading}
                         />
                       </div>
