@@ -15,8 +15,9 @@ function DispatchCompleteStatusHint() {
   return (
     <div className="rounded-xl border border-slate-500/30 bg-gradient-to-br from-slate-900/80 to-slate-950/60 px-3.5 py-3 ring-1 ring-white/5">
       <p className="text-[11px] font-semibold leading-relaxed text-slate-300">
-        실패/성공은 목록에서{' '}
-        <span className="font-bold text-sky-300">발송현황</span>을 참조하세요.
+        코드전송 결과는{' '}
+        <span className="font-bold text-sky-300">&quot;상담진행 현황 - 발송현황&quot;</span> 에서
+        확인하세요.
       </p>
       <p className="mt-2 border-t border-white/10 pt-2 text-[11px] font-semibold leading-relaxed text-slate-300">
         실패시 포인트는 실시간{' '}
