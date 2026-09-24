@@ -208,6 +208,14 @@ function targetRowInvalid(row: RecipientRow): boolean {
   return false;
 }
 
+function formatExcludedInvalidSummary(invalid: RecipientRow[]): string {
+  if (!invalid.length) return '';
+  const names = invalid.slice(0, 4).map((r) => r.displayName.trim() || '—');
+  const namePart = names.join(', ');
+  const overflow = invalid.length > 4 ? ` 외 ${invalid.length - 4}명` : '';
+  return `부적합 ${invalid.length}명 제외 (${namePart}${overflow})`;
+}
+
 /** `mergeRecipients`와 동일 — 목록 인덱스·삭제 매칭용 */
 function recipientRowMergeKey(row: RecipientRow): string {
   return `${row.displayName.trim()}|${normalizeRecipientPhone(row.phone)}`.toLowerCase();
@@ -273,6 +281,7 @@ export default function AssessmentAddRecipientModal({
   const [pendingRows, setPendingRows] = useState<RecipientRow[]>([]);
   const [addSendNow, setAddSendNow] = useState(true);
   const [addLoading, setAddLoading] = useState(false);
+  const [progressRecipientCount, setProgressRecipientCount] = useState(0);
   const [addComplete, setAddComplete] = useState<{
     title: string;
     message: string;
@@ -315,6 +324,11 @@ export default function AssessmentAddRecipientModal({
 
   const invalidRecipientCount = useMemo(
     () => combinedRows.filter((r) => targetRowInvalid(r)).length,
+    [combinedRows],
+  );
+
+  const validRecipientCount = useMemo(
+    () => combinedRows.filter((r) => !targetRowInvalid(r)).length,
     [combinedRows],
   );
 
@@ -403,13 +417,15 @@ export default function AssessmentAddRecipientModal({
 
   const notifyRecipients = useMemo<NotifyRecipientContact[]>(
     () =>
-      combinedRows.map((r) => ({
-        displayName: r.displayName,
-        phone: r.phone,
-        email: r.email,
-        groupName: context?.cohortName,
-        affiliation: context?.title,
-      })),
+      combinedRows
+        .filter((r) => !targetRowInvalid(r))
+        .map((r) => ({
+          displayName: r.displayName,
+          phone: r.phone,
+          email: r.email,
+          groupName: context?.cohortName,
+          affiliation: context?.title,
+        })),
     [combinedRows, context?.cohortName, context?.title],
   );
 
@@ -446,6 +462,7 @@ export default function AssessmentAddRecipientModal({
     setTargetSortDir('asc');
     setEditingRowKey(null);
     autoInvalidSortAppliedRef.current = false;
+    setProgressRecipientCount(0);
   };
 
   const handleClose = () => {
@@ -599,10 +616,10 @@ export default function AssessmentAddRecipientModal({
       setAddError('개별 입력 또는 파일에서 내담자 1명 이상을 추가해 주세요.');
       return;
     }
-    const invalidCount = rows.filter((r) => targetRowInvalid(r)).length;
-    if (invalidCount > 0) {
-      setInvalidBulkDeleteOffer(true);
-      setAddError('');
+    const validRows = rows.filter((r) => !targetRowInvalid(r));
+    if (validRows.length === 0) {
+      setInvalidBulkDeleteOffer(false);
+      setAddError('유효한 내담자가 없습니다. 연락처(휴대폰·이메일)를 확인해 주세요.');
       return;
     }
     setAddError('');
@@ -617,7 +634,12 @@ export default function AssessmentAddRecipientModal({
   const executeSubmit = async (notifyChannels: ('email' | 'phone')[] | undefined) => {
     if (!context) return;
     const rows = combinedRows;
+    const validRows = rows.filter((r) => !targetRowInvalid(r));
+    const excludedInvalid = rows.filter((r) => targetRowInvalid(r));
+    const excludedNote =
+      excludedInvalid.length > 0 ? ` ${formatExcludedInvalidSummary(excludedInvalid)}` : '';
     const cohortName = (context.cohortName || context.title || '내담자').trim();
+    setProgressRecipientCount(validRows.length);
     setAddLoading(true);
     setAddError('');
     setInvalidBulkDeleteOffer(false);
@@ -628,7 +650,7 @@ export default function AssessmentAddRecipientModal({
         cohortName,
         title: context.title || cohortName,
         testList: context.testList,
-        rows: rows.map((r) => ({
+        rows: validRows.map((r) => ({
           displayName: r.displayName.trim(),
           phone: normalizeRecipientPhone(r.phone) || undefined,
           email: (r.email || '').trim().toLowerCase() || undefined,
@@ -637,7 +659,7 @@ export default function AssessmentAddRecipientModal({
         queueNotify: addSendNow,
         notifyChannels: addSendNow ? notifyChannels : undefined,
       });
-      const createdCount = result.created?.length ?? rows.length;
+      const createdCount = result.created?.length ?? validRows.length;
       const sent = result.notifySent ?? 0;
       const failed = result.notifyFailed ?? 0;
       if (addSendNow && failed > 0) {
@@ -645,7 +667,8 @@ export default function AssessmentAddRecipientModal({
           title: sent > 0 ? '일부 발송 실패' : '발송 실패',
           message:
             `내담자 ${createdCount}명 추가 · 발송 성공 ${sent}명 · 실패 ${failed}명.` +
-            ' 이메일 형식(연속 .. 등)·연락처를 확인한 뒤 상담진행 현황에서 재발송하세요.',
+            ' 이메일 형식(연속 .. 등)·연락처를 확인한 뒤 상담진행 현황에서 재발송하세요.' +
+            excludedNote,
           sent: addSendNow,
           error: sent === 0,
         });
@@ -653,8 +676,8 @@ export default function AssessmentAddRecipientModal({
         setAddComplete({
           title: addSendNow ? '발송 완료' : '추가 완료',
           message: addSendNow
-            ? `${createdCount}명에게 접속 정보를 발송했습니다.`
-            : `${createdCount}명을 추가했습니다.`,
+            ? `${createdCount}명에게 접속 정보를 발송했습니다.${excludedNote}`
+            : `${createdCount}명을 추가했습니다.${excludedNote}`,
           sent: addSendNow,
         });
       }
@@ -1061,10 +1084,9 @@ export default function AssessmentAddRecipientModal({
                             type="button"
                             onClick={() => removeTargetRow(originalIndex)}
                             disabled={addLoading}
-                            className="px-1 text-slate-500 hover:text-red-300 disabled:opacity-50"
-                            title="삭제"
+                            className="rounded border border-red-500/35 bg-red-950/40 px-2 py-0.5 text-xs font-medium text-red-200 hover:bg-red-900/50 disabled:opacity-50"
                           >
-                            ✕
+                            삭제
                           </button>
                         </>
                       )}
@@ -1084,7 +1106,7 @@ export default function AssessmentAddRecipientModal({
               <button
                 type="button"
                 onClick={() => void handleSubmit()}
-                disabled={addLoading}
+                disabled={addLoading || validRecipientCount === 0}
                 className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-emerald-900/25 transition-colors hover:bg-emerald-500 disabled:opacity-50"
               >
                 {addLoading ? '추가 중…' : '코드 발송'}
@@ -1107,8 +1129,8 @@ export default function AssessmentAddRecipientModal({
         title={addSendNow ? '발송 진행 중…' : '내담자 추가 중…'}
         message={
           addSendNow
-            ? `${combinedRows.length}명에게 접속 정보를 발송하고 있습니다.`
-            : `${combinedRows.length}명을 추가하고 있습니다.`
+            ? `${(progressRecipientCount || validRecipientCount).toLocaleString('ko-KR')}명에게 접속 정보를 발송하고 있습니다.`
+            : `${(progressRecipientCount || validRecipientCount).toLocaleString('ko-KR')}명을 추가하고 있습니다.`
         }
         hint="창을 닫지 말고 잠시만 기다려 주세요."
         notice={
