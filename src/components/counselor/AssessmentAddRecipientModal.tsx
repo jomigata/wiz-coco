@@ -256,17 +256,12 @@ function editDraftFieldInvalidFlags(draft: RecipientRow): {
   phone: boolean;
   email: boolean;
 } {
-  const name = !draft.displayName.trim();
   const phoneRaw = (draft.phone || '').trim();
   const emailRaw = (draft.email || '').trim();
-  const phoneNorm = normalizeRecipientPhone(draft.phone);
-  const hasValidPhone = Boolean(phoneNorm && isValidKrMobilePhone(phoneNorm));
-  const hasValidEmail = Boolean(emailRaw && isValidEmailAddress(emailRaw.toLowerCase()));
-  const needsContact = !hasValidPhone && !hasValidEmail;
-
-  const phone = phoneRaw ? recipientPreviewPhoneInvalid(draft) : needsContact;
-  const email = emailRaw ? recipientPreviewEmailInvalid(draft) : needsContact;
-  return { name, phone, email };
+  // 수정 중 — 비어 있으면 적합 색(흰색). 값이 있는데 형식만 틀릴 때만 빨간색
+  const phone = phoneRaw ? recipientPreviewPhoneInvalid(draft) : false;
+  const email = emailRaw ? recipientPreviewEmailInvalid(draft) : false;
+  return { name: false, phone, email };
 }
 
 function FilePreviewRecipientLine({ row }: { row: RecipientRow }) {
