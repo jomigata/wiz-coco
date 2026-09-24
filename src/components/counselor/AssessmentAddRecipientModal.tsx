@@ -21,10 +21,8 @@ import {
 import CounselorActionCompleteModal, {
   type CounselorDispatchCompleteSummary,
 } from '@/components/counselor/CounselorActionCompleteModal';
-import {
-  defaultNotifyChannelSelection,
-  notifyChannelsToPayload,
-} from '@/lib/counselorNotifyChannels';
+import CounselorNotifyConfirmDialog from '@/components/counselor/CounselorNotifyConfirmDialog';
+import type { NotifyRecipientContact } from '@/lib/counselorNotifyChannels';
 import { isValidEmailAddress } from '@/lib/emailValidation';
 
 type TargetSortKey = 'input' | 'name' | 'phone' | 'email' | 'invalid';
@@ -341,6 +339,7 @@ export default function AssessmentAddRecipientModal({
   const [fileBatches, setFileBatches] = useState<ImportedFileBatch[]>([]);
   const [filePreviewAnchor, setFilePreviewAnchor] = useState<FilePreviewAnchor | null>(null);
   const [samplePreviewKind, setSamplePreviewKind] = useState<'txt' | 'csv' | null>(null);
+  const [notifyConfirmOpen, setNotifyConfirmOpen] = useState(false);
   const [targetSortKey, setTargetSortKey] = useState<TargetSortKey>('input');
   const [targetSortDir, setTargetSortDir] = useState<TargetSortDir>('asc');
   const [editingRowKey, setEditingRowKey] = useState<string | null>(null);
@@ -461,6 +460,26 @@ export default function AssessmentAddRecipientModal({
     if (targetSortKey !== key) return '↕';
     return targetSortDir === 'asc' ? '▲' : '▼';
   };
+
+  const notifyRecipients = useMemo<NotifyRecipientContact[]>(
+    () =>
+      combinedRows
+        .filter((r) => !targetRowInvalid(r))
+        .map((r) => ({
+          displayName: r.displayName,
+          phone: r.phone,
+          email: r.email,
+          groupName: context?.cohortName,
+          affiliation: context?.title,
+        })),
+    [combinedRows, context?.cohortName, context?.title],
+  );
+
+  const notifyConfirmExtraLines = useMemo(() => {
+    const invalid = combinedRows.filter((r) => targetRowInvalid(r));
+    if (!invalid.length) return [];
+    return [`${formatExcludedInvalidSummary(invalid)} — 발송 제외`];
+  }, [combinedRows]);
 
   useEffect(() => {
     if (!open) return;
@@ -659,18 +678,11 @@ export default function AssessmentAddRecipientModal({
     }
     setAddError('');
     setInvalidBulkDeleteOffer(false);
-    const notifyChannels = addSendNow
-      ? notifyChannelsToPayload(
-          defaultNotifyChannelSelection(
-            validRows.map((r) => ({
-              displayName: r.displayName,
-              phone: r.phone,
-              email: r.email,
-            })),
-          ),
-        )
-      : undefined;
-    void executeSubmit(notifyChannels);
+    if (addSendNow) {
+      setNotifyConfirmOpen(true);
+      return;
+    }
+    void executeSubmit(undefined);
   };
 
   const executeSubmit = async (notifyChannels: ('email' | 'phone')[] | undefined) => {
@@ -687,6 +699,7 @@ export default function AssessmentAddRecipientModal({
     });
 
     setProgressRecipientCount(targetCount);
+    setNotifyConfirmOpen(false);
     setAddLoading(true);
     setAddError('');
     setInvalidBulkDeleteOffer(false);
@@ -1180,6 +1193,17 @@ export default function AssessmentAddRecipientModal({
         dispatchSummary={addComplete?.dispatchSummary}
         onConfirm={handleCompleteConfirm}
         zIndexClass="z-[150]"
+      />
+      <CounselorNotifyConfirmDialog
+        open={notifyConfirmOpen}
+        kind="add_recipient"
+        hideChannels
+        recipients={notifyRecipients}
+        addRecipientExtraLines={notifyConfirmExtraLines}
+        loading={false}
+        confirmLabel="코드 발송"
+        onConfirm={(channels) => void executeSubmit(channels)}
+        onCancel={() => setNotifyConfirmOpen(false)}
       />
       {filePreviewTooltip &&
       filePreviewAnchor &&

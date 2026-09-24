@@ -22,7 +22,7 @@ type Props = {
   confirmLabel?: string;
   onConfirm: () => void;
   zIndexClass?: string;
-  /** 내담자 추가·발송 완료 — 구조화된 발송 현황 */
+  /** 내담자 추가·발송 완료 — 요약(발송 성공/실패 집계 없음) */
   dispatchSummary?: CounselorDispatchCompleteSummary | null;
 };
 
@@ -35,16 +35,14 @@ function DispatchStatCard({
   label: string;
   value: string | number;
   suffix?: string;
-  tone?: 'neutral' | 'success' | 'fail' | 'sky';
+  tone?: 'neutral' | 'success' | 'sky';
 }) {
   const toneClass =
     tone === 'success'
       ? 'border-emerald-500/30 bg-emerald-950/35 text-emerald-50'
-      : tone === 'fail'
-        ? 'border-red-500/30 bg-red-950/35 text-red-100'
-        : tone === 'sky'
-          ? 'border-sky-500/25 bg-sky-950/35 text-sky-50'
-          : 'border-white/10 bg-white/[0.04] text-white';
+      : tone === 'sky'
+        ? 'border-sky-500/25 bg-sky-950/35 text-sky-50'
+        : 'border-white/10 bg-white/[0.04] text-white';
   return (
     <div className={`rounded-xl border px-2 py-2.5 text-center ${toneClass}`}>
       <p className="text-[10px] font-semibold uppercase tracking-wide opacity-80">{label}</p>
@@ -59,11 +57,9 @@ function DispatchStatCard({
 function DispatchCompletePanel({
   summary,
   loading,
-  error,
 }: {
   summary: CounselorDispatchCompleteSummary;
   loading: boolean;
-  error: boolean;
 }) {
   const showNotify = summary.notifySent !== false;
   const pending = loading;
@@ -103,7 +99,7 @@ function DispatchCompletePanel({
             className="inline-block h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-sky-400/30 border-t-sky-200"
             aria-hidden="true"
           />
-          <span className="text-sm font-medium text-sky-100">발송 결과를 확인하고 있습니다…</span>
+          <span className="text-sm font-medium text-sky-100">처리 중…</span>
         </div>
       ) : null}
 
@@ -111,10 +107,6 @@ function DispatchCompletePanel({
         <div className="rounded-xl border border-amber-500/30 bg-amber-950/35 px-3 py-2.5 text-xs leading-relaxed text-amber-100/95">
           {summary.excludedText}
         </div>
-      ) : null}
-
-      {error && !pending ? (
-        <p className="text-xs leading-relaxed text-red-200/90">요청 처리에 실패했습니다.</p>
       ) : null}
     </div>
   );
@@ -199,7 +191,7 @@ export default function CounselorActionCompleteModal({
         </div>
 
         {premium && dispatchSummary ? (
-          <DispatchCompletePanel summary={dispatchSummary} loading={loading} error={error} />
+          <DispatchCompletePanel summary={dispatchSummary} loading={loading} />
         ) : null}
 
         {premium && message && !loading ? (
