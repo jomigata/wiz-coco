@@ -4,11 +4,8 @@ import React from 'react';
 
 export type CounselorDispatchCompleteSummary = {
   targetCount: number;
-  sent?: number;
-  failed?: number;
   addedCount?: number;
   excludedText?: string;
-  footnote?: string;
   /** false면 추가만(발송 없음) */
   notifySent?: boolean;
 };
@@ -70,34 +67,19 @@ function DispatchCompletePanel({
 }) {
   const showNotify = summary.notifySent !== false;
   const pending = loading;
-  const sent = summary.sent ?? 0;
-  const failed = summary.failed ?? 0;
-  const sentDisplay = pending || summary.sent === undefined ? '—' : sent;
-  const failDisplay = pending || summary.failed === undefined ? '—' : failed;
   const addedDisplay = pending || summary.addedCount === undefined ? '—' : summary.addedCount;
-  const showFailStat = !pending && showNotify && (failed > 0 || sent < summary.targetCount);
 
   return (
     <div className="space-y-3 px-4 pb-1 pt-2 text-left">
       {showNotify ? (
-        <div
-          className={`grid gap-2 ${showFailStat && !pending ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3'}`}
-        >
+        <div className="grid grid-cols-2 gap-2">
           <DispatchStatCard label="발송 대상" value={summary.targetCount} suffix="명" tone="sky" />
           <DispatchStatCard
-            label="발송 성공"
-            value={sentDisplay}
+            label="내담자 추가"
+            value={addedDisplay}
             suffix={pending ? '' : '명'}
-            tone={!pending && sent > 0 ? 'success' : 'neutral'}
+            tone={!pending ? 'success' : 'neutral'}
           />
-          {showFailStat ? (
-            <DispatchStatCard label="발송 실패" value={failDisplay} suffix="명" tone="fail" />
-          ) : null}
-          {!pending ? (
-            <DispatchStatCard label="내담자 추가" value={addedDisplay} suffix="명" tone="neutral" />
-          ) : (
-            <DispatchStatCard label="내담자 추가" value="—" tone="neutral" />
-          )}
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-2">
@@ -131,11 +113,7 @@ function DispatchCompletePanel({
         </div>
       ) : null}
 
-      {summary.footnote && !pending ? (
-        <p className="text-xs leading-relaxed text-slate-400">{summary.footnote}</p>
-      ) : null}
-
-      {error && !pending && !summary.footnote ? (
+      {error && !pending ? (
         <p className="text-xs leading-relaxed text-red-200/90">요청 처리에 실패했습니다.</p>
       ) : null}
     </div>
