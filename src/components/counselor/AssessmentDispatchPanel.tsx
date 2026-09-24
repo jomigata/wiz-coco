@@ -1554,8 +1554,8 @@ export default function AssessmentDispatchPanel({
             </button>
           </div>
         ) : (
-          <>
-            <CounselorListTableScroll className="flex-1">
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+            <CounselorListTableScroll className="min-h-0 flex-1">
               <table className="w-max min-w-full table-fixed text-sm">
                 <colgroup>
                   <col className="w-10" />
@@ -1842,7 +1842,7 @@ export default function AssessmentDispatchPanel({
             </CounselorListTableScroll>
 
             {dispatchNextCursor ? (
-              <div className="mt-3 flex justify-center border-t border-white/10 pt-3">
+              <div className="relative z-10 shrink-0 flex justify-center border-t border-white/10 bg-[#0f1d33] pt-3">
                 <button
                   type="button"
                   disabled={loadingMoreDispatch}
@@ -1857,7 +1857,7 @@ export default function AssessmentDispatchPanel({
             ) : null}
 
             {showFooterActions ? (
-            <div className="mt-2 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-3">
+            <div className="relative z-10 shrink-0 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 bg-[#0f1d33] px-0.5 pt-3 pb-1">
               <p className="text-xs text-slate-500">
                 선택 <span className="font-semibold text-slate-300 tabular-nums">{selected.size}</span>명 · 전체{' '}
                 <span className="tabular-nums text-slate-300">{displayData.recipients.length}</span>명
@@ -1914,7 +1914,7 @@ export default function AssessmentDispatchPanel({
               </div>
             </div>
             ) : null}
-          </>
+          </div>
         )}
       </div>
     </CounselorPageSection>

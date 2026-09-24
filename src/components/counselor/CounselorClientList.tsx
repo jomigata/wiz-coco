@@ -1463,8 +1463,8 @@ export default function CounselorClientList({
             ) : null}
           </div>
         ) : (
-          <>
-            <CounselorListTableScroll>
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+            <CounselorListTableScroll className="min-h-0 flex-1">
               <table className="w-max min-w-full table-fixed text-sm">
                 <thead className={counselorListTheadClass}>
                   <tr className={counselorListHeaderRowClass}>
@@ -1847,7 +1847,7 @@ export default function CounselorClientList({
                 )
               }
             />
-          </>
+          </div>
         )}
       </motion.div>
 
