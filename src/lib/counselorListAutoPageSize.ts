@@ -39,13 +39,55 @@ function rowMatchesExpandedId(row: HTMLElement, expandedId: string | null): bool
   return false;
 }
 
+/** 스크롤 영역 clientHeight + 상위 overflow:hidden 클립 교차 */
+export function getCounselorListScrollViewport(scrollEl: HTMLElement): { top: number; bottom: number } {
+  const rect = scrollEl.getBoundingClientRect();
+  let top = rect.top;
+  let bottom = rect.top + scrollEl.clientHeight;
+
+  let el: HTMLElement | null = scrollEl.parentElement;
+  while (el) {
+    const { overflowY, overflow } = getComputedStyle(el);
+    const clipsY =
+      overflowY === 'hidden' ||
+      overflowY === 'clip' ||
+      overflow === 'hidden' ||
+      overflow === 'clip';
+    if (clipsY) {
+      const pr = el.getBoundingClientRect();
+      top = Math.max(top, pr.top);
+      bottom = Math.min(bottom, pr.bottom);
+    }
+    el = el.parentElement;
+  }
+
+  const scrollHost = scrollEl.parentElement;
+  const footer = scrollHost?.nextElementSibling;
+  if (footer instanceof HTMLElement && footer.hasAttribute('data-counselor-list-pagination')) {
+    bottom = Math.min(bottom, footer.getBoundingClientRect().top - 1);
+  }
+
+  return { top, bottom: bottom - 1 };
+}
+
+function isMainRowFullyVisibleInViewport(
+  row: HTMLElement,
+  viewportTop: number,
+  viewportBottom: number,
+): boolean {
+  const rowRect = row.getBoundingClientRect();
+  if (rowRect.top >= viewportBottom - 0.5) return false;
+  if (rowRect.bottom > viewportBottom + 0.5) return false;
+  if (rowRect.top < viewportTop - 0.5) return false;
+  return true;
+}
+
 /** 펼침 시: 펼친 본문+세부(세부가 잘려도 유지)까지 포함하고, 그 아래 완전히 보이는 행만 현재 페이지에 둠 */
 export function measureFitCountWithExpand(
   scrollEl: HTMLElement,
   expandedId: string | null,
 ): number {
-  const containerRect = scrollEl.getBoundingClientRect();
-  const maxBottom = containerRect.bottom - 1;
+  const { top: viewportTop, bottom: viewportBottom } = getCounselorListScrollViewport(scrollEl);
 
   const mainRows = Array.from(
     scrollEl.querySelectorAll<HTMLElement>('tbody tr:not([data-counselor-list-expand-row])'),
@@ -63,10 +105,8 @@ export function measureFitCountWithExpand(
   if (expandedIndex < 0 || !expandedId) {
     let visible = 0;
     for (const row of mainRows) {
-      const rowRect = row.getBoundingClientRect();
-      if (rowRect.top >= containerRect.bottom) break;
-      if (rowRect.bottom <= maxBottom + 0.5) visible += 1;
-      else break;
+      if (!isMainRowFullyVisibleInViewport(row, viewportTop, viewportBottom)) break;
+      visible += 1;
     }
     return Math.max(1, visible);
   }
@@ -75,13 +115,9 @@ export function measureFitCountWithExpand(
   let fitCount = expandedIndex + 1;
 
   for (let i = expandedIndex + 1; i < mainRows.length; i++) {
-    const rowRect = mainRows[i].getBoundingClientRect();
-    if (rowRect.top >= maxBottom) break;
-    if (rowRect.bottom <= maxBottom + 0.5) {
-      fitCount += 1;
-    } else {
-      break;
-    }
+    const row = mainRows[i];
+    if (!isMainRowFullyVisibleInViewport(row, viewportTop, viewportBottom)) break;
+    fitCount += 1;
   }
 
   return Math.max(expandedIndex + 1, fitCount);

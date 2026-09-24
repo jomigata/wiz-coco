@@ -72,23 +72,48 @@ export function useListPaginationWithExpand<T>({
       setFitCount(null);
       return;
     }
-    if (page !== expandPage) return;
+    if (page !== expandPage) {
+      setFitCount(null);
+      return;
+    }
 
     const el = scrollContainerRef.current;
     if (!el) return;
 
+    let cancelled = false;
+
     const measure = () => {
+      if (cancelled) return;
       const next = measureFitCountWithExpand(el, expandedId);
       setFitCount((prev) => (prev === next ? prev : next));
     };
 
     measure();
+    const raf1 = requestAnimationFrame(() => {
+      measure();
+      requestAnimationFrame(measure);
+    });
+
     const ro = new ResizeObserver(() => measure());
     ro.observe(el);
     const tbody = el.querySelector('tbody');
-    if (tbody) ro.observe(tbody);
+    if (tbody) {
+      ro.observe(tbody);
+      const mo = new MutationObserver(() => measure());
+      mo.observe(tbody, { childList: true, subtree: true, attributes: true });
+      return () => {
+        cancelled = true;
+        cancelAnimationFrame(raf1);
+        ro.disconnect();
+        mo.disconnect();
+      };
+    }
 
-    return () => ro.disconnect();
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(raf1);
+      ro.disconnect();
+    };
   }, [
     expandShiftEnabled,
     expandedId,

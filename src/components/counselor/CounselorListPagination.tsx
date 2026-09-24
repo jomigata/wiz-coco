@@ -88,7 +88,10 @@ export default function CounselorListPagination({
     'flex w-full min-w-0 flex-row flex-wrap items-center justify-end gap-x-2 gap-y-1.5 [&_button]:shrink-0 sm:w-max sm:max-w-none';
 
   return (
-    <div className="relative z-10 mt-2 shrink-0 border-t border-white/10 bg-[#0f1d33] pt-3 pb-2">
+    <div
+      className="relative z-10 mt-2 shrink-0 border-t border-white/10 bg-[#0f1d33] pt-3 pb-2"
+      data-counselor-list-pagination
+    >
       {/*
         sm+: auto | 1fr | auto — 가운데 1fr 안에서 페이지 중앙 (= 좌측 끝 ~ 우측 시작 사이)
         좁은 화면: 건수 → 페이지 → 버튼(가로 줄바꿈, 세로 1열 스택 방지)
