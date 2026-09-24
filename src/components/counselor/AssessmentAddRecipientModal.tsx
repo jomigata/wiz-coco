@@ -18,7 +18,9 @@ import {
   parseRecipientFile,
   type RecipientRow,
 } from '@/lib/recipientImport';
-import CounselorActionCompleteModal from '@/components/counselor/CounselorActionCompleteModal';
+import CounselorActionCompleteModal, {
+  type CounselorDispatchCompleteSummary,
+} from '@/components/counselor/CounselorActionCompleteModal';
 import CounselorNotifyConfirmDialog from '@/components/counselor/CounselorNotifyConfirmDialog';
 import type { NotifyRecipientContact } from '@/lib/counselorNotifyChannels';
 import { isValidEmailAddress } from '@/lib/emailValidation';
@@ -215,31 +217,30 @@ function formatExcludedInvalidSummary(invalid: RecipientRow[]): string {
   return `부적합 ${invalid.length}명 제외 (${namePart}${overflow})`;
 }
 
-function buildAddRecipientCompleteMessage(opts: {
+function buildAddRecipientDispatchSummary(opts: {
   addSendNow: boolean;
   targetCount: number;
-  createdCount: number;
-  sent: number;
-  failed: number;
+  createdCount?: number;
+  sent?: number;
+  failed?: number;
   excludedInvalid: RecipientRow[];
-}): string {
+}): CounselorDispatchCompleteSummary {
   const { addSendNow, targetCount, createdCount, sent, failed, excludedInvalid } = opts;
-  const excludedLine =
-    excludedInvalid.length > 0 ? formatExcludedInvalidSummary(excludedInvalid) : '';
-  if (!addSendNow) {
-    const lines = [`${createdCount}명 추가`];
-    if (excludedLine) lines.push(excludedLine);
-    return lines.join('\n');
-  }
-  const lines: string[] = [];
-  if (failed > 0) {
-    lines.push(`${targetCount}명 발송 · 성공 ${sent} · 실패 ${failed}`);
-    lines.push('상담진행 현황에서 재발송할 수 있습니다.');
-  } else {
-    lines.push(`${targetCount}명 발송 · 성공 ${sent}명`);
-  }
-  if (excludedLine) lines.push(excludedLine);
-  return lines.join('\n');
+  const excludedText =
+    excludedInvalid.length > 0 ? formatExcludedInvalidSummary(excludedInvalid) : undefined;
+  const footnote =
+    addSendNow && failed !== undefined && failed > 0
+      ? '상담진행 현황에서 재발송할 수 있습니다.'
+      : undefined;
+  return {
+    targetCount,
+    notifySent: addSendNow,
+    sent,
+    failed,
+    addedCount: createdCount,
+    excludedText,
+    footnote,
+  };
 }
 
 const EDIT_INLINE_INPUT_SHARED =
@@ -334,12 +335,13 @@ export default function AssessmentAddRecipientModal({
   const [progressRecipientCount, setProgressRecipientCount] = useState(0);
   const [addComplete, setAddComplete] = useState<{
     title: string;
-    message: string;
+    message?: string;
     sent: boolean;
     error?: boolean;
     loading?: boolean;
     hint?: string;
     notice?: string;
+    dispatchSummary?: CounselorDispatchCompleteSummary;
   } | null>(null);
   const [addError, setAddError] = useState('');
   const [invalidBulkDeleteOffer, setInvalidBulkDeleteOffer] = useState(false);
@@ -699,10 +701,24 @@ export default function AssessmentAddRecipientModal({
     const excludedInvalid = rows.filter((r) => targetRowInvalid(r));
     const cohortName = (context.cohortName || context.title || '내담자').trim();
     const targetCount = validRows.length;
+    const pendingSummary = buildAddRecipientDispatchSummary({
+      addSendNow,
+      targetCount,
+      excludedInvalid,
+    });
+
     setProgressRecipientCount(targetCount);
+    setNotifyConfirmOpen(false);
     setAddLoading(true);
     setAddError('');
     setInvalidBulkDeleteOffer(false);
+    setAddComplete({
+      loading: true,
+      title: addSendNow ? '발송 완료' : '추가 완료',
+      sent: addSendNow,
+      dispatchSummary: pendingSummary,
+    });
+
     try {
       const result = await bulkCreateClientPortals({
         assessmentId: context.assessmentId,
@@ -721,7 +737,7 @@ export default function AssessmentAddRecipientModal({
       const createdCount = result.created?.length ?? validRows.length;
       const sent = result.notifySent ?? 0;
       const failed = result.notifyFailed ?? 0;
-      const completeMessage = buildAddRecipientCompleteMessage({
+      const dispatchSummary = buildAddRecipientDispatchSummary({
         addSendNow,
         targetCount,
         createdCount,
@@ -730,28 +746,29 @@ export default function AssessmentAddRecipientModal({
         excludedInvalid,
       });
       if (addSendNow && failed > 0) {
-        setNotifyConfirmOpen(false);
         setAddComplete({
+          loading: false,
           title: sent > 0 ? '일부 발송 실패' : '발송 실패',
-          message: completeMessage,
           sent: addSendNow,
           error: sent === 0,
+          dispatchSummary,
         });
       } else {
-        setNotifyConfirmOpen(false);
         setAddComplete({
+          loading: false,
           title: addSendNow ? '발송 완료' : '추가 완료',
-          message: completeMessage,
           sent: addSendNow,
+          dispatchSummary,
         });
       }
     } catch (err) {
-      setNotifyConfirmOpen(false);
       setAddComplete({
+        loading: false,
         title: addSendNow ? '발송 실패' : '추가 실패',
         message: err instanceof Error ? err.message : '내담자 추가에 실패했습니다.',
         sent: addSendNow,
         error: true,
+        dispatchSummary: pendingSummary,
       });
     } finally {
       setAddLoading(false);
@@ -1195,6 +1212,8 @@ export default function AssessmentAddRecipientModal({
         title={addComplete?.title ?? ''}
         message={addComplete?.message}
         error={addComplete?.error}
+        loading={addComplete?.loading}
+        dispatchSummary={addComplete?.dispatchSummary}
         onConfirm={handleCompleteConfirm}
         zIndexClass="z-[150]"
       />
@@ -1204,10 +1223,10 @@ export default function AssessmentAddRecipientModal({
         hideChannels
         recipients={notifyRecipients}
         addRecipientExtraLines={notifyConfirmExtraLines}
-        loading={addLoading}
+        loading={false}
         confirmLabel="코드 발송"
         onConfirm={(channels) => void executeSubmit(channels)}
-        onCancel={() => !addLoading && setNotifyConfirmOpen(false)}
+        onCancel={() => setNotifyConfirmOpen(false)}
       />
       {filePreviewTooltip &&
       filePreviewAnchor &&
