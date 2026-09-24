@@ -211,7 +211,17 @@ export default function CounselorNotifyConfirmDialog({
               </>
             ) : null}
             {balanceLoading ? (
-              <p className="mt-2 text-xs text-slate-500">포인트 잔액 확인 중…</p>
+              <p
+                className="mt-3 flex items-center justify-center gap-2 rounded-lg border border-sky-400/25 bg-sky-950/40 px-3 py-2.5 text-sm font-medium text-sky-100"
+                role="status"
+                aria-live="polite"
+              >
+                <span
+                  className="inline-block h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-sky-400/30 border-t-sky-300"
+                  aria-hidden="true"
+                />
+                포인트 잔액 확인 중…
+              </p>
             ) : insufficient ? (
               <p className="mt-2 text-xs text-red-300">
                 보유 포인트가 부족합니다. 충전 후 다시 시도해 주세요.
