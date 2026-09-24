@@ -15,6 +15,9 @@ import { counselorClientDetailHref } from '@/lib/counselorClientRoutes';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
+import CounselorListPagination from '@/components/counselor/CounselorListPagination';
+import { useListPagination } from '@/hooks/useListPagination';
+import { useCounselorListPageSize } from '@/hooks/useCounselorListPageSize';
 import type { CareProgramCategory, CareProgramSummary } from '@/types/careProgram';
 import type { CounselorClientPortalListItem } from '@/types/clientPortal';
 import type { CounselorCareAssignmentListItem, CareAssignmentPriority } from '@/types/careAssignment';
@@ -105,6 +108,17 @@ export default function CounselorTreatmentPlansPanel() {
   const [dueAt, setDueAt] = useState('');
   const [notify, setNotify] = useState(true);
   const [assignments, setAssignments] = useState<CounselorCareAssignmentListItem[]>([]);
+
+  const { pageSizeSetting, setPageSizeSetting, effectivePageSize } = useCounselorListPageSize();
+  const {
+    page,
+    setPage,
+    totalPages,
+    totalCount: careAssignmentTotal,
+    paginatedItems: paginatedCareAssignments,
+    currentCount: careAssignmentPageCount,
+    startIndex: careAssignmentStartIndex,
+  } = useListPagination(assignments, effectivePageSize);
 
   const [loadingClients, setLoadingClients] = useState(true);
   const [loadingAssignments, setLoadingAssignments] = useState(true);
@@ -529,6 +543,7 @@ export default function CounselorTreatmentPlansPanel() {
             <table className="min-w-full text-sm">
               <thead>
                 <tr className="border-b border-white/10 text-left text-xs text-slate-500">
+                  <th className="w-10 px-4 py-3 font-medium">No.</th>
                   <th className="px-4 py-3 font-medium">프로그램</th>
                   <th className="px-4 py-3 font-medium">내담자</th>
                   <th className="px-4 py-3 font-medium">마감</th>
@@ -538,10 +553,13 @@ export default function CounselorTreatmentPlansPanel() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
-                {assignments.map((item) => {
+                {paginatedCareAssignments.map((item, rowIndex) => {
                   const badge = progressBadge(item);
                   return (
                     <tr key={item.id} className="hover:bg-white/[0.02]">
+                      <td className="px-4 py-3 tabular-nums text-slate-500">
+                        {careAssignmentStartIndex + rowIndex + 1}
+                      </td>
                       <td className="px-4 py-3">
                         <p className="font-medium text-white">{item.title}</p>
                         <p className="text-xs text-slate-500">{item.programId}</p>
@@ -572,6 +590,16 @@ export default function CounselorTreatmentPlansPanel() {
                 })}
               </tbody>
             </table>
+            <CounselorListPagination
+              page={page}
+              totalPages={totalPages}
+              currentCount={careAssignmentPageCount}
+              totalCount={careAssignmentTotal}
+              onPageChange={setPage}
+              pageSizeSetting={pageSizeSetting}
+              onPageSizeChange={setPageSizeSetting}
+              unit="건"
+            />
           </div>
         )}
       </CounselorPageSection>

@@ -18,6 +18,10 @@ import type {
 } from '@/types/clientPortal';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import CounselorPushAssessmentPanel from '@/components/counselor/CounselorPushAssessmentPanel';
+import CounselorListTableScroll from '@/components/counselor/CounselorListTableScroll';
+import CounselorListPagination from '@/components/counselor/CounselorListPagination';
+import { useListPagination } from '@/hooks/useListPagination';
+import { useCounselorListPageSize } from '@/hooks/useCounselorListPageSize';
 
 type PortalStatusFilter = 'active' | 'archived' | 'all';
 type TestStatusFilter = 'all' | CounselorPortalTestAssignmentStatus;
@@ -117,6 +121,18 @@ export default function CounselorAssignTestsPanel() {
     const notStarted = displayItems.filter((i) => i.status === 'not_started').length;
     return { total: displayItems.length, completed, inProgress, notStarted };
   }, [displayItems]);
+
+  const { listScrollRef, pageSizeSetting, setPageSizeSetting, effectivePageSize } =
+    useCounselorListPageSize();
+  const {
+    page,
+    setPage,
+    totalPages,
+    totalCount: assignmentTotalCount,
+    paginatedItems: paginatedAssignments,
+    currentCount: assignmentPageCount,
+    startIndex: assignmentStartIndex,
+  } = useListPagination(displayItems, effectivePageSize);
 
   const selectablePortals = useMemo(() => {
     const map = new Map<
@@ -387,10 +403,12 @@ export default function CounselorAssignTestsPanel() {
             />
           ) : null}
 
-          <div className="overflow-x-auto rounded-xl border border-white/10 bg-white/[0.02]">
+          <div className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-white/10 bg-white/[0.02]">
+          <CounselorListTableScroll scrollContainerRef={listScrollRef}>
           <table className="min-w-full text-left text-sm">
             <thead>
               <tr className="border-b border-white/10 text-xs uppercase tracking-wide text-slate-500">
+                <th className="w-10 px-4 py-3 font-medium">No.</th>
                 <th className="px-4 py-3 font-medium">내담자</th>
                 <th className="px-4 py-3 font-medium">나의코드</th>
                 <th className="px-4 py-3 font-medium">상담코드</th>
@@ -401,11 +419,14 @@ export default function CounselorAssignTestsPanel() {
               </tr>
             </thead>
             <tbody>
-              {displayItems.map((row) => {
+              {paginatedAssignments.map((row, rowIndex) => {
                 const badge = statusLabel(row.status);
                 const rowKey = `${row.portalId}:${row.assessmentId}:${row.testId}`;
                 return (
                   <tr key={rowKey} className="border-b border-white/5 last:border-0 hover:bg-white/[0.03]">
+                    <td className="px-4 py-3 tabular-nums text-slate-500">
+                      {assignmentStartIndex + rowIndex + 1}
+                    </td>
                     <td className="px-4 py-3">
                       <Link
                         href={counselorClientDetailHref(row.portalId)}
@@ -451,6 +472,19 @@ export default function CounselorAssignTestsPanel() {
               })}
             </tbody>
           </table>
+          </CounselorListTableScroll>
+          {assignmentTotalCount > 0 ? (
+            <CounselorListPagination
+              page={page}
+              totalPages={totalPages}
+              currentCount={assignmentPageCount}
+              totalCount={assignmentTotalCount}
+              onPageChange={setPage}
+              pageSizeSetting={pageSizeSetting}
+              onPageSizeChange={setPageSizeSetting}
+              unit="건"
+            />
+          ) : null}
         </div>
         </>
       )}

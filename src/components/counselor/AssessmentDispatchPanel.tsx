@@ -75,6 +75,9 @@ import { stripAssessmentTitleDispatchCountSuffix } from '@/lib/counselorAssessme
 import { replaceWithAuthSession } from '@/utils/authSessionLifecycle';
 import { buildAssessmentListHref, writeAssessmentListSearch, buildAssessmentProgressHref } from '@/lib/counselorAssessmentListSearch';
 import CounselorListTableScroll from '@/components/counselor/CounselorListTableScroll';
+import CounselorListPagination from '@/components/counselor/CounselorListPagination';
+import { useListPagination } from '@/hooks/useListPagination';
+import { useCounselorListPageSize } from '@/hooks/useCounselorListPageSize';
 import { DELETED_ASSESSMENTS_HREF } from '@/lib/counselorNestedNav';
 import { matchesWildcardFields } from '@/lib/wildcardSearch';
 import {
@@ -1062,6 +1065,34 @@ export default function AssessmentDispatchPanel({
     return list;
   }, [visibleData?.recipients, dispatchOverrides, sortKey, sortDir, nameSortPhase, searchQuery]);
 
+  const { listScrollRef, pageSizeSetting, setPageSizeSetting, effectivePageSize } =
+    useCounselorListPageSize();
+  const {
+    page,
+    setPage,
+    totalPages,
+    totalCount: paginatedRecipientCount,
+    paginatedItems: paginatedRecipients,
+    currentCount: paginatedCurrentCount,
+    startIndex: recipientPageStartIndex,
+  } = useListPagination(sortedRecipients, effectivePageSize);
+
+  useEffect(() => {
+    if (!dispatchNextCursor || loadingMoreDispatch) return;
+    const needed = page * effectivePageSize;
+    if (sortedRecipients.length < needed && sortedRecipients.length < totalRecipientCount) {
+      void loadMoreDispatch();
+    }
+  }, [
+    page,
+    effectivePageSize,
+    sortedRecipients.length,
+    dispatchNextCursor,
+    loadingMoreDispatch,
+    totalRecipientCount,
+    loadMoreDispatch,
+  ]);
+
   const selectedRecipients = useMemo(
     () => sortedRecipients.filter((r) => selected.has(r.portalId)),
     [sortedRecipients, selected],
@@ -1575,7 +1606,7 @@ export default function AssessmentDispatchPanel({
           </div>
         ) : (
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-            <CounselorListTableScroll className="min-h-0 flex-1">
+            <CounselorListTableScroll className="min-h-0 flex-1" scrollContainerRef={listScrollRef}>
               <table className="w-max min-w-full table-fixed text-sm">
                 <colgroup>
                   <col className="w-10" />
@@ -1716,7 +1747,7 @@ export default function AssessmentDispatchPanel({
               </tr>
             </thead>
             <tbody>
-              {sortedRecipients.map((r, rowIndex) => {
+              {paginatedRecipients.map((r, rowIndex) => {
                 const notify = dispatchStatusForRow(r);
                 const summary = progressStatusForRow(r);
                 const isOpen = expandedId === r.portalId;
@@ -1744,7 +1775,9 @@ export default function AssessmentDispatchPanel({
                       aria-label={`${r.displayName || '내담자'} 진행 현황 ${isOpen ? '접기' : '펼치기'}`}
                       className={`cursor-pointer ${counselorListBodyRowClass} ${isOpen ? 'bg-white/[0.04]' : ''}`}
                     >
-                      <td className={`${counselorListTdClass} tabular-nums text-slate-400`}>{rowIndex + 1}</td>
+                      <td className={`${counselorListTdClass} tabular-nums text-slate-400`}>
+                        {recipientPageStartIndex + rowIndex + 1}
+                      </td>
                       {showTableCheckbox ? (
                         <td className={counselorListSelectTdClass} onClick={(e) => e.stopPropagation()}>
                           <input
@@ -1857,79 +1890,88 @@ export default function AssessmentDispatchPanel({
               </table>
             </CounselorListTableScroll>
 
-            {dispatchNextCursor ? (
-              <div className="relative z-10 shrink-0 flex justify-center border-t border-white/10 bg-[#0f1d33] pt-3">
-                <button
-                  type="button"
-                  disabled={loadingMoreDispatch}
-                  onClick={() => void loadMoreDispatch()}
-                  className="rounded-md border border-white/15 bg-white/[0.04] px-4 py-2 text-sm text-sky-200 transition-colors hover:border-sky-400/40 hover:bg-sky-500/10 disabled:opacity-50"
-                >
-                  {loadingMoreDispatch
-                    ? '불러오는 중…'
-                    : `더 보기 (${displayData.recipients.length}${totalRecipientCount ? ` / ${totalRecipientCount}` : ''})`}
-                </button>
-              </div>
-            ) : null}
-
-            {showFooterActions ? (
-            <div className="relative z-10 shrink-0 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 bg-[#0f1d33] px-0.5 pt-3 pb-1">
-              <p className="text-xs text-slate-500">
-                선택 <span className="font-semibold text-slate-300 tabular-nums">{selected.size}</span>명 · 전체{' '}
-                <span className="tabular-nums text-slate-300">{displayData.recipients.length}</span>명
-              </p>
-              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                <button
-                  type="button"
-                  onClick={handleDownloadSelected}
-                  disabled={selected.size === 0 || deleteLoading || remindLoading || resendLoading}
-                  className="rounded-md bg-emerald-700/90 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-emerald-600 disabled:opacity-50 sm:text-sm"
-                >
-                  다운로드 ({selected.size})
-                </button>
-                <button
-                  type="button"
-                  onClick={handlePrintSelected}
-                  disabled={selected.size === 0 || deleteLoading || remindLoading || resendLoading}
-                  className="rounded-md border border-white/10 bg-[#101f38]/90 px-2.5 py-1.5 text-xs font-medium text-slate-200 transition-colors hover:bg-white/5 disabled:opacity-50 sm:text-sm"
-                >
-                  인쇄 ({selected.size})
-                </button>
-                {showArchiveDeleteFooter ? (
-                  <button
-                    type="button"
-                    onClick={() => setConfirmAction('delete')}
-                    disabled={deleteLoading || selected.size === 0 || remindLoading || resendLoading}
-                    className="rounded-md bg-red-700/90 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-red-600 disabled:opacity-50 sm:text-sm"
-                  >
-                    {deleteLoading ? '삭제 중…' : `삭제 (${selected.size})`}
-                  </button>
-                ) : null}
-                {showPermanentDeleteFooter ? (
-                  <button
-                    type="button"
-                    onClick={() => setConfirmAction('permanent_delete')}
-                    disabled={deleteLoading || selected.size === 0 || remindLoading || resendLoading}
-                    className="rounded-md bg-red-700/90 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-red-600 disabled:opacity-50 sm:text-sm"
-                  >
-                    {deleteLoading ? '영구삭제 중…' : `영구삭제 (${selected.size})`}
-                  </button>
-                ) : null}
-                {!adminUser && entryFrom !== 'deleted-assessments' ? (
-                  <button
-                    type="button"
-                    onClick={() => setMoveOpen(true)}
-                    disabled={
-                      selected.size === 0 || remindLoading || resendLoading || deleteLoading
-                    }
-                    className="inline-flex shrink-0 items-center justify-center rounded-md border border-sky-500/40 bg-sky-900/40 px-2.5 py-1.5 text-xs font-medium text-sky-100 transition-colors hover:bg-sky-800/50 disabled:opacity-50 sm:text-sm"
-                  >
-                    다른 상담코드로 이동
-                  </button>
-                ) : null}
-              </div>
-            </div>
-            ) : null}
+            <CounselorListPagination
+              page={page}
+              totalPages={totalPages}
+              currentCount={paginatedCurrentCount}
+              totalCount={paginatedRecipientCount}
+              onPageChange={setPage}
+              pageSizeSetting={pageSizeSetting}
+              onPageSizeChange={setPageSizeSetting}
+              unit="명"
+              footerAction={
+                <>
+                  {dispatchNextCursor ? (
+                    <button
+                      type="button"
+                      disabled={loadingMoreDispatch}
+                      onClick={() => void loadMoreDispatch()}
+                      className="rounded-md border border-white/15 bg-white/[0.04] px-2.5 py-1.5 text-xs font-medium text-sky-200 transition-colors hover:border-sky-400/40 hover:bg-sky-500/10 disabled:opacity-50 sm:text-sm"
+                    >
+                      {loadingMoreDispatch
+                        ? '불러오는 중…'
+                        : `더 불러오기 (${displayData.recipients.length}${totalRecipientCount ? ` / ${totalRecipientCount}` : ''})`}
+                    </button>
+                  ) : null}
+                  {showFooterActions ? (
+                    <>
+                      <span className="hidden text-xs text-slate-500 sm:inline">
+                        선택{' '}
+                        <span className="font-semibold text-slate-300 tabular-nums">{selected.size}</span>명
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleDownloadSelected}
+                        disabled={selected.size === 0 || deleteLoading || remindLoading || resendLoading}
+                        className="rounded-md bg-emerald-700/90 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-emerald-600 disabled:opacity-50 sm:text-sm"
+                      >
+                        다운로드 ({selected.size})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handlePrintSelected}
+                        disabled={selected.size === 0 || deleteLoading || remindLoading || resendLoading}
+                        className="rounded-md border border-white/10 bg-[#101f38]/90 px-2.5 py-1.5 text-xs font-medium text-slate-200 transition-colors hover:bg-white/5 disabled:opacity-50 sm:text-sm"
+                      >
+                        인쇄 ({selected.size})
+                      </button>
+                      {showArchiveDeleteFooter ? (
+                        <button
+                          type="button"
+                          onClick={() => setConfirmAction('delete')}
+                          disabled={deleteLoading || selected.size === 0 || remindLoading || resendLoading}
+                          className="rounded-md bg-red-700/90 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-red-600 disabled:opacity-50 sm:text-sm"
+                        >
+                          {deleteLoading ? '삭제 중…' : `삭제 (${selected.size})`}
+                        </button>
+                      ) : null}
+                      {showPermanentDeleteFooter ? (
+                        <button
+                          type="button"
+                          onClick={() => setConfirmAction('permanent_delete')}
+                          disabled={deleteLoading || selected.size === 0 || remindLoading || resendLoading}
+                          className="rounded-md bg-red-700/90 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-red-600 disabled:opacity-50 sm:text-sm"
+                        >
+                          {deleteLoading ? '영구삭제 중…' : `영구삭제 (${selected.size})`}
+                        </button>
+                      ) : null}
+                      {!adminUser && entryFrom !== 'deleted-assessments' ? (
+                        <button
+                          type="button"
+                          onClick={() => setMoveOpen(true)}
+                          disabled={
+                            selected.size === 0 || remindLoading || resendLoading || deleteLoading
+                          }
+                          className="inline-flex shrink-0 items-center justify-center rounded-md border border-sky-500/40 bg-sky-900/40 px-2.5 py-1.5 text-xs font-medium text-sky-100 transition-colors hover:bg-sky-800/50 disabled:opacity-50 sm:text-sm"
+                        >
+                          다른 상담코드로 이동
+                        </button>
+                      ) : null}
+                    </>
+                  ) : null}
+                </>
+              }
+            />
           </div>
         )}
       </div>
