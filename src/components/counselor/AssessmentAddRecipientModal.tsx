@@ -287,6 +287,12 @@ export default function AssessmentAddRecipientModal({
   const [notifyConfirmOpen, setNotifyConfirmOpen] = useState(false);
   const [targetSortKey, setTargetSortKey] = useState<TargetSortKey>('input');
   const [targetSortDir, setTargetSortDir] = useState<TargetSortDir>('asc');
+  const [editingRowKey, setEditingRowKey] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState<RecipientRow>({
+    displayName: '',
+    phone: '',
+    email: '',
+  });
   /** 개별·파일 추가 후 부적합이 있을 때 부적합 열 정렬 — 세션당 1회 */
   const autoInvalidSortAppliedRef = useRef(false);
 
@@ -438,6 +444,7 @@ export default function AssessmentAddRecipientModal({
     setSamplePreviewKind(null);
     setTargetSortKey('input');
     setTargetSortDir('asc');
+    setEditingRowKey(null);
     autoInvalidSortAppliedRef.current = false;
   };
 
@@ -471,6 +478,7 @@ export default function AssessmentAddRecipientModal({
     const target = combinedRows[combinedIndex];
     if (!target) return;
     const key = recipientRowMergeKey(target);
+    if (editingRowKey === key) setEditingRowKey(null);
     setPendingRows((prev) => prev.filter((r) => recipientRowMergeKey(r) !== key));
     setFileBatches((prev) =>
       prev
@@ -480,6 +488,50 @@ export default function AssessmentAddRecipientModal({
         }))
         .filter((batch) => batch.rows.length > 0),
     );
+  };
+
+  const normalizeEditedRecipientRow = (draft: RecipientRow): RecipientRow => {
+    const displayName = draft.displayName.trim();
+    const phoneNorm = normalizeRecipientPhone(draft.phone);
+    const phone = phoneNorm ? formatPhoneDisplay(phoneNorm) : draft.phone.trim();
+    const email = draft.email.trim().toLowerCase();
+    return { displayName, phone, email };
+  };
+
+  const updateTargetRow = (combinedIndex: number, draft: RecipientRow) => {
+    const target = combinedRows[combinedIndex];
+    if (!target) return;
+    const key = recipientRowMergeKey(target);
+    const normalized = normalizeEditedRecipientRow(draft);
+    if (!normalized.displayName) {
+      setAddError('이름을 입력해 주세요.');
+      return;
+    }
+    setAddError('');
+    setPendingRows((prev) =>
+      prev.map((r) => (recipientRowMergeKey(r) === key ? normalized : r)),
+    );
+    setFileBatches((prev) =>
+      prev.map((batch) => ({
+        ...batch,
+        rows: batch.rows.map((r) => (recipientRowMergeKey(r) === key ? normalized : r)),
+      })),
+    );
+    setEditingRowKey(null);
+  };
+
+  const startEditTargetRow = (row: RecipientRow) => {
+    setEditingRowKey(recipientRowMergeKey(row));
+    setEditDraft({
+      displayName: row.displayName,
+      phone: row.phone,
+      email: row.email,
+    });
+    setAddError('');
+  };
+
+  const cancelEditTargetRow = () => {
+    setEditingRowKey(null);
   };
 
   const handleAddRecipientFiles = async (fileList: FileList | null) => {
@@ -906,9 +958,9 @@ export default function AssessmentAddRecipientModal({
                         type="button"
                         onClick={removeAllInvalidRecipients}
                         disabled={addLoading}
-                        className="text-[11px] font-semibold text-white underline decoration-white/50 underline-offset-2 transition-colors hover:text-sky-200 hover:decoration-sky-300/70 disabled:opacity-50 disabled:hover:text-white"
+                        className="ml-2 pl-1 text-sm font-semibold text-white underline decoration-white/50 underline-offset-2 transition-colors hover:text-sky-200 hover:decoration-sky-300/70 disabled:opacity-50 disabled:hover:text-white"
                       >
-                        일괄삭제 - ({invalidRecipientCount.toLocaleString('ko-KR')}개)
+                        부적합 일괄삭제 - ({invalidRecipientCount.toLocaleString('ko-KR')}개)
                       </button>
                     </>
                   ) : null}
@@ -924,26 +976,102 @@ export default function AssessmentAddRecipientModal({
               </p>
             ) : (
               <ul className="max-h-40 space-y-1 overflow-y-auto pr-1">
-                {displayedTargetRows.map(({ row, originalIndex }) => (
+                {displayedTargetRows.map(({ row, originalIndex }) => {
+                  const rowKey = recipientRowMergeKey(row);
+                  const isEditing = editingRowKey === rowKey;
+                  const inlineInputClass = `${FORM_INPUT} min-w-0 flex-1 py-1 text-xs sm:text-sm`;
+                  return (
                   <li
-                    key={`target-${recipientRowMergeKey(row)}-${originalIndex}`}
-                    className="flex items-center justify-between gap-2 rounded-md border border-white/5 bg-slate-900/40 px-2.5 py-1.5 text-sm leading-snug"
+                    key={`target-${rowKey}-${originalIndex}`}
+                    className="flex items-start justify-between gap-2 rounded-md border border-white/5 bg-slate-900/40 px-2.5 py-1.5 text-sm leading-snug"
                   >
-                    <span className="min-w-0 break-words text-white">
-                      <span className="font-medium">{row.displayName}</span>
-                      <TargetRowContactDisplay row={row} />
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => removeTargetRow(originalIndex)}
-                      disabled={addLoading}
-                      className="shrink-0 text-slate-500 hover:text-red-300"
-                      title="삭제"
-                    >
-                      ✕
-                    </button>
+                    {isEditing ? (
+                      <div className="grid min-w-0 flex-1 grid-cols-1 gap-1.5 sm:grid-cols-3">
+                        <input
+                          type="text"
+                          value={editDraft.displayName}
+                          onChange={(e) =>
+                            setEditDraft((d) => ({ ...d, displayName: e.target.value }))
+                          }
+                          placeholder="이름"
+                          className={inlineInputClass}
+                          disabled={addLoading}
+                        />
+                        <input
+                          type="tel"
+                          value={editDraft.phone}
+                          onChange={(e) =>
+                            setEditDraft((d) => ({
+                              ...d,
+                              phone: formatPhoneWhileTyping(e.target.value),
+                            }))
+                          }
+                          placeholder="휴대폰"
+                          className={inlineInputClass}
+                          disabled={addLoading}
+                        />
+                        <input
+                          type="email"
+                          value={editDraft.email}
+                          onChange={(e) =>
+                            setEditDraft((d) => ({ ...d, email: e.target.value }))
+                          }
+                          placeholder="이메일"
+                          className={inlineInputClass}
+                          disabled={addLoading}
+                        />
+                      </div>
+                    ) : (
+                      <span className="min-w-0 break-words text-white">
+                        <span className="font-medium">{row.displayName}</span>
+                        <TargetRowContactDisplay row={row} />
+                      </span>
+                    )}
+                    <div className="flex shrink-0 items-center gap-1.5 pt-0.5">
+                      {isEditing ? (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => updateTargetRow(originalIndex, editDraft)}
+                            disabled={addLoading}
+                            className="rounded border border-emerald-500/40 bg-emerald-950/40 px-2 py-0.5 text-xs font-medium text-emerald-200 hover:bg-emerald-900/50 disabled:opacity-50"
+                          >
+                            저장
+                          </button>
+                          <button
+                            type="button"
+                            onClick={cancelEditTargetRow}
+                            disabled={addLoading}
+                            className="rounded border border-white/15 px-2 py-0.5 text-xs text-slate-400 hover:text-white disabled:opacity-50"
+                          >
+                            취소
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => startEditTargetRow(row)}
+                            disabled={addLoading || editingRowKey !== null}
+                            className="rounded border border-sky-500/35 bg-sky-950/40 px-2 py-0.5 text-xs font-medium text-sky-200 hover:bg-sky-900/50 disabled:opacity-50"
+                          >
+                            수정
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => removeTargetRow(originalIndex)}
+                            disabled={addLoading}
+                            className="px-1 text-slate-500 hover:text-red-300 disabled:opacity-50"
+                            title="삭제"
+                          >
+                            ✕
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </li>
-                ))}
+                  );
+                })}
               </ul>
             )}
           </div>
