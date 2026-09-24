@@ -179,7 +179,7 @@ export default function CounselorNotifyConfirmDialog({
   const [balancePoints, setBalancePoints] = useState(0);
   const [balanceLoading, setBalanceLoading] = useState(false);
 
-  const channelUiHidden = hideChannels || kind === 'add_recipient';
+  const channelUiHidden = hideChannels || kind === 'add_recipient' || kind === 'remind';
   const pushCareSummary = kind === 'push' || kind === 'care';
 
   useEffect(() => {
@@ -237,7 +237,7 @@ export default function CounselorNotifyConfirmDialog({
     };
   }, [kind, recipients, addRecipientExtraLines]);
 
-  const showPointFooter = pushCareSummary || (kind !== 'add_recipient' && !channelUiHidden);
+  const showPointFooter = pushCareSummary || (kind !== 'add_recipient' && (kind === 'remind' || !channelUiHidden));
 
   const insufficient = pointSummary.usePoints > balancePoints;
 
@@ -276,6 +276,11 @@ export default function CounselorNotifyConfirmDialog({
             <p className="mt-1.5 text-sm leading-relaxed text-sky-100/80">
               선택한 내담자에게 접속 정보를 발송합니다.
             </p>
+          ) : kind === 'remind' ? (
+            <p className="mt-1 text-sm text-slate-400">
+              미실시 알림 1회 무료 · 2회째부터{' '}
+              <span className="text-amber-300">{formatPoints(POINT_COST_RESEND_PHONE)}</span>/명
+            </p>
           ) : channelUiHidden ? (
             <p className="mt-1 text-sm text-slate-400">
               등록된 연락처로 나의코드·안내가 발송됩니다.
@@ -288,12 +293,6 @@ export default function CounselorNotifyConfirmDialog({
               </span>
               /명 · 재전송 1회 무료 · 2회째{' '}
               <span className="text-amber-300">{formatPoints(POINT_COST_RESEND_PHONE)}</span>/명
-            </p>
-          ) : kind === 'remind' ? (
-            <p className="mt-1 text-sm text-slate-400">
-              미실시 알림 1회 무료 · 2회째부터 성공 시{' '}
-              <span className="text-amber-300">{formatPoints(POINT_COST_RESEND_PHONE)}</span>/명
-              (전 채널 실패 시 차감분 환불)
             </p>
           ) : (
             <p className="mt-1 text-sm text-slate-400">
@@ -336,9 +335,7 @@ export default function CounselorNotifyConfirmDialog({
                   <span className="text-amber-300">
                     {' '}
                     (
-                    {kind === 'resend' || kind === 'remind'
-                      ? `2회째 ${formatPoints(POINT_COST_RESEND_PHONE)}`
-                      : '0포인트'}
+                    {kind === 'resend' ? `2회째 ${formatPoints(POINT_COST_RESEND_PHONE)}` : '0포인트'}
                     /건)
                   </span>
                 </span>

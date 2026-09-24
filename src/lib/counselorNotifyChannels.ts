@@ -127,6 +127,48 @@ export function estimateNotifyPointCost(
   return notifyCount * POINT_COST_INITIAL_RECIPIENT_DISPATCH;
 }
 
+export function countRemindAttemptTiers(recipients: NotifyRecipientContact[]): {
+  recipientCount: number;
+  firstFreeCount: number;
+  secondPlusCount: number;
+} {
+  let firstFreeCount = 0;
+  let secondPlusCount = 0;
+  for (const r of recipients) {
+    const count = Math.max(0, Number(r.notifyResendSuccessCount) || 0);
+    if (count >= 1) secondPlusCount += 1;
+    else firstFreeCount += 1;
+  }
+  return {
+    recipientCount: recipients.length,
+    firstFreeCount,
+    secondPlusCount,
+  };
+}
+
+export function formatRemindNotifyPointSummary(
+  recipients: NotifyRecipientContact[],
+  balancePoints: number,
+): {
+  usePoints: number;
+  balanceAfter: number;
+  detailLines: string[];
+  footerLine: string;
+} {
+  const { recipientCount, firstFreeCount, secondPlusCount } = countRemindAttemptTiers(recipients);
+  const usePoints = recipients.reduce((sum, r) => sum + estimateResendRemindPointForRecipient(r), 0);
+  const balanceAfter = Math.max(0, balancePoints - usePoints);
+  const detailLines = [
+    `대상: ${recipientCount}명`,
+    `1회차 ${firstFreeCount}명 (무료)`,
+    secondPlusCount > 0
+      ? `2회차 ${secondPlusCount}명 (${formatPoints(POINT_COST_RESEND_PHONE)}/명)`
+      : null,
+  ].filter(Boolean) as string[];
+  const footerLine = `최대 ${formatPoints(usePoints)} (차감 예정) / 잔여 ${formatPoints(balanceAfter)}`;
+  return { usePoints, balanceAfter, detailLines, footerLine };
+}
+
 export function formatNotifyPointSummary(
   recipients: NotifyRecipientContact[],
   selection: NotifyChannelSelection,
@@ -143,6 +185,9 @@ export function formatNotifyPointSummary(
   const balanceAfter = Math.max(0, balancePoints - usePoints);
   const isResend = Boolean(options?.resend);
   const isRemind = Boolean(options?.remind);
+  if (isRemind) {
+    return formatRemindNotifyPointSummary(recipients, balancePoints);
+  }
   const detailLines = options?.targetOnly
     ? [`대상: ${recipientCount}명`]
     : [
