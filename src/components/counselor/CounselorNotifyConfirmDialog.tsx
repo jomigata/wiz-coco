@@ -35,6 +35,8 @@ type Props = {
   loading?: boolean;
   /** true면 발송 채널 선택 UI 숨김 — 휴대폰 자동 선택 */
   hideChannels?: boolean;
+  /** add_recipient — 부적합 제외 등 추가 한 줄 안내 */
+  addRecipientExtraLines?: string[];
   onConfirm: (channels: ('email' | 'phone')[]) => void;
   onCancel: () => void;
 };
@@ -56,6 +58,7 @@ export default function CounselorNotifyConfirmDialog({
   confirmLabel = '발송',
   loading = false,
   hideChannels = false,
+  addRecipientExtraLines,
   onConfirm,
   onCancel,
 }: Props) {
@@ -100,11 +103,22 @@ export default function CounselorNotifyConfirmDialog({
       const r = recipients[0];
       const groupName = (r?.groupName || '').trim() || '—';
       const affiliation = (r?.affiliation || '').trim() || '—';
-      return [
-        `대상: ${recipients.length}명`,
-        `그룹명: ${groupName}`,
-        `소속: ${affiliation}`,
+      const perPerson = formatPoints(POINT_COST_INITIAL_RECIPIENT_DISPATCH);
+      const lines = [
+        `대상 ${recipients.length}명 · 그룹 ${groupName} · 소속 ${affiliation}`,
+        `나의코드·비밀번호 → 등록 연락처(이메일·휴대폰)`,
+        `성공 시 ${perPerson}/명 · 다수 발송 시 1~2분 소요 가능`,
       ];
+      if (!balanceLoading) {
+        lines.push(
+          `예상 ${formatPoints(pointSummary.usePoints)} · 잔여 ${formatPoints(balancePoints)}`,
+        );
+      }
+      for (const extra of addRecipientExtraLines || []) {
+        const t = extra.trim();
+        if (t) lines.push(t);
+      }
+      return lines;
     }
     if (pushCareSummary) {
       const lines: string[] = [`대상: ${recipients.length}명`];
@@ -117,9 +131,18 @@ export default function CounselorNotifyConfirmDialog({
       return lines;
     }
     return pointSummary.detailLines;
-  }, [kind, pushCareSummary, recipients, pointSummary.detailLines]);
+  }, [
+    kind,
+    pushCareSummary,
+    recipients,
+    pointSummary.detailLines,
+    balanceLoading,
+    balancePoints,
+    pointSummary.usePoints,
+    addRecipientExtraLines,
+  ]);
 
-  const showPointFooter = pushCareSummary || kind === 'add_recipient' || !channelUiHidden;
+  const showPointFooter = pushCareSummary || (kind !== 'add_recipient' && !channelUiHidden);
 
   const insufficient = pointSummary.usePoints > balancePoints;
 
@@ -130,7 +153,9 @@ export default function CounselorNotifyConfirmDialog({
       className="fixed inset-0 z-[140] flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
-      onClick={onCancel}
+      onClick={() => {
+        if (!loading) onCancel();
+      }}
     >
       <div
         className="flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-[#0f1a2e] to-[#0a1220] shadow-2xl"
@@ -198,17 +223,17 @@ export default function CounselorNotifyConfirmDialog({
 
           <div className="rounded-xl border border-sky-500/20 bg-sky-950/25 px-3 py-3">
             <p className="text-xs font-semibold text-sky-200/90">발송 요약</p>
-            <ul className="mt-2 space-y-1 text-sm text-slate-300">
+            <ul className="mt-2 space-y-1.5 text-sm leading-snug text-slate-200">
               {summaryLines.map((line) => (
-                <li key={line}>{line}</li>
+                <li key={line} className="break-words">
+                  {line}
+                </li>
               ))}
             </ul>
             {showPointFooter ? (
-              <>
-                <p className="mt-3 border-t border-white/10 pt-3 text-sm font-semibold tabular-nums text-amber-100">
-                  {pointSummary.footerLine}
-                </p>
-              </>
+              <p className="mt-3 border-t border-white/10 pt-3 text-sm font-semibold tabular-nums text-amber-100">
+                {pointSummary.footerLine}
+              </p>
             ) : null}
             {balanceLoading ? (
               <p
