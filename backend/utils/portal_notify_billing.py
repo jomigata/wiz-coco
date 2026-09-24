@@ -73,6 +73,28 @@ def estimate_max_points_for_credential_resend(pdata: dict) -> int:
     return 0
 
 
+def should_send_test_reminder_portal(
+    pdata: dict,
+    *,
+    email: str,
+    phone: str,
+    test_status: str,
+    has_pending_tests: bool,
+) -> bool:
+    if (test_status or "").strip() == "completed" or not has_pending_tests:
+        return False
+    if not (email or "").strip() and not (phone or "").strip():
+        return False
+    norm_email = (email or "").strip().lower()
+    norm_phone = (phone or "").strip()
+    if norm_email and norm_phone:
+        email_ch = (pdata.get("lastNotifyEmailChannel") or "").strip()
+        phone_ch = (pdata.get("lastNotifyPhoneChannel") or "").strip()
+        if email_ch == "failed" and phone_ch == "failed":
+            return False
+    return True
+
+
 def estimate_max_points_for_remind(pdata: dict) -> int:
     from utils.points_display import POINT_COST_RESEND_PHONE
 

@@ -16,7 +16,7 @@ import DispatchStatusText from '@/components/counselor/DispatchStatusText';
 import {
   DISPATCH_SUCCESS_TEXT_CLASS,
   dispatchStatusDisplay,
-  canRemindIncompleteRecipient,
+  shouldSendRemindNotification,
   formatNotifyDate,
   testSummary,
   type DispatchStatusView,
@@ -307,7 +307,7 @@ function dispatchStatusForRow(recipient: DispatchRecipient): DispatchStatusView 
 }
 
 function canSendReminder(r: DispatchRecipient): boolean {
-  return canRemindIncompleteRecipient({
+  return shouldSendRemindNotification({
     notifyStatus: r.notifyStatus,
     testStatus: r.testStatus,
     completedCount: r.completedCount,
@@ -316,6 +316,8 @@ function canSendReminder(r: DispatchRecipient): boolean {
     phone: r.phone,
     moveStatus: r.moveStatus,
     tests: r.tests,
+    notifyEmailChannel: r.notifyEmailChannel,
+    notifyPhoneChannel: r.notifyPhoneChannel,
   });
 }
 
@@ -1070,12 +1072,16 @@ export default function AssessmentDispatchPanel({
     [selectedRecipients],
   );
 
-  const remindActionEnabled = useMemo(
-    () => selectedRecipients.length > 0 && selectedRecipients.every((r) => canSendReminder(r)),
-    [selectedRecipients],
-  );
-
-  const remindButtonCount = remindActionEnabled ? selectedRecipients.length : 0;
+  const openRemindNotifyConfirm = () => {
+    if (selected.size === 0) return;
+    if (remindEligibleSelected.length === 0) {
+      setError(
+        '발송 가능한 내담자가 없습니다. (검사 완료 또는 이메일·휴대폰 발송 모두 실패한 경우는 제외됩니다.)',
+      );
+      return;
+    }
+    setNotifyConfirmKind('remind');
+  };
 
   const movePortalSummaries = useMemo(
     () =>
@@ -1519,19 +1525,19 @@ export default function AssessmentDispatchPanel({
             <span className="ml-auto inline-flex shrink-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
               <button
                 type="button"
-                onClick={() => setNotifyConfirmKind('remind')}
+                onClick={() => openRemindNotifyConfirm()}
                 disabled={
                   remindLoading ||
                   resendLoading ||
                   deleteLoading ||
-                  !remindActionEnabled
+                  selected.size === 0
                 }
                 className="rounded-md bg-amber-600/90 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-amber-500 disabled:opacity-50 sm:text-sm"
                 title="미실시 검사자에게 현황·검사 링크 발송 (비밀번호 유지)"
               >
                 {remindLoading
                   ? '발송 중…'
-                  : `미실시 알림 (${remindButtonCount})`}
+                  : `미실시 알림 (${selected.size})`}
               </button>
               <button
                 type="button"

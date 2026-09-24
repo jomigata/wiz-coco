@@ -236,6 +236,8 @@ def list_counselor_client_portals(
                 "notifyAt": notify_at,
                 "notifySentVia": notify_snap.get("sentVia") or "",
                 "notifyKind": notify_snap.get("notifyKind") or "initial",
+                "notifyEmailChannel": notify_snap.get("emailChannel") or "",
+                "notifyPhoneChannel": notify_snap.get("phoneChannel") or "",
                 "notifyResendSuccessCount": int(pdata.get("notifyResendSuccessCount") or 0),
                 "initialDispatchPointsCharged": bool(pdata.get("initialDispatchPointsCharged")),
                 "lastLoginAt": _iso_timestamp(pdata.get("lastLoginAt")),

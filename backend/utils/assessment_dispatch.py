@@ -1410,7 +1410,16 @@ def send_test_reminders(
     ass = _verify_assessment_owned(db, assessment_id, counselor_uid)
     channels = _normalize_notify_channels(notify_channels)
 
-    from utils.portal_notify_billing import ensure_portal_notify_credits
+    from utils.portal_notify_billing import ensure_portal_notify_credits, should_send_test_reminder_portal
+
+    join_access_code = (ass.get("accessCode") or "").strip()
+    assessment_title = (ass.get("title") or "").strip()
+    test_list = ass.get("testList") or []
+    required = {
+        str(t.get("testId") or "").strip()
+        for t in test_list
+        if t and str(t.get("testId") or "").strip()
+    }
 
     remind_payloads: list[dict] = []
     for portal_id in portal_ids:
@@ -1421,22 +1430,27 @@ def send_test_reminders(
         if not pdoc.exists:
             continue
         pdata = pdoc.to_dict() or {}
+        if not _portal_owned_by_scope(pdata, counselor_uid):
+            continue
+        assigned = list(pdata.get("assignedAssessmentIds") or [])
+        if assessment_id not in assigned:
+            continue
         email = (pdata.get("email") or "").strip().lower()
         phone = (pdata.get("phone") or "").strip()
         email, phone = _apply_notify_channels_to_contact(email, phone, channels)
-        if not email and not phone:
+        test_rows = _test_detail_rows(db, pid, assessment_id, test_list)
+        pending = _pending_tests_from_rows(test_rows)
+        test_info = _test_status_for_portal(db, pid, assessment_id, required)
+        if not should_send_test_reminder_portal(
+            pdata,
+            email=email,
+            phone=phone,
+            test_status=str(test_info.get("testStatus") or ""),
+            has_pending_tests=bool(pending),
+        ):
             continue
         remind_payloads.append(pdata)
     ensure_portal_notify_credits(db, counselor_uid, remind_payloads, mode="remind")
-
-    join_access_code = (ass.get("accessCode") or "").strip()
-    assessment_title = (ass.get("title") or "").strip()
-    test_list = ass.get("testList") or []
-    required = {
-        str(t.get("testId") or "").strip()
-        for t in test_list
-        if t and str(t.get("testId") or "").strip()
-    }
 
     sent = 0
     failed = 0
@@ -1468,23 +1482,35 @@ def send_test_reminders(
         test_rows = _test_detail_rows(db, pid, assessment_id, test_list)
         pending = _pending_tests_from_rows(test_rows)
         test_info = _test_status_for_portal(db, pid, assessment_id, required)
-        if test_info.get("testStatus") == "completed" or not pending:
-            skipped += 1
-            details.append({"portalId": pid, "status": "skipped", "message": "all_completed"})
-            continue
-
         email = (pdata.get("email") or "").strip().lower()
         phone = (pdata.get("phone") or "").strip()
         email, phone = _apply_notify_channels_to_contact(email, phone, channels)
+
+        if not should_send_test_reminder_portal(
+            pdata,
+            email=email,
+            phone=phone,
+            test_status=str(test_info.get("testStatus") or ""),
+            has_pending_tests=bool(pending),
+        ):
+            skipped += 1
+            if test_info.get("testStatus") == "completed" or not pending:
+                skip_msg = "all_completed"
+            elif email and phone:
+                email_ch = (pdata.get("lastNotifyEmailChannel") or "").strip()
+                phone_ch = (pdata.get("lastNotifyPhoneChannel") or "").strip()
+                if email_ch == "failed" and phone_ch == "failed":
+                    skip_msg = "both_notify_failed"
+                else:
+                    skip_msg = "not_eligible"
+            else:
+                skip_msg = "not_eligible"
+            details.append({"portalId": pid, "status": "skipped", "message": skip_msg})
+            continue
+
         if not email and not phone:
             skipped += 1
             details.append({"portalId": pid, "status": "skipped", "message": "no_contact"})
-            continue
-
-        portal_status = (pdata.get("lastNotifyStatus") or "not_sent").strip()
-        if portal_status == "not_sent":
-            skipped += 1
-            details.append({"portalId": pid, "status": "skipped", "message": "not_sent"})
             continue
 
         portal_access_code = (pdata.get("accessCode") or "").strip()

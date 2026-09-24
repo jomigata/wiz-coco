@@ -26,8 +26,41 @@ export function isNotifyDispatchSuccess(notifyStatus?: string | null): boolean {
   return status === 'sent' || status === 'partial';
 }
 
-/** 미실시 알림: 발송 성공 + 검사 미완료 + 연락처 있음 */
-export function canRemindIncompleteRecipient(input: {
+function isRecipientProgressCompleted(input: {
+  testStatus?: string | null;
+  progressLabel?: string | null;
+  completedCount?: number | null;
+  requiredCount?: number | null;
+  tests?: { status: string }[] | null;
+}): boolean {
+  const testStatus = (input.testStatus || '').trim();
+  if (testStatus === 'completed') return true;
+  if (input.progressLabel === 'completed') return true;
+  const required = input.requiredCount ?? 0;
+  const completed = input.completedCount ?? 0;
+  if (required > 0 && completed >= required) return true;
+  const testRows = input.tests ?? [];
+  if (testRows.length > 0 && testRows.every((t) => t.status === 'completed')) return true;
+  return false;
+}
+
+/** 이메일·휴대폰 연락처가 모두 있고, 마지막 발송에서 두 채널 모두 실패 */
+export function isNotifyEmailAndPhoneBothFailed(input: {
+  email?: string | null;
+  phone?: string | null;
+  notifyEmailChannel?: string | null;
+  notifyPhoneChannel?: string | null;
+}): boolean {
+  const email = (input.email || '').trim();
+  const phone = (input.phone || '').trim();
+  if (!email || !phone) return false;
+  const emailCh = (input.notifyEmailChannel || '').trim().toLowerCase();
+  const phoneCh = (input.notifyPhoneChannel || '').trim().toLowerCase();
+  return emailCh === 'failed' && phoneCh === 'failed';
+}
+
+/** 미실시 알림 실제 발송·과금 대상 (완료·양쪽 실패 제외) */
+export function shouldSendRemindNotification(input: {
   notifyStatus?: string | null;
   testStatus?: string | null;
   progressLabel?: string | null;
@@ -37,27 +70,21 @@ export function canRemindIncompleteRecipient(input: {
   phone?: string | null;
   moveStatus?: string | null;
   tests?: { status: string }[] | null;
+  notifyEmailChannel?: string | null;
+  notifyPhoneChannel?: string | null;
 }): boolean {
   if (input.moveStatus === 'moved_out') return false;
-  if (!isNotifyDispatchSuccess(input.notifyStatus)) return false;
-
-  const testStatus = (input.testStatus || '').trim();
-  if (testStatus === 'completed') return false;
-  if (input.progressLabel === 'completed') return false;
-
-  const required = input.requiredCount ?? 0;
-  const completed = input.completedCount ?? 0;
-  if (required > 0 && completed >= required) return false;
-
-  const testRows = input.tests ?? [];
-  if (testRows.length > 0) {
-    const pending = testRows.some((t) => t.status !== 'completed');
-    if (!pending) return false;
-  }
-
   const email = (input.email || '').trim();
   const phone = (input.phone || '').trim();
-  return Boolean(email || phone);
+  if (!email && !phone) return false;
+  if (isRecipientProgressCompleted(input)) return false;
+  if (isNotifyEmailAndPhoneBothFailed(input)) return false;
+  return true;
+}
+
+/** @deprecated use shouldSendRemindNotification */
+export function canRemindIncompleteRecipient(input: Parameters<typeof shouldSendRemindNotification>[0]): boolean {
+  return shouldSendRemindNotification(input);
 }
 
 export function recipientProgressDisplay(input: {
