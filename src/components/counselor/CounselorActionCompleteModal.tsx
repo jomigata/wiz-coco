@@ -86,7 +86,7 @@ function DispatchCompletePanel({ summary }: { summary: CounselorDispatchComplete
       {showNotify ? (
         <p className="border-t border-white/10 pt-3 text-[11px] leading-relaxed text-slate-400">
           <span className="block font-semibold text-slate-300">{DISPATCH_COMPLETE_STATUS_HINT_LINE1}</span>
-          <span className="mt-1 block">{DISPATCH_COMPLETE_STATUS_HINT_LINE2}</span>
+          <span className="mt-1 block font-semibold text-slate-300">{DISPATCH_COMPLETE_STATUS_HINT_LINE2}</span>
         </p>
       ) : null}
     </div>
