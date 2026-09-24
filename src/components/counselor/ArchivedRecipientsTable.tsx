@@ -116,7 +116,8 @@ export default function ArchivedRecipientsTable({
   const [detail, setDetail] = useState<CounselorResultDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState('');
-  const { pageSize, setPageSize } = useCounselorListPageSize();
+  const { listScrollRef, pageSizeSetting, setPageSizeSetting, effectivePageSize } =
+    useCounselorListPageSize();
 
   const sortedItems = useMemo(() => {
     const list = [...items];
@@ -132,7 +133,7 @@ export default function ArchivedRecipientsTable({
     startIndex,
     paginatedItems,
     currentCount,
-  } = useListPagination(sortedItems, pageSize);
+  } = useListPagination(sortedItems, effectivePageSize);
 
   const toggleSort = (key: RecipientSortKey) => {
     if (sortKey === key) {
@@ -249,7 +250,7 @@ export default function ArchivedRecipientsTable({
 
   return (
     <>
-      <CounselorListTableScroll>
+      <CounselorListTableScroll scrollContainerRef={listScrollRef}>
         <table className="w-max min-w-full table-fixed text-sm">
           <thead>
             <tr className={counselorListHeaderRowClass}>
@@ -559,8 +560,8 @@ export default function ArchivedRecipientsTable({
           totalCount={totalCount}
           onPageChange={setPage}
           unit="명"
-          pageSize={pageSize}
-          onPageSizeChange={setPageSize}
+          pageSizeSetting={pageSizeSetting}
+          onPageSizeChange={setPageSizeSetting}
         />
       )}
 

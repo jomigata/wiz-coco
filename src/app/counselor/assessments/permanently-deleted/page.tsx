@@ -221,7 +221,8 @@ export default function PermanentlyDeletedAssessmentsPage() {
   const [sortKey, setSortKey] = useState<ListSortKey>('permanentlyDeletedAt');
   const [sortDir, setSortDir] = useState<SortDirection>('desc');
   const [counselSortPhase, setCounselSortPhase] = useState<CounselSortPhase>('org-asc');
-  const { pageSize, setPageSize } = useCounselorListPageSize();
+  const { listScrollRef, pageSizeSetting, setPageSizeSetting, effectivePageSize } =
+    useCounselorListPageSize();
 
   const load = useCallback(async () => {
     if (!adminUser) return;
@@ -285,7 +286,7 @@ export default function PermanentlyDeletedAssessmentsPage() {
     totalCount,
     currentCount,
     startIndex,
-  } = useListPagination(sortedFiltered, pageSize);
+  } = useListPagination(sortedFiltered, effectivePageSize);
 
   const toggleCounselFieldSort = (field: 'org' | 'title') => {
     setSortKey('counselInfo');
@@ -424,7 +425,7 @@ export default function PermanentlyDeletedAssessmentsPage() {
           </div>
         ) : (
           <>
-            <CounselorListTableScroll className="flex-1">
+            <CounselorListTableScroll className="flex-1" scrollContainerRef={listScrollRef}>
               <table className="w-max min-w-full table-fixed text-sm">
                 <thead>
                   <tr className={counselorListHeaderRowClass}>
@@ -547,8 +548,8 @@ export default function PermanentlyDeletedAssessmentsPage() {
               currentCount={currentCount}
               totalCount={totalCount}
               onPageChange={setPage}
-              pageSize={pageSize}
-              onPageSizeChange={setPageSize}
+              pageSizeSetting={pageSizeSetting}
+              onPageSizeChange={setPageSizeSetting}
               footerAction={
                 <>
                   <button

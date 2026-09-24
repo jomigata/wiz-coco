@@ -62,7 +62,8 @@ export default function TestResultsPage() {
   const [error, setError] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [queryText, setQueryText] = useState('');
-  const { pageSize, setPageSize } = useCounselorListPageSize();
+  const { listScrollRef, pageSizeSetting, setPageSizeSetting, effectivePageSize } =
+    useCounselorListPageSize();
 
   useEffect(() => {
     const run = async () => {
@@ -135,7 +136,7 @@ export default function TestResultsPage() {
     startIndex,
     paginatedItems,
     currentCount,
-  } = useListPagination(filtered, pageSize);
+  } = useListPagination(filtered, effectivePageSize);
 
   return (
     <CounselorPageSection
@@ -197,7 +198,7 @@ export default function TestResultsPage() {
           <div className="text-white/70 text-sm">표시할 결과가 없습니다.</div>
         ) : (
           <>
-            <CounselorListTableScroll>
+            <CounselorListTableScroll scrollContainerRef={listScrollRef}>
               <table className="w-max min-w-full table-fixed text-sm text-white/90">
                 <thead className={counselorListTheadClass}>
                   <tr>
@@ -285,8 +286,8 @@ export default function TestResultsPage() {
             currentCount={currentCount}
             totalCount={totalCount}
             onPageChange={setPage}
-            pageSize={pageSize}
-            onPageSizeChange={setPageSize}
+            pageSizeSetting={pageSizeSetting}
+            onPageSizeChange={setPageSizeSetting}
           />
           </>
         )}

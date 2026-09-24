@@ -287,7 +287,8 @@ export default function AssessmentList({
   const [editTarget, setEditTarget] = useState<CounselorAssessment | null>(null);
   const [liveAssessmentId, setLiveAssessmentId] = useState<string | null>(null);
   const liveStartRef = useRef<number>(0);
-  const { pageSize, setPageSize } = useCounselorListPageSize();
+  const { listScrollRef, pageSizeSetting, setPageSizeSetting, effectivePageSize } =
+    useCounselorListPageSize();
 
   useEffect(() => {
     setListItems(assessments);
@@ -551,7 +552,7 @@ export default function AssessmentList({
     startIndex,
     paginatedItems,
     currentCount,
-  } = useListPagination(sortedFiltered, pageSize);
+  } = useListPagination(sortedFiltered, effectivePageSize);
 
   const selectedItems = useMemo(
     () => sortedFiltered.filter((a) => selected.has(a.id)),
@@ -735,7 +736,10 @@ export default function AssessmentList({
         </div>
       ) : (
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <CounselorListTableScroll className="min-h-0 flex-1">
+          <CounselorListTableScroll
+            className="min-h-0 flex-1"
+            scrollContainerRef={listScrollRef}
+          >
             <table className="w-max min-w-full table-fixed text-sm">
               <thead className={counselorListTheadClass}>
                 <tr className={counselorListHeaderRowClass}>
@@ -902,8 +906,8 @@ export default function AssessmentList({
             currentCount={currentCount}
             totalCount={totalCount}
             onPageChange={setPage}
-            pageSize={pageSize}
-            onPageSizeChange={setPageSize}
+            pageSizeSetting={pageSizeSetting}
+            onPageSizeChange={setPageSizeSetting}
             unit="건"
             footerAction={
               <>

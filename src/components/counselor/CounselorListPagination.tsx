@@ -4,7 +4,9 @@ import React from 'react';
 import {
   COUNSELOR_LIST_PAGE_SIZE_OPTIONS,
   type CounselorListPageSize,
+  type CounselorListPageSizeSetting,
 } from '@/hooks/useCounselorListPageSize';
+import { COUNSELOR_LIST_PAGE_SIZE_AUTO } from '@/lib/counselorListAutoPageSize';
 
 type Props = {
   page: number;
@@ -13,8 +15,8 @@ type Props = {
   totalCount: number;
   onPageChange: (page: number) => void;
   unit?: string;
-  pageSize?: CounselorListPageSize;
-  onPageSizeChange?: (size: CounselorListPageSize) => void;
+  pageSizeSetting?: CounselorListPageSizeSetting;
+  onPageSizeChange?: (size: CounselorListPageSizeSetting) => void;
   /** 페이지네이션 우측 끝 (삭제된 목록 등) */
   footerAction?: React.ReactNode;
 };
@@ -26,7 +28,7 @@ export default function CounselorListPagination({
   totalCount,
   onPageChange,
   unit = '건',
-  pageSize,
+  pageSizeSetting,
   onPageSizeChange,
   footerAction,
 }: Props) {
@@ -95,15 +97,23 @@ export default function CounselorListPagination({
             {unit}/총{totalCount}
             {unit}
           </span>
-          {pageSize != null && onPageSizeChange ? (
+          {pageSizeSetting != null && onPageSizeChange ? (
             <label className="inline-flex shrink-0 items-center gap-1.5 text-sm text-slate-400">
               <span className="sr-only">페이지당 표시</span>
               <select
-                value={pageSize}
-                onChange={(e) => onPageSizeChange(Number(e.target.value) as CounselorListPageSize)}
+                value={pageSizeSetting}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  onPageSizeChange(
+                    raw === COUNSELOR_LIST_PAGE_SIZE_AUTO
+                      ? COUNSELOR_LIST_PAGE_SIZE_AUTO
+                      : (Number(raw) as CounselorListPageSize),
+                  );
+                }}
                 className="rounded border border-white/10 bg-[#101f38]/90 px-1.5 py-0.5 text-sm text-slate-200"
                 aria-label="페이지당 표시 개수"
               >
+                <option value={COUNSELOR_LIST_PAGE_SIZE_AUTO}>자동</option>
                 {COUNSELOR_LIST_PAGE_SIZE_OPTIONS.map((n) => (
                   <option key={n} value={n}>
                     {n}개씩

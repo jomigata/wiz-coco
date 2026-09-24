@@ -11,7 +11,24 @@ type Props = {
   children: React.ReactNode;
   /** outer wrapper (e.g. flex-1) */
   className?: string;
+  /** 세로 스크롤 영역 — 자동 페이지 크기 측정용 (RefObject 또는 callback ref) */
+  scrollContainerRef?: React.Ref<HTMLDivElement | null>;
 };
+
+function mergeScrollRefs(
+  innerRef: React.MutableRefObject<HTMLDivElement | null>,
+  externalRef?: React.Ref<HTMLDivElement | null>,
+) {
+  return (node: HTMLDivElement | null) => {
+    innerRef.current = node;
+    if (!externalRef) return;
+    if (typeof externalRef === 'function') {
+      externalRef(node);
+    } else {
+      externalRef.current = node;
+    }
+  };
+}
 
 const SCROLL_EDGE_THRESHOLD = 6;
 const HOVER_SCROLL_PX_PER_FRAME = 10;
@@ -95,9 +112,18 @@ function ScrollEdge({
 }
 
 /** 상담사 목록 테이블 — 가로 스크롤 시 좌·우 끝 세로 화살표 + hover 연속 스크롤 */
-export default function CounselorListTableScroll({ children, className = '' }: Props) {
+export default function CounselorListTableScroll({
+  children,
+  className = '',
+  scrollContainerRef,
+}: Props) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const assignScrollRef = useCallback(
+    mergeScrollRefs(scrollRef, scrollContainerRef),
+    [scrollContainerRef],
+  );
   const hoverRafRef = useRef<number | null>(null);
   const hoverDirectionRef = useRef<'left' | 'right' | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -227,7 +253,7 @@ export default function CounselorListTableScroll({ children, className = '' }: P
   return (
     <div ref={wrapperRef} className={`relative flex min-h-0 flex-col overflow-hidden ${className}`.trim()}>
       <div
-        ref={scrollRef}
+        ref={assignScrollRef}
         className="counselor-list-table-scroll min-h-0 flex-1 overflow-x-auto overflow-y-auto scroll-smooth"
       >
         {children}

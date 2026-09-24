@@ -681,7 +681,8 @@ export default function CounselorClientList({
   const [detail, setDetail] = useState<CounselorResultDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState('');
-  const { pageSize, setPageSize } = useCounselorListPageSize();
+  const { listScrollRef, pageSizeSetting, setPageSizeSetting, effectivePageSize } =
+    useCounselorListPageSize();
 
   const cacheKey = useMemo(
     () =>
@@ -937,7 +938,7 @@ export default function CounselorClientList({
     startIndex,
     paginatedItems,
     currentCount,
-  } = useListPagination(sortedFiltered, pageSize);
+  } = useListPagination(sortedFiltered, effectivePageSize);
 
   const stats = useMemo(() => {
     const completed = displayItems.filter((i) => i.progress.label === 'completed').length;
@@ -1308,7 +1309,7 @@ export default function CounselorClientList({
     if (!pid) return;
     const idx = sortedFiltered.findIndex((i) => i.portalId === pid);
     if (idx < 0) return;
-    const targetPage = Math.floor(idx / pageSize) + 1;
+    const targetPage = Math.floor(idx / effectivePageSize) + 1;
     if (page !== targetPage) {
       setPage(targetPage);
       return;
@@ -1318,7 +1319,7 @@ export default function CounselorClientList({
       document.getElementById(`client-row-${pid}`)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     }, 80);
     return () => window.clearTimeout(timer);
-  }, [rowExpandable, loading, searchParams, sortedFiltered, page, pageSize, setPage]);
+  }, [rowExpandable, loading, searchParams, sortedFiltered, page, effectivePageSize, setPage]);
 
   const patchListItemContact = useCallback(
     (portalId: string, phone: string, email: string) => {
@@ -1494,7 +1495,10 @@ export default function CounselorClientList({
           </div>
         ) : (
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-            <CounselorListTableScroll className="min-h-0 flex-1">
+            <CounselorListTableScroll
+              className="min-h-0 flex-1"
+              scrollContainerRef={listScrollRef}
+            >
               <table className="w-max min-w-full table-fixed text-sm">
                 <thead className={counselorListTheadClass}>
                   <tr className={counselorListHeaderRowClass}>
@@ -1785,8 +1789,8 @@ export default function CounselorClientList({
               totalCount={totalCount}
               onPageChange={setPage}
               unit="명"
-              pageSize={pageSize}
-              onPageSizeChange={setPageSize}
+              pageSizeSetting={pageSizeSetting}
+              onPageSizeChange={setPageSizeSetting}
               footerAction={
                 deletedMode || permanentlyDeletedMode ? (
                   <div className="contents">
