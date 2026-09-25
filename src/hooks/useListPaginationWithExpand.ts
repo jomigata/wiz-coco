@@ -53,22 +53,15 @@ export function useListPaginationWithExpand<T>({
     return idx - (expandPage - 1) * pageSize;
   }, [expandShiftEnabled, expandedId, expandPage, items, pageSize, getRowId]);
 
-  /** 펼침 중 고정: 펼친 행까지 현재 페이지, 아래 행은 다음 페이지 (DOM 재측정 없음 → 깜빡임 방지) */
-  const expandMinFit =
-    expandIndexOnPage != null && page === expandPage ? expandIndexOnPage + 1 : null;
-
-  const effectiveFitCount =
-    expandShiftEnabled && expandedId && expandPage != null && page === expandPage && expandMinFit != null
-      ? expandMinFit
-      : null;
+  /** 펼침 중 고정: 펼친 행까지 1페이지 분량, 그 다음 항목부터 2페이지 (현재 보는 page와 무관) */
+  const expandPageFitCount = expandIndexOnPage != null ? expandIndexOnPage + 1 : null;
 
   const expandShiftActive =
     expandShiftEnabled &&
     expandPage != null &&
-    page === expandPage &&
     expandedId != null &&
-    effectiveFitCount != null &&
-    effectiveFitCount < nominalRowsOnExpandPage;
+    expandPageFitCount != null &&
+    expandPageFitCount < nominalRowsOnExpandPage;
 
   const totalPages = useMemo(
     () =>
@@ -76,9 +69,9 @@ export function useListPaginationWithExpand<T>({
         totalCount,
         pageSize,
         expandShiftActive ? expandPage : null,
-        expandShiftActive ? effectiveFitCount : null,
+        expandShiftActive ? expandPageFitCount : null,
       ),
-    [totalCount, pageSize, expandShiftActive, expandPage, effectiveFitCount],
+    [totalCount, pageSize, expandShiftActive, expandPage, expandPageFitCount],
   );
 
   useEffect(() => {
@@ -98,9 +91,9 @@ export function useListPaginationWithExpand<T>({
         page,
         pageSize,
         expandShiftActive ? expandPage : null,
-        expandShiftActive ? effectiveFitCount : null,
+        expandShiftActive ? expandPageFitCount : null,
       ),
-    [items, page, pageSize, expandShiftActive, expandPage, effectiveFitCount],
+    [items, page, pageSize, expandShiftActive, expandPage, expandPageFitCount],
   );
 
   return {
