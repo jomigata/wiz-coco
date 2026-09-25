@@ -1067,7 +1067,9 @@ export default function AssessmentDispatchPanel({
   }, [visibleData?.recipients, dispatchOverrides, sortKey, sortDir, nameSortPhase, searchQuery]);
 
   const { listScrollRef, scrollContainerRef, scrollMountTick, pageSizeSetting, setPageSizeSetting, effectivePageSize } =
-    useCounselorListPageSize();
+    useCounselorListPageSize(COUNSELOR_LIST_PAGE_SIZE_AUTO, {
+      freezeAutoRemeasure: expandedId != null,
+    });
   const {
     page,
     setPage,

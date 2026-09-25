@@ -118,7 +118,9 @@ export default function ArchivedRecipientsTable({
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState('');
   const { listScrollRef, scrollContainerRef, scrollMountTick, pageSizeSetting, setPageSizeSetting, effectivePageSize } =
-    useCounselorListPageSize();
+    useCounselorListPageSize(COUNSELOR_LIST_PAGE_SIZE_AUTO, {
+      freezeAutoRemeasure: expandedId != null,
+    });
 
   const sortedItems = useMemo(() => {
     const list = [...items];

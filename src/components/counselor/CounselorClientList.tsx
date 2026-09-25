@@ -683,7 +683,9 @@ export default function CounselorClientList({
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState('');
   const { listScrollRef, scrollContainerRef, scrollMountTick, pageSizeSetting, setPageSizeSetting, effectivePageSize } =
-    useCounselorListPageSize();
+    useCounselorListPageSize(COUNSELOR_LIST_PAGE_SIZE_AUTO, {
+      freezeAutoRemeasure: expandedId != null && !permanentlyDeletedMode,
+    });
 
   const cacheKey = useMemo(
     () =>

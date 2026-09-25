@@ -34,14 +34,28 @@ function readStoredSetting(fallback: CounselorListPageSizeSetting): CounselorLis
   return fallback;
 }
 
+type UseCounselorListPageSizeOptions = {
+  /** 펼침 중 auto page size·ResizeObserver 재측정 중지 (깜빡임 방지) */
+  freezeAutoRemeasure?: boolean;
+};
+
 export function useCounselorListPageSize(
   defaultSetting: CounselorListPageSizeSetting = COUNSELOR_LIST_PAGE_SIZE_AUTO,
+  options: UseCounselorListPageSizeOptions = {},
 ) {
+  const { freezeAutoRemeasure = false } = options;
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const [scrollMountTick, setScrollMountTick] = useState(0);
   const [pageSizeSetting, setPageSizeSettingState] =
     useState<CounselorListPageSizeSetting>(defaultSetting);
   const [autoPageSize, setAutoPageSize] = useState(10);
+  const frozenAutoRef = useRef<number | null>(null);
+
+  if (freezeAutoRemeasure) {
+    if (frozenAutoRef.current === null) frozenAutoRef.current = autoPageSize;
+  } else {
+    frozenAutoRef.current = null;
+  }
 
   const listScrollRef = useCallback((node: HTMLDivElement | null) => {
     scrollContainerRef.current = node;
@@ -61,6 +75,7 @@ export function useCounselorListPageSize(
 
   useEffect(() => {
     if (pageSizeSetting !== COUNSELOR_LIST_PAGE_SIZE_AUTO) return;
+    if (freezeAutoRemeasure) return;
     remeasureAuto();
     const el = scrollContainerRef.current;
     if (!el) return;
@@ -78,13 +93,14 @@ export function useCounselorListPageSize(
       ro.disconnect();
       window.removeEventListener('resize', remeasureAuto);
     };
-  }, [pageSizeSetting, scrollMountTick, remeasureAuto]);
+  }, [pageSizeSetting, scrollMountTick, remeasureAuto, freezeAutoRemeasure]);
 
   useEffect(() => {
     if (pageSizeSetting !== COUNSELOR_LIST_PAGE_SIZE_AUTO) return;
+    if (freezeAutoRemeasure) return;
     const id = requestAnimationFrame(() => remeasureAuto());
     return () => cancelAnimationFrame(id);
-  }, [autoPageSize, pageSizeSetting, remeasureAuto]);
+  }, [autoPageSize, pageSizeSetting, remeasureAuto, freezeAutoRemeasure]);
 
   const setPageSizeSetting = useCallback((size: CounselorListPageSizeSetting) => {
     setPageSizeSettingState(size);
@@ -99,7 +115,9 @@ export function useCounselorListPageSize(
   }, []);
 
   const effectivePageSize =
-    pageSizeSetting === COUNSELOR_LIST_PAGE_SIZE_AUTO ? autoPageSize : pageSizeSetting;
+    pageSizeSetting === COUNSELOR_LIST_PAGE_SIZE_AUTO
+      ? (frozenAutoRef.current ?? autoPageSize)
+      : pageSizeSetting;
 
   return {
     listScrollRef,
