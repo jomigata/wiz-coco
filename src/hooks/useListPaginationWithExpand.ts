@@ -48,12 +48,29 @@ export function useListPaginationWithExpand<T>({
     return Math.min(pageSize, Math.max(0, totalCount - (expandPage - 1) * pageSize));
   }, [expandPage, pageSize, totalCount]);
 
+  const expandIndexOnPage = useMemo(() => {
+    if (!expandShiftEnabled || !expandedId || expandPage == null) return null;
+    const idx = items.findIndex((item) => getRowId(item) === expandedId);
+    if (idx < 0) return null;
+    return idx - (expandPage - 1) * pageSize;
+  }, [expandShiftEnabled, expandedId, expandPage, items, pageSize, getRowId]);
+
+  /** 펼침 직후 DOM 측정 전에도 펼친 행 아래는 현재 페이지에서 제외 (7·8번 → 2페이지) */
+  const expandMinFit =
+    expandIndexOnPage != null && page === expandPage ? expandIndexOnPage + 1 : null;
+
+  const effectiveFitCount =
+    expandShiftEnabled && expandedId && expandPage != null && page === expandPage
+      ? (fitCount ?? expandMinFit)
+      : fitCount;
+
   const expandShiftActive =
     expandShiftEnabled &&
     expandPage != null &&
     page === expandPage &&
-    fitCount != null &&
-    fitCount < nominalRowsOnExpandPage;
+    expandedId != null &&
+    effectiveFitCount != null &&
+    effectiveFitCount < nominalRowsOnExpandPage;
 
   const totalPages = useMemo(
     () =>
@@ -61,9 +78,9 @@ export function useListPaginationWithExpand<T>({
         totalCount,
         pageSize,
         expandShiftActive ? expandPage : null,
-        expandShiftActive ? fitCount : null,
+        expandShiftActive ? effectiveFitCount : null,
       ),
-    [totalCount, pageSize, expandShiftActive, expandPage, fitCount],
+    [totalCount, pageSize, expandShiftActive, expandPage, effectiveFitCount],
   );
 
   useEffect(() => {
@@ -92,7 +109,15 @@ export function useListPaginationWithExpand<T>({
       if (cancelled) return;
       const target = scrollContainerRef.current;
       if (!target) return;
-      const next = measureFitCountWithExpand(target, expandedId);
+      const measured = measureFitCountWithExpand(target, expandedId);
+      let next = measured;
+      if (expandMinFit != null) {
+        next = Math.max(expandMinFit, measured);
+        if (target.scrollHeight > target.clientHeight + 1 && next > expandMinFit) {
+          next = expandMinFit;
+        }
+        next = Math.min(next, nominalRowsOnExpandPage);
+      }
       setFitCount((prev) => (prev === next ? prev : next));
     };
 
@@ -141,6 +166,8 @@ export function useListPaginationWithExpand<T>({
     items,
     pageSize,
     scrollMountTick,
+    expandMinFit,
+    nominalRowsOnExpandPage,
   ]);
 
   const { startIndex, paginatedItems } = useMemo(
@@ -150,9 +177,9 @@ export function useListPaginationWithExpand<T>({
         page,
         pageSize,
         expandShiftActive ? expandPage : null,
-        expandShiftActive ? fitCount : null,
+        expandShiftActive ? effectiveFitCount : null,
       ),
-    [items, page, pageSize, expandShiftActive, expandPage, fitCount],
+    [items, page, pageSize, expandShiftActive, expandPage, effectiveFitCount],
   );
 
   return {
