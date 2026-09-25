@@ -18,6 +18,8 @@ type Options<T> = {
   getRowId: (item: T) => string;
   /** 목록 개수 「자동」일 때만 펼침 overflow 페이지 이동 */
   expandShiftEnabled?: boolean;
+  /** 스크롤 컨테이너 mount 시 재측정 */
+  scrollMountTick?: number;
 };
 
 export function useListPaginationWithExpand<T>({
@@ -27,6 +29,7 @@ export function useListPaginationWithExpand<T>({
   scrollContainerRef,
   getRowId,
   expandShiftEnabled = false,
+  scrollMountTick = 0,
 }: Options<T>) {
   const [page, setPage] = useState(1);
   const [fitCount, setFitCount] = useState<number | null>(null);
@@ -40,11 +43,17 @@ export function useListPaginationWithExpand<T>({
     return Math.floor(idx / pageSize) + 1;
   }, [items, expandedId, pageSize, getRowId, expandShiftEnabled]);
 
+  const nominalRowsOnExpandPage = useMemo(() => {
+    if (expandPage == null) return pageSize;
+    return Math.min(pageSize, Math.max(0, totalCount - (expandPage - 1) * pageSize));
+  }, [expandPage, pageSize, totalCount]);
+
   const expandShiftActive =
     expandShiftEnabled &&
     expandPage != null &&
+    page === expandPage &&
     fitCount != null &&
-    fitCount < pageSize;
+    fitCount < nominalRowsOnExpandPage;
 
   const totalPages = useMemo(
     () =>
@@ -77,18 +86,27 @@ export function useListPaginationWithExpand<T>({
       return;
     }
 
-    const el = scrollContainerRef.current;
-    if (!el) return;
-
     let cancelled = false;
 
     const measure = () => {
       if (cancelled) return;
-      const next = measureFitCountWithExpand(el, expandedId);
+      const target = scrollContainerRef.current;
+      if (!target) return;
+      const next = measureFitCountWithExpand(target, expandedId);
       setFitCount((prev) => (prev === next ? prev : next));
     };
 
     measure();
+
+    const el = scrollContainerRef.current;
+    if (!el) {
+      const retry = requestAnimationFrame(measure);
+      return () => {
+        cancelled = true;
+        cancelAnimationFrame(retry);
+      };
+    }
+
     const raf1 = requestAnimationFrame(() => {
       measure();
       requestAnimationFrame(measure);
@@ -122,6 +140,7 @@ export function useListPaginationWithExpand<T>({
     scrollContainerRef,
     items,
     pageSize,
+    scrollMountTick,
   ]);
 
   const { startIndex, paginatedItems } = useMemo(

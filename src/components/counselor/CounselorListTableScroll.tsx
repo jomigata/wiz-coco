@@ -251,10 +251,13 @@ export default function CounselorListTableScroll({
   }, [updateScrollHints, stopHoverScroll, children]);
 
   return (
-    <div ref={wrapperRef} className={`relative flex min-h-0 flex-col overflow-hidden ${className}`.trim()}>
+    <div
+      ref={wrapperRef}
+      className={`relative flex h-0 min-h-0 flex-1 flex-col overflow-hidden ${className}`.trim()}
+    >
       <div
         ref={assignScrollRef}
-        className="counselor-list-table-scroll min-h-0 flex-1 overflow-x-auto overflow-y-auto scroll-smooth"
+        className="counselor-list-table-scroll h-0 min-h-0 flex-1 overflow-x-auto overflow-y-auto scroll-smooth"
       >
         {children}
       </div>

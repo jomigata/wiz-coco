@@ -39,29 +39,18 @@ function rowMatchesExpandedId(row: HTMLElement, expandedId: string | null): bool
   return false;
 }
 
-/** 스크롤 영역 clientHeight + 상위 overflow:hidden 클립 교차 */
+/** 스크롤 뷰포트(펼침 측정용) — scroll clientHeight + 페이지네이션 상단 */
 export function getCounselorListScrollViewport(scrollEl: HTMLElement): { top: number; bottom: number } {
   const rect = scrollEl.getBoundingClientRect();
-  let top = rect.top;
+  const top = rect.top;
   let bottom = rect.top + scrollEl.clientHeight;
 
-  let el: HTMLElement | null = scrollEl.parentElement;
-  while (el) {
-    const { overflowY, overflow } = getComputedStyle(el);
-    const clipsY =
-      overflowY === 'hidden' ||
-      overflowY === 'clip' ||
-      overflow === 'hidden' ||
-      overflow === 'clip';
-    if (clipsY) {
-      const pr = el.getBoundingClientRect();
-      top = Math.max(top, pr.top);
-      bottom = Math.min(bottom, pr.bottom);
-    }
-    el = el.parentElement;
+  const scrollHost = scrollEl.parentElement;
+  if (scrollHost instanceof HTMLElement) {
+    const hostRect = scrollHost.getBoundingClientRect();
+    bottom = Math.min(bottom, hostRect.bottom);
   }
 
-  const scrollHost = scrollEl.parentElement;
   const footer = scrollHost?.nextElementSibling;
   if (footer instanceof HTMLElement && footer.hasAttribute('data-counselor-list-pagination')) {
     bottom = Math.min(bottom, footer.getBoundingClientRect().top - 1);
@@ -116,6 +105,9 @@ export function measureFitCountWithExpand(
 
   for (let i = expandedIndex + 1; i < mainRows.length; i++) {
     const row = mainRows[i];
+    const rowRect = row.getBoundingClientRect();
+    if (rowRect.top >= viewportBottom - 0.5) break;
+    if (rowRect.bottom > viewportBottom + 0.5) break;
     if (!isMainRowFullyVisibleInViewport(row, viewportTop, viewportBottom)) break;
     fitCount += 1;
   }

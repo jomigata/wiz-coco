@@ -117,7 +117,7 @@ export default function ArchivedRecipientsTable({
   const [detail, setDetail] = useState<CounselorResultDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState('');
-  const { listScrollRef, scrollContainerRef, pageSizeSetting, setPageSizeSetting, effectivePageSize } =
+  const { listScrollRef, scrollContainerRef, scrollMountTick, pageSizeSetting, setPageSizeSetting, effectivePageSize } =
     useCounselorListPageSize();
 
   const sortedItems = useMemo(() => {
@@ -141,6 +141,7 @@ export default function ArchivedRecipientsTable({
     scrollContainerRef,
     getRowId: (row) => row.portalId,
     expandShiftEnabled: pageSizeSetting === COUNSELOR_LIST_PAGE_SIZE_AUTO,
+    scrollMountTick,
   });
 
   const toggleSort = (key: RecipientSortKey) => {

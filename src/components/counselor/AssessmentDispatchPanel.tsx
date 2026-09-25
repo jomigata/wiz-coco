@@ -1066,7 +1066,7 @@ export default function AssessmentDispatchPanel({
     return list;
   }, [visibleData?.recipients, dispatchOverrides, sortKey, sortDir, nameSortPhase, searchQuery]);
 
-  const { listScrollRef, scrollContainerRef, pageSizeSetting, setPageSizeSetting, effectivePageSize } =
+  const { listScrollRef, scrollContainerRef, scrollMountTick, pageSizeSetting, setPageSizeSetting, effectivePageSize } =
     useCounselorListPageSize();
   const {
     page,
@@ -1083,6 +1083,7 @@ export default function AssessmentDispatchPanel({
     scrollContainerRef,
     getRowId: (r) => r.portalId,
     expandShiftEnabled: pageSizeSetting === COUNSELOR_LIST_PAGE_SIZE_AUTO,
+    scrollMountTick,
   });
 
   useEffect(() => {
