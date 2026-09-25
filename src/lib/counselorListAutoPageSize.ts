@@ -6,6 +6,14 @@ const DEFAULT_ROW_HEIGHT_PX = 44;
 const MIN_AUTO_PAGE_SIZE = 5;
 const MAX_AUTO_PAGE_SIZE = 200;
 
+function getMainListBodyRows(scrollEl: HTMLElement): HTMLElement[] {
+  const tbody = scrollEl.querySelector(':scope > table > tbody');
+  if (!tbody) return [];
+  return Array.from(
+    tbody.querySelectorAll<HTMLElement>(':scope > tr:not([data-counselor-list-expand-row])'),
+  );
+}
+
 export function measureCounselorListAutoPageSize(scrollEl: HTMLElement | null): number {
   if (!scrollEl) return 10;
   const available = scrollEl.clientHeight;
@@ -13,9 +21,7 @@ export function measureCounselorListAutoPageSize(scrollEl: HTMLElement | null): 
 
   const thead = scrollEl.querySelector('thead');
   const theadH = thead?.getBoundingClientRect().height ?? 0;
-  const mainRow = scrollEl.querySelector(
-    'tbody tr:not([data-counselor-list-expand-row])',
-  ) as HTMLElement | null;
+  const mainRow = getMainListBodyRows(scrollEl)[0] ?? null;
   const rowH =
     mainRow && mainRow.getBoundingClientRect().height > 0
       ? mainRow.getBoundingClientRect().height
@@ -80,9 +86,7 @@ export function measureFitCountWithExpand(
 ): number {
   const { top: viewportTop, bottom: viewportBottom } = getCounselorListScrollViewport(scrollEl);
 
-  const mainRows = Array.from(
-    scrollEl.querySelectorAll<HTMLElement>('tbody tr:not([data-counselor-list-expand-row])'),
-  );
+  const mainRows = getMainListBodyRows(scrollEl);
   if (mainRows.length === 0) return 1;
 
   let expandedIndex = -1;

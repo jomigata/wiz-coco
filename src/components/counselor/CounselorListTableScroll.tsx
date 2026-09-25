@@ -137,7 +137,9 @@ export default function CounselorListTableScroll({
     if (!wrapper || !scrollEl) return;
     const wrapperRect = wrapper.getBoundingClientRect();
     /** 펼침 상세 행 제외 — 첫·마지막 목록 값(tr) 높이와 동일 */
-    const mainRows = scrollEl.querySelectorAll('tbody tr:not([data-counselor-list-expand-row])');
+    const mainRows = scrollEl.querySelectorAll(
+      ':scope > table > tbody > tr:not([data-counselor-list-expand-row])',
+    );
 
     let top = 0;
     let height = 0;
