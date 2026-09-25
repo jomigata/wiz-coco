@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useMemo, useState, type RefObject } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useState, type RefObject } from 'react';
 
 import {
   computeExpandAwareTotalPages,
+  measureFitCountWithExpand,
   sliceExpandAwarePage,
 } from '@/lib/counselorListAutoPageSize';
 
@@ -17,7 +18,6 @@ type Options<T> = {
   getRowId: (item: T) => string;
   /** 목록 개수 「자동」일 때만 펼침 overflow 페이지 이동 */
   expandShiftEnabled?: boolean;
-  /** 스크롤 컨테이너 mount 시 (expandPage 재계산용) */
   scrollMountTick?: number;
 };
 
@@ -25,12 +25,13 @@ export function useListPaginationWithExpand<T>({
   items,
   pageSize = COUNSELOR_LIST_PAGE_SIZE,
   expandedId,
-  scrollContainerRef: _scrollContainerRef,
+  scrollContainerRef,
   getRowId,
   expandShiftEnabled = false,
-  scrollMountTick: _scrollMountTick = 0,
+  scrollMountTick = 0,
 }: Options<T>) {
   const [page, setPage] = useState(1);
+  const [fitCount, setFitCount] = useState<number | null>(null);
 
   const totalCount = items.length;
 
@@ -46,22 +47,13 @@ export function useListPaginationWithExpand<T>({
     return Math.min(pageSize, Math.max(0, totalCount - (expandPage - 1) * pageSize));
   }, [expandPage, pageSize, totalCount]);
 
-  const expandIndexOnPage = useMemo(() => {
-    if (!expandShiftEnabled || !expandedId || expandPage == null) return null;
-    const idx = items.findIndex((item) => getRowId(item) === expandedId);
-    if (idx < 0) return null;
-    return idx - (expandPage - 1) * pageSize;
-  }, [expandShiftEnabled, expandedId, expandPage, items, pageSize, getRowId]);
-
-  /** 펼침 중 고정: 펼친 행까지 1페이지 분량, 그 다음 항목부터 2페이지 (현재 보는 page와 무관) */
-  const expandPageFitCount = expandIndexOnPage != null ? expandIndexOnPage + 1 : null;
-
+  /** 실제로 잘리는 경우에만 fitCount < pageSize → 2페이지 경계 보정 (펼침 페이지와 무관하게 유지) */
   const expandShiftActive =
     expandShiftEnabled &&
     expandPage != null &&
     expandedId != null &&
-    expandPageFitCount != null &&
-    expandPageFitCount < nominalRowsOnExpandPage;
+    fitCount != null &&
+    fitCount < nominalRowsOnExpandPage;
 
   const totalPages = useMemo(
     () =>
@@ -69,9 +61,9 @@ export function useListPaginationWithExpand<T>({
         totalCount,
         pageSize,
         expandShiftActive ? expandPage : null,
-        expandShiftActive ? expandPageFitCount : null,
+        expandShiftActive ? fitCount : null,
       ),
-    [totalCount, pageSize, expandShiftActive, expandPage, expandPageFitCount],
+    [totalCount, pageSize, expandShiftActive, expandPage, fitCount],
   );
 
   useEffect(() => {
@@ -84,6 +76,74 @@ export function useListPaginationWithExpand<T>({
     }
   }, [page, totalPages]);
 
+  useLayoutEffect(() => {
+    if (!expandShiftEnabled || !expandedId || expandPage == null) {
+      setFitCount(null);
+      return;
+    }
+
+    let cancelled = false;
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const measure = () => {
+      if (cancelled) return;
+      const target = scrollContainerRef.current;
+      if (!target) return;
+      const next = measureFitCountWithExpand(target, expandedId);
+      setFitCount((prev) => (prev === next ? prev : next));
+    };
+
+    const scheduleMeasure = () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(measure, 48);
+    };
+
+    measure();
+    const raf = requestAnimationFrame(() => {
+      measure();
+      requestAnimationFrame(measure);
+    });
+
+    const el = scrollContainerRef.current;
+    if (!el) {
+      return () => {
+        cancelled = true;
+        cancelAnimationFrame(raf);
+        if (debounceTimer) clearTimeout(debounceTimer);
+      };
+    }
+
+    const ro = new ResizeObserver(scheduleMeasure);
+    ro.observe(el);
+    const tbody = el.querySelector('tbody');
+    if (tbody) {
+      ro.observe(tbody);
+      const mo = new MutationObserver(scheduleMeasure);
+      mo.observe(tbody, { childList: true, subtree: true, attributes: true });
+      return () => {
+        cancelled = true;
+        cancelAnimationFrame(raf);
+        if (debounceTimer) clearTimeout(debounceTimer);
+        ro.disconnect();
+        mo.disconnect();
+      };
+    }
+
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(raf);
+      if (debounceTimer) clearTimeout(debounceTimer);
+      ro.disconnect();
+    };
+  }, [
+    expandShiftEnabled,
+    expandedId,
+    expandPage,
+    scrollContainerRef,
+    items,
+    scrollMountTick,
+  ]);
+
   const { startIndex, paginatedItems } = useMemo(
     () =>
       sliceExpandAwarePage(
@@ -91,9 +151,9 @@ export function useListPaginationWithExpand<T>({
         page,
         pageSize,
         expandShiftActive ? expandPage : null,
-        expandShiftActive ? expandPageFitCount : null,
+        expandShiftActive ? fitCount : null,
       ),
-    [items, page, pageSize, expandShiftActive, expandPage, expandPageFitCount],
+    [items, page, pageSize, expandShiftActive, expandPage, fitCount],
   );
 
   return {
