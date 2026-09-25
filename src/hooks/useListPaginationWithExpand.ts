@@ -95,7 +95,7 @@ export function useListPaginationWithExpand<T>({
 
     const scheduleMeasure = () => {
       if (debounceTimer) clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(measure, 48);
+      debounceTimer = setTimeout(measure, 16);
     };
 
     measure();
@@ -118,7 +118,7 @@ export function useListPaginationWithExpand<T>({
     const tbody = el.querySelector('tbody');
     if (tbody) {
       ro.observe(tbody);
-      const mo = new MutationObserver(scheduleMeasure);
+      const mo = new MutationObserver(() => measure());
       mo.observe(tbody, { childList: true, subtree: true, attributes: true });
       return () => {
         cancelled = true;
@@ -142,6 +142,8 @@ export function useListPaginationWithExpand<T>({
     scrollContainerRef,
     items,
     scrollMountTick,
+    pageSize,
+    nominalRowsOnExpandPage,
   ]);
 
   const { startIndex, paginatedItems } = useMemo(

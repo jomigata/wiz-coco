@@ -39,16 +39,18 @@ function rowMatchesExpandedId(row: HTMLElement, expandedId: string | null): bool
   return false;
 }
 
-/** 스크롤 뷰포트(펼침 측정용) — scroll clientHeight + 페이지네이션 상단 */
+/** 스크롤 뷰포트(펼침 측정) — 스크롤 host·페이지네이션 상단 교차 (목록 표시 하한) */
 export function getCounselorListScrollViewport(scrollEl: HTMLElement): { top: number; bottom: number } {
   const rect = scrollEl.getBoundingClientRect();
-  const top = rect.top;
-  let bottom = rect.top + scrollEl.clientHeight;
+  const thead = scrollEl.querySelector('thead');
+  const top = rect.top + (thead?.getBoundingClientRect().height ?? 0);
+
+  let bottom = rect.top + scrollEl.clientHeight - 1;
 
   const scrollHost = scrollEl.parentElement;
   if (scrollHost instanceof HTMLElement) {
     const hostRect = scrollHost.getBoundingClientRect();
-    bottom = Math.min(bottom, hostRect.bottom);
+    bottom = Math.min(bottom, hostRect.top + scrollHost.clientHeight - 1);
   }
 
   const footer = scrollHost?.nextElementSibling;
@@ -56,7 +58,7 @@ export function getCounselorListScrollViewport(scrollEl: HTMLElement): { top: nu
     bottom = Math.min(bottom, footer.getBoundingClientRect().top - 1);
   }
 
-  return { top, bottom: bottom - 1 };
+  return { top, bottom: Math.max(top, bottom) };
 }
 
 function isMainRowFullyVisibleInViewport(
