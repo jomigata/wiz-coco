@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import AuthLink from '@/components/auth/AuthLink';
 import { counselorMenuCategories, getCounselorCategoryEntryHref, COUNSELOR_DISPATCH_MGMT_SLUG, COUNSELOR_ASSESSMENT_CODE_SLUG, COUNSELOR_TEST_MGMT_SLUG } from '@/data/counselorMenu';
@@ -60,45 +60,17 @@ function measureCategoryHeaderHeight(box: HTMLDivElement): number {
 
 function CounselorSidebarSubmenuPanel({
   visible,
-  closing,
   onMouseEnter,
   children,
 }: {
   visible: boolean;
-  closing: boolean;
   onMouseEnter?: () => void;
   children: React.ReactNode;
 }) {
-  const panelRef = useRef<HTMLDivElement>(null);
-
-  useLayoutEffect(() => {
-    const el = panelRef.current;
-    if (!el) return;
-
-    if (closing) {
-      el.style.overflow = 'hidden';
-      const height = el.scrollHeight;
-      el.style.maxHeight = `${height}px`;
-      el.style.transition = `max-height ${SUBMENU_HOVER_CLOSE_MS}ms ease`;
-      el.classList.add('counselor-sidebar-submenu-closing');
-      const raf = requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          el.style.maxHeight = '0px';
-        });
-      });
-      return () => cancelAnimationFrame(raf);
-    }
-
-    el.classList.remove('counselor-sidebar-submenu-closing');
-    el.style.maxHeight = '';
-    el.style.transition = '';
-    el.style.overflow = '';
-  }, [closing]);
-
-  if (!visible && !closing) return null;
+  if (!visible) return null;
 
   return (
-    <div ref={panelRef} className="mt-0.5 space-y-1" onMouseEnter={onMouseEnter}>
+    <div className="mt-0.5 space-y-1" onMouseEnter={onMouseEnter}>
       {children}
     </div>
   );
@@ -221,51 +193,9 @@ export default function CounselorManageShell({ children }: Props) {
     [cancelBorderFrameCollapse, clearClosingLayoutMinHeight],
   );
 
-  const startHoverClose = useCallback(
-    (slug: string) => {
-      if (expandedSlug === slug) {
-        setHoverExpandedSlug((prev) => (prev === slug ? null : prev));
-        return;
-      }
-      cancelBorderFrameCollapse(slug);
-      setBorderOnlySlugs((prev) => {
-        if (!prev.has(slug)) return prev;
-        const next = new Set(prev);
-        next.delete(slug);
-        return next;
-      });
-      clearClosingLayoutMinHeight(slug);
-
-      setHoverClosingSlugs((prev) => {
-        const next = new Set(prev);
-        next.add(slug);
-        return next;
-      });
-
-      const existingAnim = hoverCloseAnimationTimersRef.current.get(slug);
-      if (existingAnim) {
-        clearTimeout(existingAnim);
-      }
-      hoverCloseAnimationTimersRef.current.set(
-        slug,
-        setTimeout(() => {
-          hoverCloseAnimationTimersRef.current.delete(slug);
-          setHoverClosingSlugs((prev) => {
-            const next = new Set(prev);
-            next.delete(slug);
-            return next;
-          });
-          clearClosingLayoutMinHeight(slug);
-        }, SUBMENU_HOVER_CLOSE_MS),
-      );
-
-      setHoverExpandedSlug((prev) => (prev === slug ? null : prev));
-    },
-    [cancelBorderFrameCollapse, clearClosingLayoutMinHeight, expandedSlug],
-  );
-
   const runBorderFrameCollapse = useCallback(
-    (slug: string) => {
+    (slug: string, options?: { clearBorderOnly?: boolean }) => {
+      const clearBorderOnly = options?.clearBorderOnly !== false;
       if (expandedSlugRef.current === slug) return;
       const el = categoryBoxRefs.current[slug];
       if (!el) return;
@@ -278,11 +208,22 @@ export default function CounselorManageShell({ children }: Props) {
           el.style.minHeight = `${targetH}px`;
         });
       });
+      const existingAnim = hoverCloseAnimationTimersRef.current.get(slug);
+      if (existingAnim) {
+        clearTimeout(existingAnim);
+      }
       hoverCloseAnimationTimersRef.current.set(
         slug,
         setTimeout(() => {
           hoverCloseAnimationTimersRef.current.delete(slug);
-          setBorderOnlySlugs((prev) => {
+          if (clearBorderOnly) {
+            setBorderOnlySlugs((prev) => {
+              const next = new Set(prev);
+              next.delete(slug);
+              return next;
+            });
+          }
+          setHoverClosingSlugs((prev) => {
             const next = new Set(prev);
             next.delete(slug);
             return next;
@@ -296,6 +237,38 @@ export default function CounselorManageShell({ children }: Props) {
     [clearClosingLayoutMinHeight],
   );
 
+  const startHoverClose = useCallback(
+    (slug: string) => {
+      if (expandedSlug === slug) {
+        setHoverExpandedSlug((prev) => (prev === slug ? null : prev));
+        return;
+      }
+      cancelBorderFrameCollapse(slug);
+      setBorderOnlySlugs((prev) => {
+        if (!prev.has(slug)) return prev;
+        const next = new Set(prev);
+        next.delete(slug);
+        return next;
+      });
+      applyClosingLayoutMinHeightSync(slug);
+      setHoverExpandedSlug((prev) => (prev === slug ? null : prev));
+      setHoverClosingSlugs((prev) => {
+        const next = new Set(prev);
+        next.add(slug);
+        return next;
+      });
+      requestAnimationFrame(() => {
+        runBorderFrameCollapse(slug, { clearBorderOnly: false });
+      });
+    },
+    [
+      applyClosingLayoutMinHeightSync,
+      cancelBorderFrameCollapse,
+      expandedSlug,
+      runBorderFrameCollapse,
+    ],
+  );
+
   const scheduleBorderFrameCollapse = useCallback(
     (slug: string, delayMs: number = SUBMENU_BORDER_ONLY_COLLAPSE_DELAY_MS) => {
       if (expandedSlugRef.current === slug) return;
@@ -305,13 +278,6 @@ export default function CounselorManageShell({ children }: Props) {
         if (expandedSlugRef.current === slug) return;
         if (borderOnlySlugsRef.current.has(slug)) {
           runBorderFrameCollapse(slug);
-          return;
-        }
-        if (hoverClosingSlugRef.current.has(slug)) {
-          borderFrameCollapseTimersRef.current.set(
-            slug,
-            setTimeout(runCollapseWhenReady, 50),
-          );
         }
       };
 
@@ -329,37 +295,17 @@ export default function CounselorManageShell({ children }: Props) {
       cancelBorderFrameCollapse(slug);
       applyClosingLayoutMinHeightSync(slug);
       setHoverExpandedSlug((prev) => (prev === slug ? null : prev));
-      setBorderOnlySlugs((prev) => {
+      setHoverClosingSlugs((prev) => {
+        if (!prev.has(slug)) return prev;
         const next = new Set(prev);
         next.delete(slug);
         return next;
       });
-      setHoverClosingSlugs((prev) => {
+      setBorderOnlySlugs((prev) => {
         const next = new Set(prev);
         next.add(slug);
         return next;
       });
-
-      const existingAnim = hoverCloseAnimationTimersRef.current.get(slug);
-      if (existingAnim) {
-        clearTimeout(existingAnim);
-      }
-      hoverCloseAnimationTimersRef.current.set(
-        slug,
-        setTimeout(() => {
-          hoverCloseAnimationTimersRef.current.delete(slug);
-          setHoverClosingSlugs((prev) => {
-            const next = new Set(prev);
-            next.delete(slug);
-            return next;
-          });
-          setBorderOnlySlugs((prev) => {
-            const next = new Set(prev);
-            next.add(slug);
-            return next;
-          });
-        }, SUBMENU_HOVER_CLOSE_MS),
-      );
     },
     [applyClosingLayoutMinHeightSync, cancelBorderFrameCollapse],
   );
@@ -620,10 +566,7 @@ export default function CounselorManageShell({ children }: Props) {
             const hoverExpanded = hoverExpandedSlug === category.slug;
             const hoverClosing = hoverClosingSlugs.has(category.slug);
             const borderOnly = borderOnlySlugs.has(category.slug);
-            const showSubmenuPanel =
-              pinnedExpanded ||
-              hoverExpanded ||
-              (hoverClosing && !borderOnly);
+            const showSubmenuPanel = pinnedExpanded || hoverExpanded;
             const showCategoryExpanded =
               pinnedExpanded || hoverExpanded || hoverClosing || borderOnly;
             const closingLayoutMinHeight = closingLayoutMinHeights[category.slug];
@@ -731,7 +674,6 @@ export default function CounselorManageShell({ children }: Props) {
 
                     <CounselorSidebarSubmenuPanel
                       visible={showSubmenuPanel}
-                      closing={hoverClosing && !pinnedExpanded && !borderOnly}
                       onMouseEnter={() => handleCategoryMouseEnter(category.slug)}
                     >
                     {category.subcategories.map((sub) => {
