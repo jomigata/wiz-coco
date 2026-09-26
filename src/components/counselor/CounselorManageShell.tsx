@@ -72,7 +72,10 @@ function CounselorSidebarSubmenuPanel({
   if (!visible) return null;
 
   const panel = (
-    <div className="mt-0.5 space-y-1" onMouseEnter={onMouseEnter}>
+    <div
+      className={`mt-0.5 space-y-1 ${flyout ? 'counselor-sidebar-flyout-panel' : ''}`}
+      onMouseEnter={onMouseEnter}
+    >
       {children}
     </div>
   );
@@ -630,7 +633,7 @@ export default function CounselorManageShell({ children }: Props) {
     >
       <aside
         ref={sidebarAsideRef}
-        className={`flex min-h-0 flex-col overflow-hidden rounded-xl border border-sky-400/20 max-h-[38vh] shrink-0 lg:h-full lg:max-h-[calc(100dvh-4.5rem)] lg:w-[15.5rem] lg:shrink-0 xl:w-[17rem] ${counselorHubClasses.subsection} !p-0`}
+        className={`flex min-h-0 flex-col overflow-x-visible overflow-y-hidden rounded-xl border border-sky-400/20 max-h-[38vh] shrink-0 lg:h-full lg:max-h-[calc(100dvh-4.5rem)] lg:w-[15.5rem] lg:shrink-0 xl:w-[17rem] ${counselorHubClasses.subsection} !p-0`}
         aria-label="상담관리 메뉴"
         onMouseLeave={handleSidebarMouseLeave}
       >
@@ -650,6 +653,8 @@ export default function CounselorManageShell({ children }: Props) {
             const showSubmenuPanel = pinnedExpanded || hoverExpanded;
             const hoverFlyoutOpen = hoverExpanded && !pinnedExpanded;
             const inFlowExpandedLayout = pinnedExpanded && showSubmenuPanel;
+            const flyoutMenuMiddleAlign = hoverFlyoutOpen ? 'pl-1 pr-2' : MENU_MIDDLE_ALIGN;
+            const flyoutMenuNestedAlign = hoverFlyoutOpen ? 'pl-2 pr-2' : MENU_NESTED_ALIGN;
             const showCategoryExpanded =
               pinnedExpanded || hoverExpanded || hoverClosing || borderOnly;
             const closingLayoutMinHeight = closingLayoutMinHeights[category.slug];
@@ -776,7 +781,11 @@ export default function CounselorManageShell({ children }: Props) {
                       return (
                         <div key={sub.name || visibleItems[0]?.href}>
                           {!flatMiddleTier ? (
-                            <p className="px-1.5 py-0.5 text-[10px] font-normal uppercase tracking-wide text-slate-500">
+                            <p
+                              className={`py-0.5 text-[10px] font-normal uppercase tracking-wide text-slate-500 ${
+                                hoverFlyoutOpen ? 'px-1' : 'px-1.5'
+                              }`}
+                            >
                               {sub.name.replace(/^\d+[a-z]\.\s*/i, '')}
                             </p>
                           ) : null}
@@ -833,7 +842,7 @@ export default function CounselorManageShell({ children }: Props) {
                                     : isMenuItemActive(pathname, item.href);
                               const active = !activeNested && !hasActiveNested && parentExactActive;
                               const rows: React.ReactNode[] = [];
-                              const nestedAlign = MENU_NESTED_ALIGN;
+                              const nestedAlign = flyoutMenuNestedAlign;
                               const nestedPrefix = '\u00A0- ';
 
                               if (flattenNav) {
@@ -848,7 +857,7 @@ export default function CounselorManageShell({ children }: Props) {
                                           clearAssessmentListSearch();
                                         }
                                       }}
-                                      className={`block truncate rounded-md py-1 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${MENU_MIDDLE_ALIGN} ${
+                                      className={`block truncate rounded-md py-1 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${flyoutMenuMiddleAlign} ${
                                         active
                                           ? 'bg-sky-600/30 font-semibold text-sky-100'
                                           : 'text-slate-300 hover:bg-white/[0.06] hover:text-white'
@@ -877,7 +886,7 @@ export default function CounselorManageShell({ children }: Props) {
                                           clearAssessmentListSearch();
                                         }
                                       }}
-                                      className={`block truncate rounded-md py-1 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${MENU_MIDDLE_ALIGN} ${
+                                      className={`block truncate rounded-md py-1 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${flyoutMenuMiddleAlign} ${
                                         active
                                           ? 'bg-sky-600/30 font-semibold text-sky-100'
                                           : 'text-slate-300 hover:bg-white/[0.06] hover:text-white'
@@ -893,7 +902,7 @@ export default function CounselorManageShell({ children }: Props) {
                               for (const nested of parentSubmenu.sort((a, b) => a.order - b.order)) {
                                 const nestedActive = nested.isActive(pathNorm);
                                 const alignMiddle = nested.menuAlign !== 'nested';
-                                const itemMenuAlign = alignMiddle ? MENU_MIDDLE_ALIGN : nestedAlign;
+                                const itemMenuAlign = alignMiddle ? flyoutMenuMiddleAlign : nestedAlign;
                                 const itemPrefix = alignMiddle ? '' : nestedPrefix;
                                 rows.push(
                                   <li
@@ -975,7 +984,7 @@ export default function CounselorManageShell({ children }: Props) {
                                   <li key={`${item.href}-${nested.label}`}>
                                     <AuthLink
                                       href={href}
-                                      className={`block truncate rounded-md py-1 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${MENU_NESTED_ALIGN} ${
+                                      className={`block truncate rounded-md py-1 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${flyoutMenuNestedAlign} ${
                                         nestedActive
                                           ? 'bg-sky-600/30 font-semibold text-sky-100'
                                           : 'text-slate-300 hover:bg-white/[0.06] hover:text-white'
