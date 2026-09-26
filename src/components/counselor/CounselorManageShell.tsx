@@ -41,6 +41,8 @@ export default function CounselorManageShell({ children }: Props) {
   const [expandedSlug, setExpandedSlug] = useState<string>(() =>
     activeCategorySlug || COUNSELOR_ASSESSMENT_CODE_SLUG,
   );
+  /** 클릭·경로로 고정된 대분류 (다른 대분류 클릭 전까지 유지) */
+  const [hoverExpandedSlug, setHoverExpandedSlug] = useState<string | null>(null);
   const [hoveredMenuHref, setHoveredMenuHref] = useState<string | null>(null);
 
   useEffect(() => {
@@ -69,7 +71,9 @@ export default function CounselorManageShell({ children }: Props) {
         </div>
         <nav className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-1.5 py-1.5">
           {sidebarCategories.map((category) => {
-            const expanded = expandedSlug === category.slug;
+            const pinnedExpanded = expandedSlug === category.slug;
+            const hoverExpanded = hoverExpandedSlug === category.slug;
+            const expanded = pinnedExpanded || hoverExpanded;
             const categoryEntryHref = getCategoryEntryHref(category, adminUser);
 
             const categorySelected = activeCategorySlug === category.slug;
@@ -110,8 +114,14 @@ export default function CounselorManageShell({ children }: Props) {
               <div
                 key={category.slug}
                 className={`mb-1 rounded-lg border ${categoryFrameClass}`}
+                onMouseLeave={() => {
+                  setHoverExpandedSlug((prev) => (prev === category.slug ? null : prev));
+                }}
               >
-                <div className="flex items-stretch gap-0.5">
+                <div
+                  className="flex items-stretch gap-0.5"
+                  onMouseEnter={() => setHoverExpandedSlug(category.slug)}
+                >
                   <button
                     type="button"
                     onClick={() => toggleCategory(category.slug)}
@@ -146,7 +156,10 @@ export default function CounselorManageShell({ children }: Props) {
                     </AuthLink>
 
                     {expanded ? (
-                      <div className="mt-0.5 space-y-1">
+                      <div
+                        className="mt-0.5 space-y-1"
+                        onMouseEnter={() => setHoverExpandedSlug(category.slug)}
+                      >
                     {category.subcategories.map((sub) => {
                       if (sub.adminOnly && !adminUser) return null;
                       const visibleItems = sub.items.filter((item) => !item.adminOnly || adminUser);
