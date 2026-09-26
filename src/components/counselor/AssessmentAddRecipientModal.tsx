@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { bulkCreateClientPortals } from '@/lib/clientPortalApi';
+import { bulkCreateClientPortals, fetchAssessmentDispatchStatus } from '@/lib/clientPortalApi';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import { normalizeRecipientPhone, formatPhoneWhileTyping, formatPhoneDisplay, isValidKrMobilePhone } from '@/lib/phoneFormat';
 import { FORM_INPUT, FORM_LABEL } from '@/lib/assessmentFormUi';
@@ -138,6 +138,8 @@ export type AssessmentAddRecipientContext = {
   createdAt: string;
   totalIssuedCount: number;
   testList: { testId: string; name: string }[];
+  /** 동일 상담코드 등록 내담자 (중복 검사용, 없으면 모달에서 조회) */
+  registeredRows?: RecipientRow[];
 };
 
 type AddRecipientSuccessInfo = { sent: boolean };
@@ -209,31 +211,83 @@ function targetRowInvalid(row: RecipientRow): boolean {
   return false;
 }
 
-/** 개별 추가 버튼 — 실패 사유 (통과 시 null) */
-function validateIndividualDraftInput(
+/** 개별 추가 버튼 — 실패 사유 (통과 시 null). 동일 상담코드 등록·추가 목록 기준 */
+function dispatchRecipientToRow(r: {
+  displayName: string;
+  phone?: string | null;
+  email?: string | null;
+}): RecipientRow {
+  const phoneNorm = normalizeRecipientPhone(r.phone || '');
+  return {
+    displayName: (r.displayName || '').trim(),
+    phone: phoneNorm ? formatPhoneDisplay(phoneNorm) : '',
+    email: (r.email || '').trim().toLowerCase(),
+  };
+}
+
+async function loadRegisteredRowsForAssessment(assessmentId: string): Promise<RecipientRow[]> {
+  const rows: RecipientRow[] = [];
+  let cursor: string | null = null;
+  for (let page = 0; page < 50; page++) {
+    const result = await fetchAssessmentDispatchStatus(assessmentId, {
+      limit: 200,
+      cursor,
+      expandTests: false,
+    });
+    for (const r of result.recipients || []) {
+      rows.push(dispatchRecipientToRow(r));
+    }
+    cursor = result.nextCursor ?? null;
+    if (!cursor) break;
+  }
+  return rows;
+}
+
+function validateIndividualDraftForAssessment(
   draftName: string,
   draftPhone: string,
   draftEmail: string,
+  pendingAndImportedRows: RecipientRow[],
+  registeredRows: RecipientRow[],
 ): string | null {
   const name = draftName.trim();
-  if (!name) return '이름을 입력해 주세요.';
+  if (!name) {
+    return '이름(필수): 값이 비어 있습니다. 이름을 입력해 주세요.';
+  }
 
-  const phoneRaw = draftPhone.trim();
-  const emailRaw = draftEmail.trim();
   const phoneNorm = normalizeRecipientPhone(draftPhone);
+  const email = draftEmail.trim().toLowerCase();
 
-  if (!phoneRaw && !emailRaw) {
-    return '휴대폰 또는 이메일 중 하나 이상 입력해 주세요.';
+  if (!phoneNorm && !email) {
+    return '연락처: 휴대폰(선택)과 이메일(선택) 모두 비어 있습니다. 둘 중 하나 이상 입력해 주세요.';
   }
-  if (phoneRaw && !phoneNorm) {
-    return '휴대폰 번호 형식을 확인해 주세요.';
+
+  const scopeRows = [...registeredRows, ...pendingAndImportedRows];
+  const nameKey = name.toLowerCase();
+
+  if (phoneNorm) {
+    const phoneLabel = formatPhoneDisplay(phoneNorm);
+    const dupPhone = scopeRows.some((r) => {
+      const rPhone = normalizeRecipientPhone(r.phone);
+      if (!rPhone) return false;
+      return r.displayName.trim().toLowerCase() === nameKey && rPhone === phoneNorm;
+    });
+    if (dupPhone) {
+      return `중복(이름·휴대폰): 이 상담코드에 이름「${name}」, 휴대폰「${phoneLabel}」 조합이 이미 등록되어 있거나 추가 목록에 있습니다. 이름 또는 휴대폰을 확인해 주세요.`;
+    }
   }
-  if (phoneNorm && !isValidKrMobilePhone(phoneNorm)) {
-    return '올바른 휴대폰 번호(010 등)를 입력해 주세요.';
+
+  if (email) {
+    const dupEmail = scopeRows.some((r) => {
+      const rEmail = (r.email || '').trim().toLowerCase();
+      if (!rEmail) return false;
+      return r.displayName.trim().toLowerCase() === nameKey && rEmail === email;
+    });
+    if (dupEmail) {
+      return `중복(이름·이메일): 이 상담코드에 이름「${name}」, 이메일「${email}」 조합이 이미 등록되어 있거나 추가 목록에 있습니다. 이름 또는 이메일을 확인해 주세요.`;
+    }
   }
-  if (emailRaw && !isValidEmailAddress(emailRaw)) {
-    return '이메일 형식을 확인해 주세요.';
-  }
+
   return null;
 }
 
@@ -367,6 +421,7 @@ export default function AssessmentAddRecipientModal({
     type: 'success' | 'error';
     message: string;
   } | null>(null);
+  const [registeredRowsForDuplicate, setRegisteredRowsForDuplicate] = useState<RecipientRow[]>([]);
   const [invalidBulkDeleteOffer, setInvalidBulkDeleteOffer] = useState(false);
   const [fileBatches, setFileBatches] = useState<ImportedFileBatch[]>([]);
   const [filePreviewAnchor, setFilePreviewAnchor] = useState<FilePreviewAnchor | null>(null);
@@ -520,6 +575,24 @@ export default function AssessmentAddRecipientModal({
   }, [open, context?.assessmentId]);
 
   useEffect(() => {
+    if (!open || !context?.assessmentId) {
+      setRegisteredRowsForDuplicate([]);
+      return;
+    }
+    let cancelled = false;
+    void loadRegisteredRowsForAssessment(context.assessmentId)
+      .then((rows) => {
+        if (!cancelled) setRegisteredRowsForDuplicate(rows);
+      })
+      .catch(() => {
+        if (!cancelled) setRegisteredRowsForDuplicate([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [open, context?.assessmentId]);
+
+  useEffect(() => {
     if (invalidBulkDeleteOffer && invalidRecipientCount === 0) {
       setInvalidBulkDeleteOffer(false);
     }
@@ -539,6 +612,7 @@ export default function AssessmentAddRecipientModal({
     setAddSendNow(true);
     setAddError('');
     setIndividualAddFeedback(null);
+    setRegisteredRowsForDuplicate([]);
     setInvalidBulkDeleteOffer(false);
     setFileBatches([]);
     setFilePreviewAnchor(null);
@@ -557,7 +631,13 @@ export default function AssessmentAddRecipientModal({
   };
 
   const handleAddDraftRow = () => {
-    const validationError = validateIndividualDraftInput(draftName, draftPhone, draftEmail);
+    const validationError = validateIndividualDraftForAssessment(
+      draftName,
+      draftPhone,
+      draftEmail,
+      combinedRows,
+      registeredRowsForDuplicate,
+    );
     if (validationError) {
       setInvalidBulkDeleteOffer(false);
       setIndividualAddFeedback({ type: 'error', message: validationError });
@@ -568,15 +648,6 @@ export default function AssessmentAddRecipientModal({
     const phone = normalizeRecipientPhone(draftPhone);
     const email = draftEmail.trim().toLowerCase();
     const newRow = { displayName: name, phone: phone ? formatPhoneDisplay(phone) : '', email };
-    const duplicateKey = recipientRowMergeKey(newRow);
-    if (combinedRows.some((r) => recipientRowMergeKey(r) === duplicateKey)) {
-      setInvalidBulkDeleteOffer(false);
-      setIndividualAddFeedback({
-        type: 'error',
-        message: '같은 이름·휴대폰 조합이 이미 추가 목록에 있습니다.',
-      });
-      return;
-    }
 
     setAddError('');
     setInvalidBulkDeleteOffer(false);
