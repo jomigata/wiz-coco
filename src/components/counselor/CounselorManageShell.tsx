@@ -319,6 +319,42 @@ export default function CounselorManageShell({ children }: Props) {
     [cancelBorderFrameCollapse, startHoverClose],
   );
 
+  /** 위쪽으로 이동할 때 — 서브메뉴·테두리 즉시 접힘 */
+  const instantCloseHoverCategory = useCallback(
+    (slug: string) => {
+      if (expandedSlugRef.current === slug) {
+        setHoverExpandedSlug((prev) => (prev === slug ? null : prev));
+        return;
+      }
+      cancelBorderFrameCollapse(slug);
+      const anim = hoverCloseAnimationTimersRef.current.get(slug);
+      if (anim) {
+        clearTimeout(anim);
+        hoverCloseAnimationTimersRef.current.delete(slug);
+      }
+      setHoverClosingSlugs((prev) => {
+        if (!prev.has(slug)) return prev;
+        const next = new Set(prev);
+        next.delete(slug);
+        return next;
+      });
+      setBorderOnlySlugs((prev) => {
+        if (!prev.has(slug)) return prev;
+        const next = new Set(prev);
+        next.delete(slug);
+        return next;
+      });
+      setHoverExpandedSlug((prev) => (prev === slug ? null : prev));
+      clearClosingLayoutMinHeight(slug);
+      const el = categoryBoxRefs.current[slug];
+      if (el) {
+        el.style.transition = '';
+        el.style.minHeight = '';
+      }
+    },
+    [cancelBorderFrameCollapse, clearClosingLayoutMinHeight],
+  );
+
   const isHoverOpenCategory = useCallback((slug: string) => {
     return (
       hoverExpandedSlugRef.current === slug ||
@@ -349,7 +385,7 @@ export default function CounselorManageShell({ children }: Props) {
             fullCloseCategory(prevHover);
           }
         } else if (prevIdx >= 0 && enteredIdx < prevIdx) {
-          fullCloseCategory(prevHover);
+          instantCloseHoverCategory(prevHover);
         }
       }
 
@@ -368,6 +404,7 @@ export default function CounselorManageShell({ children }: Props) {
     [
       categorySlugOrder,
       fullCloseCategory,
+      instantCloseHoverCategory,
       isHoverOpenCategory,
       scheduleBorderFrameCollapse,
       submenuCloseKeepBorder,
@@ -401,7 +438,7 @@ export default function CounselorManageShell({ children }: Props) {
       ) {
         const hoverIdx = categorySlugOrder.indexOf(hovering);
         if (hoverIdx > enteredIdx) {
-          fullCloseCategory(hovering);
+          instantCloseHoverCategory(hovering);
         }
       }
 
@@ -418,6 +455,7 @@ export default function CounselorManageShell({ children }: Props) {
       expandedSlug,
       fullCloseCategory,
       hoverClosingSlugs,
+      instantCloseHoverCategory,
       processCategoryEnter,
     ],
   );
@@ -449,7 +487,7 @@ export default function CounselorManageShell({ children }: Props) {
                 return;
               }
             }
-            closeHoverOpenCategory(slug);
+            instantCloseHoverCategory(slug);
           }
         }
         return;
@@ -474,7 +512,7 @@ export default function CounselorManageShell({ children }: Props) {
         closeHoverOpenCategory(slug);
       });
     },
-    [categorySlugOrder, closeHoverOpenCategory, expandedSlug],
+    [categorySlugOrder, closeHoverOpenCategory, expandedSlug, instantCloseHoverCategory],
   );
 
   const handleSidebarMouseLeave = useCallback(
