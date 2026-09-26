@@ -34,6 +34,8 @@ export default function CounselorListPagination({
 }: Props) {
   if (totalCount === 0) return null;
 
+  const hoverNavigatesPage = pageSizeSetting === COUNSELOR_LIST_PAGE_SIZE_AUTO;
+
   const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
   const showPages =
     totalPages <= 7
@@ -60,7 +62,7 @@ export default function CounselorListPagination({
               type="button"
               onClick={() => onPageChange(p)}
               onMouseEnter={() => {
-                if (p !== page) onPageChange(p);
+                if (hoverNavigatesPage && p !== page) onPageChange(p);
               }}
               className={`min-w-[1.75rem] rounded border px-2 py-0.5 text-sm tabular-nums ${
                 p === page
