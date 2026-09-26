@@ -259,7 +259,7 @@ function validateIndividualDraftForAssessment(
   const email = draftEmail.trim().toLowerCase();
 
   if (!phoneNorm && !email) {
-    return '연락처: 휴대폰(선택)과 이메일(선택) 모두 비어 있습니다. 둘 중 하나 이상 입력해 주세요.';
+    return '휴대폰과 이메일 둘 중 하나 이상 입력해 주세요.';
   }
 
   const scopeRows = [...registeredRows, ...pendingAndImportedRows];
@@ -273,7 +273,7 @@ function validateIndividualDraftForAssessment(
       return r.displayName.trim().toLowerCase() === nameKey && rPhone === phoneNorm;
     });
     if (dupPhone) {
-      return `중복(이름·휴대폰): 이 상담코드에 이름「${name}」, 휴대폰「${phoneLabel}」 조합이 이미 등록되어 있거나 추가 목록에 있습니다. 이름 또는 휴대폰을 확인해 주세요.`;
+      return `이름이「${name}」이고, 휴대폰「${phoneLabel}」인 내담자는 중복입니다.`;
     }
   }
 
@@ -284,7 +284,7 @@ function validateIndividualDraftForAssessment(
       return r.displayName.trim().toLowerCase() === nameKey && rEmail === email;
     });
     if (dupEmail) {
-      return `중복(이름·이메일): 이 상담코드에 이름「${name}」, 이메일「${email}」 조합이 이미 등록되어 있거나 추가 목록에 있습니다. 이름 또는 이메일을 확인해 주세요.`;
+      return `이름이「${name}」이고, 이메일이「${email}」인 내담자는 중복입니다.`;
     }
   }
 
@@ -659,7 +659,7 @@ export default function AssessmentAddRecipientModal({
     setDraftEmail('');
     setIndividualAddFeedback({
       type: 'success',
-      message: `「${name}」님을 추가 목록에 넣었습니다. 아래 목록에서 확인한 뒤 발송·추가를 진행하세요.`,
+      message: `「${name}」님을 추가 하였습니다.`,
     });
   };
 
