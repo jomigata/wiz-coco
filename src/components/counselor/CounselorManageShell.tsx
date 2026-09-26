@@ -389,10 +389,23 @@ export default function CounselorManageShell({ children }: Props) {
         }
       }
 
+      const instantClosedBorderOnlySlugs = new Set<string>();
+      for (const offset of [2, 3]) {
+        const targetIdx = enteredIdx - offset;
+        if (targetIdx < 0) continue;
+        const targetSlug = categorySlugOrder[targetIdx];
+        if (targetSlug === pinned) continue;
+        if (borderOnlySlugsRef.current.has(targetSlug)) {
+          instantClosedBorderOnlySlugs.add(targetSlug);
+          instantCloseHoverCategory(targetSlug);
+        }
+      }
+
       if (enteredIdx >= 2) {
         for (let i = 0; i <= enteredIdx - 2; i++) {
           const targetSlug = categorySlugOrder[i];
           if (targetSlug === pinned) continue;
+          if (instantClosedBorderOnlySlugs.has(targetSlug)) continue;
           if (!isHoverOpenCategory(targetSlug)) continue;
           if (!borderOnlySlugsRef.current.has(targetSlug)) {
             submenuCloseKeepBorder(targetSlug);
