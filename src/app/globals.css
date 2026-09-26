@@ -469,42 +469,12 @@ body.dropdown-open {
   }
 }
 
-/** 상담관리 좌측 — 대분류 테두리: 헤더 + 서브메뉴 4행 (py-1 · text-xs leading-snug · space-y-0.5) */
-:root {
-  --counselor-sidebar-submenu-four-slots: 7.25rem;
-  --counselor-sidebar-category-header: 3rem;
-}
-
-.counselor-sidebar-category-frame-four-slots {
+/** 상담관리 좌측 — 펼침 대분류: 헤더 + 서브메뉴 개수만큼 자연 높이 */
+.counselor-sidebar-category-expanded {
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  box-sizing: border-box;
-  height: calc(
-    var(--counselor-sidebar-category-header) + var(--counselor-sidebar-submenu-four-slots)
-  );
-  min-height: calc(
-    var(--counselor-sidebar-category-header) + var(--counselor-sidebar-submenu-four-slots)
-  );
-  max-height: calc(
-    var(--counselor-sidebar-category-header) + var(--counselor-sidebar-submenu-four-slots)
-  );
 }
 
 .counselor-sidebar-category-header-row {
   flex-shrink: 0;
-}
-
-.counselor-sidebar-submenu-panel-four-slots {
-  flex: 1 1 auto;
-  min-height: 0;
-  max-height: var(--counselor-sidebar-submenu-four-slots);
-  overflow-y: auto;
-  overscroll-behavior: contain;
-}
-
-.counselor-sidebar-submenu-slot-placeholder {
-  flex: 1 1 auto;
-  min-height: 0;
-  max-height: var(--counselor-sidebar-submenu-four-slots);
 }

@@ -35,21 +35,6 @@ const SUBMENU_HOVER_CLOSE_MS = 2000;
 const SUBMENU_HOVER_SWITCH_GRACE_MS = 180;
 /** 테두리만 남긴 뒤 프레임 접힘 시작 전 대기 (예: (1)에서 (3) 정지 후) */
 const SUBMENU_BORDER_ONLY_COLLAPSE_DELAY_MS = 2000;
-const SIDEBAR_SUBMENU_FIXED_SLOT_COUNT = 4;
-
-const SIDEBAR_SUBMENU_FOUR_SLOTS_REM = 7.25;
-
-function getSubmenuFourSlotHeightPx(): number {
-  if (typeof window !== 'undefined') {
-    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
-    return SIDEBAR_SUBMENU_FOUR_SLOTS_REM * rem;
-  }
-  return SIDEBAR_SUBMENU_FIXED_SLOT_COUNT * 28 + 8;
-}
-
-function getCategoryFrameMinHeight(box: HTMLDivElement): number {
-  return measureCategoryHeaderHeight(box) + getSubmenuFourSlotHeightPx();
-}
 
 function findCategorySlugForNode(
   node: Node | null,
@@ -85,10 +70,7 @@ function CounselorSidebarSubmenuPanel({
   if (!visible) return null;
 
   return (
-    <div
-      className="counselor-sidebar-submenu-panel-four-slots mt-0.5 space-y-1"
-      onMouseEnter={onMouseEnter}
-    >
+    <div className="mt-0.5 space-y-1" onMouseEnter={onMouseEnter}>
       {children}
     </div>
   );
@@ -146,7 +128,7 @@ export default function CounselorManageShell({ children }: Props) {
   const applyClosingLayoutMinHeightSync = useCallback((slug: string) => {
     const el = categoryBoxRefs.current[slug];
     if (!el) return;
-    const height = getCategoryFrameMinHeight(el);
+    const height = el.getBoundingClientRect().height;
     if (height <= 0) return;
     el.style.minHeight = `${height}px`;
     setClosingLayoutMinHeights({ [slug]: height });
@@ -703,7 +685,7 @@ export default function CounselorManageShell({ children }: Props) {
                   categoryBoxRefs.current[category.slug] = node;
                 }}
                 className={`mb-1 rounded-lg border ease-in-out ${hoverOnlyClosing ? 'overflow-hidden' : ''} ${
-                  showCategoryExpanded ? 'counselor-sidebar-category-frame-four-slots' : ''
+                  showCategoryExpanded ? 'counselor-sidebar-category-expanded' : ''
                 } ${
                   hoverOnlyClosing
                     ? 'transition-[border-color,box-shadow,min-height] duration-[2000ms]'
@@ -994,12 +976,6 @@ export default function CounselorManageShell({ children }: Props) {
                       );
                     })}
                     </CounselorSidebarSubmenuPanel>
-                {showCategoryExpanded && !showSubmenuPanel ? (
-                  <div
-                    className="counselor-sidebar-submenu-slot-placeholder"
-                    aria-hidden
-                  />
-                ) : null}
               </div>
             );
           })}
