@@ -31,6 +31,8 @@ const MENU_MIDDLE_ALIGN = 'pl-[calc(1.75rem+1.25rem+0.75rem-2ch)]';
 const MENU_NESTED_ALIGN = 'pl-[calc(1.75rem+1.25rem+0.75rem+2ch-2ch)]';
 
 const SUBMENU_HOVER_CLOSE_MS = 2000;
+/** 아래 대분류로 이동 시, 위쪽 호버 대분류 테두리(레이아웃) 유지 시간 */
+const SUBMENU_DOWNWARD_FRAME_HOLD_MS = 3000;
 /** 대분류 전환 직후 레이아웃 보정으로 인한 잘못된 mouseleave 무시 */
 const SUBMENU_HOVER_SWITCH_GRACE_MS = 180;
 
@@ -122,6 +124,7 @@ export default function CounselorManageShell({ children }: Props) {
   const [hoverExpandedSlug, setHoverExpandedSlug] = useState<string | null>(null);
   const [hoverClosingSlug, setHoverClosingSlug] = useState<string | null>(null);
   const hoverCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const layoutHoldTimerRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const hoverExpandedSlugRef = useRef<string | null>(null);
   const hoverClosingSlugRef = useRef<string | null>(null);
   const sidebarNavRef = useRef<HTMLElement | null>(null);
@@ -169,6 +172,25 @@ export default function CounselorManageShell({ children }: Props) {
     });
   }, []);
 
+  const clearLayoutHoldTimer = useCallback((slug: string) => {
+    const timer = layoutHoldTimerRef.current[slug];
+    if (timer) {
+      clearTimeout(timer);
+      delete layoutHoldTimerRef.current[slug];
+    }
+  }, []);
+
+  const scheduleLayoutHoldRelease = useCallback(
+    (slug: string, delayMs: number) => {
+      clearLayoutHoldTimer(slug);
+      layoutHoldTimerRef.current[slug] = setTimeout(() => {
+        clearClosingLayoutMinHeight(slug);
+        delete layoutHoldTimerRef.current[slug];
+      }, delayMs);
+    },
+    [clearClosingLayoutMinHeight, clearLayoutHoldTimer],
+  );
+
   const cancelHoverClose = useCallback(
     (slug?: string) => {
       setHoverClosingSlug((closing) => {
@@ -179,24 +201,36 @@ export default function CounselorManageShell({ children }: Props) {
         }
         if (slug != null) {
           clearClosingLayoutMinHeight(slug);
+          clearLayoutHoldTimer(slug);
         } else if (closing) {
           clearClosingLayoutMinHeight(closing);
+          clearLayoutHoldTimer(closing);
         }
         return null;
       });
     },
-    [clearClosingLayoutMinHeight],
+    [clearClosingLayoutMinHeight, clearLayoutHoldTimer],
   );
 
   const startHoverClose = useCallback(
-    (slug: string, options?: { holdLayout?: boolean }) => {
+    (slug: string, options?: { holdLayout?: boolean; layoutHoldMs?: number }) => {
       const holdLayout = options?.holdLayout !== false;
+      const layoutHoldMs =
+        holdLayout && options?.layoutHoldMs != null
+          ? options.layoutHoldMs
+          : holdLayout
+            ? SUBMENU_HOVER_CLOSE_MS
+            : 0;
       if (expandedSlug === slug) {
         setHoverExpandedSlug((prev) => (prev === slug ? null : prev));
         return;
       }
+      clearLayoutHoldTimer(slug);
       if (holdLayout) {
         applyClosingLayoutMinHeightSync(slug);
+        if (layoutHoldMs > SUBMENU_HOVER_CLOSE_MS) {
+          scheduleLayoutHoldRelease(slug, layoutHoldMs);
+        }
       } else {
         clearClosingLayoutMinHeight(slug);
       }
@@ -214,8 +248,16 @@ export default function CounselorManageShell({ children }: Props) {
         hoverCloseTimerRef.current = setTimeout(() => {
           setHoverClosingSlug((c) => (c === slug ? null : c));
           const hovering = hoverExpandedSlugRef.current;
-          if (hovering == null || hovering === slug) {
-            clearClosingLayoutMinHeight(slug);
+          if (!holdLayout) {
+            if (hovering == null || hovering === slug) {
+              clearClosingLayoutMinHeight(slug);
+              clearLayoutHoldTimer(slug);
+            }
+          } else if (layoutHoldMs <= SUBMENU_HOVER_CLOSE_MS) {
+            if (hovering == null || hovering === slug) {
+              clearClosingLayoutMinHeight(slug);
+              clearLayoutHoldTimer(slug);
+            }
           }
           hoverCloseTimerRef.current = null;
         }, SUBMENU_HOVER_CLOSE_MS);
@@ -223,7 +265,13 @@ export default function CounselorManageShell({ children }: Props) {
       });
       setHoverExpandedSlug((prev) => (prev === slug ? null : prev));
     },
-    [applyClosingLayoutMinHeightSync, clearClosingLayoutMinHeight, expandedSlug],
+    [
+      applyClosingLayoutMinHeightSync,
+      clearClosingLayoutMinHeight,
+      clearLayoutHoldTimer,
+      expandedSlug,
+      scheduleLayoutHoldRelease,
+    ],
   );
 
   const closeHoverOpenCategory = useCallback(
@@ -268,7 +316,10 @@ export default function CounselorManageShell({ children }: Props) {
             slug,
             categorySlugOrder,
           );
-          startHoverClose(prevHover, { holdLayout });
+          startHoverClose(prevHover, {
+            holdLayout,
+            layoutHoldMs: holdLayout ? SUBMENU_DOWNWARD_FRAME_HOLD_MS : undefined,
+          });
         }
         return slug;
       });
@@ -380,6 +431,10 @@ export default function CounselorManageShell({ children }: Props) {
       if (hoverCloseTimerRef.current) {
         clearTimeout(hoverCloseTimerRef.current);
       }
+      for (const timer of Object.values(layoutHoldTimerRef.current)) {
+        clearTimeout(timer);
+      }
+      layoutHoldTimerRef.current = {};
     };
   }, []);
 
@@ -460,6 +515,9 @@ export default function CounselorManageShell({ children }: Props) {
               : 'border-white/10';
 
             const hoverOnlyClosing = hoverClosing && !pinnedExpanded;
+            const frameLayoutHold =
+              !pinnedExpanded && Boolean(closingLayoutMinHeight) && !hoverExpanded;
+            const frameTransition = hoverOnlyClosing || frameLayoutHold;
 
             return (
               <div
@@ -467,9 +525,9 @@ export default function CounselorManageShell({ children }: Props) {
                 ref={(node) => {
                   categoryBoxRefs.current[category.slug] = node;
                 }}
-                className={`mb-1 rounded-lg border ease-in-out ${hoverOnlyClosing ? 'overflow-hidden' : ''} ${
-                  hoverOnlyClosing
-                    ? 'transition-[border-color,box-shadow,min-height] duration-[2000ms]'
+                className={`mb-1 rounded-lg border ease-in-out ${frameTransition ? 'overflow-hidden' : ''} ${
+                  frameTransition
+                    ? 'transition-[border-color,box-shadow,min-height,border-width] duration-[2000ms]'
                     : 'transition-[border-color,box-shadow] duration-[2000ms]'
                 } ${categoryFrameClass}`}
                 style={
