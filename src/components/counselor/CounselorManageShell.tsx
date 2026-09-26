@@ -60,20 +60,28 @@ function measureCategoryHeaderHeight(box: HTMLDivElement): number {
 
 function CounselorSidebarSubmenuPanel({
   visible,
+  flyout,
   onMouseEnter,
   children,
 }: {
   visible: boolean;
+  flyout?: boolean;
   onMouseEnter?: () => void;
   children: React.ReactNode;
 }) {
   if (!visible) return null;
 
-  return (
+  const panel = (
     <div className="mt-0.5 space-y-1" onMouseEnter={onMouseEnter}>
       {children}
     </div>
   );
+
+  if (flyout) {
+    return <div className="counselor-sidebar-submenu-flyout">{panel}</div>;
+  }
+
+  return panel;
 }
 
 export default function CounselorManageShell({ children }: Props) {
@@ -128,7 +136,11 @@ export default function CounselorManageShell({ children }: Props) {
   const applyClosingLayoutMinHeightSync = useCallback((slug: string) => {
     const el = categoryBoxRefs.current[slug];
     if (!el) return;
-    const height = el.getBoundingClientRect().height;
+    const headerH = measureCategoryHeaderHeight(el);
+    const flyout = el.querySelector('.counselor-sidebar-submenu-flyout');
+    const height = flyout
+      ? headerH + flyout.getBoundingClientRect().height
+      : el.getBoundingClientRect().height;
     if (height <= 0) return;
     el.style.minHeight = `${height}px`;
     setClosingLayoutMinHeights({ [slug]: height });
@@ -628,7 +640,7 @@ export default function CounselorManageShell({ children }: Props) {
         </div>
         <nav
           ref={sidebarNavRef}
-          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-1.5 py-1.5"
+          className="relative min-h-0 flex-1 overflow-y-auto overflow-x-visible overscroll-contain px-1.5 py-1.5"
         >
           {sidebarCategories.map((category) => {
             const pinnedExpanded = expandedSlug === category.slug;
@@ -636,6 +648,8 @@ export default function CounselorManageShell({ children }: Props) {
             const hoverClosing = hoverClosingSlugs.has(category.slug);
             const borderOnly = borderOnlySlugs.has(category.slug);
             const showSubmenuPanel = pinnedExpanded || hoverExpanded;
+            const hoverFlyoutOpen = hoverExpanded && !pinnedExpanded;
+            const inFlowExpandedLayout = pinnedExpanded && showSubmenuPanel;
             const showCategoryExpanded =
               pinnedExpanded || hoverExpanded || hoverClosing || borderOnly;
             const closingLayoutMinHeight = closingLayoutMinHeights[category.slug];
@@ -677,6 +691,7 @@ export default function CounselorManageShell({ children }: Props) {
 
             const hoverOnlyClosing =
               (hoverClosing && !pinnedExpanded) || borderOnly;
+            const clipCategoryOverflow = hoverOnlyClosing && !hoverFlyoutOpen;
 
             return (
               <div
@@ -684,9 +699,11 @@ export default function CounselorManageShell({ children }: Props) {
                 ref={(node) => {
                   categoryBoxRefs.current[category.slug] = node;
                 }}
-                className={`mb-1 rounded-lg border ease-in-out ${hoverOnlyClosing ? 'overflow-hidden' : ''} ${
-                  showCategoryExpanded ? 'counselor-sidebar-category-expanded' : ''
-                } ${
+                className={`mb-1 rounded-lg border ease-in-out ${clipCategoryOverflow ? 'overflow-hidden' : ''} ${
+                  hoverFlyoutOpen
+                    ? 'counselor-sidebar-category-hover-flyout counselor-sidebar-category-hover-flyout-active'
+                    : ''
+                } ${inFlowExpandedLayout ? 'counselor-sidebar-category-expanded' : ''} ${
                   hoverOnlyClosing
                     ? 'transition-[border-color,box-shadow,min-height] duration-[2000ms]'
                     : 'transition-[border-color,box-shadow] duration-[2000ms]'
@@ -748,6 +765,7 @@ export default function CounselorManageShell({ children }: Props) {
 
                     <CounselorSidebarSubmenuPanel
                       visible={showSubmenuPanel}
+                      flyout={hoverFlyoutOpen}
                       onMouseEnter={() => handleCategoryMouseEnter(category.slug)}
                     >
                     {category.subcategories.map((sub) => {
