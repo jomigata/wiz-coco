@@ -26,9 +26,9 @@ type Props = {
   children: React.ReactNode;
 };
 
-/** 좌측 메뉴 — 오버레이 서브메뉴(1/3~)용 컴팩트 정렬 */
-const SUBMENU_OVERLAY_MIDDLE_ALIGN = 'pl-1 pr-2';
-const SUBMENU_OVERLAY_NESTED_ALIGN = 'pl-2 pr-2';
+/** 좌측 메뉴 — 중분류는 대분류 아이콘·타이틀 시작선보다 2ch 왼쪽 */
+const MENU_MIDDLE_ALIGN = 'pl-[calc(1.75rem+1.25rem+0.75rem-2ch)]';
+const MENU_NESTED_ALIGN = 'pl-[calc(1.75rem+1.25rem+0.75rem+2ch-2ch)]';
 
 function CounselorSidebarSubmenuPanel({
   visible,
@@ -39,11 +39,7 @@ function CounselorSidebarSubmenuPanel({
 }) {
   if (!visible) return null;
 
-  return (
-    <div className="counselor-sidebar-submenu-flyout">
-      <div className="counselor-sidebar-flyout-panel mt-0.5 space-y-1">{children}</div>
-    </div>
-  );
+  return <div className="mt-0.5 space-y-1">{children}</div>;
 }
 
 export default function CounselorManageShell({ children }: Props) {
@@ -68,7 +64,7 @@ export default function CounselorManageShell({ children }: Props) {
   }, [activeCategorySlug]);
 
   const toggleCategory = (slug: string) => {
-    setExpandedSlug((prev) => (prev === slug ? '' : slug));
+    setExpandedSlug((current) => (current === slug ? '' : slug));
   };
 
   return (
@@ -76,16 +72,17 @@ export default function CounselorManageShell({ children }: Props) {
       className={`flex min-h-0 flex-1 flex-col gap-2 lg:h-[calc(100dvh-4.5rem)] lg:flex-row lg:items-stretch lg:gap-3 lg:overflow-hidden`}
     >
       <aside
-        className={`flex min-h-0 flex-col overflow-x-visible overflow-y-hidden rounded-xl border border-sky-400/20 max-h-[38vh] shrink-0 lg:h-full lg:max-h-[calc(100dvh-4.5rem)] lg:w-[15.5rem] lg:shrink-0 xl:w-[17rem] ${counselorHubClasses.subsection} !p-0`}
+        className={`flex min-h-0 flex-col overflow-hidden rounded-xl border border-sky-400/20 max-h-[38vh] shrink-0 lg:h-full lg:max-h-[calc(100dvh-4.5rem)] lg:w-[15.5rem] lg:shrink-0 xl:w-[17rem] ${counselorHubClasses.subsection} !p-0`}
         aria-label="상담관리 메뉴"
       >
         <div className="shrink-0 border-b border-sky-400/25 bg-gradient-to-r from-sky-600/25 via-sky-500/15 to-transparent px-3 py-2">
           <p className="text-sm font-bold text-white">상담관리</p>
           <p className="text-[11px] leading-tight text-sky-200/60">대분류 · 중분류 · 소분류</p>
         </div>
-        <nav className="relative min-h-0 flex-1 overflow-y-auto overflow-x-visible overscroll-contain px-1.5 py-1.5">
+        <nav className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-1.5 py-1.5">
           {sidebarCategories.map((category) => {
             const categoryExpanded = expandedSlug === category.slug;
+            const showSubmenuPanel = categoryExpanded;
             const categoryEntryHref = getCategoryEntryHref(category, adminUser);
 
             const categorySelected = activeCategorySlug === category.slug;
@@ -122,11 +119,12 @@ export default function CounselorManageShell({ children }: Props) {
                     : 'border-sky-400/45 ring-1 ring-inset ring-sky-400/20'
               : 'border-white/10';
 
+
             return (
               <div
                 key={category.slug}
-                className={`mb-1 rounded-lg border transition-[border-color,box-shadow] duration-200 ease-in-out ${
-                  categoryExpanded ? 'counselor-sidebar-category-overlay-open' : ''
+                className={`mb-1 rounded-lg border transition-[border-color,box-shadow] duration-[2000ms] ${
+                  categoryExpanded ? 'counselor-sidebar-category-expanded' : ''
                 } ${categoryFrameClass}`}
               >
                 <div className="counselor-sidebar-category-header-row flex shrink-0 items-stretch gap-0.5">
@@ -142,7 +140,9 @@ export default function CounselorManageShell({ children }: Props) {
                   <div className="min-w-0 flex-1">
                     <AuthLink
                       href={categoryEntryHref}
-                      onClick={() => setExpandedSlug(category.slug)}
+                      onClick={() => {
+                        setExpandedSlug(category.slug);
+                      }}
                       className={`block rounded-md px-2 py-1.5 font-normal transition-colors hover:bg-white/[0.06] ${
                         categoryLinkActive
                           ? 'bg-sky-600/30 font-semibold text-sky-100'
@@ -165,7 +165,7 @@ export default function CounselorManageShell({ children }: Props) {
                   </div>
                 </div>
 
-                    <CounselorSidebarSubmenuPanel visible={categoryExpanded}>
+                    <CounselorSidebarSubmenuPanel visible={showSubmenuPanel}>
                     {category.subcategories.map((sub) => {
                       if (sub.adminOnly && !adminUser) return null;
                       const visibleItems = sub.items.filter((item) => !item.adminOnly || adminUser);
@@ -174,7 +174,7 @@ export default function CounselorManageShell({ children }: Props) {
                       return (
                         <div key={sub.name || visibleItems[0]?.href}>
                           {!flatMiddleTier ? (
-                            <p className="px-1 py-0.5 text-[10px] font-normal uppercase tracking-wide text-slate-500">
+                            <p className="px-1.5 py-0.5 text-[10px] font-normal uppercase tracking-wide text-slate-500">
                               {sub.name.replace(/^\d+[a-z]\.\s*/i, '')}
                             </p>
                           ) : null}
@@ -231,7 +231,7 @@ export default function CounselorManageShell({ children }: Props) {
                                     : isMenuItemActive(pathname, item.href);
                               const active = !activeNested && !hasActiveNested && parentExactActive;
                               const rows: React.ReactNode[] = [];
-                              const nestedAlign = SUBMENU_OVERLAY_NESTED_ALIGN;
+                              const nestedAlign = MENU_NESTED_ALIGN;
                               const nestedPrefix = '\u00A0- ';
 
                               if (flattenNav) {
@@ -246,7 +246,7 @@ export default function CounselorManageShell({ children }: Props) {
                                           clearAssessmentListSearch();
                                         }
                                       }}
-                                      className={`block truncate rounded-md py-1 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${SUBMENU_OVERLAY_MIDDLE_ALIGN} ${
+                                      className={`block truncate rounded-md py-1 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${MENU_MIDDLE_ALIGN} ${
                                         active
                                           ? 'bg-sky-600/30 font-semibold text-sky-100'
                                           : 'text-slate-300 hover:bg-white/[0.06] hover:text-white'
@@ -275,7 +275,7 @@ export default function CounselorManageShell({ children }: Props) {
                                           clearAssessmentListSearch();
                                         }
                                       }}
-                                      className={`block truncate rounded-md py-1 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${SUBMENU_OVERLAY_MIDDLE_ALIGN} ${
+                                      className={`block truncate rounded-md py-1 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${MENU_MIDDLE_ALIGN} ${
                                         active
                                           ? 'bg-sky-600/30 font-semibold text-sky-100'
                                           : 'text-slate-300 hover:bg-white/[0.06] hover:text-white'
@@ -291,7 +291,7 @@ export default function CounselorManageShell({ children }: Props) {
                               for (const nested of parentSubmenu.sort((a, b) => a.order - b.order)) {
                                 const nestedActive = nested.isActive(pathNorm);
                                 const alignMiddle = nested.menuAlign !== 'nested';
-                                const itemMenuAlign = alignMiddle ? SUBMENU_OVERLAY_MIDDLE_ALIGN : nestedAlign;
+                                const itemMenuAlign = alignMiddle ? MENU_MIDDLE_ALIGN : nestedAlign;
                                 const itemPrefix = alignMiddle ? '' : nestedPrefix;
                                 rows.push(
                                   <li
@@ -373,7 +373,7 @@ export default function CounselorManageShell({ children }: Props) {
                                   <li key={`${item.href}-${nested.label}`}>
                                     <AuthLink
                                       href={href}
-                                      className={`block truncate rounded-md py-1 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${SUBMENU_OVERLAY_NESTED_ALIGN} ${
+                                      className={`block truncate rounded-md py-1 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${MENU_NESTED_ALIGN} ${
                                         nestedActive
                                           ? 'bg-sky-600/30 font-semibold text-sky-100'
                                           : 'text-slate-300 hover:bg-white/[0.06] hover:text-white'
