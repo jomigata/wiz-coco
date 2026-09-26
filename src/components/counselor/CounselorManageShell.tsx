@@ -34,6 +34,21 @@ const SUBMENU_HOVER_CLOSE_MS = 2000;
 /** 대분류 전환 직후 레이아웃 보정으로 인한 잘못된 mouseleave 무시 */
 const SUBMENU_HOVER_SWITCH_GRACE_MS = 180;
 
+function findCategorySlugForNode(
+  node: Node | null,
+  boxes: Record<string, HTMLDivElement | null>,
+): string | null {
+  if (!(node instanceof Element)) return null;
+  let el: Element | null = node;
+  while (el) {
+    for (const [slug, box] of Object.entries(boxes)) {
+      if (box === el) return slug;
+    }
+    el = el.parentElement;
+  }
+  return null;
+}
+
 function CounselorSidebarSubmenuPanel({
   visible,
   closing,
@@ -106,6 +121,12 @@ export default function CounselorManageShell({ children }: Props) {
     {},
   );
   const [hoveredMenuHref, setHoveredMenuHref] = useState<string | null>(null);
+
+  const sidebarCategories = useMemo(() => counselorMenuCategories, []);
+  const categorySlugOrder = useMemo(
+    () => sidebarCategories.map((category) => category.slug),
+    [sidebarCategories],
+  );
 
   const expandedSlugRef = useRef(expandedSlug);
   expandedSlugRef.current = expandedSlug;
@@ -181,12 +202,43 @@ export default function CounselorManageShell({ children }: Props) {
     [applyClosingLayoutMinHeightSync, clearClosingLayoutMinHeight, expandedSlug],
   );
 
+  const closeHoverOpenCategory = useCallback(
+    (slug: string) => {
+      if (expandedSlugRef.current === slug) return;
+      if (
+        hoverExpandedSlugRef.current !== slug &&
+        hoverClosingSlugRef.current !== slug
+      ) {
+        return;
+      }
+      applyClosingLayoutMinHeightSync(slug);
+      startHoverClose(slug);
+    },
+    [applyClosingLayoutMinHeightSync, startHoverClose],
+  );
+
   const handleCategoryMouseEnter = useCallback(
     (slug: string) => {
       if (hoverClosingSlug === slug) {
         cancelHoverClose(slug);
       }
       lastHoverSwitchRef.current = { slug, at: Date.now() };
+
+      const enteredIdx = categorySlugOrder.indexOf(slug);
+      const hovering = hoverExpandedSlugRef.current;
+      if (
+        hovering &&
+        hovering !== slug &&
+        expandedSlug !== hovering &&
+        enteredIdx >= 0
+      ) {
+        const hoverIdx = categorySlugOrder.indexOf(hovering);
+        if (hoverIdx > enteredIdx) {
+          applyClosingLayoutMinHeightSync(hovering);
+          startHoverClose(hovering);
+        }
+      }
+
       setHoverExpandedSlug((prevHover) => {
         if (prevHover && prevHover !== slug && expandedSlug !== prevHover) {
           applyClosingLayoutMinHeightSync(prevHover);
@@ -198,6 +250,7 @@ export default function CounselorManageShell({ children }: Props) {
     [
       applyClosingLayoutMinHeightSync,
       cancelHoverClose,
+      categorySlugOrder,
       expandedSlug,
       hoverClosingSlug,
       startHoverClose,
@@ -214,6 +267,26 @@ export default function CounselorManageShell({ children }: Props) {
       const nav = sidebarNavRef.current;
       const related = e.relatedTarget;
       if (related instanceof Node && nav?.contains(related)) {
+        const targetSlug = findCategorySlugForNode(related, categoryBoxRefs.current);
+        if (targetSlug && targetSlug !== slug) {
+          const fromIdx = categorySlugOrder.indexOf(slug);
+          const toIdx = categorySlugOrder.indexOf(targetSlug);
+          if (fromIdx >= 0 && toIdx >= 0 && toIdx < fromIdx) {
+            if (
+              hoverClosingSlugRef.current === targetSlug &&
+              hoverExpandedSlugRef.current === slug
+            ) {
+              const switchAt = lastHoverSwitchRef.current;
+              if (
+                switchAt?.slug === slug &&
+                Date.now() - switchAt.at < SUBMENU_HOVER_SWITCH_GRACE_MS
+              ) {
+                return;
+              }
+            }
+            closeHoverOpenCategory(slug);
+          }
+        }
         return;
       }
 
@@ -233,14 +306,10 @@ export default function CounselorManageShell({ children }: Props) {
         const hit = document.elementFromPoint(clientX, clientY);
         if (hit && box.contains(hit)) return;
 
-        const expanded = hoverExpandedSlugRef.current;
-        const closing = hoverClosingSlugRef.current;
-        if (expanded !== slug && closing !== slug) return;
-
-        startHoverClose(slug);
+        closeHoverOpenCategory(slug);
       });
     },
-    [expandedSlug, startHoverClose],
+    [categorySlugOrder, closeHoverOpenCategory, expandedSlug],
   );
 
   const handleSidebarMouseLeave = useCallback(
@@ -289,8 +358,6 @@ export default function CounselorManageShell({ children }: Props) {
     });
     setExpandedSlug(slug);
   };
-
-  const sidebarCategories = useMemo(() => counselorMenuCategories, []);
 
   return (
     <div
