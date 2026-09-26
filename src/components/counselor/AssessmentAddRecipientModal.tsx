@@ -209,6 +209,34 @@ function targetRowInvalid(row: RecipientRow): boolean {
   return false;
 }
 
+/** 개별 추가 버튼 — 실패 사유 (통과 시 null) */
+function validateIndividualDraftInput(
+  draftName: string,
+  draftPhone: string,
+  draftEmail: string,
+): string | null {
+  const name = draftName.trim();
+  if (!name) return '이름을 입력해 주세요.';
+
+  const phoneRaw = draftPhone.trim();
+  const emailRaw = draftEmail.trim();
+  const phoneNorm = normalizeRecipientPhone(draftPhone);
+
+  if (!phoneRaw && !emailRaw) {
+    return '휴대폰 또는 이메일 중 하나 이상 입력해 주세요.';
+  }
+  if (phoneRaw && !phoneNorm) {
+    return '휴대폰 번호 형식을 확인해 주세요.';
+  }
+  if (phoneNorm && !isValidKrMobilePhone(phoneNorm)) {
+    return '올바른 휴대폰 번호(010 등)를 입력해 주세요.';
+  }
+  if (emailRaw && !isValidEmailAddress(emailRaw)) {
+    return '이메일 형식을 확인해 주세요.';
+  }
+  return null;
+}
+
 function formatExcludedInvalidSummary(invalid: RecipientRow[]): string {
   if (!invalid.length) return '';
   const names = invalid.slice(0, 4).map((r) => r.displayName.trim() || '—');
@@ -335,6 +363,10 @@ export default function AssessmentAddRecipientModal({
     dispatchSummary?: CounselorDispatchCompleteSummary;
   } | null>(null);
   const [addError, setAddError] = useState('');
+  const [individualAddFeedback, setIndividualAddFeedback] = useState<{
+    type: 'success' | 'error';
+    message: string;
+  } | null>(null);
   const [invalidBulkDeleteOffer, setInvalidBulkDeleteOffer] = useState(false);
   const [fileBatches, setFileBatches] = useState<ImportedFileBatch[]>([]);
   const [filePreviewAnchor, setFilePreviewAnchor] = useState<FilePreviewAnchor | null>(null);
@@ -506,6 +538,7 @@ export default function AssessmentAddRecipientModal({
     setPendingRows([]);
     setAddSendNow(true);
     setAddError('');
+    setIndividualAddFeedback(null);
     setInvalidBulkDeleteOffer(false);
     setFileBatches([]);
     setFilePreviewAnchor(null);
@@ -524,23 +557,39 @@ export default function AssessmentAddRecipientModal({
   };
 
   const handleAddDraftRow = () => {
+    const validationError = validateIndividualDraftInput(draftName, draftPhone, draftEmail);
+    if (validationError) {
+      setInvalidBulkDeleteOffer(false);
+      setIndividualAddFeedback({ type: 'error', message: validationError });
+      return;
+    }
+
     const name = draftName.trim();
     const phone = normalizeRecipientPhone(draftPhone);
     const email = draftEmail.trim().toLowerCase();
-    if (!name) {
+    const newRow = { displayName: name, phone: phone ? formatPhoneDisplay(phone) : '', email };
+    const duplicateKey = recipientRowMergeKey(newRow);
+    if (combinedRows.some((r) => recipientRowMergeKey(r) === duplicateKey)) {
       setInvalidBulkDeleteOffer(false);
-      setAddError('이름을 입력해 주세요.');
+      setIndividualAddFeedback({
+        type: 'error',
+        message: '같은 이름·휴대폰 조합이 이미 추가 목록에 있습니다.',
+      });
       return;
     }
+
     setAddError('');
     setInvalidBulkDeleteOffer(false);
-    const newRow = { displayName: name, phone: phone ? formatPhoneDisplay(phone) : '', email };
     const nextPending = [...pendingRows, newRow];
     applyInitialInvalidSortIfNeeded(mergeRecipients(nextPending, importedFileRows));
     setPendingRows(nextPending);
     setDraftName('');
     setDraftPhone('');
     setDraftEmail('');
+    setIndividualAddFeedback({
+      type: 'success',
+      message: `「${name}」님을 추가 목록에 넣었습니다. 아래 목록에서 확인한 뒤 발송·추가를 진행하세요.`,
+    });
   };
 
   const removeTargetRow = (combinedIndex: number) => {
@@ -798,7 +847,10 @@ export default function AssessmentAddRecipientModal({
                       type="text"
                       className={`${FORM_INPUT} w-full !px-2`}
                       value={draftName}
-                      onChange={(e) => setDraftName(e.target.value)}
+                      onChange={(e) => {
+                        setDraftName(e.target.value);
+                        setIndividualAddFeedback(null);
+                      }}
                       onKeyDown={handleDraftKeyDown}
                       disabled={addLoading}
                       placeholder="홍길동"
@@ -815,7 +867,10 @@ export default function AssessmentAddRecipientModal({
                       inputMode="numeric"
                       className={`${FORM_INPUT} w-full tabular-nums !px-2`}
                       value={draftPhone}
-                      onChange={(e) => setDraftPhone(formatPhoneWhileTyping(e.target.value))}
+                      onChange={(e) => {
+                        setDraftPhone(formatPhoneWhileTyping(e.target.value));
+                        setIndividualAddFeedback(null);
+                      }}
                       onKeyDown={handleDraftKeyDown}
                       disabled={addLoading}
                       placeholder="010-1234-5678"
@@ -830,7 +885,10 @@ export default function AssessmentAddRecipientModal({
                       type="email"
                       className={`${FORM_INPUT} w-full !px-2`}
                       value={draftEmail}
-                      onChange={(e) => setDraftEmail(e.target.value)}
+                      onChange={(e) => {
+                        setDraftEmail(e.target.value);
+                        setIndividualAddFeedback(null);
+                      }}
                       onKeyDown={handleDraftKeyDown}
                       disabled={addLoading}
                       placeholder="name@example.com"
@@ -849,6 +907,18 @@ export default function AssessmentAddRecipientModal({
                   </span>
                 </button>
               </div>
+              {individualAddFeedback ? (
+                <div
+                  className={`mt-3 rounded-lg border px-3 py-2 text-sm leading-relaxed ${
+                    individualAddFeedback.type === 'success'
+                      ? 'border-emerald-500/40 bg-emerald-950/40 text-emerald-100'
+                      : 'border-red-500/35 bg-red-950/35 text-red-200'
+                  }`}
+                  role={individualAddFeedback.type === 'success' ? 'status' : 'alert'}
+                >
+                  {individualAddFeedback.message}
+                </div>
+              ) : null}
             </section>
 
             <section className="flex flex-col overflow-visible rounded-2xl border border-emerald-500/15 bg-gradient-to-br from-[#0f1f36]/90 via-[#0d1830]/95 to-[#0a1220]/90 p-4 shadow-inner shadow-black/20 lg:col-span-5">
