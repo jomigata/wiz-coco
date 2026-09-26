@@ -49,6 +49,18 @@ function findCategorySlugForNode(
   return null;
 }
 
+/** 아래→위로 옮길 때 닫히는(아래) 대분류는 테두리와 함께 줄임 */
+function shouldHoldLayoutWhenClosingForEnter(
+  closingSlug: string,
+  enteredSlug: string,
+  order: string[],
+): boolean {
+  const closingIdx = order.indexOf(closingSlug);
+  const enteredIdx = order.indexOf(enteredSlug);
+  if (closingIdx < 0 || enteredIdx < 0) return true;
+  return closingIdx <= enteredIdx;
+}
+
 function CounselorSidebarSubmenuPanel({
   visible,
   closing,
@@ -215,7 +227,7 @@ export default function CounselorManageShell({ children }: Props) {
   );
 
   const closeHoverOpenCategory = useCallback(
-    (slug: string) => {
+    (slug: string, options?: { holdLayout?: boolean }) => {
       if (expandedSlugRef.current === slug) return;
       if (
         hoverExpandedSlugRef.current !== slug &&
@@ -223,10 +235,9 @@ export default function CounselorManageShell({ children }: Props) {
       ) {
         return;
       }
-      applyClosingLayoutMinHeightSync(slug);
-      startHoverClose(slug);
+      startHoverClose(slug, options);
     },
-    [applyClosingLayoutMinHeightSync, startHoverClose],
+    [startHoverClose],
   );
 
   const handleCategoryMouseEnter = useCallback(
@@ -246,21 +257,23 @@ export default function CounselorManageShell({ children }: Props) {
       ) {
         const hoverIdx = categorySlugOrder.indexOf(hovering);
         if (hoverIdx > enteredIdx) {
-          applyClosingLayoutMinHeightSync(hovering);
-          startHoverClose(hovering);
+          startHoverClose(hovering, { holdLayout: false });
         }
       }
 
       setHoverExpandedSlug((prevHover) => {
         if (prevHover && prevHover !== slug && expandedSlug !== prevHover) {
-          applyClosingLayoutMinHeightSync(prevHover);
-          startHoverClose(prevHover);
+          const holdLayout = shouldHoldLayoutWhenClosingForEnter(
+            prevHover,
+            slug,
+            categorySlugOrder,
+          );
+          startHoverClose(prevHover, { holdLayout });
         }
         return slug;
       });
     },
     [
-      applyClosingLayoutMinHeightSync,
       cancelHoverClose,
       categorySlugOrder,
       expandedSlug,
@@ -296,7 +309,7 @@ export default function CounselorManageShell({ children }: Props) {
                 return;
               }
             }
-            closeHoverOpenCategory(slug);
+            closeHoverOpenCategory(slug, { holdLayout: false });
           }
         }
         return;
