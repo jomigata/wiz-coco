@@ -95,12 +95,15 @@ export default function CounselorManageShell({ children }: Props) {
   const hoverCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [hoveredMenuHref, setHoveredMenuHref] = useState<string | null>(null);
 
-  const cancelHoverClose = useCallback(() => {
-    if (hoverCloseTimerRef.current) {
-      clearTimeout(hoverCloseTimerRef.current);
-      hoverCloseTimerRef.current = null;
-    }
-    setHoverClosingSlug(null);
+  const cancelHoverClose = useCallback((slug?: string) => {
+    setHoverClosingSlug((closing) => {
+      if (slug != null && closing !== slug) return closing;
+      if (hoverCloseTimerRef.current) {
+        clearTimeout(hoverCloseTimerRef.current);
+        hoverCloseTimerRef.current = null;
+      }
+      return null;
+    });
   }, []);
 
   const startHoverClose = useCallback(
@@ -109,25 +112,36 @@ export default function CounselorManageShell({ children }: Props) {
         setHoverExpandedSlug((prev) => (prev === slug ? null : prev));
         return;
       }
-      if (hoverClosingSlug === slug) return;
-
-      cancelHoverClose();
-      setHoverExpandedSlug(null);
-      setHoverClosingSlug(slug);
-      hoverCloseTimerRef.current = setTimeout(() => {
-        setHoverClosingSlug(null);
-        hoverCloseTimerRef.current = null;
-      }, SUBMENU_HOVER_CLOSE_MS);
+      setHoverClosingSlug((current) => {
+        if (current === slug) return current;
+        if (hoverCloseTimerRef.current) {
+          clearTimeout(hoverCloseTimerRef.current);
+          hoverCloseTimerRef.current = null;
+        }
+        hoverCloseTimerRef.current = setTimeout(() => {
+          setHoverClosingSlug((c) => (c === slug ? null : c));
+          hoverCloseTimerRef.current = null;
+        }, SUBMENU_HOVER_CLOSE_MS);
+        return slug;
+      });
+      setHoverExpandedSlug((prev) => (prev === slug ? null : prev));
     },
-    [cancelHoverClose, expandedSlug, hoverClosingSlug],
+    [expandedSlug],
   );
 
   const handleCategoryMouseEnter = useCallback(
     (slug: string) => {
-      cancelHoverClose();
-      setHoverExpandedSlug(slug);
+      if (hoverClosingSlug === slug) {
+        cancelHoverClose(slug);
+      }
+      setHoverExpandedSlug((prevHover) => {
+        if (prevHover && prevHover !== slug && expandedSlug !== prevHover) {
+          startHoverClose(prevHover);
+        }
+        return slug;
+      });
     },
-    [cancelHoverClose],
+    [cancelHoverClose, expandedSlug, hoverClosingSlug, startHoverClose],
   );
 
   const handleCategoryMouseLeave = useCallback(
@@ -158,6 +172,12 @@ export default function CounselorManageShell({ children }: Props) {
   }, [activeCategorySlug]);
 
   const toggleCategory = (slug: string) => {
+    setHoverExpandedSlug((prevHover) => {
+      if (prevHover && prevHover !== slug && expandedSlug !== prevHover) {
+        startHoverClose(prevHover);
+      }
+      return null;
+    });
     setExpandedSlug(slug);
   };
 
@@ -239,7 +259,15 @@ export default function CounselorManageShell({ children }: Props) {
                   <div className="min-w-0 flex-1">
                     <AuthLink
                       href={categoryEntryHref}
-                      onClick={() => setExpandedSlug(category.slug)}
+                      onClick={() => {
+                        setHoverExpandedSlug((prevHover) => {
+                          if (prevHover && prevHover !== category.slug && expandedSlug !== prevHover) {
+                            startHoverClose(prevHover);
+                          }
+                          return null;
+                        });
+                        setExpandedSlug(category.slug);
+                      }}
                       className={`block rounded-md px-2 py-1.5 font-normal transition-colors hover:bg-white/[0.06] ${
                         categoryLinkActive
                           ? 'bg-sky-600/30 font-semibold text-sky-100'
