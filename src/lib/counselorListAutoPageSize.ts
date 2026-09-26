@@ -129,6 +129,14 @@ export function measureVisibleMainRowsInScroll(
   return measureFitCountWithExpand(scrollEl, expandedId);
 }
 
+export function nominalRowsOnExpandAwarePage(
+  expandPage: number,
+  pageSize: number,
+  totalItems: number,
+): number {
+  return Math.min(pageSize, Math.max(0, totalItems - (expandPage - 1) * pageSize));
+}
+
 export function computeExpandAwareTotalPages(
   totalItems: number,
   pageSize: number,

@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useLayoutEffect, useMemo, useState, type RefObject } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from 'react';
 
 import {
   computeExpandAwareTotalPages,
   measureFitCountWithExpand,
+  nominalRowsOnExpandAwarePage,
   sliceExpandAwarePage,
 } from '@/lib/counselorListAutoPageSize';
 
@@ -32,25 +33,34 @@ export function useListPaginationWithExpand<T>({
 }: Options<T>) {
   const [page, setPage] = useState(1);
   const [fitCount, setFitCount] = useState<number | null>(null);
+  /** 펼침을 연 페이지 (2페이지 이후 펼침·슬라이스 기준) */
+  const [expandAnchorPage, setExpandAnchorPage] = useState<number | null>(null);
+  const lastExpandedIdRef = useRef<string | null>(null);
 
   const totalCount = items.length;
 
-  const expandPage = useMemo(() => {
-    if (!expandShiftEnabled || !expandedId) return null;
-    const idx = items.findIndex((item) => getRowId(item) === expandedId);
-    if (idx < 0) return null;
-    return Math.floor(idx / pageSize) + 1;
-  }, [items, expandedId, pageSize, getRowId, expandShiftEnabled]);
+  useLayoutEffect(() => {
+    if (!expandShiftEnabled || !expandedId) {
+      setExpandAnchorPage(null);
+      lastExpandedIdRef.current = null;
+      setFitCount(null);
+      return;
+    }
+    if (lastExpandedIdRef.current !== expandedId) {
+      lastExpandedIdRef.current = expandedId;
+      setExpandAnchorPage(page);
+      setFitCount(null);
+    }
+  }, [expandShiftEnabled, expandedId, page]);
 
   const nominalRowsOnExpandPage = useMemo(() => {
-    if (expandPage == null) return pageSize;
-    return Math.min(pageSize, Math.max(0, totalCount - (expandPage - 1) * pageSize));
-  }, [expandPage, pageSize, totalCount]);
+    if (expandAnchorPage == null) return pageSize;
+    return nominalRowsOnExpandAwarePage(expandAnchorPage, pageSize, totalCount);
+  }, [expandAnchorPage, pageSize, totalCount]);
 
-  /** 실제로 잘리는 경우에만 fitCount < pageSize → 2페이지 경계 보정 (펼침 페이지와 무관하게 유지) */
   const expandShiftActive =
     expandShiftEnabled &&
-    expandPage != null &&
+    expandAnchorPage != null &&
     expandedId != null &&
     fitCount != null &&
     fitCount < nominalRowsOnExpandPage;
@@ -60,14 +70,17 @@ export function useListPaginationWithExpand<T>({
       computeExpandAwareTotalPages(
         totalCount,
         pageSize,
-        expandShiftActive ? expandPage : null,
+        expandShiftActive ? expandAnchorPage : null,
         expandShiftActive ? fitCount : null,
       ),
-    [totalCount, pageSize, expandShiftActive, expandPage, fitCount],
+    [totalCount, pageSize, expandShiftActive, expandAnchorPage, fitCount],
   );
 
   useEffect(() => {
     setPage(1);
+    setExpandAnchorPage(null);
+    setFitCount(null);
+    lastExpandedIdRef.current = null;
   }, [totalCount, pageSize]);
 
   useEffect(() => {
@@ -77,8 +90,10 @@ export function useListPaginationWithExpand<T>({
   }, [page, totalPages]);
 
   useLayoutEffect(() => {
-    if (!expandShiftEnabled || !expandedId || expandPage == null) {
-      setFitCount(null);
+    if (!expandShiftEnabled || !expandedId || expandAnchorPage == null) {
+      return;
+    }
+    if (page !== expandAnchorPage) {
       return;
     }
 
@@ -89,7 +104,10 @@ export function useListPaginationWithExpand<T>({
       if (cancelled) return;
       const target = scrollContainerRef.current;
       if (!target) return;
-      const next = measureFitCountWithExpand(target, expandedId);
+      const next = Math.min(
+        measureFitCountWithExpand(target, expandedId),
+        nominalRowsOnExpandPage,
+      );
       setFitCount((prev) => (prev === next ? prev : next));
     };
 
@@ -138,11 +156,10 @@ export function useListPaginationWithExpand<T>({
   }, [
     expandShiftEnabled,
     expandedId,
-    expandPage,
+    expandAnchorPage,
+    page,
     scrollContainerRef,
-    items,
     scrollMountTick,
-    pageSize,
     nominalRowsOnExpandPage,
   ]);
 
@@ -152,10 +169,10 @@ export function useListPaginationWithExpand<T>({
         items,
         page,
         pageSize,
-        expandShiftActive ? expandPage : null,
+        expandShiftActive ? expandAnchorPage : null,
         expandShiftActive ? fitCount : null,
       ),
-    [items, page, pageSize, expandShiftActive, expandPage, fitCount],
+    [items, page, pageSize, expandShiftActive, expandAnchorPage, fitCount],
   );
 
   return {
