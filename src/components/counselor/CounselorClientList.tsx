@@ -32,6 +32,7 @@ import {
 } from '@/lib/counselorListTableStyles';
 import { matchesWildcardFields } from '@/lib/wildcardSearch';
 import { useListPaginationWithExpand, toggleExpandedByPage, type ExpandedByPage } from '@/hooks/useListPaginationWithExpand';
+import { useCounselorListExpandScroll } from '@/hooks/useCounselorListExpandScroll';
 import { useCounselorListPageSize } from '@/hooks/useCounselorListPageSize';
 import { COUNSELOR_LIST_PAGE_SIZE_AUTO } from '@/lib/counselorListAutoPageSize';
 import CounselorPortalMoveDialog from '@/components/counselor/CounselorPortalMoveDialog';
@@ -951,6 +952,12 @@ export default function CounselorClientList({
     scrollMountTick,
   });
 
+  useCounselorListExpandScroll(
+    scrollContainerRef,
+    !permanentlyDeletedMode ? expandedByPage[page] ?? null : null,
+    !permanentlyDeletedMode,
+  );
+
   const stats = useMemo(() => {
     const completed = displayItems.filter((i) => i.progress.label === 'completed').length;
     const inProgress = displayItems.filter((i) => i.progress.label === 'in_progress').length;
@@ -1341,10 +1348,6 @@ export default function CounselorClientList({
       return;
     }
     setExpandedByPage((prev) => ({ ...prev, [targetPage]: pid }));
-    const timer = window.setTimeout(() => {
-      document.getElementById(`client-row-${pid}`)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-    }, 80);
-    return () => window.clearTimeout(timer);
   }, [rowExpandable, loading, searchParams, sortedFiltered, page, effectivePageSize, setPage]);
 
   const patchListItemContact = useCallback(

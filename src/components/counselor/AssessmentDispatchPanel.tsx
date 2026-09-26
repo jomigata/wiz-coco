@@ -77,6 +77,7 @@ import { buildAssessmentListHref, writeAssessmentListSearch, buildAssessmentProg
 import CounselorListTableScroll from '@/components/counselor/CounselorListTableScroll';
 import CounselorListPagination from '@/components/counselor/CounselorListPagination';
 import { useListPaginationWithExpand, toggleExpandedByPage, type ExpandedByPage } from '@/hooks/useListPaginationWithExpand';
+import { useCounselorListExpandScroll } from '@/hooks/useCounselorListExpandScroll';
 import { useCounselorListPageSize } from '@/hooks/useCounselorListPageSize';
 import { COUNSELOR_LIST_PAGE_SIZE_AUTO } from '@/lib/counselorListAutoPageSize';
 import { DELETED_ASSESSMENTS_HREF } from '@/lib/counselorNestedNav';
@@ -1097,6 +1098,8 @@ export default function AssessmentDispatchPanel({
     expandShiftEnabled: pageSizeSetting === COUNSELOR_LIST_PAGE_SIZE_AUTO,
     scrollMountTick,
   });
+
+  useCounselorListExpandScroll(scrollContainerRef, expandedByPage[page] ?? null);
 
   useEffect(() => {
     if (!dispatchNextCursor || loadingMoreDispatch) return;

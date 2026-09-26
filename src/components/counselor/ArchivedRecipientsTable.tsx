@@ -33,6 +33,7 @@ import {
   counselorListThClass,
 } from '@/lib/counselorListTableStyles';
 import { useListPaginationWithExpand, toggleExpandedByPage, type ExpandedByPage } from '@/hooks/useListPaginationWithExpand';
+import { useCounselorListExpandScroll } from '@/hooks/useCounselorListExpandScroll';
 import { useCounselorListPageSize } from '@/hooks/useCounselorListPageSize';
 import { COUNSELOR_LIST_PAGE_SIZE_AUTO } from '@/lib/counselorListAutoPageSize';
 import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
@@ -145,6 +146,8 @@ export default function ArchivedRecipientsTable({
     expandShiftEnabled: pageSizeSetting === COUNSELOR_LIST_PAGE_SIZE_AUTO,
     scrollMountTick,
   });
+
+  useCounselorListExpandScroll(scrollContainerRef, expandedByPage[page] ?? null);
 
   const toggleSort = (key: RecipientSortKey) => {
     if (sortKey === key) {
