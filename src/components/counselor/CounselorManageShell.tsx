@@ -31,6 +31,8 @@ const MENU_MIDDLE_ALIGN = 'pl-[calc(1.75rem+1.25rem+0.75rem-2ch)]';
 const MENU_NESTED_ALIGN = 'pl-[calc(1.75rem+1.25rem+0.75rem+2ch-2ch)]';
 
 const SUBMENU_HOVER_CLOSE_MS = 2000;
+/** 대분류 전환 직후 레이아웃 보정으로 인한 잘못된 mouseleave 무시 */
+const SUBMENU_HOVER_SWITCH_GRACE_MS = 180;
 
 function CounselorSidebarSubmenuPanel({
   visible,
@@ -94,6 +96,9 @@ export default function CounselorManageShell({ children }: Props) {
   const [hoverClosingSlug, setHoverClosingSlug] = useState<string | null>(null);
   const hoverCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hoverExpandedSlugRef = useRef<string | null>(null);
+  const hoverClosingSlugRef = useRef<string | null>(null);
+  const sidebarNavRef = useRef<HTMLElement | null>(null);
+  const lastHoverSwitchRef = useRef<{ slug: string; at: number } | null>(null);
   const categoryBoxRefs = useRef<Record<string, HTMLDivElement | null>>({});
   /** 호버 접힘 중 아래 대분류가 밀리지 않도록 닫히는 블록 높이 유지 */
   const [closingLayoutMinHeights, setClosingLayoutMinHeights] = useState<Record<string, number>>(
@@ -102,8 +107,22 @@ export default function CounselorManageShell({ children }: Props) {
   const [hoveredMenuHref, setHoveredMenuHref] = useState<string | null>(null);
 
   hoverExpandedSlugRef.current = hoverExpandedSlug;
+  hoverClosingSlugRef.current = hoverClosingSlug;
+
+  const applyClosingLayoutMinHeightSync = useCallback((slug: string) => {
+    const el = categoryBoxRefs.current[slug];
+    if (!el) return;
+    const height = el.getBoundingClientRect().height;
+    if (height <= 0) return;
+    el.style.minHeight = `${height}px`;
+    setClosingLayoutMinHeights({ [slug]: height });
+  }, []);
 
   const clearClosingLayoutMinHeight = useCallback((slug: string) => {
+    const el = categoryBoxRefs.current[slug];
+    if (el) {
+      el.style.minHeight = '';
+    }
     setClosingLayoutMinHeights((prev) => {
       if (!(slug in prev)) return prev;
       const next = { ...prev };
@@ -137,15 +156,7 @@ export default function CounselorManageShell({ children }: Props) {
         setHoverExpandedSlug((prev) => (prev === slug ? null : prev));
         return;
       }
-      const el = categoryBoxRefs.current[slug];
-      if (el) {
-        const height = el.getBoundingClientRect().height;
-        if (height > 0) {
-          setClosingLayoutMinHeights({ [slug]: height });
-        } else {
-          setClosingLayoutMinHeights({});
-        }
-      }
+      applyClosingLayoutMinHeightSync(slug);
       setHoverClosingSlug((current) => {
         if (current === slug) return current;
         if (hoverCloseTimerRef.current) {
@@ -164,7 +175,7 @@ export default function CounselorManageShell({ children }: Props) {
       });
       setHoverExpandedSlug((prev) => (prev === slug ? null : prev));
     },
-    [clearClosingLayoutMinHeight, expandedSlug],
+    [applyClosingLayoutMinHeightSync, clearClosingLayoutMinHeight, expandedSlug],
   );
 
   const handleCategoryMouseEnter = useCallback(
@@ -172,27 +183,61 @@ export default function CounselorManageShell({ children }: Props) {
       if (hoverClosingSlug === slug) {
         cancelHoverClose(slug);
       }
+      lastHoverSwitchRef.current = { slug, at: Date.now() };
       setHoverExpandedSlug((prevHover) => {
         if (prevHover && prevHover !== slug && expandedSlug !== prevHover) {
+          applyClosingLayoutMinHeightSync(prevHover);
           startHoverClose(prevHover);
         }
         return slug;
       });
     },
-    [cancelHoverClose, expandedSlug, hoverClosingSlug, startHoverClose],
+    [
+      applyClosingLayoutMinHeightSync,
+      cancelHoverClose,
+      expandedSlug,
+      hoverClosingSlug,
+      startHoverClose,
+    ],
   );
 
   const handleCategoryMouseLeave = useCallback(
-    (slug: string) => {
+    (slug: string, e: React.MouseEvent) => {
       if (expandedSlug === slug) {
         setHoverExpandedSlug((prev) => (prev === slug ? null : prev));
         return;
       }
-      if (hoverExpandedSlug === slug || hoverClosingSlug === slug) {
-        startHoverClose(slug);
+
+      const nav = sidebarNavRef.current;
+      const related = e.relatedTarget;
+      if (related instanceof Node && nav?.contains(related)) {
+        return;
       }
+
+      const switchAt = lastHoverSwitchRef.current;
+      if (
+        switchAt?.slug === slug &&
+        Date.now() - switchAt.at < SUBMENU_HOVER_SWITCH_GRACE_MS
+      ) {
+        return;
+      }
+
+      const { clientX, clientY } = e;
+      requestAnimationFrame(() => {
+        const box = categoryBoxRefs.current[slug];
+        if (!box) return;
+
+        const hit = document.elementFromPoint(clientX, clientY);
+        if (hit && box.contains(hit)) return;
+
+        const expanded = hoverExpandedSlugRef.current;
+        const closing = hoverClosingSlugRef.current;
+        if (expanded !== slug && closing !== slug) return;
+
+        startHoverClose(slug);
+      });
     },
-    [expandedSlug, hoverClosingSlug, hoverExpandedSlug, startHoverClose],
+    [expandedSlug, startHoverClose],
   );
 
   useEffect(() => {
@@ -233,7 +278,10 @@ export default function CounselorManageShell({ children }: Props) {
           <p className="text-sm font-bold text-white">상담관리</p>
           <p className="text-[11px] leading-tight text-sky-200/60">대분류 · 중분류 · 소분류</p>
         </div>
-        <nav className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-1.5 py-1.5">
+        <nav
+          ref={sidebarNavRef}
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-1.5 py-1.5"
+        >
           {sidebarCategories.map((category) => {
             const pinnedExpanded = expandedSlug === category.slug;
             const hoverExpanded = hoverExpandedSlug === category.slug;
@@ -288,7 +336,7 @@ export default function CounselorManageShell({ children }: Props) {
                     ? { minHeight: closingLayoutMinHeight }
                     : undefined
                 }
-                onMouseLeave={() => handleCategoryMouseLeave(category.slug)}
+                onMouseLeave={(e) => handleCategoryMouseLeave(category.slug, e)}
               >
                 <div
                   className="flex items-stretch gap-0.5"
