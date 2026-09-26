@@ -98,6 +98,7 @@ export default function CounselorManageShell({ children }: Props) {
   const hoverExpandedSlugRef = useRef<string | null>(null);
   const hoverClosingSlugRef = useRef<string | null>(null);
   const sidebarNavRef = useRef<HTMLElement | null>(null);
+  const sidebarAsideRef = useRef<HTMLElement | null>(null);
   const lastHoverSwitchRef = useRef<{ slug: string; at: number } | null>(null);
   const categoryBoxRefs = useRef<Record<string, HTMLDivElement | null>>({});
   /** 호버 접힘 중 아래 대분류가 밀리지 않도록 닫히는 블록 높이 유지 */
@@ -106,6 +107,8 @@ export default function CounselorManageShell({ children }: Props) {
   );
   const [hoveredMenuHref, setHoveredMenuHref] = useState<string | null>(null);
 
+  const expandedSlugRef = useRef(expandedSlug);
+  expandedSlugRef.current = expandedSlug;
   hoverExpandedSlugRef.current = hoverExpandedSlug;
   hoverClosingSlugRef.current = hoverClosingSlug;
 
@@ -240,6 +243,29 @@ export default function CounselorManageShell({ children }: Props) {
     [expandedSlug, startHoverClose],
   );
 
+  const handleSidebarMouseLeave = useCallback(
+    (e: React.MouseEvent) => {
+      const aside = sidebarAsideRef.current;
+      const related = e.relatedTarget;
+      if (related instanceof Node && aside?.contains(related)) {
+        return;
+      }
+
+      const pinned = expandedSlugRef.current;
+      const hovering = hoverExpandedSlugRef.current;
+
+      if (hovering != null) {
+        if (hovering !== pinned) {
+          applyClosingLayoutMinHeightSync(hovering);
+          startHoverClose(hovering);
+        } else {
+          setHoverExpandedSlug(null);
+        }
+      }
+    },
+    [applyClosingLayoutMinHeightSync, startHoverClose],
+  );
+
   useEffect(() => {
     return () => {
       if (hoverCloseTimerRef.current) {
@@ -271,8 +297,10 @@ export default function CounselorManageShell({ children }: Props) {
       className={`flex min-h-0 flex-1 flex-col gap-2 lg:h-[calc(100dvh-4.5rem)] lg:flex-row lg:items-stretch lg:gap-3 lg:overflow-hidden`}
     >
       <aside
+        ref={sidebarAsideRef}
         className={`flex min-h-0 flex-col overflow-hidden rounded-xl border border-sky-400/20 max-h-[38vh] shrink-0 lg:h-full lg:max-h-[calc(100dvh-4.5rem)] lg:w-[15.5rem] lg:shrink-0 xl:w-[17rem] ${counselorHubClasses.subsection} !p-0`}
         aria-label="상담관리 메뉴"
+        onMouseLeave={handleSidebarMouseLeave}
       >
         <div className="shrink-0 border-b border-sky-400/25 bg-gradient-to-r from-sky-600/25 via-sky-500/15 to-transparent px-3 py-2">
           <p className="text-sm font-bold text-white">상담관리</p>
