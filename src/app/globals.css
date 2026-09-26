@@ -452,3 +452,19 @@ body.dropdown-open {
   color: rgb(250 204 21);
   filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.55));
 }
+
+/** 상담관리 좌측 — 호버 해제 시 서브메뉴 접힘 (약 2초, 하단→상단) */
+.counselor-sidebar-submenu-closing {
+  animation: counselor-sidebar-submenu-fade-out 2s ease forwards;
+}
+
+@keyframes counselor-sidebar-submenu-fade-out {
+  from {
+    clip-path: inset(0 0 0 0);
+    opacity: 1;
+  }
+  to {
+    clip-path: inset(0 0 100% 0);
+    opacity: 0;
+  }
+}

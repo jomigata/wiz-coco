@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import AuthLink from '@/components/auth/AuthLink';
 import { counselorMenuCategories, getCounselorCategoryEntryHref, COUNSELOR_DISPATCH_MGMT_SLUG, COUNSELOR_ASSESSMENT_CODE_SLUG, COUNSELOR_TEST_MGMT_SLUG } from '@/data/counselorMenu';
@@ -30,6 +30,54 @@ type Props = {
 const MENU_MIDDLE_ALIGN = 'pl-[calc(1.75rem+1.25rem+0.75rem-2ch)]';
 const MENU_NESTED_ALIGN = 'pl-[calc(1.75rem+1.25rem+0.75rem+2ch-2ch)]';
 
+const SUBMENU_HOVER_CLOSE_MS = 2000;
+
+function CounselorSidebarSubmenuPanel({
+  visible,
+  closing,
+  onMouseEnter,
+  children,
+}: {
+  visible: boolean;
+  closing: boolean;
+  onMouseEnter?: () => void;
+  children: React.ReactNode;
+}) {
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const el = panelRef.current;
+    if (!el) return;
+
+    if (closing) {
+      el.style.overflow = 'hidden';
+      const height = el.scrollHeight;
+      el.style.maxHeight = `${height}px`;
+      el.style.transition = `max-height ${SUBMENU_HOVER_CLOSE_MS}ms ease`;
+      el.classList.add('counselor-sidebar-submenu-closing');
+      const raf = requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          el.style.maxHeight = '0px';
+        });
+      });
+      return () => cancelAnimationFrame(raf);
+    }
+
+    el.classList.remove('counselor-sidebar-submenu-closing');
+    el.style.maxHeight = '';
+    el.style.transition = '';
+    el.style.overflow = '';
+  }, [closing]);
+
+  if (!visible && !closing) return null;
+
+  return (
+    <div ref={panelRef} className="mt-0.5 space-y-1" onMouseEnter={onMouseEnter}>
+      {children}
+    </div>
+  );
+}
+
 export default function CounselorManageShell({ children }: Props) {
   const pathname = usePathname() || '';
   const searchParams = useSearchParams();
@@ -41,9 +89,67 @@ export default function CounselorManageShell({ children }: Props) {
   const [expandedSlug, setExpandedSlug] = useState<string>(() =>
     activeCategorySlug || COUNSELOR_ASSESSMENT_CODE_SLUG,
   );
-  /** 클릭·경로로 고정된 대분류 (다른 대분류 클릭 전까지 유지) */
+  /** 호버로 잠시 펼친 대분류 — 마우스 아웃 시 접힘 애니메이션 */
   const [hoverExpandedSlug, setHoverExpandedSlug] = useState<string | null>(null);
+  const [hoverClosingSlug, setHoverClosingSlug] = useState<string | null>(null);
+  const hoverCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [hoveredMenuHref, setHoveredMenuHref] = useState<string | null>(null);
+
+  const cancelHoverClose = useCallback(() => {
+    if (hoverCloseTimerRef.current) {
+      clearTimeout(hoverCloseTimerRef.current);
+      hoverCloseTimerRef.current = null;
+    }
+    setHoverClosingSlug(null);
+  }, []);
+
+  const startHoverClose = useCallback(
+    (slug: string) => {
+      if (expandedSlug === slug) {
+        setHoverExpandedSlug((prev) => (prev === slug ? null : prev));
+        return;
+      }
+      if (hoverClosingSlug === slug) return;
+
+      cancelHoverClose();
+      setHoverExpandedSlug(null);
+      setHoverClosingSlug(slug);
+      hoverCloseTimerRef.current = setTimeout(() => {
+        setHoverClosingSlug(null);
+        hoverCloseTimerRef.current = null;
+      }, SUBMENU_HOVER_CLOSE_MS);
+    },
+    [cancelHoverClose, expandedSlug, hoverClosingSlug],
+  );
+
+  const handleCategoryMouseEnter = useCallback(
+    (slug: string) => {
+      cancelHoverClose();
+      setHoverExpandedSlug(slug);
+    },
+    [cancelHoverClose],
+  );
+
+  const handleCategoryMouseLeave = useCallback(
+    (slug: string) => {
+      if (expandedSlug === slug) {
+        setHoverExpandedSlug((prev) => (prev === slug ? null : prev));
+        return;
+      }
+      if (hoverExpandedSlug === slug || hoverClosingSlug === slug) {
+        startHoverClose(slug);
+      }
+    },
+    [expandedSlug, hoverClosingSlug, hoverExpandedSlug, startHoverClose],
+  );
+
+  useEffect(() => {
+    return () => {
+      if (hoverCloseTimerRef.current) {
+        clearTimeout(hoverCloseTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (activeCategorySlug) {
@@ -73,7 +179,8 @@ export default function CounselorManageShell({ children }: Props) {
           {sidebarCategories.map((category) => {
             const pinnedExpanded = expandedSlug === category.slug;
             const hoverExpanded = hoverExpandedSlug === category.slug;
-            const expanded = pinnedExpanded || hoverExpanded;
+            const hoverClosing = hoverClosingSlug === category.slug;
+            const showSubmenus = pinnedExpanded || hoverExpanded || hoverClosing;
             const categoryEntryHref = getCategoryEntryHref(category, adminUser);
 
             const categorySelected = activeCategorySlug === category.slug;
@@ -113,23 +220,21 @@ export default function CounselorManageShell({ children }: Props) {
             return (
               <div
                 key={category.slug}
-                className={`mb-1 rounded-lg border ${categoryFrameClass}`}
-                onMouseLeave={() => {
-                  setHoverExpandedSlug((prev) => (prev === category.slug ? null : prev));
-                }}
+                className={`mb-1 rounded-lg border transition-[border-color,box-shadow] duration-[2000ms] ease-in-out ${categoryFrameClass}`}
+                onMouseLeave={() => handleCategoryMouseLeave(category.slug)}
               >
                 <div
                   className="flex items-stretch gap-0.5"
-                  onMouseEnter={() => setHoverExpandedSlug(category.slug)}
+                  onMouseEnter={() => handleCategoryMouseEnter(category.slug)}
                 >
                   <button
                     type="button"
                     onClick={() => toggleCategory(category.slug)}
                     className="flex w-7 shrink-0 items-center justify-center rounded text-sky-300/80 hover:bg-white/5 hover:text-sky-100"
-                    aria-expanded={expanded}
-                    aria-label={`${category.category} ${expanded ? '접기' : '펼치기'}`}
+                    aria-expanded={showSubmenus}
+                    aria-label={`${category.category} ${showSubmenus ? '접기' : '펼치기'}`}
                   >
-                    <span className="text-[10px]">{expanded ? '▼' : '▶'}</span>
+                    <span className="text-[10px]">{showSubmenus ? '▼' : '▶'}</span>
                   </button>
                   <div className="min-w-0 flex-1">
                     <AuthLink
@@ -155,11 +260,11 @@ export default function CounselorManageShell({ children }: Props) {
                       </span>
                     </AuthLink>
 
-                    {expanded ? (
-                      <div
-                        className="mt-0.5 space-y-1"
-                        onMouseEnter={() => setHoverExpandedSlug(category.slug)}
-                      >
+                    <CounselorSidebarSubmenuPanel
+                      visible={showSubmenus}
+                      closing={hoverClosing && !pinnedExpanded}
+                      onMouseEnter={() => handleCategoryMouseEnter(category.slug)}
+                    >
                     {category.subcategories.map((sub) => {
                       if (sub.adminOnly && !adminUser) return null;
                       const visibleItems = sub.items.filter((item) => !item.adminOnly || adminUser);
@@ -385,8 +490,7 @@ export default function CounselorManageShell({ children }: Props) {
                         </div>
                       );
                     })}
-                      </div>
-                    ) : null}
+                    </CounselorSidebarSubmenuPanel>
                   </div>
                 </div>
               </div>
