@@ -1099,7 +1099,10 @@ export default function AssessmentDispatchPanel({
     scrollMountTick,
   });
 
-  useCounselorListExpandScroll(scrollContainerRef, expandedByPage[page] ?? null);
+  useCounselorListExpandScroll(scrollContainerRef, expandedByPage[page] ?? null, true, {
+    autoPageSize: pageSizeSetting === COUNSELOR_LIST_PAGE_SIZE_AUTO,
+    page,
+  });
 
   useEffect(() => {
     if (!dispatchNextCursor || loadingMoreDispatch) return;

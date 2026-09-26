@@ -956,6 +956,10 @@ export default function CounselorClientList({
     scrollContainerRef,
     !permanentlyDeletedMode ? expandedByPage[page] ?? null : null,
     !permanentlyDeletedMode,
+    {
+      autoPageSize: pageSizeSetting === COUNSELOR_LIST_PAGE_SIZE_AUTO,
+      page,
+    },
   );
 
   const stats = useMemo(() => {

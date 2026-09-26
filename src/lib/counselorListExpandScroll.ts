@@ -29,6 +29,11 @@ export function resolveCounselorListExpandRow(mainRow: HTMLElement): HTMLElement
   return null;
 }
 
+/** 자동 페이지 — 마지막 행 펼침 스크롤 해제 시 목록 상단(스크롤 없음)으로 복귀 */
+export function resetCounselorListScrollTop(scrollEl: HTMLElement): void {
+  scrollEl.scrollTop = 0;
+}
+
 /**
  * 펼침 시: 세부가 아래에 잘리면 세부 하단을 목록 viewport 하단에 맞춤.
  * 그 후 세부 상단·본문 행이 함께 보이지 않으면 본문 행을 viewport 최상단에 맞춤.

@@ -14,6 +14,11 @@ function getMainListBodyRows(scrollEl: HTMLElement): HTMLElement[] {
   );
 }
 
+export function isLastCounselorListMainRow(scrollEl: HTMLElement, mainRow: HTMLElement): boolean {
+  const rows = getMainListBodyRows(scrollEl);
+  return rows.length > 0 && rows[rows.length - 1] === mainRow;
+}
+
 export function measureCounselorListAutoPageSize(scrollEl: HTMLElement | null): number {
   if (!scrollEl) return 10;
   const available = scrollEl.clientHeight;
