@@ -145,12 +145,73 @@ export function computeExpandAwareTotalPages(
 ): number {
   if (totalItems <= 0) return 1;
   if (!expandPage || fitCount == null || fitCount >= pageSize) {
-    return Math.max(1, Math.ceil(totalItems / pageSize));
+    return computeExpandAwareTotalPagesMulti(totalItems, pageSize, new Map());
   }
-  const before = (expandPage - 1) * pageSize;
-  const afterExpandPage = Math.max(0, totalItems - before - fitCount);
-  return expandPage + Math.ceil(afterExpandPage / pageSize);
+  const map = new Map<number, number>([[expandPage, fitCount]]);
+  return computeExpandAwareTotalPagesMulti(totalItems, pageSize, map);
 }
+
+/** 페이지별 펼침 fitCount( < pageSize ) 누적 슬라이스 */
+export function computeExpandAwareTotalPagesMulti(
+  totalItems: number,
+  pageSize: number,
+  fitCountByPage: ReadonlyMap<number, number>,
+): number {
+  if (totalItems <= 0) return 1;
+  let cursor = 0;
+  let pageNum = 1;
+  while (cursor < totalItems) {
+    const fit = fitCountByPage.get(pageNum);
+    const take =
+      fit != null && fit < pageSize ? fit : Math.min(pageSize, totalItems - cursor);
+    if (take <= 0) break;
+    cursor += take;
+    pageNum += 1;
+  }
+  return Math.max(1, pageNum - 1);
+}
+
+function pageSliceLength(
+  page: number,
+  pageSize: number,
+  totalItems: number,
+  cursor: number,
+  fitCountByPage: ReadonlyMap<number, number>,
+): number {
+  const fit = fitCountByPage.get(page);
+  if (fit != null && fit < pageSize) {
+    return Math.min(fit, Math.max(0, totalItems - cursor));
+  }
+  return Math.min(pageSize, Math.max(0, totalItems - cursor));
+}
+
+export function sliceExpandAwarePageStartIndex(
+  page: number,
+  pageSize: number,
+  totalItems: number,
+  fitCountByPage: ReadonlyMap<number, number>,
+): number {
+  let cursor = 0;
+  for (let p = 1; p < page; p++) {
+    cursor += pageSliceLength(p, pageSize, totalItems, cursor, fitCountByPage);
+  }
+  return cursor;
+}
+
+export function sliceExpandAwarePageMulti<T>(
+  items: T[],
+  page: number,
+  pageSize: number,
+  fitCountByPage: ReadonlyMap<number, number>,
+): { startIndex: number; paginatedItems: T[] } {
+  if (items.length === 0) {
+    return { startIndex: 0, paginatedItems: [] };
+  }
+  const startIndex = sliceExpandAwarePageStartIndex(page, pageSize, items.length, fitCountByPage);
+  const count = pageSliceLength(page, pageSize, items.length, startIndex, fitCountByPage);
+  return { startIndex, paginatedItems: items.slice(startIndex, startIndex + count) };
+}
+
 
 export function sliceExpandAwarePage<T>(
   items: T[],

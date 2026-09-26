@@ -32,7 +32,7 @@ import {
   counselorListTdClass,
   counselorListThClass,
 } from '@/lib/counselorListTableStyles';
-import { useListPaginationWithExpand } from '@/hooks/useListPaginationWithExpand';
+import { useListPaginationWithExpand, toggleExpandedByPage, type ExpandedByPage } from '@/hooks/useListPaginationWithExpand';
 import { useCounselorListPageSize } from '@/hooks/useCounselorListPageSize';
 import { COUNSELOR_LIST_PAGE_SIZE_AUTO } from '@/lib/counselorListAutoPageSize';
 import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
@@ -113,13 +113,13 @@ export default function ArchivedRecipientsTable({
 }: ArchivedRecipientsTableProps) {
   const [sortKey, setSortKey] = useState<RecipientSortKey>('notifyAt');
   const [sortDir, setSortDir] = useState<SortDirection>('desc');
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [expandedByPage, setExpandedByPage] = useState<ExpandedByPage>({});
   const [detail, setDetail] = useState<CounselorResultDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState('');
   const { listScrollRef, scrollContainerRef, scrollMountTick, pageSizeSetting, setPageSizeSetting, effectivePageSize } =
     useCounselorListPageSize(COUNSELOR_LIST_PAGE_SIZE_AUTO, {
-      freezeAutoRemeasure: expandedId != null,
+      freezeAutoRemeasure: Object.keys(expandedByPage).length > 0,
     });
 
   const sortedItems = useMemo(() => {
@@ -139,7 +139,7 @@ export default function ArchivedRecipientsTable({
   } = useListPaginationWithExpand({
     items: sortedItems,
     pageSize: effectivePageSize,
-    expandedId,
+    expandedByPage,
     scrollContainerRef,
     getRowId: (row) => row.portalId,
     expandShiftEnabled: pageSizeSetting === COUNSELOR_LIST_PAGE_SIZE_AUTO,
@@ -156,7 +156,7 @@ export default function ArchivedRecipientsTable({
   };
 
   const toggleExpand = (portalId: string) => {
-    setExpandedId((prev) => (prev === portalId ? null : portalId));
+    setExpandedByPage((prev) => toggleExpandedByPage(prev, page, portalId));
   };
 
   const openResultDetail = async (resultId: string, assessmentId: string) => {
@@ -414,7 +414,7 @@ export default function ArchivedRecipientsTable({
             {paginatedItems.map((row, rowIndex) => {
               const notify = dispatchStatusDisplay(row);
               const summary = testSummary(row);
-              const isOpen = expandedId === row.portalId;
+              const isOpen = expandedByPage[page] === row.portalId;
               const contactRevealed = isOpen;
               const tests = row.tests ?? [];
               const myCodeLabel = formatAccessCodeDisplay(row.myCode);

@@ -31,7 +31,7 @@ import {
   counselorListTheadClass,
 } from '@/lib/counselorListTableStyles';
 import { matchesWildcardFields } from '@/lib/wildcardSearch';
-import { useListPaginationWithExpand } from '@/hooks/useListPaginationWithExpand';
+import { useListPaginationWithExpand, toggleExpandedByPage, type ExpandedByPage } from '@/hooks/useListPaginationWithExpand';
 import { useCounselorListPageSize } from '@/hooks/useCounselorListPageSize';
 import { COUNSELOR_LIST_PAGE_SIZE_AUTO } from '@/lib/counselorListAutoPageSize';
 import CounselorPortalMoveDialog from '@/components/counselor/CounselorPortalMoveDialog';
@@ -668,7 +668,7 @@ export default function CounselorClientList({
     message: string;
     error?: boolean;
   } | null>(null);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [expandedByPage, setExpandedByPage] = useState<ExpandedByPage>({});
   const [expandDetailByPortal, setExpandDetailByPortal] = useState<
     Record<
       string,
@@ -684,7 +684,7 @@ export default function CounselorClientList({
   const [detailError, setDetailError] = useState('');
   const { listScrollRef, scrollContainerRef, scrollMountTick, pageSizeSetting, setPageSizeSetting, effectivePageSize } =
     useCounselorListPageSize(COUNSELOR_LIST_PAGE_SIZE_AUTO, {
-      freezeAutoRemeasure: expandedId != null && !permanentlyDeletedMode,
+      freezeAutoRemeasure: Object.keys(expandedByPage).length > 0 && !permanentlyDeletedMode,
     });
 
   const cacheKey = useMemo(
@@ -944,7 +944,7 @@ export default function CounselorClientList({
   } = useListPaginationWithExpand({
     items: sortedFiltered,
     pageSize: effectivePageSize,
-    expandedId: !permanentlyDeletedMode ? expandedId : null,
+    expandedByPage: !permanentlyDeletedMode ? expandedByPage : {},
     scrollContainerRef,
     getRowId: (item) => item.portalId,
     expandShiftEnabled: pageSizeSetting === COUNSELOR_LIST_PAGE_SIZE_AUTO,
@@ -1230,49 +1230,82 @@ export default function CounselorClientList({
   const expandLeadingColSpan = 2;
   const expandDetailColSpan = showContactEditColumn ? 7 : 6;
 
-  const toggleExpand = useCallback((portalId: string) => {
-    setExpandedId((prev) => (prev === portalId ? null : portalId));
-  }, []);
+  const toggleExpand = useCallback(
+    (portalId: string) => {
+      setExpandedByPage((prev) => toggleExpandedByPage(prev, page, portalId));
+    },
+    [page],
+  );
 
   useEffect(() => {
-    if (!expandedId || permanentlyDeletedMode) return;
+    if (permanentlyDeletedMode) return;
+    const expandedIds = Object.values(expandedByPage);
+    if (expandedIds.length === 0) return;
 
     setExpandDetailByPortal((prev) => {
-      if (prev[expandedId] !== undefined) return prev;
+      let next: typeof prev | null = null;
+      const ensure = (expandedId: string) => {
+        if (prev[expandedId] !== undefined) return;
 
-      const item = displayItems.find((i) => i.portalId === expandedId);
-      const assessmentId = item?.assessments[0]?.assessmentId;
+        const item = displayItems.find((i) => i.portalId === expandedId);
+        const assessmentId = item?.assessments[0]?.assessmentId;
 
-      void (async () => {
-        if (!item) {
-          setExpandDetailByPortal((p) =>
-            p[expandedId] !== undefined ? p : { ...p, [expandedId]: 'error' },
-          );
-          return;
-        }
+        void (async () => {
+          if (!item) {
+            setExpandDetailByPortal((p) =>
+              p[expandedId] !== undefined ? p : { ...p, [expandedId]: 'error' },
+            );
+            return;
+          }
 
-        const applyLocalArchivedExpand = () => {
-          const tests = archivedTestsToDispatchTests(item.archivedTests);
-          setExpandDetailByPortal((p) => ({
-            ...p,
-            [expandedId]: {
-              recipient: listItemToDispatchRecipient(item, tests),
-              tests,
-            },
-          }));
-        };
+          const applyLocalArchivedExpand = () => {
+            const tests = archivedTestsToDispatchTests(item.archivedTests);
+            setExpandDetailByPortal((p) => ({
+              ...p,
+              [expandedId]: {
+                recipient: listItemToDispatchRecipient(item, tests),
+                tests,
+              },
+            }));
+          };
 
-        if (deletedMode) {
+          if (deletedMode) {
+            if (!assessmentId) {
+              applyLocalArchivedExpand();
+              return;
+            }
+            try {
+              const detail = await fetchDispatchRecipientDetail(assessmentId, expandedId);
+              const recipient = detail.recipient;
+              const tests =
+                recipient.tests?.map((t) => ({ ...t })) ??
+                archivedTestsToDispatchTests(item.archivedTests);
+              setExpandDetailByPortal((p) => ({
+                ...p,
+                [expandedId]: {
+                  recipient: recipient ?? listItemToDispatchRecipient(item, tests),
+                  tests,
+                },
+              }));
+            } catch {
+              applyLocalArchivedExpand();
+            }
+            return;
+          }
+
           if (!assessmentId) {
-            applyLocalArchivedExpand();
+            const tests = archivedTestsToDispatchTests(item.archivedTests);
+            setExpandDetailByPortal((p) => ({
+              ...p,
+              [expandedId]: { recipient: listItemToDispatchRecipient(item, tests), tests },
+            }));
             return;
           }
           try {
             const detail = await fetchDispatchRecipientDetail(assessmentId, expandedId);
             const recipient = detail.recipient;
             const tests =
-              recipient.tests?.map((t) => ({ ...t })) ??
-              archivedTestsToDispatchTests(item.archivedTests);
+              recipient.tests?.map((t) => ({ ...t })) ?? archivedTestsToDispatchTests(item.archivedTests);
             setExpandDetailByPortal((p) => ({
               ...p,
               [expandedId]: {
@@ -1281,38 +1314,20 @@ export default function CounselorClientList({
               },
             }));
           } catch {
-            applyLocalArchivedExpand();
+            setExpandDetailByPortal((p) => ({ ...p, [expandedId]: 'error' }));
           }
-          return;
-        }
+        })();
 
-        if (!assessmentId) {
-          const tests = archivedTestsToDispatchTests(item.archivedTests);
-          setExpandDetailByPortal((p) => ({
-            ...p,
-            [expandedId]: { recipient: listItemToDispatchRecipient(item, tests), tests },
-          }));
-          return;
-        }
-        try {
-          const detail = await fetchDispatchRecipientDetail(assessmentId, expandedId);
-          const recipient = detail.recipient;
-          const tests = recipient.tests?.map((t) => ({ ...t })) ?? archivedTestsToDispatchTests(item.archivedTests);
-          setExpandDetailByPortal((p) => ({
-            ...p,
-            [expandedId]: {
-              recipient: recipient ?? listItemToDispatchRecipient(item, tests),
-              tests,
-            },
-          }));
-        } catch {
-          setExpandDetailByPortal((p) => ({ ...p, [expandedId]: 'error' }));
-        }
-      })();
+        if (!next) next = { ...prev };
+        next[expandedId] = 'loading';
+      };
 
-      return { ...prev, [expandedId]: 'loading' };
+      for (const expandedId of expandedIds) {
+        ensure(expandedId);
+      }
+      return next ?? prev;
     });
-  }, [deletedMode, permanentlyDeletedMode, expandedId, displayItems]);
+  }, [deletedMode, permanentlyDeletedMode, expandedByPage, displayItems]);
 
   useEffect(() => {
     if (!rowExpandable || loading) return;
@@ -1325,7 +1340,7 @@ export default function CounselorClientList({
       setPage(targetPage);
       return;
     }
-    setExpandedId(pid);
+    setExpandedByPage((prev) => ({ ...prev, [targetPage]: pid }));
     const timer = window.setTimeout(() => {
       document.getElementById(`client-row-${pid}`)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     }, 80);
@@ -1612,7 +1627,7 @@ export default function CounselorClientList({
                       notifyKind: item.notifyKind,
                     });
                     const isSelected = selected.has(item.portalId);
-                    const isOpen = expandedId === item.portalId;
+                    const isOpen = expandedByPage[page] === item.portalId;
                     const expandDetailState = expandDetailByPortal[item.portalId];
                     const assessmentId = primaryAssessment?.assessmentId || '';
                     const expandPayload =

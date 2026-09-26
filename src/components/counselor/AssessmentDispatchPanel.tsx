@@ -76,7 +76,7 @@ import { replaceWithAuthSession } from '@/utils/authSessionLifecycle';
 import { buildAssessmentListHref, writeAssessmentListSearch, buildAssessmentProgressHref } from '@/lib/counselorAssessmentListSearch';
 import CounselorListTableScroll from '@/components/counselor/CounselorListTableScroll';
 import CounselorListPagination from '@/components/counselor/CounselorListPagination';
-import { useListPaginationWithExpand } from '@/hooks/useListPaginationWithExpand';
+import { useListPaginationWithExpand, toggleExpandedByPage, type ExpandedByPage } from '@/hooks/useListPaginationWithExpand';
 import { useCounselorListPageSize } from '@/hooks/useCounselorListPageSize';
 import { COUNSELOR_LIST_PAGE_SIZE_AUTO } from '@/lib/counselorListAutoPageSize';
 import { DELETED_ASSESSMENTS_HREF } from '@/lib/counselorNestedNav';
@@ -571,7 +571,7 @@ export default function AssessmentDispatchPanel({
   const [error, setError] = useState('');
   const [pendingIssueError, setPendingIssueError] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [expandedByPage, setExpandedByPage] = useState<ExpandedByPage>({});
   const [resendLoading, setResendLoading] = useState(false);
   const [remindLoading, setRemindLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -763,36 +763,46 @@ export default function AssessmentDispatchPanel({
   }, [assessmentId, dispatchNextCursor, loadingMoreDispatch, user?.uid]);
 
   useEffect(() => {
-    if (authPending || !isAuthenticated || !expandedId) return;
-    if (expandedTestsLoadedRef.current.has(expandedId)) return;
+    if (authPending || !isAuthenticated) return;
+    const ids = Array.from(new Set(Object.values(expandedByPage)));
+    if (ids.length === 0) return;
     const fetchId = resolveDispatchFetchId(assessmentId) || assessmentId;
-    let cancelled = false;
-    setLoadingExpandedTests(expandedId);
-    void fetchDispatchRecipientDetail(fetchId, expandedId)
-      .then((detail) => {
-        if (cancelled) return;
-        expandedTestsLoadedRef.current.add(expandedId);
-        const tests = (detail.recipient.tests ?? []).map((t) => ({ ...t }));
-        setData((prev) => {
-          if (!prev) return prev;
-          return {
-            ...prev,
-            recipients: prev.recipients.map((row) =>
-              row.portalId === expandedId ? { ...row, ...detail.recipient, tests } : row,
-            ),
-          };
+    const disposers: (() => void)[] = [];
+
+    for (const expandedId of ids) {
+      if (expandedTestsLoadedRef.current.has(expandedId)) continue;
+      let cancelled = false;
+      setLoadingExpandedTests((prev) => prev ?? expandedId);
+      void fetchDispatchRecipientDetail(fetchId, expandedId)
+        .then((detail) => {
+          if (cancelled) return;
+          expandedTestsLoadedRef.current.add(expandedId);
+          const tests = (detail.recipient.tests ?? []).map((t) => ({ ...t }));
+          setData((prev) => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              recipients: prev.recipients.map((row) =>
+                row.portalId === expandedId ? { ...row, ...detail.recipient, tests } : row,
+              ),
+            };
+          });
+        })
+        .catch(() => {
+          expandedTestsLoadedRef.current.delete(expandedId);
+        })
+        .finally(() => {
+          if (!cancelled) setLoadingExpandedTests(null);
         });
-      })
-      .catch(() => {
-        expandedTestsLoadedRef.current.delete(expandedId);
-      })
-      .finally(() => {
-        if (!cancelled) setLoadingExpandedTests(null);
+      disposers.push(() => {
+        cancelled = true;
       });
+    }
+
     return () => {
-      cancelled = true;
+      for (const dispose of disposers) dispose();
     };
-  }, [expandedId, assessmentId, authPending, isAuthenticated]);
+  }, [expandedByPage, assessmentId, authPending, isAuthenticated]);
 
   const openEditContact = useCallback((recipient: DispatchRecipient) => {
     setEditRecipient(recipient);
@@ -883,7 +893,7 @@ export default function AssessmentDispatchPanel({
   useEffect(() => {
     const portalFilter = (filterPortalId || '').trim();
     if (portalFilter) {
-      setExpandedId(portalFilter);
+      setExpandedByPage({ 1: portalFilter });
     }
   }, [filterPortalId]);
 
@@ -1068,7 +1078,7 @@ export default function AssessmentDispatchPanel({
 
   const { listScrollRef, scrollContainerRef, scrollMountTick, pageSizeSetting, setPageSizeSetting, effectivePageSize } =
     useCounselorListPageSize(COUNSELOR_LIST_PAGE_SIZE_AUTO, {
-      freezeAutoRemeasure: expandedId != null,
+      freezeAutoRemeasure: Object.keys(expandedByPage).length > 0,
     });
   const {
     page,
@@ -1081,7 +1091,7 @@ export default function AssessmentDispatchPanel({
   } = useListPaginationWithExpand({
     items: sortedRecipients,
     pageSize: effectivePageSize,
-    expandedId,
+    expandedByPage,
     scrollContainerRef,
     getRowId: (r) => r.portalId,
     expandShiftEnabled: pageSizeSetting === COUNSELOR_LIST_PAGE_SIZE_AUTO,
@@ -1213,7 +1223,7 @@ export default function AssessmentDispatchPanel({
   };
 
   const toggleExpand = (id: string) => {
-    setExpandedId((prev) => (prev === id ? null : id));
+    setExpandedByPage((prev) => toggleExpandedByPage(prev, page, id));
   };
 
   const notifyConfirmRecipients = useMemo<NotifyRecipientContact[]>(() => {
@@ -1234,7 +1244,7 @@ export default function AssessmentDispatchPanel({
     try {
       await restoreAssessmentMove(tombstoneId);
       setRestoreTombstoneId(null);
-      setExpandedId(null);
+      setExpandedByPage({});
       await load({ silent: true });
       setDispatchComplete({
         kind: 'delete',
@@ -1359,7 +1369,13 @@ export default function AssessmentDispatchPanel({
     try {
       const result = await archiveDispatchRecipients(assessmentId, Array.from(selected));
       await load({ silent: true });
-      setExpandedId((prev) => (prev && selected.has(prev) ? null : prev));
+      setExpandedByPage((prev) => {
+        const next = { ...prev };
+        for (const [p, id] of Object.entries(next)) {
+          if (selected.has(id)) delete next[Number(p)];
+        }
+        return next;
+      });
       setSelected(new Set());
       setDispatchComplete({
         kind: 'delete',
@@ -1388,7 +1404,13 @@ export default function AssessmentDispatchPanel({
       }
       const result = await permanentlyDeleteArchivedDispatchRecipients(portalIds);
       await load({ silent: true });
-      setExpandedId((prev) => (prev && selected.has(prev) ? null : prev));
+      setExpandedByPage((prev) => {
+        const next = { ...prev };
+        for (const [p, id] of Object.entries(next)) {
+          if (selected.has(id)) delete next[Number(p)];
+        }
+        return next;
+      });
       setSelected(new Set());
       setDispatchComplete({
         kind: 'delete',
@@ -1761,7 +1783,7 @@ export default function AssessmentDispatchPanel({
               {paginatedRecipients.map((r, rowIndex) => {
                 const notify = dispatchStatusForRow(r);
                 const summary = progressStatusForRow(r);
-                const isOpen = expandedId === r.portalId;
+                const isOpen = expandedByPage[page] === r.portalId;
                 const contactRevealed = isOpen;
                 const tests = r.tests ?? [];
                 const fieldPending = getDispatchRecipientFieldPending(r, issuingPhase);

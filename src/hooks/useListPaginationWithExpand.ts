@@ -3,18 +3,45 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from 'react';
 
 import {
-  computeExpandAwareTotalPages,
+  computeExpandAwareTotalPagesMulti,
   measureFitCountWithExpand,
-  nominalRowsOnExpandAwarePage,
-  sliceExpandAwarePage,
+  sliceExpandAwarePageMulti,
+  sliceExpandAwarePageStartIndex,
 } from '@/lib/counselorListAutoPageSize';
 
 import { COUNSELOR_LIST_PAGE_SIZE } from '@/hooks/useListPagination';
 
+export type ExpandedByPage = Record<number, string>;
+
+export function toggleExpandedByPage(
+  prev: ExpandedByPage,
+  page: number,
+  portalId: string,
+): ExpandedByPage {
+  const next = { ...prev };
+  for (const key of Object.keys(next)) {
+    const p = Number(key);
+    if (p > page) delete next[p];
+  }
+  if (next[page] === portalId) delete next[page];
+  else next[page] = portalId;
+  return next;
+}
+
+function nominalRowsOnPage(
+  pageNum: number,
+  pageSize: number,
+  totalItems: number,
+  fitCountByPage: ReadonlyMap<number, number>,
+): number {
+  const start = sliceExpandAwarePageStartIndex(pageNum, pageSize, totalItems, fitCountByPage);
+  return Math.min(pageSize, Math.max(0, totalItems - start));
+}
+
 type Options<T> = {
   items: T[];
   pageSize?: number;
-  expandedId: string | null;
+  expandedByPage: ExpandedByPage;
   scrollContainerRef: RefObject<HTMLElement | null>;
   getRowId: (item: T) => string;
   /** 목록 개수 「자동」일 때만 펼침 overflow 페이지 이동 */
@@ -25,62 +52,69 @@ type Options<T> = {
 export function useListPaginationWithExpand<T>({
   items,
   pageSize = COUNSELOR_LIST_PAGE_SIZE,
-  expandedId,
+  expandedByPage,
   scrollContainerRef,
   getRowId,
   expandShiftEnabled = false,
   scrollMountTick = 0,
 }: Options<T>) {
   const [page, setPage] = useState(1);
-  const [fitCount, setFitCount] = useState<number | null>(null);
-  /** 펼침을 연 페이지 (2페이지 이후 펼침·슬라이스 기준) */
-  const [expandAnchorPage, setExpandAnchorPage] = useState<number | null>(null);
-  const lastExpandedIdRef = useRef<string | null>(null);
+  const [fitCountByPage, setFitCountByPage] = useState<Map<number, number>>(() => new Map());
+  const fitCountByPageRef = useRef(fitCountByPage);
+  fitCountByPageRef.current = fitCountByPage;
+  const lastExpandedOnPageRef = useRef<Map<number, string>>(new Map());
 
   const totalCount = items.length;
+  const expandedIdOnView = expandedByPage[page] ?? null;
+
+  useEffect(() => {
+    setFitCountByPage((prev) => {
+      const next = new Map(prev);
+      for (const p of Array.from(next.keys())) {
+        if (!expandedByPage[p]) next.delete(p);
+      }
+      return next;
+    });
+    for (const p of Array.from(lastExpandedOnPageRef.current.keys())) {
+      if (!expandedByPage[p]) lastExpandedOnPageRef.current.delete(p);
+    }
+  }, [expandedByPage]);
 
   useLayoutEffect(() => {
-    if (!expandShiftEnabled || !expandedId) {
-      setExpandAnchorPage(null);
-      lastExpandedIdRef.current = null;
-      setFitCount(null);
-      return;
+    if (!expandShiftEnabled) return;
+    for (const key of Object.keys(expandedByPage)) {
+      const p = Number(key);
+      const id = expandedByPage[p];
+      if (lastExpandedOnPageRef.current.get(p) !== id) {
+        lastExpandedOnPageRef.current.set(p, id);
+        setFitCountByPage((prev) => {
+          if (!prev.has(p)) return prev;
+          const next = new Map(prev);
+          next.delete(p);
+          return next;
+        });
+      }
     }
-    if (lastExpandedIdRef.current !== expandedId) {
-      lastExpandedIdRef.current = expandedId;
-      setExpandAnchorPage(page);
-      setFitCount(null);
+  }, [expandShiftEnabled, expandedByPage]);
+
+  const shiftFitMap = useMemo(() => {
+    const map = new Map<number, number>();
+    for (const [p, fit] of Array.from(fitCountByPage.entries())) {
+      const nominal = nominalRowsOnPage(p, pageSize, totalCount, fitCountByPage);
+      if (fit < nominal) map.set(p, fit);
     }
-  }, [expandShiftEnabled, expandedId, page]);
-
-  const nominalRowsOnExpandPage = useMemo(() => {
-    if (expandAnchorPage == null) return pageSize;
-    return nominalRowsOnExpandAwarePage(expandAnchorPage, pageSize, totalCount);
-  }, [expandAnchorPage, pageSize, totalCount]);
-
-  const expandShiftActive =
-    expandShiftEnabled &&
-    expandAnchorPage != null &&
-    expandedId != null &&
-    fitCount != null &&
-    fitCount < nominalRowsOnExpandPage;
+    return map;
+  }, [fitCountByPage, pageSize, totalCount]);
 
   const totalPages = useMemo(
-    () =>
-      computeExpandAwareTotalPages(
-        totalCount,
-        pageSize,
-        expandShiftActive ? expandAnchorPage : null,
-        expandShiftActive ? fitCount : null,
-      ),
-    [totalCount, pageSize, expandShiftActive, expandAnchorPage, fitCount],
+    () => computeExpandAwareTotalPagesMulti(totalCount, pageSize, shiftFitMap),
+    [totalCount, pageSize, shiftFitMap],
   );
 
   useEffect(() => {
     setPage(1);
-    setExpandAnchorPage(null);
-    setFitCount(null);
-    lastExpandedIdRef.current = null;
+    setFitCountByPage(new Map());
+    lastExpandedOnPageRef.current.clear();
   }, [totalCount, pageSize]);
 
   useEffect(() => {
@@ -90,12 +124,17 @@ export function useListPaginationWithExpand<T>({
   }, [page, totalPages]);
 
   useLayoutEffect(() => {
-    if (!expandShiftEnabled || !expandedId || expandAnchorPage == null) {
+    if (!expandShiftEnabled || !expandedIdOnView) {
       return;
     }
-    if (page !== expandAnchorPage) {
-      return;
-    }
+
+    const measurePage = page;
+    const nominal = nominalRowsOnPage(
+      measurePage,
+      pageSize,
+      totalCount,
+      fitCountByPageRef.current,
+    );
 
     let cancelled = false;
     let debounceTimer: ReturnType<typeof setTimeout> | null = null;
@@ -104,11 +143,21 @@ export function useListPaginationWithExpand<T>({
       if (cancelled) return;
       const target = scrollContainerRef.current;
       if (!target) return;
-      const next = Math.min(
-        measureFitCountWithExpand(target, expandedId),
-        nominalRowsOnExpandPage,
-      );
-      setFitCount((prev) => (prev === next ? prev : next));
+      const raw = measureFitCountWithExpand(target, expandedIdOnView);
+      const next = Math.min(raw, nominal);
+      setFitCountByPage((prev) => {
+        const cur = prev.get(measurePage);
+        if (next >= nominal) {
+          if (cur === undefined) return prev;
+          const out = new Map(prev);
+          out.delete(measurePage);
+          return out;
+        }
+        if (cur === next) return prev;
+        const out = new Map(prev);
+        out.set(measurePage, next);
+        return out;
+      });
     };
 
     const scheduleMeasure = () => {
@@ -155,24 +204,17 @@ export function useListPaginationWithExpand<T>({
     };
   }, [
     expandShiftEnabled,
-    expandedId,
-    expandAnchorPage,
+    expandedIdOnView,
     page,
     scrollContainerRef,
     scrollMountTick,
-    nominalRowsOnExpandPage,
+    pageSize,
+    totalCount,
   ]);
 
   const { startIndex, paginatedItems } = useMemo(
-    () =>
-      sliceExpandAwarePage(
-        items,
-        page,
-        pageSize,
-        expandShiftActive ? expandAnchorPage : null,
-        expandShiftActive ? fitCount : null,
-      ),
-    [items, page, pageSize, expandShiftActive, expandAnchorPage, fitCount],
+    () => sliceExpandAwarePageMulti(items, page, pageSize, shiftFitMap),
+    [items, page, pageSize, shiftFitMap],
   );
 
   return {
@@ -184,5 +226,6 @@ export function useListPaginationWithExpand<T>({
     startIndex,
     paginatedItems,
     currentCount: paginatedItems.length,
+    expandedIdOnPage: expandedIdOnView,
   };
 }
