@@ -116,7 +116,6 @@ export default function CounselorPortalChatPanel() {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
   const latestAnchorRef = useRef<HTMLDivElement>(null);
-  const threadListRef = useRef<HTMLUListElement>(null);
   const pendingScrollRef = useRef(false);
   const messageLoadSeqRef = useRef(0);
   /** 목록에서 직접 고른 스레드 — deep link(portalId)로 덮어쓰지 않음 */
@@ -130,13 +129,6 @@ export default function CounselorPortalChatPanel() {
     () => sortThreads(filteredThreads, threadSortKey, threadSortDir),
     [filteredThreads, threadSortKey, threadSortDir],
   );
-  /** 선택된 스레드는 정렬과 관계없이 목록 최상단 */
-  const displayThreads = useMemo(() => {
-    if (!selectedPortalId) return sortedThreads;
-    const selected = sortedThreads.find((t) => t.portalId === selectedPortalId);
-    if (!selected) return sortedThreads;
-    return [selected, ...sortedThreads.filter((t) => t.portalId !== selectedPortalId)];
-  }, [sortedThreads, selectedPortalId]);
   const visibleMessages = useMemo(() => {
     if (!selectedPortalId || messagesForPortalId !== selectedPortalId) return [];
     return filterCounselorVisibleChatMessages(messages);
@@ -313,13 +305,6 @@ export default function CounselorPortalChatPanel() {
     pendingScrollRef.current = true;
     scrollToLatest('auto');
   }, [selectedPortalId, scrollToLatest]);
-
-  useEffect(() => {
-    if (!selectedPortalId) return;
-    const list = threadListRef.current;
-    if (!list) return;
-    list.scrollTop = 0;
-  }, [selectedPortalId]);
 
   const handleSelectThread = (portalId: string) => {
     if (portalId === selectedPortalId) return;
@@ -514,16 +499,13 @@ export default function CounselorPortalChatPanel() {
                 />
               </div>
             </div>
-            <ul
-              ref={threadListRef}
-              className="min-h-0 flex-1 divide-y divide-slate-800/80 overflow-y-auto overscroll-contain rounded-b-2xl px-1 pb-4 pt-1"
-            >
-              {displayThreads.length === 0 ? (
+            <ul className="min-h-0 flex-1 divide-y divide-slate-800/80 overflow-y-auto overscroll-contain rounded-b-2xl px-1 pb-4 pt-1">
+              {sortedThreads.length === 0 ? (
                 <li className="px-4 py-6 text-sm text-slate-500">
                   {searchQuery.trim() ? '검색 결과가 없습니다.' : '등록된 내담자가 없습니다.'}
                 </li>
               ) : (
-                displayThreads.map((thread) => {
+                sortedThreads.map((thread) => {
                   const active = thread.portalId === selectedPortalId;
                   const noChat = !thread.lastMessageAt;
                   return (
