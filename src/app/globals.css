@@ -468,3 +468,21 @@ body.dropdown-open {
     opacity: 0;
   }
 }
+
+/** 상담관리 좌측 — 대분류 테두리: 헤더 + 서브메뉴 4행 (py-1 · text-xs leading-snug · space-y-0.5) */
+:root {
+  --counselor-sidebar-submenu-four-slots: 7.25rem;
+  --counselor-sidebar-category-header: 3rem;
+}
+
+.counselor-sidebar-category-frame-four-slots {
+  min-height: calc(
+    var(--counselor-sidebar-category-header) + var(--counselor-sidebar-submenu-four-slots)
+  );
+}
+
+.counselor-sidebar-submenu-panel-four-slots {
+  max-height: var(--counselor-sidebar-submenu-four-slots);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
