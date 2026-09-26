@@ -93,24 +93,58 @@ export default function CounselorManageShell({ children }: Props) {
   const [hoverExpandedSlug, setHoverExpandedSlug] = useState<string | null>(null);
   const [hoverClosingSlug, setHoverClosingSlug] = useState<string | null>(null);
   const hoverCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hoverExpandedSlugRef = useRef<string | null>(null);
+  const categoryBoxRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  /** 호버 접힘 중 아래 대분류가 밀리지 않도록 닫히는 블록 높이 유지 */
+  const [closingLayoutMinHeights, setClosingLayoutMinHeights] = useState<Record<string, number>>(
+    {},
+  );
   const [hoveredMenuHref, setHoveredMenuHref] = useState<string | null>(null);
 
-  const cancelHoverClose = useCallback((slug?: string) => {
-    setHoverClosingSlug((closing) => {
-      if (slug != null && closing !== slug) return closing;
-      if (hoverCloseTimerRef.current) {
-        clearTimeout(hoverCloseTimerRef.current);
-        hoverCloseTimerRef.current = null;
-      }
-      return null;
+  hoverExpandedSlugRef.current = hoverExpandedSlug;
+
+  const clearClosingLayoutMinHeight = useCallback((slug: string) => {
+    setClosingLayoutMinHeights((prev) => {
+      if (!(slug in prev)) return prev;
+      const next = { ...prev };
+      delete next[slug];
+      return next;
     });
   }, []);
+
+  const cancelHoverClose = useCallback(
+    (slug?: string) => {
+      setHoverClosingSlug((closing) => {
+        if (slug != null && closing !== slug) return closing;
+        if (hoverCloseTimerRef.current) {
+          clearTimeout(hoverCloseTimerRef.current);
+          hoverCloseTimerRef.current = null;
+        }
+        if (slug != null) {
+          clearClosingLayoutMinHeight(slug);
+        } else if (closing) {
+          clearClosingLayoutMinHeight(closing);
+        }
+        return null;
+      });
+    },
+    [clearClosingLayoutMinHeight],
+  );
 
   const startHoverClose = useCallback(
     (slug: string) => {
       if (expandedSlug === slug) {
         setHoverExpandedSlug((prev) => (prev === slug ? null : prev));
         return;
+      }
+      const el = categoryBoxRefs.current[slug];
+      if (el) {
+        const height = el.getBoundingClientRect().height;
+        if (height > 0) {
+          setClosingLayoutMinHeights({ [slug]: height });
+        } else {
+          setClosingLayoutMinHeights({});
+        }
       }
       setHoverClosingSlug((current) => {
         if (current === slug) return current;
@@ -120,13 +154,17 @@ export default function CounselorManageShell({ children }: Props) {
         }
         hoverCloseTimerRef.current = setTimeout(() => {
           setHoverClosingSlug((c) => (c === slug ? null : c));
+          const hovering = hoverExpandedSlugRef.current;
+          if (hovering == null || hovering === slug) {
+            clearClosingLayoutMinHeight(slug);
+          }
           hoverCloseTimerRef.current = null;
         }, SUBMENU_HOVER_CLOSE_MS);
         return slug;
       });
       setHoverExpandedSlug((prev) => (prev === slug ? null : prev));
     },
-    [expandedSlug],
+    [clearClosingLayoutMinHeight, expandedSlug],
   );
 
   const handleCategoryMouseEnter = useCallback(
@@ -201,6 +239,7 @@ export default function CounselorManageShell({ children }: Props) {
             const hoverExpanded = hoverExpandedSlug === category.slug;
             const hoverClosing = hoverClosingSlug === category.slug;
             const showSubmenus = pinnedExpanded || hoverExpanded || hoverClosing;
+            const closingLayoutMinHeight = closingLayoutMinHeights[category.slug];
             const categoryEntryHref = getCategoryEntryHref(category, adminUser);
 
             const categorySelected = activeCategorySlug === category.slug;
@@ -240,7 +279,15 @@ export default function CounselorManageShell({ children }: Props) {
             return (
               <div
                 key={category.slug}
+                ref={(node) => {
+                  categoryBoxRefs.current[category.slug] = node;
+                }}
                 className={`mb-1 rounded-lg border transition-[border-color,box-shadow] duration-[2000ms] ease-in-out ${categoryFrameClass}`}
+                style={
+                  !pinnedExpanded && closingLayoutMinHeight
+                    ? { minHeight: closingLayoutMinHeight }
+                    : undefined
+                }
                 onMouseLeave={() => handleCategoryMouseLeave(category.slug)}
               >
                 <div
