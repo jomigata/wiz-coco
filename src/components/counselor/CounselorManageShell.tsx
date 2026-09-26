@@ -423,9 +423,27 @@ export default function CounselorManageShell({ children }: Props) {
   const handleCategoryMouseEnter = useCallback(
     (slug: string) => {
       cancelBorderFrameCollapse(slug);
-      if (hoverClosingSlugs.has(slug) || borderOnlySlugs.has(slug)) {
+
+      if (borderOnlySlugs.has(slug)) {
+        const anim = hoverCloseAnimationTimersRef.current.get(slug);
+        if (anim) {
+          clearTimeout(anim);
+          hoverCloseAnimationTimersRef.current.delete(slug);
+        }
+        setBorderOnlySlugs((prev) => {
+          const next = new Set(prev);
+          next.delete(slug);
+          return next;
+        });
+        setHoverClosingSlugs((prev) => {
+          const next = new Set(prev);
+          next.delete(slug);
+          return next;
+        });
+      } else if (hoverClosingSlugs.has(slug)) {
         cancelHoverClose(slug);
       }
+
       lastHoverSwitchRef.current = { slug, at: Date.now() };
 
       const enteredIdx = categorySlugOrder.indexOf(slug);
@@ -663,6 +681,7 @@ export default function CounselorManageShell({ children }: Props) {
                     ? { minHeight: closingLayoutMinHeight }
                     : undefined
                 }
+                onMouseEnter={() => handleCategoryMouseEnter(category.slug)}
                 onMouseLeave={(e) => handleCategoryMouseLeave(category.slug, e)}
               >
                 <div
