@@ -68,7 +68,7 @@ function findCategorySlugForNode(
 
 /** 접힘 시 테두리·서브메뉴를 함께 줄일지 — 기본 false */
 function measureCategoryHeaderHeight(box: HTMLDivElement): number {
-  const header = box.querySelector(':scope > .flex.items-stretch');
+  const header = box.querySelector(':scope > .counselor-sidebar-category-header-row');
   const h = header?.getBoundingClientRect().height;
   return h && h > 0 ? h : 48;
 }
@@ -718,7 +718,7 @@ export default function CounselorManageShell({ children }: Props) {
                 onMouseLeave={(e) => handleCategoryMouseLeave(category.slug, e)}
               >
                 <div
-                  className="flex items-stretch gap-0.5"
+                  className="counselor-sidebar-category-header-row flex shrink-0 items-stretch gap-0.5"
                   onMouseEnter={() => handleCategoryMouseEnter(category.slug)}
                 >
                   <button
@@ -761,6 +761,8 @@ export default function CounselorManageShell({ children }: Props) {
                         </span>
                       </span>
                     </AuthLink>
+                  </div>
+                </div>
 
                     <CounselorSidebarSubmenuPanel
                       visible={showSubmenuPanel}
@@ -992,8 +994,12 @@ export default function CounselorManageShell({ children }: Props) {
                       );
                     })}
                     </CounselorSidebarSubmenuPanel>
-                  </div>
-                </div>
+                {showCategoryExpanded && !showSubmenuPanel ? (
+                  <div
+                    className="counselor-sidebar-submenu-slot-placeholder"
+                    aria-hidden
+                  />
+                ) : null}
               </div>
             );
           })}

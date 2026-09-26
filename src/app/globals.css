@@ -476,13 +476,35 @@ body.dropdown-open {
 }
 
 .counselor-sidebar-category-frame-four-slots {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-sizing: border-box;
+  height: calc(
+    var(--counselor-sidebar-category-header) + var(--counselor-sidebar-submenu-four-slots)
+  );
   min-height: calc(
+    var(--counselor-sidebar-category-header) + var(--counselor-sidebar-submenu-four-slots)
+  );
+  max-height: calc(
     var(--counselor-sidebar-category-header) + var(--counselor-sidebar-submenu-four-slots)
   );
 }
 
+.counselor-sidebar-category-header-row {
+  flex-shrink: 0;
+}
+
 .counselor-sidebar-submenu-panel-four-slots {
+  flex: 1 1 auto;
+  min-height: 0;
   max-height: var(--counselor-sidebar-submenu-four-slots);
   overflow-y: auto;
   overscroll-behavior: contain;
+}
+
+.counselor-sidebar-submenu-slot-placeholder {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: var(--counselor-sidebar-submenu-four-slots);
 }
