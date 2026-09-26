@@ -31,11 +31,10 @@ const MENU_MIDDLE_ALIGN = 'pl-[calc(1.75rem+1.25rem+0.75rem-2ch)]';
 const MENU_NESTED_ALIGN = 'pl-[calc(1.75rem+1.25rem+0.75rem+2ch-2ch)]';
 
 const SUBMENU_HOVER_CLOSE_MS = 2000;
-/** 아래로 이동 후 남는 테두리 껍데기 — 최소 유지 후 서서히 접힘 */
-const BORDER_SHELL_MIN_HOLD_MS = 5000;
-const BORDER_SHELL_COLLAPSE_MS = 2000;
 /** 대분류 전환 직후 레이아웃 보정으로 인한 잘못된 mouseleave 무시 */
 const SUBMENU_HOVER_SWITCH_GRACE_MS = 180;
+/** 아래로 빠르게 지나친 상단 대분류(0·1) — 접힘 시작 전 대기 */
+const SUBMENU_HOVER_PASSTHROUGH_CLOSE_DELAY_MS = 5000;
 
 function findCategorySlugForNode(
   node: Node | null,
@@ -64,12 +63,9 @@ function shouldHoldLayoutWhenClosingForEnter(
   return closingIdx <= enteredIdx;
 }
 
-function measureCategoryHeaderHeight(box: HTMLDivElement): number {
-  const headerRow = box.querySelector(':scope > .flex.items-stretch');
-  if (headerRow instanceof HTMLElement) {
-    return Math.ceil(headerRow.getBoundingClientRect().height);
-  }
-  return Math.ceil(box.getBoundingClientRect().height);
+function shouldUsePassthroughCloseDelay(closingSlug: string, order: string[]): boolean {
+  const closingIdx = order.indexOf(closingSlug);
+  return closingIdx >= 0 && closingIdx <= 1;
 }
 
 function CounselorSidebarSubmenuPanel({
@@ -131,16 +127,21 @@ export default function CounselorManageShell({ children }: Props) {
   );
   /** 호버로 잠시 펼친 대분류 — 마우스 아웃 시 접힘 애니메이션 */
   const [hoverExpandedSlug, setHoverExpandedSlug] = useState<string | null>(null);
-  const [hoverClosingSlug, setHoverClosingSlug] = useState<string | null>(null);
-  const hoverCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [hoverClosingSlugs, setHoverClosingSlugs] = useState<Set<string>>(() => new Set());
+  /** 아래로 지나친 뒤 지연 접힘 대기 중 — 펼침·테두리 유지 */
+  const [lingerHoverExpandedSlugs, setLingerHoverExpandedSlugs] = useState<Set<string>>(
+    () => new Set(),
+  );
+  const hoverCloseAnimationTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(
+    new Map(),
+  );
+  const hoverCloseDelayTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const hoverExpandedSlugRef = useRef<string | null>(null);
-  const hoverClosingSlugRef = useRef<string | null>(null);
+  const hoverClosingSlugRef = useRef<Set<string>>(hoverClosingSlugs);
   const sidebarNavRef = useRef<HTMLElement | null>(null);
   const sidebarAsideRef = useRef<HTMLElement | null>(null);
   const lastHoverSwitchRef = useRef<{ slug: string; at: number } | null>(null);
   const categoryBoxRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  const borderShellTimerRef = useRef<Record<string, ReturnType<typeof setTimeout>[]>>({});
-  const borderShellDeferredSlugsRef = useRef<Set<string>>(new Set());
   /** 호버 접힘 중 아래 대분류가 밀리지 않도록 닫히는 블록 높이 유지 */
   const [closingLayoutMinHeights, setClosingLayoutMinHeights] = useState<Record<string, number>>(
     {},
@@ -156,9 +157,11 @@ export default function CounselorManageShell({ children }: Props) {
   const expandedSlugRef = useRef(expandedSlug);
   expandedSlugRef.current = expandedSlug;
   hoverExpandedSlugRef.current = hoverExpandedSlug;
-  hoverClosingSlugRef.current = hoverClosingSlug;
+  hoverClosingSlugRef.current = hoverClosingSlugs;
   const closingLayoutMinHeightsRef = useRef(closingLayoutMinHeights);
   closingLayoutMinHeightsRef.current = closingLayoutMinHeights;
+  const lingerHoverExpandedSlugsRef = useRef(lingerHoverExpandedSlugs);
+  lingerHoverExpandedSlugsRef.current = lingerHoverExpandedSlugs;
 
   const applyClosingLayoutMinHeightSync = useCallback((slug: string) => {
     const el = categoryBoxRefs.current[slug];
@@ -166,7 +169,7 @@ export default function CounselorManageShell({ children }: Props) {
     const height = el.getBoundingClientRect().height;
     if (height <= 0) return;
     el.style.minHeight = `${height}px`;
-    setClosingLayoutMinHeights((prev) => ({ ...prev, [slug]: height }));
+    setClosingLayoutMinHeights({ [slug]: height });
   }, []);
 
   const clearClosingLayoutMinHeight = useCallback((slug: string) => {
@@ -182,99 +185,50 @@ export default function CounselorManageShell({ children }: Props) {
     });
   }, []);
 
-  const cancelBorderShellDeferredCollapse = useCallback(
-    (slug?: string) => {
-      const cancelOne = (s: string) => {
-        borderShellDeferredSlugsRef.current.delete(s);
-        const timers = borderShellTimerRef.current[s];
-        if (timers) {
-          timers.forEach(clearTimeout);
-          delete borderShellTimerRef.current[s];
-        }
-      };
-      if (slug != null) {
-        cancelOne(slug);
-        return;
+  const cancelDelayedHoverClose = useCallback((slug?: string) => {
+    if (slug != null) {
+      const timer = hoverCloseDelayTimersRef.current.get(slug);
+      if (timer) {
+        clearTimeout(timer);
+        hoverCloseDelayTimersRef.current.delete(slug);
       }
-      for (const s of Array.from(borderShellDeferredSlugsRef.current)) {
-        cancelOne(s);
-      }
-      borderShellDeferredSlugsRef.current.clear();
-      for (const key of Object.keys(borderShellTimerRef.current)) {
-        borderShellTimerRef.current[key]?.forEach(clearTimeout);
-        delete borderShellTimerRef.current[key];
-      }
-    },
-    [],
-  );
-
-  const pushBorderShellTimer = (slug: string, timer: ReturnType<typeof setTimeout>) => {
-    if (!borderShellTimerRef.current[slug]) {
-      borderShellTimerRef.current[slug] = [];
+      setLingerHoverExpandedSlugs((prev) => {
+        if (!prev.has(slug)) return prev;
+        const next = new Set(prev);
+        next.delete(slug);
+        return next;
+      });
+      return;
     }
-    borderShellTimerRef.current[slug].push(timer);
-  };
-
-  const scheduleBorderShellDeferredCollapse = useCallback(
-    (slug: string) => {
-      if (expandedSlugRef.current === slug) return;
-      cancelBorderShellDeferredCollapse(slug);
-      borderShellDeferredSlugsRef.current.add(slug);
-
-      const el = categoryBoxRefs.current[slug];
-      if (el) {
-        const height = el.getBoundingClientRect().height;
-        if (height > 0) {
-          el.style.minHeight = `${height}px`;
-          setClosingLayoutMinHeights((prev) => ({ ...prev, [slug]: height }));
-        }
-      }
-
-      const holdTimer = setTimeout(() => {
-        const box = categoryBoxRefs.current[slug];
-        if (!box) {
-          borderShellDeferredSlugsRef.current.delete(slug);
-          clearClosingLayoutMinHeight(slug);
-          return;
-        }
-        const target = measureCategoryHeaderHeight(box);
-        box.style.transition = `min-height ${BORDER_SHELL_COLLAPSE_MS}ms ease`;
-        box.style.minHeight = `${target}px`;
-        setClosingLayoutMinHeights((prev) => ({ ...prev, [slug]: target }));
-
-        pushBorderShellTimer(
-          slug,
-          setTimeout(() => {
-            borderShellDeferredSlugsRef.current.delete(slug);
-            clearClosingLayoutMinHeight(slug);
-            box.style.transition = '';
-          }, BORDER_SHELL_COLLAPSE_MS),
-        );
-      }, BORDER_SHELL_MIN_HOLD_MS);
-      pushBorderShellTimer(slug, holdTimer);
-    },
-    [cancelBorderShellDeferredCollapse, clearClosingLayoutMinHeight],
-  );
+    hoverCloseDelayTimersRef.current.forEach((timer) => clearTimeout(timer));
+    hoverCloseDelayTimersRef.current.clear();
+    setLingerHoverExpandedSlugs(new Set());
+  }, []);
 
   const cancelHoverClose = useCallback(
     (slug?: string) => {
-      setHoverClosingSlug((closing) => {
-        if (slug != null && closing !== slug) return closing;
-        if (hoverCloseTimerRef.current) {
-          clearTimeout(hoverCloseTimerRef.current);
-          hoverCloseTimerRef.current = null;
+      cancelDelayedHoverClose(slug);
+      if (slug != null) {
+        const anim = hoverCloseAnimationTimersRef.current.get(slug);
+        if (anim) {
+          clearTimeout(anim);
+          hoverCloseAnimationTimersRef.current.delete(slug);
         }
-        if (slug != null) {
-          cancelBorderShellDeferredCollapse(slug);
-          clearClosingLayoutMinHeight(slug);
-        } else if (closing) {
-          cancelBorderShellDeferredCollapse(closing);
-          clearClosingLayoutMinHeight(closing);
-        }
-        return null;
-      });
+        setHoverClosingSlugs((prev) => {
+          if (!prev.has(slug)) return prev;
+          const next = new Set(prev);
+          next.delete(slug);
+          return next;
+        });
+        clearClosingLayoutMinHeight(slug);
+        return;
+      }
+      hoverCloseAnimationTimersRef.current.forEach((timer) => clearTimeout(timer));
+      hoverCloseAnimationTimersRef.current.clear();
+      setHoverClosingSlugs(new Set());
+      cancelDelayedHoverClose();
     },
-    [cancelBorderShellDeferredCollapse, clearClosingLayoutMinHeight],
+    [cancelDelayedHoverClose, clearClosingLayoutMinHeight],
   );
 
   const startHoverClose = useCallback(
@@ -289,70 +243,74 @@ export default function CounselorManageShell({ children }: Props) {
       } else {
         clearClosingLayoutMinHeight(slug);
       }
-      setHoverClosingSlug((current) => {
-        if (current === slug) {
-          if (!holdLayout) {
-            clearClosingLayoutMinHeight(slug);
-          }
-          return current;
+
+      setHoverClosingSlugs((prev) => {
+        if (prev.has(slug) && !holdLayout) {
+          clearClosingLayoutMinHeight(slug);
         }
-        if (hoverCloseTimerRef.current) {
-          clearTimeout(hoverCloseTimerRef.current);
-          hoverCloseTimerRef.current = null;
-        }
-        hoverCloseTimerRef.current = setTimeout(() => {
-          setHoverClosingSlug((c) => (c === slug ? null : c));
-          const hovering = hoverExpandedSlugRef.current;
-          const keepShell =
-            borderShellDeferredSlugsRef.current.has(slug) ||
-            (hovering != null && hovering !== slug);
-          if (!keepShell && (hovering == null || hovering === slug)) {
-            clearClosingLayoutMinHeight(slug);
-          }
-          hoverCloseTimerRef.current = null;
-        }, SUBMENU_HOVER_CLOSE_MS);
-        return slug;
+        const next = new Set(prev);
+        next.add(slug);
+        return next;
       });
+
+      const existingAnim = hoverCloseAnimationTimersRef.current.get(slug);
+      if (existingAnim) {
+        clearTimeout(existingAnim);
+      }
+      hoverCloseAnimationTimersRef.current.set(
+        slug,
+        setTimeout(() => {
+          hoverCloseAnimationTimersRef.current.delete(slug);
+          setHoverClosingSlugs((prev) => {
+            const next = new Set(prev);
+            next.delete(slug);
+            return next;
+          });
+          const hovering = hoverExpandedSlugRef.current;
+          if (hovering == null || hovering === slug) {
+            clearClosingLayoutMinHeight(slug);
+          }
+        }, SUBMENU_HOVER_CLOSE_MS),
+      );
+
       setHoverExpandedSlug((prev) => (prev === slug ? null : prev));
     },
     [applyClosingLayoutMinHeightSync, clearClosingLayoutMinHeight, expandedSlug],
   );
 
-  const applyDeferredBorderShellsForEnter = useCallback(
-    (enteredSlug: string) => {
-      const enteredIdx = categorySlugOrder.indexOf(enteredSlug);
-      if (enteredIdx < 2) return;
-
-      const pinned = expandedSlugRef.current;
-      for (let i = 0; i < enteredIdx - 1; i++) {
-        const shellSlug = categorySlugOrder[i];
-        if (!shellSlug || shellSlug === pinned) continue;
-
-        const hasShell =
-          shellSlug in closingLayoutMinHeightsRef.current ||
-          hoverClosingSlugRef.current === shellSlug ||
-          hoverExpandedSlugRef.current === shellSlug;
-
-        if (!hasShell) continue;
-
-        if (
-          hoverExpandedSlugRef.current === shellSlug ||
-          hoverClosingSlugRef.current === shellSlug
-        ) {
-          startHoverClose(shellSlug, { holdLayout: true });
-        } else if (!(shellSlug in closingLayoutMinHeightsRef.current)) {
-          applyClosingLayoutMinHeightSync(shellSlug);
-        }
-
-        scheduleBorderShellDeferredCollapse(shellSlug);
+  const scheduleHoverClose = useCallback(
+    (slug: string, options?: { holdLayout?: boolean; delayMs?: number }) => {
+      const delayMs = options?.delayMs ?? 0;
+      const existing = hoverCloseDelayTimersRef.current.get(slug);
+      if (existing) {
+        clearTimeout(existing);
+        hoverCloseDelayTimersRef.current.delete(slug);
       }
+
+      const runClose = () => {
+        hoverCloseDelayTimersRef.current.delete(slug);
+        setLingerHoverExpandedSlugs((prev) => {
+          if (!prev.has(slug)) return prev;
+          const next = new Set(prev);
+          next.delete(slug);
+          return next;
+        });
+        startHoverClose(slug, options);
+      };
+
+      if (delayMs > 0) {
+        setLingerHoverExpandedSlugs((prev) => {
+          const next = new Set(prev);
+          next.add(slug);
+          return next;
+        });
+        hoverCloseDelayTimersRef.current.set(slug, setTimeout(runClose, delayMs));
+        return;
+      }
+
+      runClose();
     },
-    [
-      applyClosingLayoutMinHeightSync,
-      categorySlugOrder,
-      scheduleBorderShellDeferredCollapse,
-      startHoverClose,
-    ],
+    [startHoverClose],
   );
 
   const closeHoverOpenCategory = useCallback(
@@ -360,18 +318,21 @@ export default function CounselorManageShell({ children }: Props) {
       if (expandedSlugRef.current === slug) return;
       if (
         hoverExpandedSlugRef.current !== slug &&
-        hoverClosingSlugRef.current !== slug
+        !hoverClosingSlugRef.current.has(slug) &&
+        !lingerHoverExpandedSlugsRef.current.has(slug)
       ) {
         return;
       }
+      cancelDelayedHoverClose(slug);
       startHoverClose(slug, options);
     },
-    [startHoverClose],
+    [cancelDelayedHoverClose, startHoverClose],
   );
 
   const handleCategoryMouseEnter = useCallback(
     (slug: string) => {
-      if (hoverClosingSlug === slug) {
+      cancelDelayedHoverClose(slug);
+      if (hoverClosingSlugs.has(slug)) {
         cancelHoverClose(slug);
       }
       lastHoverSwitchRef.current = { slug, at: Date.now() };
@@ -397,18 +358,26 @@ export default function CounselorManageShell({ children }: Props) {
             slug,
             categorySlugOrder,
           );
-          startHoverClose(prevHover, { holdLayout });
+          const prevIdx = categorySlugOrder.indexOf(prevHover);
+          const movingDown =
+            prevIdx >= 0 && enteredIdx >= 0 && prevIdx < enteredIdx;
+          const delayMs =
+            movingDown && shouldUsePassthroughCloseDelay(prevHover, categorySlugOrder)
+              ? SUBMENU_HOVER_PASSTHROUGH_CLOSE_DELAY_MS
+              : 0;
+          const closeHoldLayout = delayMs > 0 ? false : holdLayout;
+          scheduleHoverClose(prevHover, { holdLayout: closeHoldLayout, delayMs });
         }
         return slug;
       });
-      applyDeferredBorderShellsForEnter(slug);
     },
     [
-      applyDeferredBorderShellsForEnter,
+      cancelDelayedHoverClose,
       cancelHoverClose,
       categorySlugOrder,
       expandedSlug,
-      hoverClosingSlug,
+      hoverClosingSlugs,
+      scheduleHoverClose,
       startHoverClose,
     ],
   );
@@ -429,7 +398,7 @@ export default function CounselorManageShell({ children }: Props) {
           const toIdx = categorySlugOrder.indexOf(targetSlug);
           if (fromIdx >= 0 && toIdx >= 0 && toIdx < fromIdx) {
             if (
-              hoverClosingSlugRef.current === targetSlug &&
+              hoverClosingSlugRef.current.has(targetSlug) &&
               hoverExpandedSlugRef.current === slug
             ) {
               const switchAt = lastHoverSwitchRef.current;
@@ -477,8 +446,12 @@ export default function CounselorManageShell({ children }: Props) {
       }
 
       const pinned = expandedSlugRef.current;
-      cancelBorderShellDeferredCollapse();
       const slugsToClose = new Set<string>();
+
+      lingerHoverExpandedSlugsRef.current.forEach((s) => {
+        if (s !== pinned) slugsToClose.add(s);
+      });
+      cancelDelayedHoverClose();
 
       const hovering = hoverExpandedSlugRef.current;
       if (hovering != null) {
@@ -489,10 +462,9 @@ export default function CounselorManageShell({ children }: Props) {
         }
       }
 
-      const closing = hoverClosingSlugRef.current;
-      if (closing != null && closing !== pinned) {
-        slugsToClose.add(closing);
-      }
+      hoverClosingSlugRef.current.forEach((s: string) => {
+        if (s !== pinned) slugsToClose.add(s);
+      });
 
       for (const slug of Object.keys(closingLayoutMinHeightsRef.current)) {
         if (slug !== pinned) {
@@ -504,17 +476,17 @@ export default function CounselorManageShell({ children }: Props) {
         startHoverClose(slug, { holdLayout: false });
       });
     },
-    [cancelBorderShellDeferredCollapse, startHoverClose],
+    [cancelDelayedHoverClose, startHoverClose],
   );
 
   useEffect(() => {
     return () => {
-      if (hoverCloseTimerRef.current) {
-        clearTimeout(hoverCloseTimerRef.current);
-      }
-      cancelBorderShellDeferredCollapse();
+      hoverCloseAnimationTimersRef.current.forEach((timer) => clearTimeout(timer));
+      hoverCloseAnimationTimersRef.current.clear();
+      hoverCloseDelayTimersRef.current.forEach((timer) => clearTimeout(timer));
+      hoverCloseDelayTimersRef.current.clear();
     };
-  }, [cancelBorderShellDeferredCollapse]);
+  }, []);
 
   useEffect(() => {
     if (activeCategorySlug) {
@@ -553,8 +525,9 @@ export default function CounselorManageShell({ children }: Props) {
           {sidebarCategories.map((category) => {
             const pinnedExpanded = expandedSlug === category.slug;
             const hoverExpanded = hoverExpandedSlug === category.slug;
-            const hoverClosing = hoverClosingSlug === category.slug;
-            const showSubmenus = pinnedExpanded || hoverExpanded || hoverClosing;
+            const hoverClosing = hoverClosingSlugs.has(category.slug);
+            const lingerExpanded = lingerHoverExpandedSlugs.has(category.slug);
+            const showSubmenus = pinnedExpanded || hoverExpanded || hoverClosing || lingerExpanded;
             const closingLayoutMinHeight = closingLayoutMinHeights[category.slug];
             const categoryEntryHref = getCategoryEntryHref(category, adminUser);
 
@@ -593,15 +566,6 @@ export default function CounselorManageShell({ children }: Props) {
               : 'border-white/10';
 
             const hoverOnlyClosing = hoverClosing && !pinnedExpanded;
-            const borderShellOnly =
-              !pinnedExpanded &&
-              Boolean(closingLayoutMinHeight) &&
-              !hoverExpanded &&
-              !hoverClosing;
-            const frameTransition =
-              hoverOnlyClosing || borderShellOnly
-                ? 'transition-[border-color,box-shadow,min-height] duration-[2000ms]'
-                : 'transition-[border-color,box-shadow] duration-[2000ms]';
 
             return (
               <div
@@ -609,9 +573,11 @@ export default function CounselorManageShell({ children }: Props) {
                 ref={(node) => {
                   categoryBoxRefs.current[category.slug] = node;
                 }}
-                className={`mb-1 rounded-lg border ease-in-out ${
-                  hoverOnlyClosing || borderShellOnly ? 'overflow-hidden' : ''
-                } ${frameTransition} ${categoryFrameClass}`}
+                className={`mb-1 rounded-lg border ease-in-out ${hoverOnlyClosing ? 'overflow-hidden' : ''} ${
+                  hoverOnlyClosing
+                    ? 'transition-[border-color,box-shadow,min-height] duration-[2000ms]'
+                    : 'transition-[border-color,box-shadow] duration-[2000ms]'
+                } ${categoryFrameClass}`}
                 style={
                   !pinnedExpanded && closingLayoutMinHeight
                     ? { minHeight: closingLayoutMinHeight }
