@@ -29,6 +29,7 @@ export interface NotificationChannelStatus {
     sender?: boolean;
   };
   cron: Record<string, string>;
+  clientPortalEmailDispatch?: boolean;
 }
 
 export interface ReminderBatchResult {

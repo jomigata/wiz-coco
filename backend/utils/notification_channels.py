@@ -11,6 +11,7 @@ from config import (
     SOLAPI_SENDER,
     is_email_configured,
 )
+from utils.client_portal_notify_policy import client_portal_email_notify_enabled
 from utils.kakao_alimtalk import get_alimtalk_setup_info, is_alimtalk_configured
 from utils.sms_notify import is_sms_configured, is_twilio_configured
 from utils.solapi_sms import is_solapi_sms_configured
@@ -48,6 +49,7 @@ def get_notification_channel_status() -> dict:
             "sender": bool(SOLAPI_SENDER),
             "setup": alimtalk_setup,
         },
+        "clientPortalEmailDispatch": client_portal_email_notify_enabled(),
         "cron": {
             "notificationWorker": "*/5 * * * *",
             "cohortReminders": "0 0 * * *",

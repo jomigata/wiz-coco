@@ -1141,7 +1141,7 @@ export default function CounselorClientList({
       const targets = selectedItems.filter((item) => clientItemCanRemind(item));
       if (targets.length === 0) {
         setError(
-          '발송 가능한 내담자가 없습니다. (검사 완료 또는 이메일·휴대폰 발송 모두 실패한 경우는 제외됩니다.)',
+          '발송 가능한 내담자가 없습니다. (검사 완료·휴대 미등록·발송 실패 등은 제외됩니다.)',
         );
         return;
       }

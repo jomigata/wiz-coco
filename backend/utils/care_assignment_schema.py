@@ -102,7 +102,18 @@ def validate_create_care_assignment_payload(body: dict | None) -> dict:
     notify_on_assign = True if notify is None else bool(notify)
     notify_channels_raw = body.get("notifyChannels")
     notify_channels = None
-    if notify_channels_raw is not None:
+    from utils.client_portal_notify_policy import (
+        client_portal_email_notify_enabled,
+        normalize_portal_notify_channels,
+    )
+
+    if notify_on_assign:
+        notify_channels = normalize_portal_notify_channels(notify_channels_raw)
+        if not notify_channels or "phone" not in notify_channels:
+            raise CareAssignmentValidationError(
+                "내담자 알림은 휴대폰(알림톡·문자)만 가능합니다."
+            )
+    elif notify_channels_raw is not None:
         if not isinstance(notify_channels_raw, list):
             raise CareAssignmentValidationError("notifyChannels는 배열이어야 합니다.")
         notify_channels = [
@@ -110,10 +121,8 @@ def validate_create_care_assignment_payload(body: dict | None) -> dict:
             for x in notify_channels_raw
             if str(x).strip() in ("email", "phone")
         ]
-        if notify_on_assign and not notify_channels:
-            raise CareAssignmentValidationError(
-                "notifyChannels에 email 또는 phone이 최소 1개 필요합니다."
-            )
+        if not client_portal_email_notify_enabled():
+            notify_channels = [c for c in notify_channels if c != "email"]
 
     metadata = body.get("metadata")
     if metadata is not None and not isinstance(metadata, dict):

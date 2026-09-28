@@ -1,3 +1,5 @@
+import { CLIENT_PORTAL_EMAIL_NOTIFY_ENABLED } from '@/lib/clientPortalNotifyPolicy';
+
 export type DispatchChannelBucket = {
   attempted: number;
   success: number;
@@ -14,7 +16,7 @@ export function formatDispatchChannelSummary(
 ): string {
   if (!summary) return '';
   const lines: string[] = [];
-  if (summary.email.attempted > 0) {
+  if (CLIENT_PORTAL_EMAIL_NOTIFY_ENABLED && summary.email.attempted > 0) {
     lines.push(`이메일 성공 ${summary.email.success} · 실패 ${summary.email.failed}`);
   }
   if (summary.phone.attempted > 0) {

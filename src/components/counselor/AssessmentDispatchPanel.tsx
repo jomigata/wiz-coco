@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
@@ -96,7 +96,8 @@ import {
 import { CounselorDispatchRecipientExpandContent } from '@/components/counselor/CounselorDispatchRecipientExpandDetail';
 import { CounselorRecipientExpandLeadingCells } from '@/components/counselor/CounselorRecipientExpandRowCells';
 import CounselorNotifyConfirmDialog from '@/components/counselor/CounselorNotifyConfirmDialog';
-import type { NotifyRecipientContact } from '@/lib/counselorNotifyChannels';
+import { recipientHasNotifyPhone, type NotifyRecipientContact } from '@/lib/counselorNotifyChannels';
+import { CLIENT_PORTAL_EMAIL_NOTIFY_ENABLED } from '@/lib/clientPortalNotifyPolicy';
 import AssessmentAddRecipientModal, {
   type AssessmentAddRecipientContext,
 } from '@/components/counselor/AssessmentAddRecipientModal';
@@ -106,6 +107,13 @@ import { LoadingMessage } from '@/components/ui/LoadingMessage';
 const DISPATCH_PAGE_SIZE = 50;
 /** 탭 재포커스 시 silent load 최소 간격 */
 const DISPATCH_VISIBILITY_REFRESH_MS = 60_000;
+
+function isRecipientNotifyEligible(r: { email?: string | null; phone?: string | null }): boolean {
+  if (CLIENT_PORTAL_EMAIL_NOTIFY_ENABLED) {
+    return Boolean((r.email || '').trim() || normalizeRecipientPhone(r.phone || ''));
+  }
+  return recipientHasNotifyPhone(r);
+}
 
 function myCodeWithOriginSuffix(
   r: DispatchRecipient,
@@ -148,7 +156,11 @@ function notifyErrorHint(error: string | null | undefined): string | undefined {
   const err = (error || '').trim();
   if (!err) return undefined;
   if (err.includes('invalid_phone')) return '휴대폰 번호 형식(11자리)을 확인해 주세요.';
-  if (err.includes('no_recipient')) return '이메일·휴대폰 정보가 없습니다.';
+  if (err.includes('no_recipient')) {
+    return CLIENT_PORTAL_EMAIL_NOTIFY_ENABLED
+      ? '이메일·휴대폰 정보가 없습니다.'
+      : '휴대폰(알림톡·문자) 번호가 없습니다.';
+  }
   if (err.includes('email_send_failed')) return '이메일 발송에 실패했습니다.';
   if (err.includes('phone_send_failed')) return '문자·알림톡 발송에 실패했습니다.';
   if (err.includes('alimtalk_sender_equals_recipient') || err.includes('sms_sender_equals_recipient')) {
@@ -248,7 +260,7 @@ function hasCredentialBeenSent(r: DispatchRecipient): boolean {
 }
 
 function resolveCredentialSendMode(recipients: DispatchRecipient[]): CredentialSendMode {
-  const eligible = recipients.filter((r) => r.email || r.phone);
+  const eligible = recipients.filter((r) => isRecipientNotifyEligible(r));
   if (!eligible.length) return 'resend';
   const sentBefore = eligible.filter(hasCredentialBeenSent);
   if (sentBefore.length === 0) return 'initial';
@@ -1134,7 +1146,7 @@ export default function AssessmentDispatchPanel({
     if (selected.size === 0) return;
     if (remindEligibleSelected.length === 0) {
       setError(
-        '발송 가능한 내담자가 없습니다. (검사 완료 또는 이메일·휴대폰 발송 모두 실패한 경우는 제외됩니다.)',
+        '발송 가능한 내담자가 없습니다. (검사 완료·휴대 미등록·발송 실패 등은 제외됩니다.)',
       );
       return;
     }
@@ -1152,12 +1164,12 @@ export default function AssessmentDispatchPanel({
   );
 
   const resendEligibleSelected = useMemo(
-    () => selectedRecipients.filter((r) => !isMovedOutRecipient(r) && (r.email || r.phone)),
+    () => selectedRecipients.filter((r) => !isMovedOutRecipient(r) && isRecipientNotifyEligible(r)),
     [selectedRecipients],
   );
 
   const resendSkippedSelected = useMemo(
-    () => selectedRecipients.filter((r) => !r.email && !r.phone),
+    () => selectedRecipients.filter((r) => !isRecipientNotifyEligible(r)),
     [selectedRecipients],
   );
 

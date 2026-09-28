@@ -1,5 +1,6 @@
 import { normalizeRecipientPhone } from '@/lib/phoneFormat';
 import { isValidEmailAddress } from '@/lib/emailValidation';
+import { CLIENT_PORTAL_EMAIL_NOTIFY_ENABLED } from '@/lib/clientPortalNotifyPolicy';
 import {
   POINT_COST_INITIAL_RECIPIENT_DISPATCH,
   POINT_COST_RESEND_PHONE,
@@ -48,27 +49,34 @@ export function estimateCredentialResendPointForRecipient(r: NotifyRecipientCont
 export function defaultNotifyChannelSelection(
   recipients: NotifyRecipientContact[],
 ): NotifyChannelSelection {
-  const hasEmail = recipients.some((r) => isValidEmailAddress((r.email || '').trim()));
   const hasPhone = recipients.some((r) => Boolean(normalizeRecipientPhone(r.phone || '')));
-  return {
-    email: hasEmail,
-    phone: hasPhone,
-  };
+  if (CLIENT_PORTAL_EMAIL_NOTIFY_ENABLED) {
+    const hasEmail = recipients.some((r) => isValidEmailAddress((r.email || '').trim()));
+    return { email: hasEmail, phone: hasPhone };
+  }
+  return { email: false, phone: hasPhone };
 }
 
 export function notifyChannelsToPayload(selection: NotifyChannelSelection): NotifyChannelKey[] {
-  const out: NotifyChannelKey[] = [];
-  if (selection.email) out.push('email');
-  if (selection.phone) out.push('phone');
-  return out;
+  if (CLIENT_PORTAL_EMAIL_NOTIFY_ENABLED) {
+    const out: NotifyChannelKey[] = [];
+    if (selection.email) out.push('email');
+    if (selection.phone) out.push('phone');
+    return out;
+  }
+  return selection.phone ? ['phone'] : [];
 }
 
 export function validateNotifyChannelSelection(
   selection: NotifyChannelSelection,
   recipients: NotifyRecipientContact[],
 ): string | null {
-  if (!selection.email && !selection.phone) {
-    return '이메일 또는 휴대폰(1포인트) 중 최소 1개를 선택해 주세요.';
+  if (CLIENT_PORTAL_EMAIL_NOTIFY_ENABLED) {
+    if (!selection.email && !selection.phone) {
+      return '이메일 또는 휴대폰(1포인트) 중 최소 1개를 선택해 주세요.';
+    }
+  } else if (!selection.phone) {
+    return '휴대폰(알림톡·문자) 발송을 위해 번호가 있는 내담자를 선택해 주세요.';
   }
   if (selection.email) {
     const emailCount = recipients.filter((r) =>
@@ -120,7 +128,9 @@ export function estimateNotifyPointCost(
     return recipients.length * POINT_COST_INITIAL_RECIPIENT_DISPATCH;
   }
   const { emailCount, phoneCount } = countNotifyTargets(recipients, selection);
-  const notifyCount = Math.max(emailCount, phoneCount, 0);
+  const notifyCount = CLIENT_PORTAL_EMAIL_NOTIFY_ENABLED
+    ? Math.max(emailCount, phoneCount, 0)
+    : phoneCount;
   if (notifyCount === 0 && recipients.length > 0) {
     return recipients.length * POINT_COST_INITIAL_RECIPIENT_DISPATCH;
   }
@@ -192,11 +202,13 @@ export function formatNotifyPointSummary(
     ? [`대상: ${recipientCount}명`]
     : [
         `대상: ${recipientCount}명`,
-        selection.email ? `이메일 ${emailCount}건 (0포인트)` : null,
+        CLIENT_PORTAL_EMAIL_NOTIFY_ENABLED && selection.email
+          ? `이메일 ${emailCount}건 (0포인트)`
+          : null,
         selection.phone
           ? isResend || isRemind
             ? `휴대폰 ${phoneCount}건 (재전송 1회 무료 · 2회째 ${formatPoints(POINT_COST_RESEND_PHONE)})`
-            : `발송 ${recipientCount}명 (${formatPoints(POINT_COST_INITIAL_RECIPIENT_DISPATCH)}/명, 성공 시)`
+            : `휴대폰 ${phoneCount}건 (알림톡·문자)`
           : !isResend && !isRemind && recipientCount > 0
             ? `발송 ${recipientCount}명 (${formatPoints(POINT_COST_INITIAL_RECIPIENT_DISPATCH)}/명, 성공 시)`
             : isResend || isRemind
@@ -217,4 +229,8 @@ export function creditsRequiredForNotify(
 ): number {
   const points = estimateNotifyPointCost(recipients, selection);
   return Math.ceil(points / assessmentCreditsToPoints(1));
+}
+
+export function recipientHasNotifyPhone(r: { phone?: string | null }): boolean {
+  return Boolean(normalizeRecipientPhone(r.phone || ''));
 }

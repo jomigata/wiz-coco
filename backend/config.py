@@ -36,6 +36,14 @@ MAIL_FROM = os.getenv("MAIL_FROM", "noreply@wizcoco.example.com")
 def is_email_configured():
     return bool(SMTP_HOST and SMTP_USER and SMTP_PASSWORD)
 
+
+# 내담자 포털 발송 — false(기본): 알림톡·SMS만. true: legacy 이메일 채널 허용
+CLIENT_PORTAL_NOTIFY_EMAIL = os.getenv("CLIENT_PORTAL_NOTIFY_EMAIL", "false").lower() in (
+    "1",
+    "true",
+    "yes",
+)
+
 # Rate limiting (requests per minute; 0 = disabled)
 RATE_LIMIT_ACCESS_CODE = int(os.getenv("RATE_LIMIT_ACCESS_CODE", "30"))
 RATE_LIMIT_PASSWORD_API = int(os.getenv("RATE_LIMIT_PASSWORD_API", "20"))

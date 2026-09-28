@@ -1,4 +1,5 @@
 import type { ArchivedDispatchRecipient } from '@/lib/clientPortalApi';
+import { CLIENT_PORTAL_EMAIL_NOTIFY_ENABLED } from '@/lib/clientPortalNotifyPolicy';
 import { formatPhoneDisplay } from '@/lib/phoneFormat';
 
 export type DispatchDisplayRecipient = {
@@ -121,7 +122,11 @@ export function recipientProgressDisplay(input: {
 function notifyErrorHint(error: string | null | undefined): string | undefined {
   const err = (error || '').trim();
   if (!err) return undefined;
-  if (err.includes('no_recipient')) return '이메일·휴대폰 정보가 없습니다.';
+  if (err.includes('no_recipient')) {
+    return CLIENT_PORTAL_EMAIL_NOTIFY_ENABLED
+      ? '이메일·휴대폰 정보가 없습니다.'
+      : '휴대폰(알림톡·문자) 번호가 없습니다.';
+  }
   if (err.includes('email_send_failed')) return '이메일 발송에 실패했습니다.';
   if (err.includes('phone_send_failed')) return '문자·알림톡 발송에 실패했습니다.';
   if (err.includes('sms_sender_equals_recipient') || err.includes('alimtalk_sender_equals_recipient')) {

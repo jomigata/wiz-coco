@@ -760,18 +760,19 @@ def bulk_create():
 
     from utils.email_validation import is_valid_recipient_email
     from utils.phone_format import is_valid_kr_mobile_phone
+    from utils.client_portal_notify_policy import (
+        validate_portal_notify_channels_for_send,
+        validate_recipient_contact_row,
+    )
 
     for idx, row in enumerate(normalized_rows, start=1):
         email = (row.get("email") or "").strip()
         phone = (row.get("phone") or "").strip()
-        if not email and not phone:
+        queue_notify = bool(row.get("queueNotify"))
+        row_err = validate_recipient_contact_row(phone=phone, email=email, queue_notify=queue_notify)
+        if row_err:
             return (
-                jsonify(
-                    {
-                        "error": "Bad Request",
-                        "message": f"{idx}번째 내담자: 휴대폰 또는 이메일 중 하나는 필요합니다.",
-                    }
-                ),
+                jsonify({"error": "Bad Request", "message": f"{idx}번째 내담자: {row_err}"}),
                 400,
             )
         if email and not is_valid_recipient_email(email):
@@ -784,7 +785,7 @@ def bulk_create():
                 ),
                 400,
             )
-        if phone and not is_valid_kr_mobile_phone(phone):
+        if phone and not queue_notify and not is_valid_kr_mobile_phone(normalize_recipient_phone(phone)):
             return (
                 jsonify(
                     {
@@ -803,6 +804,11 @@ def bulk_create():
     )
 
     notify_channels = _normalize_notify_channels(body.get("notifyChannels"))
+
+    if any_notify:
+        channel_err = validate_portal_notify_channels_for_send(notify_channels)
+        if channel_err:
+            return jsonify({"error": "Bad Request", "message": channel_err}), 400
 
     if scheduled_at_raw and any_notify:
         try:
@@ -1130,6 +1136,11 @@ def resend_dispatch(assessment_id):
     from utils.assessment_dispatch import _normalize_notify_channels
 
     notify_channels = _normalize_notify_channels(body.get("notifyChannels"))
+    from utils.client_portal_notify_policy import validate_portal_notify_channels_for_send
+
+    channel_err = validate_portal_notify_channels_for_send(notify_channels)
+    if channel_err:
+        return jsonify({"error": "Bad Request", "message": channel_err}), 400
     db = get_firestore()
     try:
         result = resend_portal_credentials(
@@ -1186,6 +1197,11 @@ def remind_dispatch(assessment_id):
     from utils.assessment_dispatch import _normalize_notify_channels
 
     notify_channels = _normalize_notify_channels(body.get("notifyChannels"))
+    from utils.client_portal_notify_policy import validate_portal_notify_channels_for_send
+
+    channel_err = validate_portal_notify_channels_for_send(notify_channels)
+    if channel_err:
+        return jsonify({"error": "Bad Request", "message": channel_err}), 400
     db = get_firestore()
     try:
         result = send_test_reminders(

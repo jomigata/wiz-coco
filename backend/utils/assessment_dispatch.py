@@ -1124,20 +1124,9 @@ def get_dispatch_recipient_detail(
 
 
 def _normalize_notify_channels(raw) -> list[str] | None:
-    if raw is None:
-        return None
-    if isinstance(raw, str):
-        items = [raw]
-    elif isinstance(raw, list):
-        items = raw
-    else:
-        return None
-    out: list[str] = []
-    for item in items:
-        value = str(item or "").strip().lower()
-        if value in ("email", "phone") and value not in out:
-            out.append(value)
-    return out or None
+    from utils.client_portal_notify_policy import normalize_portal_notify_channels
+
+    return normalize_portal_notify_channels(raw)
 
 
 def _will_use_phone_channel(email: str, phone: str, notify_channels: list[str] | None) -> bool:
@@ -1153,14 +1142,9 @@ def _apply_notify_channels_to_contact(
     phone: str,
     notify_channels: list[str] | None,
 ) -> tuple[str, str]:
-    if notify_channels is None:
-        return email, phone
-    allowed = set(notify_channels)
-    if "email" not in allowed:
-        email = ""
-    if "phone" not in allowed:
-        phone = ""
-    return email, phone
+    from utils.client_portal_notify_policy import apply_portal_notify_contact
+
+    return apply_portal_notify_contact(email, phone, notify_channels)
 
 
 def _ensure_notify_phone_credits(db, counselor_uid: str | None, phone_send_count: int) -> None:

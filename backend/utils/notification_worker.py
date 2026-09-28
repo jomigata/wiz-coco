@@ -941,12 +941,9 @@ def deliver_portal_credentials(
     """나의코드·PIN 등 포털 접속 정보를 이메일·문자로 즉시 발송."""
     email = (email or "").strip().lower()
     phone = (phone or "").strip()
-    if allowed_channels is not None:
-        allowed = set(allowed_channels)
-        if "email" not in allowed:
-            email = ""
-        if "phone" not in allowed:
-            phone = ""
+    from utils.client_portal_notify_policy import apply_portal_notify_contact
+
+    email, phone = apply_portal_notify_contact(email, phone, allowed_channels)
     long_magic_url = f"{PUBLIC_SITE_URL.rstrip('/')}{magic_path}" if magic_path else PUBLIC_SITE_URL
     portal_id_str = portal_ref.id if portal_ref is not None else ""
     magic_url = _apply_short_go_url(
@@ -1169,12 +1166,9 @@ def deliver_test_reminder(
     """미실시·미완료 검사 현황과 검사 연결 링크를 이메일·문자로 즉시 발송."""
     email = (email or "").strip().lower()
     phone = (phone or "").strip()
-    if allowed_channels is not None:
-        allowed = set(allowed_channels)
-        if "email" not in allowed:
-            email = ""
-        if "phone" not in allowed:
-            phone = ""
+    from utils.client_portal_notify_policy import apply_portal_notify_contact
+
+    email, phone = apply_portal_notify_contact(email, phone, allowed_channels)
     long_magic_url = f"{PUBLIC_SITE_URL.rstrip('/')}{magic_path}" if magic_path else PUBLIC_SITE_URL
     portal_id_str = portal_ref.id if portal_ref is not None else ""
     magic_url = _apply_short_go_url(
@@ -1354,12 +1348,9 @@ def deliver_care_assignment(
     """치료·과제 할당 안내를 이메일·문자로 즉시 발송."""
     email = (email or "").strip().lower()
     phone = (phone or "").strip()
-    if allowed_channels is not None:
-        allowed = set(allowed_channels)
-        if "email" not in allowed:
-            email = ""
-        if "phone" not in allowed:
-            phone = ""
+    from utils.client_portal_notify_policy import apply_portal_notify_contact
+
+    email, phone = apply_portal_notify_contact(email, phone, allowed_channels)
     long_magic_url = f"{PUBLIC_SITE_URL.rstrip('/')}{magic_path}" if magic_path else PUBLIC_SITE_URL
     magic_url = _apply_short_go_url(
         magic_path=magic_path,

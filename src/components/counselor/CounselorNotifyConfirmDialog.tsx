@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { fetchMyCredits } from '@/lib/commerceApi';
+import { CLIENT_PORTAL_EMAIL_NOTIFY_ENABLED } from '@/lib/clientPortalNotifyPolicy';
 import {
   defaultNotifyChannelSelection,
   formatNotifyPointSummary,
@@ -179,7 +180,8 @@ export default function CounselorNotifyConfirmDialog({
   const [balancePoints, setBalancePoints] = useState(0);
   const [balanceLoading, setBalanceLoading] = useState(false);
 
-  const channelUiHidden = hideChannels || kind === 'add_recipient' || kind === 'remind';
+  const channelUiHidden =
+    hideChannels || kind === 'add_recipient' || kind === 'remind' || kind === 'resend' || !CLIENT_PORTAL_EMAIL_NOTIFY_ENABLED;
   const pushCareSummary = kind === 'push' || kind === 'care';
 
   useEffect(() => {
@@ -281,22 +283,22 @@ export default function CounselorNotifyConfirmDialog({
               미실시 알림 1회 무료 · 2회째부터{' '}
               <span className="text-amber-300">{formatPoints(POINT_COST_RESEND_PHONE)}</span>/명
             </p>
-          ) : channelUiHidden ? (
-            <p className="mt-1 text-sm text-slate-400">
-              등록된 연락처로 나의코드·안내가 발송됩니다.
-            </p>
           ) : kind === 'resend' ? (
             <p className="mt-1 text-sm text-slate-400">
-              최초 전달(미발송·전체 실패)은 성공 시{' '}
+              등록된 휴대폰으로 알림톡·문자(나의코드·안내)가 발송됩니다. 최초 전달(미발송·전체 실패) 성공 시{' '}
               <span className="text-amber-300">
                 {formatPoints(POINT_COST_INITIAL_RECIPIENT_DISPATCH)}
               </span>
               /명 · 재전송 1회 무료 · 2회째{' '}
               <span className="text-amber-300">{formatPoints(POINT_COST_RESEND_PHONE)}</span>/명
             </p>
+          ) : channelUiHidden ? (
+            <p className="mt-1 text-sm text-slate-400">
+              등록된 휴대폰으로 알림톡·문자(나의코드·안내)가 발송됩니다.
+            </p>
           ) : (
             <p className="mt-1 text-sm text-slate-400">
-              이메일·휴대폰 발송 성공 시 내담자 1명당{' '}
+              휴대폰(알림톡·문자) 발송 성공 시 내담자 1명당{' '}
               <span className="text-amber-300">
                 {formatPoints(POINT_COST_INITIAL_RECIPIENT_DISPATCH)}
               </span>
@@ -334,9 +336,7 @@ export default function CounselorNotifyConfirmDialog({
                   <span className="font-semibold text-white">휴대폰</span>
                   <span className="text-amber-300">
                     {' '}
-                    (
-                    {kind === 'resend' ? `2회째 ${formatPoints(POINT_COST_RESEND_PHONE)}` : '0포인트'}
-                    /건)
+                    (0포인트/건)
                   </span>
                 </span>
               </label>

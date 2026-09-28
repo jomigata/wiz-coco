@@ -24,6 +24,7 @@ import CounselorActionCompleteModal, {
 import CounselorNotifyConfirmDialog from '@/components/counselor/CounselorNotifyConfirmDialog';
 import type { NotifyRecipientContact } from '@/lib/counselorNotifyChannels';
 import { isValidEmailAddress } from '@/lib/emailValidation';
+import { CLIENT_PORTAL_EMAIL_NOTIFY_ENABLED } from '@/lib/clientPortalNotifyPolicy';
 
 type TargetSortKey = 'input' | 'name' | 'phone' | 'email' | 'invalid';
 type TargetSortDir = 'asc' | 'desc';
@@ -202,9 +203,10 @@ function TargetRowContactDisplay({ row }: { row: RecipientRow }) {
   );
 }
 
-function targetRowInvalid(row: RecipientRow): boolean {
+function targetRowInvalid(row: RecipientRow, options?: { requirePhone?: boolean }): boolean {
   const phone = normalizeRecipientPhone(row.phone);
   const email = (row.email || '').trim();
+  if (options?.requirePhone && !phone) return true;
   if (!phone && !email) return true;
   if (phone && !isValidKrMobilePhone(phone)) return true;
   if (email && !isValidEmailAddress(email)) return true;
@@ -249,6 +251,7 @@ function validateIndividualDraftForAssessment(
   draftEmail: string,
   pendingAndImportedRows: RecipientRow[],
   registeredRows: RecipientRow[],
+  options?: { requirePhone?: boolean },
 ): string | null {
   const name = draftName.trim();
   if (!name) {
@@ -258,8 +261,13 @@ function validateIndividualDraftForAssessment(
   const phoneNorm = normalizeRecipientPhone(draftPhone);
   const email = draftEmail.trim().toLowerCase();
 
+  if (options?.requirePhone && !phoneNorm) {
+    return '즉시 발송 시 휴대폰 번호(11자리)를 입력해 주세요.';
+  }
   if (!phoneNorm && !email) {
-    return '휴대폰과 이메일 둘 중 하나 이상 입력해 주세요.';
+    return CLIENT_PORTAL_EMAIL_NOTIFY_ENABLED
+      ? '휴대폰과 이메일 둘 중 하나 이상 입력해 주세요.'
+      : '휴대폰 번호(11자리)를 입력해 주세요.';
   }
 
   const scopeRows = [...registeredRows, ...pendingAndImportedRows];
@@ -637,6 +645,7 @@ export default function AssessmentAddRecipientModal({
       draftEmail,
       combinedRows,
       registeredRowsForDuplicate,
+      addSendNow && !CLIENT_PORTAL_EMAIL_NOTIFY_ENABLED ? { requirePhone: true } : undefined,
     );
     if (validationError) {
       setInvalidBulkDeleteOffer(false);
@@ -790,10 +799,16 @@ export default function AssessmentAddRecipientModal({
       setAddError('개별 입력 또는 파일에서 내담자 1명 이상을 추가해 주세요.');
       return;
     }
-    const validRows = rows.filter((r) => !targetRowInvalid(r));
+    const notifyRowOpts =
+      addSendNow && !CLIENT_PORTAL_EMAIL_NOTIFY_ENABLED ? { requirePhone: true as const } : undefined;
+    const validRows = rows.filter((r) => !targetRowInvalid(r, notifyRowOpts));
     if (validRows.length === 0) {
       setInvalidBulkDeleteOffer(false);
-      setAddError('유효한 내담자가 없습니다. 연락처(휴대폰·이메일)를 확인해 주세요.');
+      setAddError(
+        notifyRowOpts
+          ? '즉시 발송하려면 유효한 휴대폰(11자리)이 있는 내담자가 필요합니다.'
+          : '유효한 내담자가 없습니다. 연락처(휴대폰·이메일)를 확인해 주세요.',
+      );
       return;
     }
     setAddError('');
@@ -808,8 +823,10 @@ export default function AssessmentAddRecipientModal({
   const executeSubmit = async (notifyChannels: ('email' | 'phone')[] | undefined) => {
     if (!context) return;
     const rows = combinedRows;
-    const validRows = rows.filter((r) => !targetRowInvalid(r));
-    const excludedInvalid = rows.filter((r) => targetRowInvalid(r));
+    const notifyRowOpts =
+      addSendNow && !CLIENT_PORTAL_EMAIL_NOTIFY_ENABLED ? { requirePhone: true as const } : undefined;
+    const validRows = rows.filter((r) => !targetRowInvalid(r, notifyRowOpts));
+    const excludedInvalid = rows.filter((r) => targetRowInvalid(r, notifyRowOpts));
     const cohortName = (context.cohortName || context.title || '내담자').trim();
     const targetCount = validRows.length;
     const dispatchSummary = buildAddRecipientDispatchSummary({

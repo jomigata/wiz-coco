@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import { formatPhoneDisplay, isValidKrMobilePhone, normalizeRecipientPhone } from '@/lib/phoneFormat';
 import { isValidEmailAddress } from '@/lib/emailValidation';
+import { CLIENT_PORTAL_EMAIL_NOTIFY_ENABLED } from '@/lib/clientPortalNotifyPolicy';
 
 export type CounselorRecipientContactEditTarget = {
   displayName?: string;
@@ -23,7 +24,11 @@ type Props = {
 export function validateRecipientContactEdit(phoneInput: string, emailInput: string): string | null {
   const phone = normalizeRecipientPhone(phoneInput);
   const email = emailInput.trim().toLowerCase();
-  if (!phone && !email) return '휴대폰 또는 이메일 중 하나 이상 입력해 주세요.';
+  if (CLIENT_PORTAL_EMAIL_NOTIFY_ENABLED) {
+    if (!phone && !email) return '휴대폰 또는 이메일 중 하나 이상 입력해 주세요.';
+  } else if (!phone) {
+    return '휴대폰 번호(11자리)를 입력해 주세요. (발송은 알림톡·문자만 가능)';
+  }
   if (email && !isValidEmailAddress(email)) return '이메일 형식을 확인해 주세요.';
   if (phone && !isValidKrMobilePhone(phone)) {
     return '휴대폰 번호는 11자리(010-1234-5678) 형식으로 입력해 주세요.';
@@ -119,6 +124,7 @@ export default function CounselorRecipientContactEditModal({
               className="w-full rounded-lg border border-white/15 bg-slate-900/80 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500/40"
             />
           </div>
+          {CLIENT_PORTAL_EMAIL_NOTIFY_ENABLED ? (
           <div className="rounded-lg border border-white/10 bg-slate-900/30 px-3 py-3">
             <label htmlFor="recipient-edit-email" className="mb-1.5 block text-xs font-semibold text-slate-400">
               이메일
@@ -132,6 +138,11 @@ export default function CounselorRecipientContactEditModal({
               className="w-full rounded-lg border border-white/15 bg-slate-900/80 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500/40"
             />
           </div>
+          ) : (
+            <p className="text-xs text-slate-500">
+              내담자 안내는 휴대폰(알림톡·문자)으로만 발송됩니다.
+            </p>
+          )}
           {error || (liveValidation && (phone.trim() || email.trim()) && !saving) ? (
             <p className="text-sm text-red-400" role="alert">
               {error || liveValidation}
