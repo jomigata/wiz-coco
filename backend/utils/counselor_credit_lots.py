@@ -10,10 +10,9 @@ from utils.points_display import POINTS_PER_ASSESSMENT_CREDIT
 
 
 def _lots_query(db, counselor_uid: str):
-    return (
-        db.collection(COUNSELOR_CREDIT_LOTS_COLLECTION)
-        .where("counselorUid", "==", counselor_uid)
-        .where("pointsRemaining", ">", 0)
+    """counselorUid만 Firestore 필터 — pointsRemaining은 Python에서 필터(복합 인덱스 불필요)."""
+    return db.collection(COUNSELOR_CREDIT_LOTS_COLLECTION).where(
+        "counselorUid", "==", counselor_uid
     )
 
 
