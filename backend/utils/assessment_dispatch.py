@@ -909,11 +909,7 @@ def get_assessment_dispatch_status(
     portal_ids = [pid for pid, _ in page_rows]
 
     notify_map = _latest_notify_by_portal(db, set(portal_ids))
-    completion_map = (
-        _bulk_completed_tests_by_portal_assessment(db, portal_ids, {assessment_id})
-        if expand_tests
-        else {}
-    )
+    completion_map = _bulk_completed_tests_by_portal_assessment(db, portal_ids, {assessment_id})
     test_results_map = (
         _bulk_test_results_by_portal_assessment(db, portal_ids, assessment_id)
         if expand_tests
@@ -934,14 +930,7 @@ def get_assessment_dispatch_status(
         notify_at = _resolve_notify_at(notify, pdata, notify_status)
         summary = pdata.get("dispatchSummary") or {}
         completed = completion_map.get((portal_id, assessment_id), set())
-        if expand_tests or not summary:
-            test_info = _test_status_from_completed(completed, required)
-        else:
-            test_info = {
-                "testStatus": (summary.get("testStatus") or "not_started").strip(),
-                "completedCount": int(summary.get("completedCount") or 0),
-                "requiredCount": int(summary.get("requiredCount") or required_count),
-            }
+        test_info = _test_status_from_completed(completed, required)
         tests_payload = (
             _test_detail_rows_from_map(test_results_map.get(portal_id) or {}, test_list)
             if expand_tests
@@ -974,7 +963,9 @@ def get_assessment_dispatch_status(
             if (
                 not summary
                 or (summary.get("notifyStatus") or "") != notify_status
-                or int(summary.get("requiredCount") or 0) != required_count
+                or (summary.get("testStatus") or "") != (test_info.get("testStatus") or "")
+                or int(summary.get("completedCount") or 0) != int(test_info.get("completedCount") or 0)
+                or int(summary.get("requiredCount") or 0) != int(test_info.get("requiredCount") or 0)
             ):
                 patch_portal_dispatch_summary(
                     db,
