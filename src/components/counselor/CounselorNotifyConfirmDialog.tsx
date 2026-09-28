@@ -97,20 +97,9 @@ function AddRecipientConfirmSummary({
 
         <div className="rounded-xl border border-emerald-500/20 bg-gradient-to-r from-emerald-950/40 to-slate-900/30 px-3.5 py-3">
           <p className="text-[11px] font-semibold text-emerald-300/90">발송 내용</p>
-          <p className="mt-1.5 leading-relaxed">
-            <span className="text-sm font-semibold text-white">나의코드</span>
-            <span className="text-xs text-slate-300">와 </span>
-            <span className="text-sm font-semibold text-white">비밀번호</span>
-            <span className="text-xs text-slate-300">
-              를 등록된 이메일과 휴대폰으로 전달합니다.
-            </span>
-          </p>
-          <p className="mt-2 text-xs leading-relaxed text-slate-300">
-            발송 성공 시{' '}
-            <span className="font-semibold tabular-nums text-amber-200/90">
-              {formatPoints(POINT_COST_INITIAL_RECIPIENT_DISPATCH)}(1명당)
-            </span>{' '}
-            차감합니다.
+          <p className="mt-1.5 text-sm leading-relaxed text-slate-200">
+            <span className="font-semibold text-white">나의코드</span>
+            와 <span className="font-semibold text-white">비밀번호</span>를 휴대폰으로 전달합니다.
           </p>
         </div>
 
@@ -129,7 +118,7 @@ function AddRecipientConfirmSummary({
         ) : (
           <div className="grid grid-cols-2 gap-2">
             <div className="rounded-xl border border-amber-400/25 bg-gradient-to-br from-amber-950/50 to-amber-900/15 px-3 py-2.5">
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-amber-300/80">예상 차감</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-amber-300/80">포인트 차감</p>
               <p className="mt-1 text-lg font-bold tabular-nums text-amber-50">
                 {formatPoints(usePoints)}
               </p>
