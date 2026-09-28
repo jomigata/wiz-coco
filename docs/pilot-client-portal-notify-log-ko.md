@@ -1,7 +1,7 @@
 # 파일럿: 내담자 포털 휴대(알림톡) 전용 발송
 
 **기간:** 2026-09-28 ~ 2026-10-12  
-**prod baseline:** Hosting/API `8e285087` — `clientPortalEmailDispatch: false`
+**prod baseline:** Hosting `78feafaf` (2026-09-28) — API `8e285087` — `clientPortalEmailDispatch: false`
 
 ## Day 0 (2026-09-28)
 
