@@ -77,7 +77,7 @@ export {
   hideNextTestRecommendation as dismissNextTestRecommendation,
   isNextTestRecommendationHidden as isNextTestRecommendationDismissed,
   restoreNextTestRecommendation,
-  readNextTestRecommendationSent,
-  writeNextTestRecommendationSent,
-  clearNextTestRecommendationSent,
+  readNextTestRecommendationScheduled,
+  writeNextTestRecommendationScheduled,
+  clearNextTestRecommendationScheduled,
 } from '@/lib/counselorRecommendCardState';

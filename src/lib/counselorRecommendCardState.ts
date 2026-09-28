@@ -6,6 +6,11 @@ export type RecommendCardSentSnapshot = {
   scheduledAt?: string;
 };
 
+export type RecommendCardScheduledSnapshot = {
+  scheduledAt: string;
+  statusText: string;
+};
+
 const NEXT_DISMISS = 'counselorNextRecoDismissed:';
 const NEXT_SENT = 'counselorNextRecoSent:';
 const CARE_DISMISS = 'counselorQuickCareDismissed:';
@@ -93,6 +98,49 @@ export function clearNextTestRecommendationSent(
   safeRemove(`${NEXT_SENT}${portalId}:${assessmentId}:${testId}`);
 }
 
+export function readNextTestRecommendationScheduled(
+  portalId: string,
+  assessmentId: string,
+  testId: string,
+): RecommendCardScheduledSnapshot | null {
+  const raw = safeGet(`${NEXT_SENT}${portalId}:${assessmentId}:${testId}`);
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as RecommendCardSentSnapshot;
+    if (!parsed.scheduledAt) return null;
+    return {
+      scheduledAt: parsed.scheduledAt,
+      statusText: parsed.statusText || `예약 · ${formatScheduleLabel(parsed.scheduledAt)}`,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function writeNextTestRecommendationScheduled(
+  portalId: string,
+  assessmentId: string,
+  testId: string,
+  snapshot: RecommendCardScheduledSnapshot,
+): void {
+  safeSet(
+    `${NEXT_SENT}${portalId}:${assessmentId}:${testId}`,
+    JSON.stringify({
+      statusText: snapshot.statusText,
+      statusClassName: 'text-amber-300',
+      scheduledAt: snapshot.scheduledAt,
+    }),
+  );
+}
+
+export function clearNextTestRecommendationScheduled(
+  portalId: string,
+  assessmentId: string,
+  testId: string,
+): void {
+  clearNextTestRecommendationSent(portalId, assessmentId, testId);
+}
+
 export function isQuickCareRecommendationHidden(portalId: string, presetId: string): boolean {
   return safeGet(quickCareDismissKey(portalId, presetId)) === '1';
 }
@@ -128,6 +176,43 @@ export function writeQuickCareRecommendationSent(
 
 export function clearQuickCareRecommendationSent(portalId: string, presetId: string): void {
   safeRemove(`${CARE_SENT}${portalId}:${presetId}`);
+}
+
+export function readQuickCareRecommendationScheduled(
+  portalId: string,
+  presetId: string,
+): RecommendCardScheduledSnapshot | null {
+  const raw = safeGet(`${CARE_SENT}${portalId}:${presetId}`);
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as RecommendCardSentSnapshot;
+    if (!parsed.scheduledAt) return null;
+    return {
+      scheduledAt: parsed.scheduledAt,
+      statusText: parsed.statusText || `예약 · ${formatScheduleLabel(parsed.scheduledAt)}`,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function writeQuickCareRecommendationScheduled(
+  portalId: string,
+  presetId: string,
+  snapshot: RecommendCardScheduledSnapshot,
+): void {
+  safeSet(
+    `${CARE_SENT}${portalId}:${presetId}`,
+    JSON.stringify({
+      statusText: snapshot.statusText,
+      statusClassName: 'text-amber-300',
+      scheduledAt: snapshot.scheduledAt,
+    }),
+  );
+}
+
+export function clearQuickCareRecommendationScheduled(portalId: string, presetId: string): void {
+  clearQuickCareRecommendationSent(portalId, presetId);
 }
 
 export function formatRecommendNotifyStatusText(opts: {

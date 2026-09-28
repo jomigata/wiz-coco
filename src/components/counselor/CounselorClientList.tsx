@@ -717,6 +717,7 @@ export default function CounselorClientList({
   const [loading, setLoading] = useState(() =>
     deletedMode || permanentlyDeletedMode ? true : !initialCached?.items?.length,
   );
+  const [careListRefresh, setCareListRefresh] = useState(0);
 
   useEffect(() => {
     void listAssessments()
@@ -1806,7 +1807,11 @@ export default function CounselorClientList({
                                 ? (resultId) => openResultDetail(assessmentId, resultId)
                                 : undefined
                             }
-                            onRecommendAssigned={() => void load()}
+                            onRecommendAssigned={() => {
+                              setCareListRefresh((n) => n + 1);
+                              void load();
+                            }}
+                            careListRefresh={careListRefresh}
                           />
                         ) : null
                       ) : null}

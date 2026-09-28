@@ -108,7 +108,7 @@ export {
   hideQuickCareRecommendation as dismissQuickCareRecommendation,
   isQuickCareRecommendationHidden as isQuickCareRecommendationDismissed,
   restoreQuickCareRecommendation,
-  readQuickCareRecommendationSent,
-  writeQuickCareRecommendationSent,
-  clearQuickCareRecommendationSent,
+  readQuickCareRecommendationScheduled,
+  writeQuickCareRecommendationScheduled,
+  clearQuickCareRecommendationScheduled,
 } from '@/lib/counselorRecommendCardState';

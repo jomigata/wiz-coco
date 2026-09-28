@@ -579,6 +579,7 @@ export default function AssessmentDispatchPanel({
   const [pendingIssueError, setPendingIssueError] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [expandedByPage, setExpandedByPage] = useState<ExpandedByPage>({});
+  const [careListRefresh, setCareListRefresh] = useState(0);
   const [resendLoading, setResendLoading] = useState(false);
   const [remindLoading, setRemindLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -1909,7 +1910,11 @@ export default function AssessmentDispatchPanel({
                             onOpenResult={(resultId) => openResultDetail(resultId)}
                             onRestoreTombstone={(tombstoneId) => setRestoreTombstoneId(tombstoneId)}
                             restoreLoading={restoreLoading}
-                            onRecommendAssigned={() => void load({ silent: true })}
+                            onRecommendAssigned={() => {
+                              setCareListRefresh((n) => n + 1);
+                              void load({ silent: true });
+                            }}
+                            careListRefresh={careListRefresh}
                           />
                           )}
                         </td>

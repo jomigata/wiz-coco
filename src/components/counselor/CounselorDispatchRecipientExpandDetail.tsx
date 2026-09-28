@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import { buildAssessmentProgressHref } from '@/lib/counselorAssessmentListSearch';
@@ -8,6 +8,8 @@ import { DISPATCH_SUCCESS_TEXT_CLASS } from '@/lib/dispatchRecipientDisplay';
 import {
   counselorListTheadClass,
 } from '@/lib/counselorListTableStyles';
+import { listCareAssignments } from '@/lib/careAssignmentApi';
+import type { CounselorCareAssignmentListItem } from '@/types/careAssignment';
 import CounselorNextTestRecommendCard from '@/components/counselor/CounselorNextTestRecommendCard';
 import CounselorQuickCareRecommendCard from '@/components/counselor/CounselorQuickCareRecommendCard';
 import CounselorRecipientExpandTestName from '@/components/counselor/CounselorRecipientExpandTestName';
@@ -56,6 +58,8 @@ export type CounselorDispatchRecipientExpandContentProps = {
   onRestoreTombstone?: (tombstoneId: string) => void;
   restoreLoading?: boolean;
   onRecommendAssigned?: () => void;
+  /** 숙제 목록 재조회 (발송 후 테이블 반영) */
+  careListRefresh?: number;
 };
 
 export function CounselorDispatchRecipientExpandContent({
@@ -68,8 +72,68 @@ export function CounselorDispatchRecipientExpandContent({
   onRestoreTombstone,
   restoreLoading = false,
   onRecommendAssigned,
+  careListRefresh = 0,
 }: CounselorDispatchRecipientExpandContentProps) {
   const r = recipient;
+  const [careItems, setCareItems] = useState<CounselorCareAssignmentListItem[]>([]);
+
+  useEffect(() => {
+    if (!showRecommendCards || !r.portalId) {
+      setCareItems([]);
+      return;
+    }
+    let cancelled = false;
+    void listCareAssignments({ portalId: r.portalId, status: 'active', limit: 40 })
+      .then((data) => {
+        if (!cancelled) setCareItems(data.items || []);
+      })
+      .catch(() => {
+        if (!cancelled) setCareItems([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [showRecommendCards, r.portalId, tests, careListRefresh]);
+
+  type ExpandTableRow = {
+    rowKey: string;
+    name: string;
+    testId?: string;
+    status: DispatchTestResult['status'];
+    completedAt: string | null;
+    resultId: string | null;
+    isCare: boolean;
+  };
+
+  const tableRows = useMemo(() => {
+    const fromTests: ExpandTableRow[] = tests.map((t) => ({
+      rowKey: `test-${t.testId}`,
+      name: t.testName || '',
+      testId: t.testId,
+      status: t.status,
+      completedAt: t.completedAt,
+      resultId: t.resultId,
+      isCare: false,
+    }));
+    const fromCare: ExpandTableRow[] = careItems.map((item) => {
+      const progressStatus = item.progress?.status;
+      const status: DispatchTestResult['status'] =
+        item.status === 'completed' || progressStatus === 'completed'
+          ? 'completed'
+          : progressStatus === 'in_progress'
+            ? 'in_progress'
+            : 'not_started';
+      return {
+        rowKey: `care-${item.id}`,
+        name: item.title || '숙제',
+        status,
+        completedAt: item.completedAt || item.progress?.completedAt || null,
+        resultId: null,
+        isCare: true,
+      };
+    });
+    return [...fromTests, ...fromCare];
+  }, [tests, careItems]);
 
   return (
     <>
@@ -108,9 +172,9 @@ export function CounselorDispatchRecipientExpandContent({
           </div>
         </div>
       ) : null}
-      {tests.length === 0 ? (
+      {tableRows.length === 0 ? (
         <p className="rounded-lg border border-slate-700/60 bg-slate-950/40 px-3 py-2 text-sm text-slate-500">
-          등록된 검사 항목이 없습니다.
+          등록된 검사·숙제 항목이 없습니다.
         </p>
       ) : (
         <div className="max-w-2xl overflow-hidden rounded-lg border border-slate-600/80 bg-slate-950/55 shadow-inner">
@@ -132,25 +196,31 @@ export function CounselorDispatchRecipientExpandContent({
               </tr>
             </thead>
             <tbody>
-              {tests.map((t, testIndex) => {
+              {tableRows.map((t, testIndex) => {
                 const st = testStatusLabel(t.status);
                 return (
                   <tr
-                    key={t.testId}
+                    key={t.rowKey}
                     className="border-b border-slate-800/80 last:border-0 hover:bg-slate-900/30"
                   >
                     <td className="px-3 py-2.5 align-top tabular-nums text-slate-500">
                       {testLetterLabel(testIndex)}
                     </td>
                     <td className="break-words px-3 py-2.5 align-top text-white">
-                      <CounselorRecipientExpandTestName testName={t.testName || ''} testId={t.testId} />
+                      {t.testId ? (
+                        <CounselorRecipientExpandTestName testName={t.name} testId={t.testId} />
+                      ) : (
+                        t.name
+                      )}
                     </td>
                     <td className={`px-3 py-2.5 align-top ${st.className}`}>{st.text}</td>
                     <td className="px-3 py-2.5 align-top text-xs leading-relaxed text-slate-400">
                       {formatCompletedAt(t.completedAt)}
                     </td>
                     <td className="px-3 py-2.5 align-top">
-                      {t.status === 'completed' && t.resultId && onOpenResult ? (
+                      {t.isCare ? (
+                        <span className="text-slate-500">내 검사실</span>
+                      ) : t.status === 'completed' && t.resultId && onOpenResult ? (
                         <button
                           type="button"
                           onClick={() => onOpenResult(t.resultId!)}
@@ -178,7 +248,11 @@ export function CounselorDispatchRecipientExpandContent({
             recipient={r}
             onAssigned={onRecommendAssigned}
           />
-          <CounselorQuickCareRecommendCard recipient={r} onAssigned={onRecommendAssigned} />
+          <CounselorQuickCareRecommendCard
+            recipient={r}
+            careListRefresh={careListRefresh}
+            onAssigned={onRecommendAssigned}
+          />
         </>
       ) : null}
     </>
