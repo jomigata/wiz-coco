@@ -283,6 +283,23 @@ def push_assessments():
     from utils.assessment_dispatch import _normalize_notify_channels
 
     notify_channels = _normalize_notify_channels(body.get("notifyChannels"))
+    scheduled_at_raw = (body.get("scheduledAt") or "").strip()
+    scheduled_at_iso = ""
+    if scheduled_at_raw:
+        try:
+            from datetime import datetime, timezone
+
+            sched = datetime.fromisoformat(scheduled_at_raw.replace("Z", "+00:00"))
+            if sched.tzinfo is None:
+                sched = sched.replace(tzinfo=timezone.utc)
+            if sched <= datetime.now(timezone.utc):
+                return (
+                    jsonify({"error": "Bad Request", "message": "예약 발송 시각은 현재 이후여야 합니다."}),
+                    400,
+                )
+            scheduled_at_iso = sched.astimezone(timezone.utc).isoformat()
+        except ValueError:
+            return jsonify({"error": "Bad Request", "message": "예약 발송 시각 형식이 올바르지 않습니다."}), 400
 
     if not assessment_id:
         if not title:
@@ -303,6 +320,7 @@ def push_assessments():
             test_list=test_list if isinstance(test_list, list) else [],
             notify=notify,
             notify_channels=notify_channels,
+            scheduled_at_iso=scheduled_at_iso or None,
         )
     except PermissionError as exc:
         return jsonify({"error": "Forbidden", "message": str(exc)}), 403

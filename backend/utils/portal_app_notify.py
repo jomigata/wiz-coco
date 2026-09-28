@@ -56,6 +56,52 @@ def deliver_portal_app_notification(
     }
 
 
+def enqueue_portal_app_notification(
+    db,
+    *,
+    portal_id: str,
+    kind: str,
+    title: str,
+    body: str,
+    action_path: str = "/portal/",
+    metadata: dict | None = None,
+    scheduled_at_iso: str | None = None,
+) -> dict:
+    """예약 시각이 있으면 notificationQueue에 적재, 없으면 즉시 deliver."""
+    pid = (portal_id or "").strip()
+    if not pid:
+        return {"status": "failed", "message": "missing_portal_id"}
+    scheduled = (scheduled_at_iso or "").strip()
+    if not scheduled:
+        return deliver_portal_app_notification(
+            db,
+            portal_id=pid,
+            kind=kind,
+            title=title,
+            body=body,
+            action_path=action_path,
+            metadata=metadata,
+        )
+
+    from config import NOTIFICATION_QUEUE_COLLECTION
+
+    db.collection(NOTIFICATION_QUEUE_COLLECTION).add(
+        {
+            "type": "portal_app_notification",
+            "status": "pending",
+            "portalId": pid,
+            "kind": (kind or "general").strip() or "general",
+            "title": (title or "").strip() or "새 안내",
+            "body": (body or "").strip(),
+            "actionPath": (action_path or "/portal/").strip() or "/portal/",
+            "metadata": metadata or {},
+            "scheduledAt": scheduled,
+            "createdAt": SERVER_TIMESTAMP,
+        }
+    )
+    return {"status": "pending", "sentVia": "app", "scheduledAt": scheduled}
+
+
 def list_portal_app_notifications(db, portal_id: str, *, limit: int = 40) -> dict:
     pid = (portal_id or "").strip()
     if not pid:

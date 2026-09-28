@@ -50,6 +50,19 @@ def _default_due_at(program: dict | None) -> str | None:
     return (datetime.now(timezone.utc) + timedelta(days=days)).date().isoformat()
 
 
+def _notify_schedule_pending(scheduled_at_iso: str | None) -> bool:
+    raw = (scheduled_at_iso or "").strip()
+    if not raw:
+        return False
+    try:
+        sched = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+        if sched.tzinfo is None:
+            sched = sched.replace(tzinfo=timezone.utc)
+        return sched > datetime.now(timezone.utc)
+    except Exception:
+        return False
+
+
 def _enqueue_care_assignment_notify(
     db,
     *,
@@ -62,6 +75,7 @@ def _enqueue_care_assignment_notify(
     title: str,
     portal_access_code: str,
     notify_channels: list[str] | None = None,
+    scheduled_at_iso: str | None = None,
 ) -> str:
     """T-2-08 — care_assignment 알림 큐 적재."""
     payload = {
@@ -81,12 +95,18 @@ def _enqueue_care_assignment_notify(
     }
     if notify_channels is not None:
         payload["notifyChannels"] = list(notify_channels)
+    scheduled = (scheduled_at_iso or "").strip()
+    if scheduled:
+        payload["scheduledAt"] = scheduled
     db.collection(NOTIFICATION_QUEUE_COLLECTION).add(payload)
     return "pending"
 
 
 def create_care_assignments(db, counselor_uid: str, body: dict) -> dict:
     payload = validate_create_care_assignment_payload(body)
+    scheduled_at = (payload.get("scheduledAt") or "").strip() or None
+    if scheduled_at and not _notify_schedule_pending(scheduled_at):
+        raise CareAssignmentValidationError("예약 발송 시각은 현재 이후여야 합니다.")
     program = None
     if payload["type"] == "treatment_program":
         program = validate_care_program_id(payload["programId"])
@@ -198,12 +218,13 @@ def create_care_assignments(db, counselor_uid: str, body: dict) -> dict:
 
             notify_status = "skipped"
             notify_error = None
+            scheduled_at = (payload.get("scheduledAt") or "").strip() or None
             if payload.get("notifyOnAssign"):
                 if portal_notify_uses_app_channel(channels):
-                    from utils.portal_app_notify import deliver_portal_app_notification
+                    from utils.portal_app_notify import enqueue_portal_app_notification
 
                     try:
-                        app_result = deliver_portal_app_notification(
+                        app_result = enqueue_portal_app_notification(
                             db,
                             portal_id=portal_id,
                             kind="care_assignment",
@@ -211,9 +232,10 @@ def create_care_assignments(db, counselor_uid: str, body: dict) -> dict:
                             body=f"{title} — 내 검사실에서 확인해 주세요.",
                             action_path="/portal/?tab=tests",
                             metadata={"assignmentId": ass_ref.id, "title": title},
+                            scheduled_at_iso=scheduled_at,
                         )
                         notify_status = app_result.get("status") or "failed"
-                        if notify_status == "sent":
+                        if notify_status in ("sent", "pending"):
                             notify_sent += 1
                         else:
                             notify_failed += 1
@@ -244,9 +266,13 @@ def create_care_assignments(db, counselor_uid: str, body: dict) -> dict:
                                 title=title,
                                 portal_access_code=access_code,
                                 notify_channels=notify_channels,
+                                scheduled_at_iso=scheduled_at,
                             )
                             notify_sent += 1
-                            if notify_channels is not None:
+                            if (
+                                notify_channels is not None
+                                and not _notify_schedule_pending(scheduled_at)
+                            ):
                                 from utils.assessment_dispatch import (
                                     _consume_notify_phone_credit,
                                     _will_use_phone_channel,

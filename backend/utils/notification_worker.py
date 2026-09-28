@@ -1489,6 +1489,34 @@ def process_notification_queue(*, limit: int = 50) -> dict:
                 details.append({"id": doc.id, "status": status, "errors": errors})
                 continue
 
+            if item_type == "portal_app_notification":
+                portal_id = (data.get("portalId") or "").strip()
+                from utils.portal_app_notify import deliver_portal_app_notification
+
+                result = deliver_portal_app_notification(
+                    db,
+                    portal_id=portal_id,
+                    kind=(data.get("kind") or "general").strip(),
+                    title=(data.get("title") or "").strip(),
+                    body=(data.get("body") or "").strip(),
+                    action_path=(data.get("actionPath") or "/portal/").strip(),
+                    metadata=data.get("metadata") if isinstance(data.get("metadata"), dict) else {},
+                )
+                status = result.get("status") or "failed"
+                if status == "sent":
+                    sent += 1
+                else:
+                    failed += 1
+                doc.reference.update(
+                    {
+                        "status": status,
+                        "processedAt": SERVER_TIMESTAMP,
+                        "sentVia": result.get("sentVia"),
+                    }
+                )
+                details.append({"id": doc.id, "status": status})
+                continue
+
             if item_type == "care_assignment":
                 payload = data.get("payload") or {}
                 assignment_title = (payload.get("title") or "").strip() or "새 치료·과제"

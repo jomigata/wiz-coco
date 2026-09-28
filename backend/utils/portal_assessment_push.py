@@ -17,6 +17,21 @@ from utils.portal_magic import create_portal_magic_link_token
 from utils.short_link import resolve_message_go_url
 
 
+def _notify_schedule_pending(scheduled_at_iso: str | None) -> bool:
+    from datetime import datetime, timezone
+
+    raw = (scheduled_at_iso or "").strip()
+    if not raw:
+        return False
+    try:
+        sched = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+        if sched.tzinfo is None:
+            sched = sched.replace(tzinfo=timezone.utc)
+        return sched > datetime.now(timezone.utc)
+    except Exception:
+        return False
+
+
 def _normalize_test_list(test_list: list | None) -> list[dict]:
     return [
         {"testId": str(t.get("testId") or ""), "name": str(t.get("name") or "")}
@@ -89,6 +104,7 @@ def _notify_portal_push(
     pdata: dict,
     assessment: dict,
     notify_channels: list[str] | None = None,
+    scheduled_at_iso: str | None = None,
 ) -> dict:
     from utils.assessment_dispatch import (
         _apply_notify_channels_to_contact,
@@ -100,7 +116,7 @@ def _notify_portal_push(
 
     channels = _normalize_notify_channels(notify_channels)
     from utils.client_portal_notify_policy import portal_notify_uses_app_channel
-    from utils.portal_app_notify import deliver_portal_app_notification
+    from utils.portal_app_notify import deliver_portal_app_notification, enqueue_portal_app_notification
 
     aid = assessment["assessmentId"]
     test_list = assessment.get("testList") or []
@@ -119,19 +135,36 @@ def _notify_portal_push(
         test_names = [n for n in test_names if n]
         label = test_names[0] if len(test_names) == 1 else f"{len(test_names)}개 검사"
         body = f"{assessment.get('title') or '추천 검사'} — {label}을(를) 진행해 주세요."
-        result = deliver_portal_app_notification(
-            db,
-            portal_id=portal_id,
-            kind="assessment_push",
-            title="새 검사 안내",
-            body=body,
-            action_path="/portal/?tab=tests",
-            metadata={
-                "assessmentId": aid,
-                "joinAccessCode": assessment.get("joinAccessCode") or "",
-                "pendingTestIds": [str(t.get("testId") or "") for t in pending],
-            },
-        )
+        scheduled = (scheduled_at_iso or "").strip() or None
+        if _notify_schedule_pending(scheduled):
+            result = enqueue_portal_app_notification(
+                db,
+                portal_id=portal_id,
+                kind="assessment_push",
+                title="새 검사 안내",
+                body=body,
+                action_path="/portal/?tab=tests",
+                metadata={
+                    "assessmentId": aid,
+                    "joinAccessCode": assessment.get("joinAccessCode") or "",
+                    "pendingTestIds": [str(t.get("testId") or "") for t in pending],
+                },
+                scheduled_at_iso=scheduled,
+            )
+        else:
+            result = deliver_portal_app_notification(
+                db,
+                portal_id=portal_id,
+                kind="assessment_push",
+                title="새 검사 안내",
+                body=body,
+                action_path="/portal/?tab=tests",
+                metadata={
+                    "assessmentId": aid,
+                    "joinAccessCode": assessment.get("joinAccessCode") or "",
+                    "pendingTestIds": [str(t.get("testId") or "") for t in pending],
+                },
+            )
         status = result.get("status") or "failed"
         db.collection(CLIENT_PORTALS_COLLECTION).document(portal_id).update(
             {
@@ -212,6 +245,7 @@ def push_assessments_to_portals(
     test_list: list | None = None,
     notify: bool = True,
     notify_channels: list[str] | None = None,
+    scheduled_at_iso: str | None = None,
 ) -> dict:
     """
     기존 내담자 포털에 상담(코드)를 추가 배정하고 선택적으로 알림을 발송합니다.
@@ -320,10 +354,11 @@ def push_assessments_to_portals(
                 pdata=pdata,
                 assessment=assessment,
                 notify_channels=notify_channels,
+                scheduled_at_iso=scheduled_at_iso,
             )
             detail["notify"] = notify_result
             nstatus = notify_result.get("status")
-            if nstatus == "sent":
+            if nstatus in ("sent", "pending"):
                 notify_sent += 1
             elif nstatus == "skipped":
                 notify_skipped += 1

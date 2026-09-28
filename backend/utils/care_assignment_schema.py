@@ -144,6 +144,7 @@ def validate_create_care_assignment_payload(body: dict | None) -> dict:
         "testList": test_list or None,
         "startAt": _strip(body.get("startAt")) or None,
         "dueAt": _strip(body.get("dueAt")) or None,
+        "scheduledAt": _strip(body.get("scheduledAt")) or None,
         "notifyOnAssign": notify_on_assign,
         "notifyChannels": notify_channels,
         "source": source,

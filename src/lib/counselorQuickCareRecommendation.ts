@@ -104,22 +104,11 @@ export function buildQuickCareAssignmentInput(
   };
 }
 
-const DISMISS_PREFIX = 'counselorQuickCareDismissed:';
-
-export function dismissQuickCareRecommendation(portalId: string, presetId: string): void {
-  if (typeof window === 'undefined') return;
-  try {
-    window.localStorage.setItem(`${DISMISS_PREFIX}${portalId}:${presetId}`, '1');
-  } catch {
-    // ignore
-  }
-}
-
-export function isQuickCareRecommendationDismissed(portalId: string, presetId: string): boolean {
-  if (typeof window === 'undefined') return false;
-  try {
-    return window.localStorage.getItem(`${DISMISS_PREFIX}${portalId}:${presetId}`) === '1';
-  } catch {
-    return false;
-  }
-}
+export {
+  hideQuickCareRecommendation as dismissQuickCareRecommendation,
+  isQuickCareRecommendationHidden as isQuickCareRecommendationDismissed,
+  restoreQuickCareRecommendation,
+  readQuickCareRecommendationSent,
+  writeQuickCareRecommendationSent,
+  clearQuickCareRecommendationSent,
+} from '@/lib/counselorRecommendCardState';

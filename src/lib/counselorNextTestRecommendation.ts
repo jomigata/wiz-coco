@@ -73,28 +73,11 @@ export function resolveCounselorNextTestRecommendation(
   return { testId, name, pitch, rationale };
 }
 
-const DISMISS_PREFIX = 'counselorNextRecoDismissed:';
-
-export function dismissNextTestRecommendation(portalId: string, assessmentId: string, testId: string): void {
-  if (typeof window === 'undefined') return;
-  try {
-    const key = `${DISMISS_PREFIX}${portalId}:${assessmentId}:${testId}`;
-    window.localStorage.setItem(key, '1');
-  } catch {
-    // ignore
-  }
-}
-
-export function isNextTestRecommendationDismissed(
-  portalId: string,
-  assessmentId: string,
-  testId: string,
-): boolean {
-  if (typeof window === 'undefined') return false;
-  try {
-    const key = `${DISMISS_PREFIX}${portalId}:${assessmentId}:${testId}`;
-    return window.localStorage.getItem(key) === '1';
-  } catch {
-    return false;
-  }
-}
+export {
+  hideNextTestRecommendation as dismissNextTestRecommendation,
+  isNextTestRecommendationHidden as isNextTestRecommendationDismissed,
+  restoreNextTestRecommendation,
+  readNextTestRecommendationSent,
+  writeNextTestRecommendationSent,
+  clearNextTestRecommendationSent,
+} from '@/lib/counselorRecommendCardState';

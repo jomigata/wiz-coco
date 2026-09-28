@@ -85,6 +85,8 @@ export type CreateCareAssignmentInput = {
   testList?: CareAssignmentTestItem[];
   startAt?: string;
   dueAt?: string;
+  /** 알림 예약 발송 (ISO8601, 현재 이후) */
+  scheduledAt?: string;
   notify?: boolean;
   notifyChannels?: PortalNotifyChannelKey[];
   source?: CareAssignmentSource;

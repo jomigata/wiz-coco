@@ -870,6 +870,7 @@ export async function pushAssessmentsToPortals(body: {
   testList?: { testId: string; name: string }[];
   notify?: boolean;
   notifyChannels?: PortalNotifyChannelKey[];
+  scheduledAt?: string;
 }): Promise<CounselorPushAssessmentResult> {
   const token = await getCounselorToken();
   if (!token) throw new Error('전문가·상담사 로그인이 필요합니다.');
