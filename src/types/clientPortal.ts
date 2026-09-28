@@ -138,6 +138,11 @@ export type CounselorClientPortalListItem = {
     percent: number;
     label: ClientPortalProgressLabel;
   };
+  /** 목록 진행률 — 숙제(care) 분 (실시간 검사 갱신 시 합산용) */
+  progressCare?: {
+    totalTests: number;
+    completedTests: number;
+  };
   archivedTests?: {
     testId: string;
     testName?: string;

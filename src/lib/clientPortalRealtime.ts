@@ -71,11 +71,29 @@ export function buildExpandTestsForClientList(
   return fallbackPrimaryTests?.length ? dedupeDispatchTestsByTestId(fallbackPrimaryTests) : [];
 }
 
+function mergeProgressWithCareSlice(
+  testProgress: CounselorClientPortalListItem['progress'],
+  careSlice?: CounselorClientPortalListItem['progressCare'],
+): CounselorClientPortalListItem['progress'] {
+  const careTotal = careSlice?.totalTests ?? 0;
+  const careCompleted = careSlice?.completedTests ?? 0;
+  const totalTests = testProgress.totalTests + careTotal;
+  const completedTests = testProgress.completedTests + careCompleted;
+  const percent = totalTests ? Math.round((completedTests / totalTests) * 100) : 0;
+  return {
+    totalTests,
+    completedTests,
+    percent,
+    label: progressLabel(totalTests, completedTests),
+  };
+}
+
 export function computePortalProgress(
   portalId: string,
   assessmentIds: string[],
   assessmentMeta: Record<string, AssessmentMetaEntry>,
   results: RealtimeTestResultDoc[],
+  careSlice?: CounselorClientPortalListItem['progressCare'],
 ): CounselorClientPortalListItem['progress'] {
   const merged: DispatchTestResult[] = [];
   for (const aid of assessmentIds) {
@@ -84,16 +102,17 @@ export function computePortalProgress(
     merged.push(...buildTestsForPortal(portalId, meta.testList, results));
   }
   const unique = dedupeDispatchTestsByTestId(merged);
-  const totalTests = unique.length;
-  const completedTests = unique.filter((t) => t.status === 'completed').length;
-
-  const percent = totalTests ? Math.round((completedTests / totalTests) * 100) : 0;
-  return {
-    totalTests,
-    completedTests,
-    percent,
-    label: progressLabel(totalTests, completedTests),
+  const testProgress = {
+    totalTests: unique.length,
+    completedTests: unique.filter((t) => t.status === 'completed').length,
+    percent: 0,
+    label: progressLabel(0, 0) as CounselorClientPortalListItem['progress']['label'],
   };
+  testProgress.percent = testProgress.totalTests
+    ? Math.round((testProgress.completedTests / testProgress.totalTests) * 100)
+    : 0;
+  testProgress.label = progressLabel(testProgress.totalTests, testProgress.completedTests);
+  return mergeProgressWithCareSlice(testProgress, careSlice);
 }
 
 export function applyRealtimeToClientList(
@@ -106,7 +125,13 @@ export function applyRealtimeToClientList(
     const assessmentIds = item.assessments.map((a) => a.assessmentId);
     return {
       ...item,
-      progress: computePortalProgress(item.portalId, assessmentIds, assessmentMeta, results),
+      progress: computePortalProgress(
+        item.portalId,
+        assessmentIds,
+        assessmentMeta,
+        results,
+        item.progressCare,
+      ),
     };
   });
 }

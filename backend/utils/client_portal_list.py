@@ -19,6 +19,10 @@ from utils.assessment_dispatch import (
 from utils.portal_assessment_access import get_portal_doc
 from utils.portal_linking import list_linked_portal_summaries
 from utils.counselor_monitoring import INDIVIDUAL_COHORT_KEY
+from utils.counselor_portal_expand_progress import (
+    bulk_active_care_by_portal,
+    portal_expand_progress_counts,
+)
 
 
 def _matches_counselor_scope(resource_counselor_id: str | None, scoped_uid: str | None) -> bool:
@@ -57,31 +61,6 @@ def _progress_label(total: int, completed: int) -> str:
     if completed >= total:
         return "completed"
     return "in_progress"
-
-
-def _portal_unique_test_progress(
-    portal_id: str,
-    assigned_ids: list[str],
-    assessment_cache: dict,
-    completion_map: dict,
-) -> tuple[int, int]:
-    """배정된 여러 상담(코드)에 같은 testId가 있어도 진행률은 유니크 testId 기준."""
-    all_required: set[str] = set()
-    all_completed: set[str] = set()
-    for aid in assigned_ids:
-        cached = assessment_cache.get(aid)
-        if not cached:
-            continue
-        test_list = cached.get("testList") or []
-        required = {
-            str(t.get("testId") or "").strip()
-            for t in test_list
-            if t and str(t.get("testId") or "").strip()
-        }
-        all_required |= required
-        done = completion_map.get((portal_id, aid), set())
-        all_completed |= done & required
-    return len(all_completed), len(all_required)
 
 
 def list_counselor_client_portals(
@@ -191,6 +170,8 @@ def list_counselor_client_portals(
         set(assessment_cache.keys()),
     )
 
+    care_by_portal = bulk_active_care_by_portal(db, counselor_uid, [row[0] for row in rows])
+
     items: list[dict] = []
 
     for portal_id, pdata, _ in rows:
@@ -215,8 +196,13 @@ def list_counselor_client_portals(
 
         total_tests = 0
         completed_tests = 0
-        completed_tests, total_tests = _portal_unique_test_progress(
-            portal_id, assigned_ids, assessment_cache, completion_map
+        progress_slices = {"careTotal": 0, "careCompleted": 0, "testTotal": 0, "testCompleted": 0}
+        completed_tests, total_tests, progress_slices = portal_expand_progress_counts(
+            portal_id,
+            assigned_ids,
+            assessment_cache,
+            completion_map,
+            care_by_portal.get(portal_id, []),
         )
 
         percent = round((completed_tests / total_tests) * 100) if total_tests else 0
@@ -273,6 +259,10 @@ def list_counselor_client_portals(
                     "completedTests": completed_tests,
                     "percent": percent,
                     "label": progress_label,
+                },
+                "progressCare": {
+                    "totalTests": progress_slices.get("careTotal") or 0,
+                    "completedTests": progress_slices.get("careCompleted") or 0,
                 },
             }
         )
@@ -382,8 +372,13 @@ def get_counselor_client_portal_detail(
     completion_map = _bulk_completed_tests_by_portal_assessment(
         db, [pid], set(progress_aids)
     )
-    completed_tests, total_tests = _portal_unique_test_progress(
-        pid, progress_aids, assessment_cache_for_progress, completion_map
+    care_items = bulk_active_care_by_portal(db, counselor_uid, [pid]).get(pid, [])
+    completed_tests, total_tests, _slices = portal_expand_progress_counts(
+        pid,
+        progress_aids,
+        assessment_cache_for_progress,
+        completion_map,
+        care_items,
     )
 
     percent = round((completed_tests / total_tests) * 100) if total_tests else 0
