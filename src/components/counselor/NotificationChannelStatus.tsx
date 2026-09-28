@@ -80,6 +80,9 @@ export default function NotificationChannelStatus() {
         />
       </div>
       <p className="mt-3 text-[11px] text-slate-500">
+        내담자 코드·리마인더 발송: 휴대폰(알림톡 → SMS). SMTP 이메일은 상담사 승인·문의 등 시스템용입니다.
+      </p>
+      <p className="mt-1 text-[11px] text-slate-500">
         자동 리마인더: cohort 매일 09:00 · 개별 월 12:00 · 케어 마감 매일 13:00 (KST)
       </p>
     </div>

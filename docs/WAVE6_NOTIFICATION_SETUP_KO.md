@@ -50,7 +50,7 @@ GitHub Secrets (선택):
 
 상세 설정: [SOLAPI_KAKAO_ALIMTALK_SETUP_KO.md](./SOLAPI_KAKAO_ALIMTALK_SETUP_KO.md)
 
-발송 우선순위: **이메일 → 알림톡(전화번호) → SMS**
+발송 우선순위: **휴대(알림톡 → SMS)** — 내담자 포털 기본. (legacy) 이메일 채널은 `CLIENT_PORTAL_NOTIFY_EMAIL=true` 시에만. SMTP는 시스템·문의용. 정책: [client-portal-notify-policy-ko.md](./client-portal-notify-policy-ko.md)
 
 ---
 

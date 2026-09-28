@@ -33,7 +33,7 @@ const selfPurchaseSteps = [
   {
     step: '02',
     title: '결제·코드 발급',
-    desc: '결제 완료 후 이메일·문자로 나의코드와 PIN이 발급됩니다.',
+    desc: '결제 완료 후 알림톡·문자로 나의코드와 PIN이 발급됩니다.',
   },
   {
     step: '03',

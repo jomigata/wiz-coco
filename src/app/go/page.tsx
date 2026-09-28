@@ -130,7 +130,8 @@ function GoContent() {
               나의코드 / 비밀번호 이용을 추천합니다
             </p>
             <p className="mt-1.5 text-slate-300 text-xs leading-relaxed">
-              안내 이메일·문자에 적힌 <span className="text-white font-medium">나의코드</span>와{' '}
+              안내 <span className="text-white font-medium">알림톡·문자</span>에 적힌{' '}
+              <span className="text-white font-medium">나의코드</span>와{' '}
               <span className="text-white font-medium">4자리 비밀번호</span>로 로그인하면 언제든
               검사를 이어갈 수 있습니다.
             </p>
