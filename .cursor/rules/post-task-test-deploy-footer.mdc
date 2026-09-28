@@ -1,0 +1,34 @@
+---
+description: End every completed task with local/online test and push/deploy cost footer
+alwaysApply: true
+---
+
+# 작업 완료 후 — 테스트 · 푸시 · 배포 기록 (필수)
+
+## 적용 시점
+
+- 사용자 **요청 작업**(코드·설정·문서 변경 등)을 마친 **응답 맨 아래**에 매번 아래 블록을 붙인다.
+- 질문만 답하고 **저장소 변경이 없으면** 생략 가능.
+
+## 응답 최하단 형식 (한국어)
+
+마크다운 소제목 **`## 테스트 · 푸시 · 배포`** 아래 표 또는 짧은 bullet로 기록:
+
+| 항목 | 내용 |
+|------|------|
+| **로컬 확인** | `npm run dev` 등으로 바로 볼 수 있는지, 확인할 화면/경로 |
+| **Git push** | 이미 push 했는지 / 필요 시 `main` push — **`AUTO_DEPLOY_ON_PUSH=false`면 GCP 과금 없음, CI만** |
+| **온라인(prod) 확인** | [wiz-coco.web.app](https://wiz-coco.web.app) 반영에 **hosting / API / 둘 다** 중 무엇이 필요한지 |
+| **비용** | push만 vs prod 배포(`npm run deploy:prod:hosting` · `deploy:prod:api` · Actions Run) — [docs/gcp-cost-saver-ko.md](../docs/gcp-cost-saver-ko.md) 기준 |
+| **권장** | **진행 필요성**(필수 / 선택 / 불필요) + **push 여부**(완료·필요·불필요) + **prod 배포 여부**(완료·필요·불필요) |
+
+### 판단 기준 (요약)
+
+- **프론트만** (`src/**`, `public/**`) → prod는 **hosting** 수동 배포가 필요할 때만 GCP Hosting 비용
+- **`backend/**`** → prod API 확인 시 **Cloud Run** 수동 배포
+- **push만** (변경 커밋 후) → 기본 정책에서 **자동 Firebase/Cloud Run 배포 없음**
+- 로컬에서 충분하면 prod 배포는 **선택(불필요)** 로 명시
+
+## Git
+
+- 규칙 파일·코드 변경 작업이면 기존 [git-push-after-edit.mdc](./git-push-after-edit.mdc)대로 push까지 수행한 뒤, footer에 push **완료** 또는 커밋 SHA를 적는다.
