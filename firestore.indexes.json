@@ -117,6 +117,14 @@
         { "fieldPath": "counselorId", "order": "ASCENDING" },
         { "fieldPath": "assignmentId", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "counselorCreditLots",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "counselorUid", "order": "ASCENDING" },
+        { "fieldPath": "pointsRemaining", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []
