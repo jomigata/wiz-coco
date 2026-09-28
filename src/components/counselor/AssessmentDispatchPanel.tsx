@@ -162,7 +162,7 @@ function notifyErrorHint(error: string | null | undefined): string | undefined {
       : '휴대폰(알림톡·문자) 번호가 없습니다.';
   }
   if (err.includes('email_send_failed')) return '이메일 발송에 실패했습니다.';
-  if (err.includes('phone_send_failed')) return '문자·알림톡 발송에 실패했습니다.';
+  if (err.includes('phone_send_failed')) return undefined;
   if (err.includes('alimtalk_sender_equals_recipient') || err.includes('sms_sender_equals_recipient')) {
     return '수신 번호가 Solapi 발신번호와 같습니다. 알림톡·문자 테스트는 다른 휴대폰 번호를 사용해 주세요.';
   }

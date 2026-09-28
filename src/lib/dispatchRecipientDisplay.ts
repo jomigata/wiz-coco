@@ -128,7 +128,7 @@ function notifyErrorHint(error: string | null | undefined): string | undefined {
       : '휴대폰(알림톡·문자) 번호가 없습니다.';
   }
   if (err.includes('email_send_failed')) return '이메일 발송에 실패했습니다.';
-  if (err.includes('phone_send_failed')) return '문자·알림톡 발송에 실패했습니다.';
+  if (err.includes('phone_send_failed')) return undefined;
   if (err.includes('sms_sender_equals_recipient') || err.includes('alimtalk_sender_equals_recipient')) {
     return '발신번호와 수신번호가 같으면 발송할 수 없습니다. 다른 휴대폰 번호를 등록해 주세요.';
   }
@@ -144,16 +144,6 @@ function notifyErrorHint(error: string | null | undefined): string | undefined {
     return '알림톡 결과 확인 시간이 초과되어 문자 대체 발송을 시도했으나 실패했을 수 있습니다.';
   }
   return err;
-}
-
-function formatSentViaLabel(via: string | null | undefined): string {
-  const v = (via || '').trim().toLowerCase();
-  if (!v) return '';
-  if (v.includes('email') && v.includes('sms')) return '이메일·SMS';
-  if (v.includes('alimtalk')) return '알림톡';
-  if (v.includes('sms')) return 'SMS';
-  if (v.includes('email')) return '이메일';
-  return via || '';
 }
 
 function notifyKindPrefix(kind: string | null | undefined): string {
@@ -184,12 +174,6 @@ function parseSentViaFlags(via: string | null | undefined): {
     alimtalkOk: v.includes('alimtalk') || v.includes('kakao'),
     smsOk: v.includes('sms'),
   };
-}
-
-function phoneChannelLabel(flags: ReturnType<typeof parseSentViaFlags>): string {
-  if (flags.alimtalkOk) return '알림톡';
-  if (flags.smsOk) return '문자';
-  return '휴대폰';
 }
 
 export function formatRecipientContactLine(phone?: string | null, _email?: string | null): string {
@@ -266,10 +250,6 @@ function composeStatusText(mainText: string, detailParts: ChannelDetailPart[]): 
   return `${mainText} (${detailParts.map((p) => p.text).join('·')})`;
 }
 
-function isTerminalNotifyStatus(status: string): boolean {
-  return status === 'sent' || status === 'partial' || status === 'failed';
-}
-
 function resolveEffectiveNotifyStatus(r: DispatchDisplayRecipient): string {
   let status = (r.notifyStatus || 'not_sent').trim();
   if (status !== 'sending') return status;
@@ -289,136 +269,125 @@ function resolveEffectiveNotifyStatus(r: DispatchDisplayRecipient): string {
   return status;
 }
 
-function pushChannelPart(parts: ChannelDetailPart[], text: string, failed: boolean): void {
-  parts.push({ text, failed });
+type SubChannelOutcome = 'ok' | 'fail' | 'pending' | 'skip';
+
+function phoneNotifyWasAttempted(r: DispatchDisplayRecipient, status: string): boolean {
+  const phoneCh = (r.notifyPhoneChannel || '').trim().toLowerCase();
+  return (
+    status === 'sent' ||
+    status === 'partial' ||
+    status === 'failed' ||
+    status === 'sending' ||
+    Boolean((r.notifyAt || '').trim()) ||
+    phoneCh === 'sent' ||
+    phoneCh === 'failed' ||
+    phoneCh === 'sending'
+  );
 }
 
-function pushChannelFromExplicitState(
-  parts: ChannelDetailPart[],
-  label: string,
-  channelState: string | null | undefined,
-  legacyOutcome: 'ok' | 'fail' | 'pending' | 'idle',
-): void {
-  const state = (channelState || '').trim().toLowerCase();
-  if (state === 'sent') {
-    pushChannelPart(parts, `${label}✓`, false);
-    return;
-  }
-  if (state === 'failed') {
-    pushChannelPart(parts, `${label}✗`, true);
-    return;
-  }
-  if (state === 'sending') {
-    pushChannelPart(parts, `${label}…`, false);
-    return;
-  }
-  if (legacyOutcome === 'ok') pushChannelPart(parts, `${label}✓`, false);
-  else if (legacyOutcome === 'fail') pushChannelPart(parts, `${label}✗`, true);
-  else if (legacyOutcome === 'pending') pushChannelPart(parts, `${label}…`, false);
-  // idle — 한 번도 발송 시도하지 않은 채널은 표시하지 않음
-}
-
-function emailLegacyOutcome(
+function resolveEmailSubChannel(
   r: DispatchDisplayRecipient,
   status: string,
   via: ReturnType<typeof parseSentViaFlags>,
   failed: ReturnType<typeof parseNotifyErrors>,
-): 'ok' | 'fail' | 'pending' | 'idle' {
-  const ch = (r.notifyEmailChannel || '').trim().toLowerCase();
-  if (failed.emailFailed) return 'fail';
-  if (ch === 'sent' || via.emailOk) return 'ok';
-  if (ch === 'failed') return 'fail';
-  if (status === 'sending' || ch === 'sending') return 'pending';
-  return 'idle';
+): SubChannelOutcome {
+  if (!r.email?.trim()) return 'skip';
+  const emailCh = (r.notifyEmailChannel || '').trim().toLowerCase();
+  const attempted =
+    status === 'sent' ||
+    status === 'partial' ||
+    status === 'failed' ||
+    status === 'sending' ||
+    emailCh === 'sent' ||
+    emailCh === 'failed' ||
+    emailCh === 'sending' ||
+    via.emailOk;
+  if (!attempted) return 'skip';
+  if (status === 'sending' || emailCh === 'sending') return 'pending';
+  if (via.emailOk || emailCh === 'sent') return 'ok';
+  if (failed.emailFailed || emailCh === 'failed' || status === 'failed') return 'fail';
+  return 'skip';
 }
 
-function phoneLegacyOutcome(
+/** 휴대 발송: 알림톡 선시도 → 실패 시 문자. 성공 채널만 ✓, 전부 실패 시 ✗만 표기. */
+function resolvePhoneSubChannels(
   r: DispatchDisplayRecipient,
   status: string,
   via: ReturnType<typeof parseSentViaFlags>,
-  failed: ReturnType<typeof parseNotifyErrors>,
-): 'ok' | 'fail' | 'pending' | 'idle' {
-  const ch = (r.notifyPhoneChannel || '').trim().toLowerCase();
-  const phoneOk = via.alimtalkOk || via.smsOk;
-  if (failed.phoneFailed) return 'fail';
-  if (ch === 'sent' || phoneOk) return 'ok';
-  if (ch === 'failed') return 'fail';
-  if (status === 'sending' || ch === 'sending') return 'pending';
-  return 'idle';
-}
+): { alimtalk: SubChannelOutcome; sms: SubChannelOutcome } {
+  if (!r.phone?.trim()) return { alimtalk: 'skip', sms: 'skip' };
+  if (!phoneNotifyWasAttempted(r, status)) return { alimtalk: 'skip', sms: 'skip' };
 
-function channelWasAttempted(
-  explicit: string | null | undefined,
-  legacy: 'ok' | 'fail' | 'pending' | 'idle',
-): boolean {
-  const ch = (explicit || '').trim().toLowerCase();
-  if (ch === 'sent' || ch === 'failed' || ch === 'sending') return true;
-  return legacy !== 'idle';
-}
-
-function appendPhoneChannelParts(
-  parts: ChannelDetailPart[],
-  r: DispatchDisplayRecipient,
-  status: string,
-  via: ReturnType<typeof parseSentViaFlags>,
-  failed: ReturnType<typeof parseNotifyErrors>,
-  terminal: boolean,
-): void {
-  const legacy = phoneLegacyOutcome(r, status, via, failed);
-  if (!channelWasAttempted(r.notifyPhoneChannel, legacy)) return;
-
-  const showAlimtalk =
-    via.alimtalkOk ||
-    (r.notifySentVia || '').toLowerCase().includes('kakao') ||
-    (r.notifySentVia || '').toLowerCase().includes('alimtalk');
-  const showSms =
-    via.smsOk ||
-    (r.notifySentVia || '').toLowerCase().includes('sms') ||
-    failed.phoneFailed;
-
-  if (showAlimtalk) {
-    let channelState = r.notifyPhoneChannel;
-    if (terminal && channelState === 'sending') channelState = undefined;
-    pushChannelFromExplicitState(parts, '알림톡', channelState, legacy);
-    return;
+  const phoneCh = (r.notifyPhoneChannel || '').trim().toLowerCase();
+  if (status === 'sending' || phoneCh === 'sending') {
+    return { alimtalk: 'pending', sms: 'pending' };
   }
-  if (showSms) {
-    let channelState = r.notifyPhoneChannel;
-    if (terminal && channelState === 'sending') channelState = undefined;
-    pushChannelFromExplicitState(parts, '문자', channelState, legacy);
-    return;
+
+  if (via.alimtalkOk) {
+    return { alimtalk: 'ok', sms: 'skip' };
   }
-  const phoneLabel = phoneChannelLabel(via);
-  let channelState = r.notifyPhoneChannel;
-  if (terminal && channelState === 'sending') channelState = undefined;
-  pushChannelFromExplicitState(parts, phoneLabel, channelState, legacy);
+  if (via.smsOk) {
+    return { alimtalk: 'fail', sms: 'ok' };
+  }
+  if (status === 'failed' || phoneCh === 'failed') {
+    return { alimtalk: 'fail', sms: 'fail' };
+  }
+  if ((status === 'sent' || status === 'partial') && phoneCh === 'sent') {
+    return { alimtalk: 'ok', sms: 'skip' };
+  }
+  return { alimtalk: 'skip', sms: 'skip' };
 }
 
-function buildChannelDetailParts(r: DispatchDisplayRecipient): ChannelDetailPart[] {
-  const hasPhone = Boolean(r.phone?.trim());
-  const hasEmail = Boolean(r.email?.trim());
-  if (!hasPhone && !hasEmail) return [];
+function subChannelPart(label: string, outcome: SubChannelOutcome, mode: 'success' | 'failure' | 'pending'): ChannelDetailPart | null {
+  if (outcome === 'skip') return null;
+  if (mode === 'pending') {
+    if (outcome === 'pending') return { text: `${label}…`, failed: false };
+    return null;
+  }
+  if (mode === 'success') {
+    if (outcome === 'ok') return { text: `${label}✓`, failed: false };
+    return null;
+  }
+  if (outcome === 'fail') return { text: `${label}✗`, failed: true };
+  return null;
+}
 
+function buildTerminalNotifyChannelParts(r: DispatchDisplayRecipient): {
+  success: ChannelDetailPart[];
+  failure: ChannelDetailPart[];
+  pending: ChannelDetailPart[];
+} {
   const status = resolveEffectiveNotifyStatus(r);
   const via = parseSentViaFlags(r.notifySentVia);
   const failed = parseNotifyErrors(r.notifyError);
-  const terminal = isTerminalNotifyStatus(status);
-  const parts: ChannelDetailPart[] = [];
+  const success: ChannelDetailPart[] = [];
+  const failure: ChannelDetailPart[] = [];
+  const pending: ChannelDetailPart[] = [];
 
-  if (hasEmail) {
-    const emailLegacy = emailLegacyOutcome(r, status, via, failed);
-    if (channelWasAttempted(r.notifyEmailChannel, emailLegacy)) {
-      let emailState = r.notifyEmailChannel;
-      if (terminal && emailState === 'sending') emailState = undefined;
-      pushChannelFromExplicitState(parts, '이메일', emailState, emailLegacy);
-    }
-  }
+  const emailOutcome = resolveEmailSubChannel(r, status, via, failed);
+  const push = (label: string, outcome: SubChannelOutcome) => {
+    const okPart = subChannelPart(label, outcome, 'success');
+    const failPart = subChannelPart(label, outcome, 'failure');
+    const pendPart = subChannelPart(label, outcome, 'pending');
+    if (okPart) success.push(okPart);
+    if (failPart) failure.push(failPart);
+    if (pendPart) pending.push(pendPart);
+  };
 
-  if (hasPhone) {
-    appendPhoneChannelParts(parts, r, status, via, failed, terminal);
-  }
+  push('이메일', emailOutcome);
 
-  return parts;
+  const phone = resolvePhoneSubChannels(r, status, via);
+  push('알림톡', phone.alimtalk);
+  push('문자', phone.sms);
+
+  return { success, failure, pending };
+}
+
+function buildChannelDetailParts(r: DispatchDisplayRecipient): ChannelDetailPart[] {
+  const { success, failure, pending } = buildTerminalNotifyChannelParts(r);
+  if (success.length > 0) return success;
+  if (pending.length > 0) return pending;
+  return failure;
 }
 
 function notifyLabel(status: string): { text: string; className: string } {
@@ -469,7 +438,9 @@ export function dispatchStatusDisplay(r: DispatchDisplayRecipient): DispatchStat
         return statusView(dispatchSuccessLabel(''), detailParts, DISPATCH_SUCCESS_TEXT_CLASS);
       }
       if (status === 'failed') {
-        return statusView('실패', detailParts, 'text-red-400', notifyErrorHint(r.notifyError));
+        const channels = buildTerminalNotifyChannelParts(r);
+        const failParts = channels.failure.length > 0 ? channels.failure : buildChannelDetailParts(r);
+        return statusView('실패', failParts, 'text-red-400', notifyErrorHint(r.notifyError));
       }
       if (status === 'sending') {
         const kindPrefix = notifyKindPrefix(r.notifyKind);
@@ -499,52 +470,40 @@ export function dispatchStatusDisplay(r: DispatchDisplayRecipient): DispatchStat
 
   if (status === 'sending') {
     const kindPrefix = notifyKindPrefix(r.notifyKind);
-    const detailParts = buildChannelDetailParts(r);
+    const channels = buildTerminalNotifyChannelParts(r);
+    const detailParts = channels.pending.length > 0 ? channels.pending : buildChannelDetailParts(r);
     return statusView(
       `${kindPrefix}발송중`.trim(),
       detailParts,
       'text-amber-300',
-      notifyErrorHint(r.notifyError) || 'Solapi 발송 결과를 확인하는 중입니다.',
     );
   }
 
   if (status === 'partial' || status === 'sent' || status === 'failed') {
     const kindPrefix = notifyKindPrefix(r.notifyKind);
-    let detailParts = buildChannelDetailParts(r);
-    const succeeded = status === 'sent' || status === 'partial' || anyChannelSucceeded(detailParts);
+    const via = parseSentViaFlags(r.notifySentVia);
+    const channels = buildTerminalNotifyChannelParts(r);
+    const anyDelivered = via.emailOk || via.alimtalkOk || via.smsOk || channels.success.length > 0;
 
-    if (succeeded) {
-      if (!detailParts.length && status === 'sent') {
-        if (!hasEmail && hasPhone) {
-          detailParts = [{ text: 'SMS', failed: false }];
-        } else if (hasEmail && !hasPhone) {
-          detailParts = [{ text: '이메일', failed: false }];
-        } else {
-          const viaLabel = formatSentViaLabel(r.notifySentVia);
-          if (viaLabel) detailParts = [{ text: viaLabel, failed: false }];
-        }
-      }
-
-      let title = kindPrefix.includes('재발송') ? '접속 정보 재발송 완료' : '접속 정보 발송 완료';
-      if (!hasEmail && hasPhone) title = '이메일 없음 · SMS로 발송됨';
-      else if (hasEmail && !hasPhone) title = '이메일로 발송됨';
-      else if (status === 'partial') title = notifyErrorHint(r.notifyError) || '일부 채널만 발송되었습니다.';
-
-      const mainText = dispatchSuccessLabel(kindPrefix);
-
+    if (anyDelivered || channels.success.length > 0) {
+      const parts =
+        channels.success.length > 0
+          ? channels.success
+          : buildChannelDetailParts(r);
       return statusView(
-        mainText,
-        detailParts,
+        dispatchSuccessLabel(kindPrefix),
+        parts,
         DISPATCH_SUCCESS_TEXT_CLASS,
-        title,
+        notifyErrorHint(r.notifyError),
       );
     }
 
+    const failParts = channels.failure.length > 0 ? channels.failure : buildChannelDetailParts(r);
     return statusView(
       `${kindPrefix}실패`.trim() || '실패',
-      detailParts,
+      failParts,
       'text-red-400',
-      notifyErrorHint(r.notifyError) || '발송에 실패했습니다.',
+      notifyErrorHint(r.notifyError),
     );
   }
 
