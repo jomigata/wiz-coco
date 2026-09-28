@@ -26,11 +26,6 @@ import {
   downloadDispatchRecipientsExcel,
   printDispatchRecipients,
 } from '@/lib/dispatchRecipientExport';
-import {
-  formatDispatchChannelSummary,
-  parseDispatchChannelSummary,
-  type DispatchChannelSummary,
-} from '@/lib/dispatchNotifySummary';
 import CounselorPortalMoveDialog from '@/components/counselor/CounselorPortalMoveDialog';
 import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
 import {
@@ -537,8 +532,7 @@ type DispatchProgress = { kind: 'remind' | 'resend' | 'delete'; count: number };
 type DispatchComplete = {
   kind: 'remind' | 'resend' | 'delete';
   error?: boolean;
-  summary: string;
-  channelSummary?: DispatchChannelSummary | null;
+  summary?: string;
 };
 
 interface AssessmentDispatchPanelProps {
@@ -1306,14 +1300,7 @@ export default function AssessmentDispatchPanel({
       });
       await load({ silent: true });
       scheduleBurstDispatchRefresh();
-      const channelSummary = parseDispatchChannelSummary(result.channelSummary);
-      setDispatchComplete({
-        kind: 'resend',
-        channelSummary,
-        summary:
-          formatDispatchChannelSummary(channelSummary) ||
-          `성공 ${result.sent}명, 실패 ${result.failed}명`,
-      });
+      setDispatchComplete({ kind: 'resend' });
     } catch (err) {
       setDispatchComplete({
         kind: 'resend',
@@ -1332,16 +1319,9 @@ export default function AssessmentDispatchPanel({
     setDispatchProgress({ kind: 'remind', count: portalIds.length });
     setRemindLoading(true);
     try {
-      const result = await sendDispatchTestReminders(assessmentId, portalIds, notifyChannels);
+      await sendDispatchTestReminders(assessmentId, portalIds, notifyChannels);
       await load({ silent: true });
-      const channelSummary = parseDispatchChannelSummary(result.channelSummary);
-      setDispatchComplete({
-        kind: 'remind',
-        channelSummary,
-        summary:
-          formatDispatchChannelSummary(channelSummary) ||
-          `성공 ${result.sent}명, 실패 ${result.failed}명`,
-      });
+      setDispatchComplete({ kind: 'remind' });
     } catch (err) {
       setDispatchComplete({
         kind: 'remind',
