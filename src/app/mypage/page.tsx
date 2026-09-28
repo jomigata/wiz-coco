@@ -227,6 +227,12 @@ function MyPageContent() {
   const initialTab = normalizeMypageTab(searchParams.get('tab'));
   
   const [activeTab, setActiveTab] = useState<string>(initialTab);
+
+  useEffect(() => {
+    if (activeTab === 'profile') {
+      router.replace('/mypage/profile');
+    }
+  }, [activeTab, router]);
   
   // 타 페이지에서 링크로 들어오거나 브라우저 앞/뒤로 이동 시 URL과 동기화
   useEffect(() => {
@@ -556,6 +562,10 @@ function MyPageContent() {
     return <LoadingMyPage />;
   }
 
+  if (activeTab === 'profile') {
+    return <LoadingMyPage />;
+  }
+
   const awaitingAuthRestore =
     hasAuthenticatedTabSession() && !user && !firebaseUser && (firebaseLoading || isLoading);
 
@@ -614,17 +624,6 @@ function MyPageContent() {
             >
               <button
                 type="button"
-                onClick={() => changeTab('profile')}
-                className={`px-3 py-1.5 text-sm font-medium rounded-t-md transition-colors ${
-                  activeTab === 'profile'
-                    ? 'text-white bg-white/10 border border-b-0 border-white/15'
-                    : 'text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                기본 정보
-              </button>
-              <button
-                type="button"
                 onClick={() => changeTab('records')}
                 className={`px-3 py-1.5 text-sm font-medium rounded-t-md transition-colors ${
                   activeTab === 'records'
@@ -654,40 +653,6 @@ function MyPageContent() {
             </motion.div>
 
             <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-
-            {activeTab === 'profile' && (
-              <motion.div
-                className="relative flex min-h-0 flex-1 flex-col rounded-lg border border-white/10 bg-white/[0.06] p-4 backdrop-blur-sm sm:p-5"
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.05, duration: 0.35 }}
-              >
-                <motion.div
-                  className="mb-3"
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.05, duration: 0.35 }}
-                >
-                  <h2 className="text-lg font-semibold text-slate-100">기본 정보</h2>
-                  <p className="mt-1 text-xs text-slate-400 max-w-2xl">
-                    각 블록의 <span className="text-violet-300/90 font-medium">수정</span>으로 정보를 바로 편집할 수 있습니다.
-                  </p>
-                </motion.div>
-                {resolvedUser ? (
-                  <InlineProfileBlocks
-                    user={resolvedUser}
-                    firebaseUserRole={firebaseUser?.role}
-                    onUpdate={(patch) => {
-                      if (patch) {
-                        setUser((prev) => (prev ? applySavePatch(prev, patch) : prev));
-                      }
-                      void loadUserProfile();
-                    }}
-                  />
-                ) : null}
-                <SubtleLoadingOverlay show={recordsSyncPending} />
-              </motion.div>
-            )}
 
             {activeTab === 'records' && (
               <div className="flex min-h-0 flex-1 flex-col">

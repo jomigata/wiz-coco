@@ -11,6 +11,7 @@ import { useCounselorProfessionalAccess } from '@/hooks/useCounselorProfessional
 import { usePendingCounselorApplicationsCount } from '@/hooks/usePendingCounselorApplicationsCount';
 import { useCounselorApplicationNotificationCount } from '@/hooks/useCounselorApplicationNotificationCount';
 import { getVisibleTestMenuItems, TestCategory, TestSubcategory, TEST_CATEGORY_SLUGS, TEST_SUBCATEGORY_SLUGS } from '@/data/psychologyTestMenu';
+import { buildMypageNavSections } from '@/data/mypageMenu';
 import { aiMindAssistantMenuCategories, AI_MIND_ASSISTANT_MAIN_HREF } from '@/data/aiMindAssistantMenu';
 import { counselorMenuCategories, getCounselorCategoryEntryHref } from '@/data/counselorMenu';
 import { adminMenuCategories, ADMIN_MAIN_HREF, withAdminMenuBadges } from '@/data/adminMenu';
@@ -173,6 +174,10 @@ export default function Navigation() {
   const userRole = user?.role || 'user';
   const pendingCounselorCount = usePendingCounselorApplicationsCount(userRole);
   const counselorResultCount = useCounselorApplicationNotificationCount(userUid, userRole);
+  const mypageNavSections = useMemo(
+    () => buildMypageNavSections(userRole, { settingsBadge: counselorResultCount }),
+    [userRole, counselorResultCount],
+  );
   const counselorAccess = useCounselorProfessionalAccess();
   const userName = user?.displayName || sessionFirebaseUser?.displayName || '';
   const showPsychologyTestsMenu =
@@ -757,7 +762,7 @@ export default function Navigation() {
                       onMouseLeave={scheduleClose}
                     >
                       <Link
-                        href="/mypage"
+                        href="/mypage/profile"
                         className={`relative h-10 px-2.5 lg:px-3.5 inline-flex items-center justify-center gap-1 rounded-lg text-sm lg:text-[15px] font-semibold tracking-tight transition-all duration-300 whitespace-nowrap border-2 ${
                           activeItem === "/mypage" || activeItem.startsWith("/mypage/") || activeItem.startsWith("/mypage?")
                             ? "text-white bg-blue-600 border-white"
@@ -765,7 +770,7 @@ export default function Navigation() {
                             ? "text-gray-300 border-white"
                             : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
                         }`}
-                        onClick={(e) => handleNavLinkClick("/mypage", e)}
+                        onClick={(e) => handleNavLinkClick("/mypage/profile", e)}
                       >
                         👤 마이페이지
                         {counselorResultCount > 0 && (
@@ -820,44 +825,47 @@ export default function Navigation() {
                                 </div>
                               </div>
 
-                              {/* 마이페이지 메뉴 아이템들 */}
-                              <div className="space-y-1">
-                                {[
-                                  { name: "검사 기록", href: "/mypage?tab=records", description: "나의 심리검사 결과 확인", icon: "📊" },
-                                  { name: "기본 정보", href: "/mypage?tab=profile", description: "프로필 정보 수정", icon: "👤" },
-                                  { name: "상담 예약", href: "/mypage/counseling", description: "전문가 상담 예약", icon: "💬" },
-                                  { name: "삭제된 코드", href: "/mypage?tab=deleted", description: "삭제된 테스트 코드 복구", icon: "📋" },
-                                  { name: "설정", href: "/mypage/settings", description: "계정 설정", icon: "⚙️", badge: counselorResultCount }
-                                ].map((item) => (
-                                  <Link
-                                    key={item.name}
-                                    href={item.href}
-                                    className="group flex items-center gap-4 rounded-xl border-2 border-white/20 px-4 py-3 transition-all duration-300 hover:border-white"
-                                    onClick={() => setActiveMenu(null)}
-                                  >
-                                    <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
-                                      {item.icon}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                      <div className="font-medium text-white truncate flex items-center gap-2">
-                                        {item.name}
-                                        {'badge' in item && typeof item.badge === 'number' && item.badge > 0 && (
-                                          <span className="min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold leading-none shrink-0">
-                                            {item.badge > 99 ? '99+' : item.badge}
-                                          </span>
-                                        )}
-                                      </div>
-                                      <div className="text-xs text-green-300 truncate">{item.description}</div>
-                                    </div>
-                                    <svg 
-                                      className="w-4 h-4 text-green-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
-                                      fill="none" 
-                                      stroke="currentColor" 
-                                      viewBox="0 0 24 24"
-                                    >
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                    </svg>
-                                  </Link>
+                              {/* 마이페이지 메뉴 */}
+                              <div className="space-y-3">
+                                {mypageNavSections.map((section) => (
+                                  <div key={section.id} className="space-y-1">
+                                    {section.id !== 'account' ? (
+                                      <p className="px-2 pt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-400/70">
+                                        {section.title}
+                                      </p>
+                                    ) : null}
+                                    {section.items.map((item) => (
+                                      <Link
+                                        key={item.href}
+                                        href={item.href}
+                                        className="group flex items-center gap-4 rounded-xl border-2 border-white/20 px-4 py-3 transition-all duration-300 hover:border-white"
+                                        onClick={() => setActiveMenu(null)}
+                                      >
+                                        <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
+                                          {item.icon}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                          <div className="font-medium text-white truncate flex items-center gap-2">
+                                            {item.name}
+                                            {typeof item.badge === 'number' && item.badge > 0 ? (
+                                              <span className="min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold leading-none shrink-0">
+                                                {item.badge > 99 ? '99+' : item.badge}
+                                              </span>
+                                            ) : null}
+                                          </div>
+                                          <div className="text-xs text-green-300 truncate">{item.description}</div>
+                                        </div>
+                                        <svg
+                                          className="w-4 h-4 text-green-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          viewBox="0 0 24 24"
+                                        >
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                        </svg>
+                                      </Link>
+                                    ))}
+                                  </div>
                                 ))}
 
                                 {/* 로그아웃 버튼 */}
@@ -1064,27 +1072,25 @@ export default function Navigation() {
                       </span>
                     )}
                   </div>
-                  <Link
-                    href="/mypage"
-                    className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-indigo-800/30 rounded-lg transition-all duration-300"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    📊 검사 기록
-                  </Link>
-                  <Link
-                    href="/mypage?tab=profile"
-                    className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-indigo-800/30 rounded-lg transition-all duration-300"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    👤 기본 정보
-                  </Link>
-                  <Link
-                    href="/mypage/counseling"
-                    className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-indigo-800/30 rounded-lg transition-all duration-300"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    💬 상담 예약
-                  </Link>
+                  {mypageNavSections.map((section) => (
+                    <React.Fragment key={section.id}>
+                      {section.id !== 'account' ? (
+                        <p className="px-4 pt-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                          {section.title}
+                        </p>
+                      ) : null}
+                      {section.items.map((item) => (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-indigo-800/30 rounded-lg transition-all duration-300"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          {item.icon} {item.name}
+                        </Link>
+                      ))}
+                    </React.Fragment>
+                  ))}
                   <button
                     onClick={() => {
                       setIsMobileMenuOpen(false);

@@ -1,0 +1,105 @@
+import { ADMIN_MAIN_HREF } from '@/data/adminMenu';
+import {
+  COUNSELOR_ASSESSMENT_CODE_SLUG,
+  COUNSELOR_DISPATCH_MGMT_SLUG,
+  COUNSELOR_MAIN_HREF,
+  getCounselorCategoryEntryHref,
+} from '@/data/counselorMenu';
+import { shouldShowAdminMenu, shouldShowCounselorMenu } from '@/utils/roleUtils';
+
+export type MypageNavItem = {
+  name: string;
+  href: string;
+  description: string;
+  icon: string;
+  badge?: number;
+};
+
+export type MypageNavSection = {
+  id: string;
+  title: string;
+  items: MypageNavItem[];
+};
+
+export function buildMypageNavSections(
+  role: unknown,
+  options?: { settingsBadge?: number },
+): MypageNavSection[] {
+  const sections: MypageNavSection[] = [
+    {
+      id: 'account',
+      title: '계정',
+      items: [
+        {
+          name: '기본 정보',
+          href: '/mypage/profile',
+          description: '프로필·연락처·전문 정보',
+          icon: '👤',
+        },
+        {
+          name: '설정',
+          href: '/mypage/settings',
+          description: '공개 범위·역할·계정',
+          icon: '⚙️',
+          badge: options?.settingsBadge,
+        },
+      ],
+    },
+  ];
+
+  if (shouldShowCounselorMenu(role)) {
+    sections.push({
+      id: 'counselor',
+      title: '상담사',
+      items: [
+        {
+          name: '상담관리 홈',
+          href: COUNSELOR_MAIN_HREF,
+          description: '상담 운영 대시보드',
+          icon: '👨‍⚕️',
+        },
+        {
+          name: '내담자 목록',
+          href: getCounselorCategoryEntryHref(COUNSELOR_DISPATCH_MGMT_SLUG),
+          description: '발송·진행 현황',
+          icon: '📤',
+        },
+        {
+          name: '상담코드 목록',
+          href: getCounselorCategoryEntryHref(COUNSELOR_ASSESSMENT_CODE_SLUG),
+          description: '코드 발급·관리',
+          icon: '📦',
+        },
+      ],
+    });
+  }
+
+  if (shouldShowAdminMenu(role)) {
+    sections.push({
+      id: 'admin',
+      title: '관리자',
+      items: [
+        {
+          name: '관리자 홈',
+          href: ADMIN_MAIN_HREF,
+          description: '운영·모니터링 허브',
+          icon: '🔧',
+        },
+        {
+          name: '시스템 대시보드',
+          href: '/admin/system-dashboard',
+          description: '전체 현황',
+          icon: '📊',
+        },
+        {
+          name: '상담 관리',
+          href: '/admin/counseling-management',
+          description: '상담 일정·기록',
+          icon: '💬',
+        },
+      ],
+    });
+  }
+
+  return sections;
+}
