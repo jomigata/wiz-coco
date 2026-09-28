@@ -16,6 +16,30 @@ export type AssessmentMetaEntry = {
   createdAt?: string | null;
 };
 
+export type PrimaryAdditionalTestEntry = {
+  primaryAssessmentId: string;
+  testId: string;
+  name: string;
+  addedAt?: string | null;
+};
+
+function mergePortalAssessmentTestList(
+  aid: string,
+  meta: AssessmentMetaEntry,
+  primaryAdditionalTests?: PrimaryAdditionalTestEntry[],
+): { testId: string; name: string }[] {
+  const base = meta.testList || [];
+  const baseIds = new Set(base.map((t) => (t.testId || '').trim()).filter(Boolean));
+  const extras = (primaryAdditionalTests || [])
+    .filter((e) => e.primaryAssessmentId === aid && (e.testId || '').trim())
+    .filter((e) => !baseIds.has((e.testId || '').trim()))
+    .map((e) => ({
+      testId: (e.testId || '').trim(),
+      name: (e.name || e.testId || '').trim(),
+    }));
+  return [...base, ...extras];
+}
+
 function progressLabel(total: number, completed: number): ClientPortalProgressLabel {
   if (total <= 0) return 'no_tests';
   if (completed <= 0) return 'not_started';
@@ -65,8 +89,16 @@ export function buildExpandTestsForClientList(
   const rows: DispatchTestResult[] = [];
   for (const aid of aids) {
     const meta = assessmentMeta[aid];
-    if (!meta?.testList?.length) continue;
-    rows.push(...buildTestsForPortal(item.portalId, meta.testList, results));
+    if (!meta?.testList?.length && !(item.primaryAdditionalTests || []).some((e) => e.primaryAssessmentId === aid)) {
+      continue;
+    }
+    const testList = meta
+      ? mergePortalAssessmentTestList(aid, meta, item.primaryAdditionalTests)
+      : (item.primaryAdditionalTests || [])
+          .filter((e) => e.primaryAssessmentId === aid)
+          .map((e) => ({ testId: e.testId, name: e.name || e.testId }));
+    if (!testList.length) continue;
+    rows.push(...buildTestsForPortal(item.portalId, testList, results));
   }
   if (rows.length > 0) return dedupeDispatchTestsByTestId(rows);
   return fallbackPrimaryTests?.length ? dedupeDispatchTestsByTestId(fallbackPrimaryTests) : [];
@@ -95,12 +127,19 @@ export function computePortalProgress(
   assessmentMeta: Record<string, AssessmentMetaEntry>,
   results: RealtimeTestResultDoc[],
   careSlice?: CounselorClientPortalListItem['progressCare'],
+  primaryAdditionalTests?: PrimaryAdditionalTestEntry[],
 ): CounselorClientPortalListItem['progress'] {
   const merged: DispatchTestResult[] = [];
   for (const aid of assessmentIds) {
     const meta = assessmentMeta[aid];
     if (!meta) continue;
-    merged.push(...buildTestsForPortal(portalId, meta.testList, results));
+    merged.push(
+      ...buildTestsForPortal(
+        portalId,
+        mergePortalAssessmentTestList(aid, meta, primaryAdditionalTests),
+        results,
+      ),
+    );
   }
   const unique = dedupeDispatchTestsByTestId(merged);
   const testProgress = {
@@ -132,6 +171,7 @@ export function applyRealtimeToClientList(
         assessmentMeta,
         results,
         item.progressCare,
+        item.primaryAdditionalTests,
       ),
     };
   });

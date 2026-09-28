@@ -5,6 +5,7 @@ from collections import defaultdict
 
 from config import CARE_ASSIGNMENTS_COLLECTION
 from utils.assessment_dispatch import _test_detail_rows_from_map
+from utils.portal_primary_additional_tests import merged_test_list_for_portal_assessment
 
 _TEST_STATUS_RANK = {"completed": 3, "in_progress": 2, "not_started": 1}
 
@@ -73,6 +74,7 @@ def portal_expand_progress_counts(
     assessment_cache: dict,
     completion_map: dict,
     care_items: list[dict] | None = None,
+    portal_pdata: dict | None = None,
 ) -> tuple[int, int, dict]:
     """Returns (completed, total, {careCompleted, careTotal, testCompleted, testTotal})."""
     pid = (portal_id or "").strip()
@@ -81,7 +83,11 @@ def portal_expand_progress_counts(
         cached = assessment_cache.get(aid)
         if not cached:
             continue
-        test_list = cached.get("testList") or []
+        test_list = merged_test_list_for_portal_assessment(
+            cached.get("testList") or [],
+            portal_pdata,
+            aid,
+        )
         completed_ids = completion_map.get((pid, aid), set())
         by_test: dict[str, dict] = {}
         for tid in completed_ids:

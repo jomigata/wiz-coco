@@ -80,8 +80,7 @@ export default function CounselorNextTestRecommendCard({
     try {
       const result = await pushAssessmentsToPortals({
         portalIds: [recipient.portalId],
-        title: `추천 · ${recommendation.name}`,
-        welcomeMessage: '담당 상담사가 다음 검사를 안내했습니다. 아래 링크에서 이어서 진행해 주세요.',
+        assessmentId,
         testList: [{ testId: recommendation.testId, name: recommendation.name }],
         notify: true,
         notifyChannels: channels,
@@ -108,7 +107,7 @@ export default function CounselorNextTestRecommendCard({
       }
     } catch (err) {
       setSendPendingUntilListed(false);
-      setError(err instanceof Error ? err.message : '검사 보내기에 실패했습니다.');
+      setError(err instanceof Error ? err.message : '검사 추가에 실패했습니다.');
       setBusy(false);
     }
   };
@@ -164,10 +163,10 @@ export default function CounselorNextTestRecommendCard({
               {sendingImmediate ? (
                 <>
                   <LoadingSpinner size="sm" className="h-3.5 w-3.5 border-[1.5px]" />
-                  보내는 중…
+                  추가 중…
                 </>
               ) : (
-                '즉시 발송'
+                '즉시 추가'
               )}
             </button>
             <button

@@ -121,6 +121,8 @@ def _find_portal_by_access_code(db, code: str):
 
 
 def _load_assessments_for_portal(db, portal_doc):
+    from utils.portal_primary_additional_tests import merged_test_list_for_portal_assessment
+
     d = portal_doc.to_dict()
     assigned = list(d.get("assignedAssessmentIds") or [])
     linked = list(d.get("linkedAssessmentIds") or [])
@@ -135,6 +137,8 @@ def _load_assessments_for_portal(db, portal_doc):
             continue
         is_linked = aid in linked and aid not in assigned
         issue_type = "shared" if is_linked else (a.get("issueType") or "individual")
+        base_tests = a.get("testList", [])
+        test_list = merged_test_list_for_portal_assessment(base_tests, d, adoc.id)
         items.append(
             {
                 "assessmentId": adoc.id,
@@ -142,7 +146,7 @@ def _load_assessments_for_portal(db, portal_doc):
                 "cohortName": (a.get("cohortName") or d.get("cohortName") or "").strip(),
                 "welcomeMessage": a.get("welcomeMessage", ""),
                 "usageEndDate": a.get("usageEndDate", ""),
-                "testList": a.get("testList", []),
+                "testList": test_list,
                 "accessCode": a.get("accessCode", ""),
                 "issueType": issue_type,
                 "isLinkedShared": is_linked,
@@ -307,6 +311,26 @@ def push_assessments():
             return jsonify({"error": "Bad Request", "message": "신규 상담(코드) 생성 시 title이 필요합니다."}), 400
         if not isinstance(test_list, list) or not test_list:
             return jsonify({"error": "Bad Request", "message": "신규 상담(코드) 생성 시 testList가 필요합니다."}), 400
+    elif isinstance(test_list, list) and test_list:
+        from utils.portal_primary_additional_tests import add_primary_additional_tests_to_portals
+
+        db = get_firestore()
+        try:
+            result = add_primary_additional_tests_to_portals(
+                db,
+                counselor_uid=g.counselor_uid,
+                portal_ids=[str(x).strip() for x in portal_ids if str(x).strip()],
+                primary_assessment_id=assessment_id,
+                test_list=test_list,
+                notify=notify,
+                notify_channels=notify_channels,
+                scheduled_at_iso=scheduled_at_iso or None,
+            )
+        except ValueError as exc:
+            return jsonify({"error": "Bad Request", "message": str(exc)}), 400
+        except PermissionError as exc:
+            return jsonify({"error": "Forbidden", "message": str(exc)}), 403
+        return jsonify(result)
 
     db = get_firestore()
     try:

@@ -143,6 +143,13 @@ export type CounselorClientPortalListItem = {
     totalTests: number;
     completedTests: number;
   };
+  /** 나의코드(primary)에 추가된 검사 — 신규 상담코드 없음 */
+  primaryAdditionalTests?: {
+    primaryAssessmentId: string;
+    testId: string;
+    name: string;
+    addedAt?: string | null;
+  }[];
   archivedTests?: {
     testId: string;
     testName?: string;

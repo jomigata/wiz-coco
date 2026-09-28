@@ -23,6 +23,10 @@ from utils.counselor_portal_expand_progress import (
     bulk_active_care_by_portal,
     portal_expand_progress_counts,
 )
+from utils.portal_primary_additional_tests import (
+    merged_test_list_for_portal_assessment,
+    primary_additional_tests_for_api,
+)
 
 
 def _matches_counselor_scope(resource_counselor_id: str | None, scoped_uid: str | None) -> bool:
@@ -204,6 +208,7 @@ def list_counselor_client_portals(
             assessment_cache,
             completion_map,
             care_by_portal.get(portal_id, []),
+            portal_pdata=pdata,
         )
 
         percent = round((completed_tests / total_tests) * 100) if total_tests else 0
@@ -265,6 +270,7 @@ def list_counselor_client_portals(
                     "totalTests": progress_slices.get("careTotal") or 0,
                     "completedTests": progress_slices.get("careCompleted") or 0,
                 },
+                "primaryAdditionalTests": primary_additional_tests_for_api(pdata),
             }
         )
 
@@ -347,7 +353,7 @@ def get_counselor_client_portal_detail(
         if (a.get("status") or "active") != "active":
             continue
         all_aids.add(aid)
-        test_list = a.get("testList") or []
+        test_list = merged_test_list_for_portal_assessment(a.get("testList") or [], pdata, aid)
         assessment_cache_for_progress[aid] = {"testList": test_list}
         required = {
             str(t.get("testId") or "").strip()
@@ -383,6 +389,7 @@ def get_counselor_client_portal_detail(
         assessment_cache_for_progress,
         completion_map,
         care_items,
+        portal_pdata=pdata,
     )
 
     percent = round((completed_tests / total_tests) * 100) if total_tests else 0
@@ -438,6 +445,7 @@ def get_counselor_client_portal_detail(
                 for t in (pdata.get("counselorTags") or [])
                 if str(t).strip()
             ][:10],
+            "primaryAdditionalTests": primary_additional_tests_for_api(pdata),
         },
         "progress": {
             "totalTests": total_tests,

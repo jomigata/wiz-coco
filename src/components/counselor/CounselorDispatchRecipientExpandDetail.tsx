@@ -53,6 +53,27 @@ function addedAtForPushedTest(
   return latest;
 }
 
+function addedAtForAdditionalTest(
+  testId: string,
+  primaryAssessmentId: string,
+  baselineTestIds: Set<string>,
+  assignedAssessmentIds: string[],
+  assessmentMeta?: Record<string, AssessmentMetaEntry>,
+  primaryAdditionalTests?: {
+    primaryAssessmentId: string;
+    testId: string;
+    addedAt?: string | null;
+  }[],
+): string | null {
+  const tid = testId.trim();
+  if (!tid || baselineTestIds.has(tid)) return null;
+  const onPrimary = (primaryAdditionalTests || []).find(
+    (e) => e.primaryAssessmentId === primaryAssessmentId && (e.testId || '').trim() === tid,
+  );
+  if (onPrimary?.addedAt) return onPrimary.addedAt;
+  return addedAtForPushedTest(tid, primaryAssessmentId, assignedAssessmentIds, assessmentMeta);
+}
+
 function formatCompletionOrAddedColumn(row: {
   status: DispatchTestResult['status'];
   completedAt: string | null;
@@ -143,6 +164,11 @@ export type CounselorDispatchRecipientExpandContentProps = {
   /** dispatch 패널 등 testList 직접 전달 */
   baselineTestIds?: string[];
   assignedAssessmentIds?: string[];
+  primaryAdditionalTests?: {
+    primaryAssessmentId: string;
+    testId: string;
+    addedAt?: string | null;
+  }[];
 };
 
 export function CounselorDispatchRecipientExpandContent({
@@ -161,6 +187,7 @@ export function CounselorDispatchRecipientExpandContent({
   assessmentMeta,
   baselineTestIds: baselineTestIdsProp,
   assignedAssessmentIds = [],
+  primaryAdditionalTests = [],
 }: CounselorDispatchRecipientExpandContentProps) {
   const r = recipient;
   const [careItems, setCareItems] = useState<CounselorCareAssignmentListItem[]>([]);
@@ -230,7 +257,14 @@ export function CounselorDispatchRecipientExpandContent({
       const isBaseline = testId ? baselineTestIds.has(testId) : false;
       const canRemove = t.status === 'not_started' && Boolean(testId) && !isBaseline;
       const addedAt = canRemove
-        ? addedAtForPushedTest(testId, assessmentId, assignedAssessmentIds, assessmentMeta)
+        ? addedAtForAdditionalTest(
+            testId,
+            assessmentId,
+            baselineTestIds,
+            assignedAssessmentIds,
+            assessmentMeta,
+            primaryAdditionalTests,
+          )
         : null;
       return {
         rowKey: `test-${t.testId}`,
@@ -289,6 +323,7 @@ export function CounselorDispatchRecipientExpandContent({
     assignedAssessmentIds,
     assessmentMeta,
     optimisticRemovedTestIds,
+    primaryAdditionalTests,
   ]);
 
   useEffect(() => {

@@ -5,6 +5,7 @@ from firebase_admin.firestore import ArrayRemove, SERVER_TIMESTAMP
 
 from config import ASSESSMENTS_COLLECTION, CLIENT_PORTALS_COLLECTION, TEST_RESULTS_COLLECTION
 from utils.assessment_dispatch import _bulk_completed_tests_by_portal_assessment
+from utils.portal_primary_additional_tests import revoke_primary_additional_test_on_portal
 
 
 def _verify_portal_counselor(db, portal_id: str, counselor_uid: str) -> dict:
@@ -36,6 +37,15 @@ def revoke_portal_additional_test(
         raise ValueError("portalId와 testId가 필요합니다.")
 
     pdata = _verify_portal_counselor(db, pid, counselor_uid)
+
+    if primary and revoke_primary_additional_test_on_portal(
+        db,
+        portal_id=pid,
+        primary_assessment_id=primary,
+        test_id=tid,
+    ):
+        return {"portalId": pid, "testId": tid, "removedFrom": "primaryAdditionalTests"}
+
     assigned = [str(x).strip() for x in (pdata.get("assignedAssessmentIds") or []) if str(x).strip()]
 
     completion_map = _bulk_completed_tests_by_portal_assessment(db, [pid], set(assigned))
