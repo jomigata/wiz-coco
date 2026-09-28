@@ -18,6 +18,7 @@
 1. Solapi 알림톡·발신번호 prod 설정 — [SOLAPI_QUICKSTART_KO.md](./SOLAPI_QUICKSTART_KO.md)
 2. **email-only** 기존 내담자: 연락처 수정으로 **휴대 11자리** 등록 후 발송
 3. `/api/notifications/status` → `clientPortalEmailDispatch: false` 확인
+4. 파일럿 진행·주간 체크 — [pilot-client-portal-notify-log-ko.md](./pilot-client-portal-notify-log-ko.md)
 
 ## 롤백
 

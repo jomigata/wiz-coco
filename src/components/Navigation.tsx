@@ -717,7 +717,10 @@ export default function Navigation() {
                         ref={counselorTriggerRef}
                         className="relative"
                         onMouseEnter={() => openMenu('counselor')}
-                        onMouseLeave={scheduleClose}
+                        onMouseLeave={() => {
+                          suppressMegaMenuHoverRef.current = false;
+                          scheduleClose();
+                        }}
                       >
                         <Link
                           href="/counselor"
