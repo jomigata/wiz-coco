@@ -4,6 +4,7 @@ import type {
   CounselorClientPortalListItem,
   CounselorPortalTestAssignmentRow,
 } from '@/types/clientPortal';
+import type { DispatchTestResult } from '@/lib/clientPortalApi';
 import {
   buildTestsForPortal,
   type RealtimeTestResultDoc,
@@ -46,6 +47,27 @@ function isoFromFirestore(value: unknown): string | null {
     if (typeof sec === 'number') return new Date(sec * 1000).toISOString();
   }
   return null;
+}
+
+/** 내담자 목록 펼침 — 진행현황과 동일하게 배정된 모든 상담(코드) 검사 행 */
+export function buildExpandTestsForClientList(
+  item: CounselorClientPortalListItem,
+  assessmentMeta: Record<string, AssessmentMetaEntry>,
+  results: RealtimeTestResultDoc[],
+  fallbackPrimaryTests?: DispatchTestResult[] | null,
+): DispatchTestResult[] {
+  const aids = item.assessments.map((a) => a.assessmentId).filter(Boolean);
+  if (aids.length === 0) {
+    return fallbackPrimaryTests?.length ? fallbackPrimaryTests : [];
+  }
+  const rows: DispatchTestResult[] = [];
+  for (const aid of aids) {
+    const meta = assessmentMeta[aid];
+    if (!meta?.testList?.length) continue;
+    rows.push(...buildTestsForPortal(item.portalId, meta.testList, results));
+  }
+  if (rows.length > 0) return rows;
+  return fallbackPrimaryTests?.length ? fallbackPrimaryTests : [];
 }
 
 export function computePortalProgress(

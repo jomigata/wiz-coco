@@ -79,7 +79,7 @@ import CounselorRecipientContactEditModal from '@/components/counselor/Counselor
 import { dispatchStatusDisplay, formatNotifyDate, compareDispatchStatusSort, recipientProgressDisplay, shouldSendRemindNotification } from '@/lib/dispatchRecipientDisplay';
 import { INDIVIDUAL_COHORT_KEY } from '@/lib/monitoringRealtime';
 import { consumeCounselorListSkipReload } from '@/lib/counselorListNavigationCache';
-import { applyRealtimeToClientList } from '@/lib/clientPortalRealtime';
+import { applyRealtimeToClientList, buildExpandTestsForClientList } from '@/lib/clientPortalRealtime';
 import { useCounselorTestResultsRealtime } from '@/hooks/useCounselorTestResultsRealtime';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { getAppRoleSync, isAdmin } from '@/utils/roleUtils';
@@ -1645,7 +1645,12 @@ export default function CounselorClientList({
                       expandDetailState !== 'error'
                         ? expandDetailState
                         : null;
-                    const rowTests: DispatchTestResult[] = expandPayload?.tests ?? [];
+                    const rowTests: DispatchTestResult[] = buildExpandTestsForClientList(
+                      item,
+                      assessmentMeta,
+                      liveResults,
+                      expandPayload?.tests ?? null,
+                    );
 
                     const locked = isRowSelectionLocked(item.portalId);
                     const dimmedCheckbox =
