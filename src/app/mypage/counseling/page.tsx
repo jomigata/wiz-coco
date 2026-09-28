@@ -86,16 +86,7 @@ export default function CounselingPage() {
         
         <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20 mb-8">
           <h2 className="text-xl font-semibold text-white mb-4">내 상담 예약</h2>
-          <p className="text-blue-200 mb-8">현재 개발 중입니다. 곧 상담 예약 기능이 추가될 예정입니다.</p>
-          
-          <div className="flex justify-center">
-            <Link 
-              href="/counseling" 
-              className="px-5 py-2.5 bg-blue-600 rounded-lg text-white font-medium text-sm shadow-md hover:bg-blue-700 transition-colors"
-            >
-              상담 프로그램 보기
-            </Link>
-          </div>
+          <p className="text-blue-200">현재 개발 중입니다. 곧 상담 예약 기능이 추가될 예정입니다.</p>
         </div>
       </div>
     </main>

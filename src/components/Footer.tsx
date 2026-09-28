@@ -22,7 +22,6 @@ export default function Footer() {
             <h3 className="text-lg font-semibold text-slate-900 mb-4">바로가기</h3>
             <ul className="text-sm space-y-2">
               <li><a href="#" className="hover:text-white transition-colors">심리검사</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">상담 프로그램</a></li>
               <li><a href="#" className="hover:text-white transition-colors">상담사 찾기</a></li>
               <li><a href="#" className="hover:text-white transition-colors">자주 묻는 질문</a></li>
               <li><a href="#" className="hover:text-white transition-colors">공지사항</a></li>

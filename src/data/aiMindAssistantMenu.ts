@@ -217,7 +217,7 @@ export const aiMindAssistantMenuCategories: TestCategory[] = [
         items: [
           {
             name: '상담 예약',
-            href: '/counseling/appointments',
+            href: '/mypage/counseling',
             description: '개인/가족/커플 상담 예약',
             icon: '📅',
           },

@@ -223,34 +223,6 @@ export default function ProgramSection() {
       icon: "👨‍👩‍👧",
       image: "",
       link: "/portal/"
-    },
-    {
-      title: "개인 맞춤 심리 상담",
-      description: "개인의 내면 탐색과 자아 성장을 돕는 1:1 맞춤형 심리 상담 프로그램입니다. 일상의 스트레스부터 깊은 심리적 문제까지 전문가와 함께 해결해나갑니다.",
-      icon: "📊",
-      image: "",
-      link: "/counseling"
-    },
-    {
-      title: "커플/부부 관계 회복",
-      description: "관계의 어려움을 겪고 있는 커플과 부부를 위한 상담 프로그램. 소통 방식 개선과 갈등 해결 기술을 배우고 건강한 관계로 회복합니다.",
-      icon: "💼",
-      image: "",
-      link: "/counseling"
-    },
-    {
-      title: "아동/청소년 성장 지원",
-      description: "발달 단계에 맞는 심리 지원으로 아동과 청소년의 건강한 성장을 돕습니다. 학업 스트레스, 또래 관계, 정체성 형성 등 다양한 문제를 다룹니다.",
-      icon: "💻",
-      image: "",
-      link: "/counseling"
-    },
-    {
-      title: "가족 시스템 치료",
-      description: "가족 구성원 간의 역동성을 이해하고 건강한 가족 문화를 형성할 수 있도록 돕는 통합적 가족 상담 프로그램입니다.",
-      icon: "👥",
-      image: "",
-      link: "/counseling"
     }
   ];
 

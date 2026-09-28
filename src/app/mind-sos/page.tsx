@@ -201,7 +201,7 @@ import Link from 'next/link';export default function MindSOSPage() {
                       지속적인 도움이 필요하다면 전문 상담사와의 상담을 예약하세요
                     </p>
                     <Link
-                      href="/counseling"
+                      href="/mypage/counseling"
                       className="inline-block w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 px-6 rounded-lg font-semibold text-center hover:from-purple-600 hover:to-pink-600 transition-all duration-300 transform hover:scale-105"
                     >
                       상담 예약하기
