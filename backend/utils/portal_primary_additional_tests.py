@@ -1,6 +1,8 @@
 """나의코드(배정된 primary 상담코드)에 검사만 추가 — 신규 상담코드 문서 생성 없음."""
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 from firebase_admin.firestore import SERVER_TIMESTAMP
 
 from config import ASSESSMENTS_COLLECTION, CLIENT_PORTALS_COLLECTION
@@ -136,6 +138,7 @@ def add_primary_additional_tests_to_portals(
         existing = normalize_primary_additional_entries(pdata.get(PRIMARY_ADDITIONAL_FIELD))
         extra_ids = _existing_additional_ids(existing, primary)
         to_add: list[dict] = []
+        added_at_iso = datetime.now(timezone.utc).isoformat()
         for t in normalized_tests:
             tid = str(t.get("testId") or "").strip()
             if not tid:
@@ -147,7 +150,7 @@ def add_primary_additional_tests_to_portals(
                     "primaryAssessmentId": primary,
                     "testId": tid,
                     "name": str(t.get("name") or "").strip() or tid,
-                    "addedAt": SERVER_TIMESTAMP,
+                    "addedAt": added_at_iso,
                 }
             )
             extra_ids.add(tid)

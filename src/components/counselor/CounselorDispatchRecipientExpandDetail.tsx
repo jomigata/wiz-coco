@@ -74,6 +74,12 @@ function addedAtForAdditionalTest(
   return addedAtForPushedTest(tid, primaryAssessmentId, assignedAssessmentIds, assessmentMeta);
 }
 
+function formatAddedAtInParens(iso: string | null | undefined): string {
+  const inner = formatCompletedAt(iso);
+  if (inner === '—') return '—';
+  return `( ${inner} )`;
+}
+
 function formatCompletionOrAddedColumn(row: {
   status: DispatchTestResult['status'];
   completedAt: string | null;
@@ -83,8 +89,8 @@ function formatCompletionOrAddedColumn(row: {
   if (row.status === 'completed') {
     return formatCompletedAt(row.completedAt);
   }
-  if (row.canRemove && row.addedAt) {
-    return `(${formatCompletedAt(row.addedAt)})`;
+  if (row.canRemove && row.addedAt && row.status === 'not_started') {
+    return formatAddedAtInParens(row.addedAt);
   }
   return '—';
 }
@@ -128,10 +134,10 @@ function renderResultCheckCell(
   if (row.status === 'in_progress') {
     return <span className="text-amber-300">진행 중</span>;
   }
-  if (row.canRemove && row.addedAt) {
+  if (row.status === 'not_started' && row.canRemove && row.addedAt) {
     return (
       <span className="whitespace-nowrap text-slate-400">
-        ← {formatCompletedAt(row.addedAt)}
+        ← {formatAddedAtInParens(row.addedAt)}
       </span>
     );
   }
@@ -357,6 +363,8 @@ export function CounselorDispatchRecipientExpandContent({
           careAssignmentId: row.careAssignmentId,
         });
         setCareItems((prev) => prev.filter((c) => c.id !== row.careAssignmentId));
+        refreshCareList?.();
+        setRecommendUiRev((n) => n + 1);
       } else if (row.testId && assessmentId) {
         await revokePortalAdditionalAssignment(r.portalId, {
           kind: 'test',
@@ -429,7 +437,7 @@ export function CounselorDispatchRecipientExpandContent({
               <col />
               <col className="w-[5.5rem]" />
               <col className="w-[11.5rem]" />
-              <col className="w-[5.5rem]" />
+              <col className="w-[7.5rem]" />
               <col className="w-9" />
             </colgroup>
             <thead className={counselorListTheadClass}>
