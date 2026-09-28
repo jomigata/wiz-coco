@@ -383,6 +383,7 @@ export default function AssessmentAddRecipientModal({
     loading?: boolean;
     hint?: string;
     notice?: string;
+    refreshListOnConfirm?: boolean;
     dispatchSummary?: CounselorDispatchCompleteSummary;
   } | null>(null);
   const [addError, setAddError] = useState('');
@@ -829,13 +830,14 @@ export default function AssessmentAddRecipientModal({
         title: allNotifyFailed ? '발송 실패' : addSendNow ? '발송 완료' : '추가 완료',
         sent: addSendNow,
         error: allNotifyFailed,
+        refreshListOnConfirm: true,
         dispatchSummary: {
           ...dispatchSummary,
+          addedCount: result.created?.length ?? targetCount,
           notifySuccessCount,
           notifyFailedCount,
         },
       });
-      onSuccess?.({ sent: addSendNow });
     } catch (err) {
       setAddComplete((prev) =>
         prev
@@ -859,9 +861,14 @@ export default function AssessmentAddRecipientModal({
   };
 
   const handleCompleteConfirm = () => {
+    const refresh = addComplete?.refreshListOnConfirm;
+    const sent = addComplete?.sent ?? false;
     setAddComplete(null);
     resetForm();
     onClose();
+    if (refresh) {
+      onSuccess?.({ sent });
+    }
   };
 
   if (!open || !context) return null;

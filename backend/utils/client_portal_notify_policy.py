@@ -113,12 +113,23 @@ def validate_recipient_contact_row(
     phone: str,
     email: str,
     queue_notify: bool,
+    strict_immediate_phone: bool = True,
 ) -> str | None:
     """일괄/단건 등록 행 검증."""
     phone_norm = normalize_recipient_phone((phone or "").strip())
     email = (email or "").strip()
     if queue_notify:
-        return validate_immediate_notify_phone(phone_norm)
+        if not is_valid_kr_mobile_phone(phone_norm):
+            return "즉시 발송 시 휴대폰 번호(11자리)가 필요합니다."
+        if strict_immediate_phone:
+            from utils.solapi_client import recipient_conflicts_with_sender
+
+            if recipient_conflicts_with_sender(phone_norm):
+                return (
+                    "등록된 Solapi 발신번호와 같은 번호로는 알림톡·문자를 받을 수 없습니다. "
+                    "다른 휴대폰 번호를 등록해 주세요."
+                )
+        return None
     if not phone_norm and not email:
         return "휴대폰 또는 이메일 중 하나는 필요합니다."
     if phone_norm and not is_valid_kr_mobile_phone(phone_norm):

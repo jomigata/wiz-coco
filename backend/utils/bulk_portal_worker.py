@@ -224,13 +224,63 @@ def create_portal_for_row(
         portal_id=portal_ref.id,
     )
 
+    created = {
+        "portalId": portal_ref.id,
+        "displayName": display_name,
+        "email": email,
+        "phone": phone,
+        "joinAccessCode": join_access_code,
+        "accessCode": portal_access_code,
+        "myCode": portal_access_code,
+        "pin": pin,
+        "magicPath": magic_path,
+        "magicUrl": magic_url,
+        "assessmentId": assessment_ref_id,
+    }
+
     notify_queued = False
     notify_sent = 0
     notify_failed = 0
     notify_errors: list[str] = []
     if queue_notify and (email or phone):
         if immediate_notify and not scheduled_at_iso:
-            from utils.notification_worker import deliver_portal_credentials
+            from utils.client_portal_notify_policy import validate_immediate_notify_phone
+            from utils.notification_worker import (
+                CHANNEL_FAILED,
+                CHANNEL_IDLE,
+                _apply_notify_snapshot,
+                deliver_portal_credentials,
+            )
+
+            if phone:
+                pre_err = validate_immediate_notify_phone(phone)
+                if pre_err:
+                    err_code = (
+                        "sms_sender_equals_recipient"
+                        if "발신번호" in pre_err
+                        else "phone_send_failed"
+                    )
+                    _apply_notify_snapshot(
+                        portal_ref=portal_ref,
+                        queue_ref=None,
+                        email=email,
+                        phone=phone,
+                        email_channel=CHANNEL_IDLE,
+                        phone_channel=CHANNEL_FAILED,
+                        status="failed",
+                        errors=[err_code],
+                        sent_via=None,
+                        notify_kind="initial",
+                    )
+                    notify_errors = [pre_err]
+                    created["notifyErrors"] = notify_errors
+                    try:
+                        from utils.assessment_list_stats import touch_assessment_list_stats
+
+                        touch_assessment_list_stats(db, assessment_ref_id)
+                    except Exception:
+                        pass
+                    return created, False, 0, 1
 
             try:
                 result = deliver_portal_credentials(
@@ -252,9 +302,9 @@ def create_portal_for_row(
                 result = {"status": "failed", "errors": [str(exc)[:240]]}
             status = result.get("status") or "failed"
             notify_errors = list(result.get("errors") or [])
-            if status == "sent":
+            if status in ("sent", "partial"):
                 notify_sent = 1
-            elif status in ("failed", "partial"):
+            elif status == "failed":
                 notify_failed = 1
             elif status == "sending":
                 notify_queued = True
@@ -281,19 +331,6 @@ def create_portal_for_row(
             )
             notify_queued = True
 
-    created = {
-        "portalId": portal_ref.id,
-        "displayName": display_name,
-        "email": email,
-        "phone": phone,
-        "joinAccessCode": join_access_code,
-        "accessCode": portal_access_code,
-        "myCode": portal_access_code,
-        "pin": pin,
-        "magicPath": magic_path,
-        "magicUrl": magic_url,
-        "assessmentId": assessment_ref_id,
-    }
     if queue_notify and immediate_notify and not scheduled_at_iso:
         created["notifyErrors"] = notify_errors
     try:

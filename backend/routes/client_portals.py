@@ -816,7 +816,12 @@ def bulk_create():
         email = (row.get("email") or "").strip()
         phone = (row.get("phone") or "").strip()
         queue_notify = bool(row.get("queueNotify"))
-        row_err = validate_recipient_contact_row(phone=phone, email=email, queue_notify=queue_notify)
+        row_err = validate_recipient_contact_row(
+            phone=phone,
+            email=email,
+            queue_notify=queue_notify,
+            strict_immediate_phone=False,
+        )
         if row_err:
             return (
                 jsonify({"error": "Bad Request", "message": f"{idx}번째 내담자: {row_err}"}),
