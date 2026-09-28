@@ -804,7 +804,7 @@ export default function AssessmentAddRecipientModal({
     });
 
     try {
-      await bulkCreateClientPortals({
+      const result = await bulkCreateClientPortals({
         assessmentId: context.assessmentId,
         cohortName,
         title: context.title || cohortName,
@@ -817,6 +817,24 @@ export default function AssessmentAddRecipientModal({
         queueNotify: addSendNow,
         notifyChannels: addSendNow ? notifyChannels : undefined,
       });
+      const notifySuccessCount = addSendNow ? (result.notifySent ?? 0) : undefined;
+      const notifyFailedCount = addSendNow ? (result.notifyFailed ?? 0) : undefined;
+      const allNotifyFailed =
+        addSendNow &&
+        notifyFailedCount !== undefined &&
+        notifySuccessCount !== undefined &&
+        notifyFailedCount > 0 &&
+        notifySuccessCount === 0;
+      setAddComplete({
+        title: allNotifyFailed ? '발송 실패' : addSendNow ? '발송 완료' : '추가 완료',
+        sent: addSendNow,
+        error: allNotifyFailed,
+        dispatchSummary: {
+          ...dispatchSummary,
+          notifySuccessCount,
+          notifyFailedCount,
+        },
+      });
       onSuccess?.({ sent: addSendNow });
     } catch (err) {
       setAddComplete((prev) =>
@@ -824,8 +842,14 @@ export default function AssessmentAddRecipientModal({
           ? {
               ...prev,
               title: addSendNow ? '발송 실패' : '추가 실패',
-              message: err instanceof Error ? err.message : '내담자 추가에 실패했습니다.',
               error: true,
+              dispatchSummary: prev.dispatchSummary
+                ? {
+                    ...prev.dispatchSummary,
+                    notifySuccessCount: addSendNow ? 0 : undefined,
+                    notifyFailedCount: addSendNow ? prev.dispatchSummary.targetCount : undefined,
+                  }
+                : prev.dispatchSummary,
             }
           : null,
       );

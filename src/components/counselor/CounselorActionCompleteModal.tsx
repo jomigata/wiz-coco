@@ -8,22 +8,21 @@ export type CounselorDispatchCompleteSummary = {
   excludedText?: string;
   /** false면 추가만(발송 없음) */
   notifySent?: boolean;
+  notifySuccessCount?: number;
+  notifyFailedCount?: number;
 };
 
-/** 발송 완료 팝업 하단 안내 (발송 포함 시) */
-function DispatchCompleteStatusHint() {
+function DispatchNotifyOutcomeLine({
+  success,
+  failed,
+}: {
+  success: number;
+  failed: number;
+}) {
   return (
-    <div className="rounded-xl border border-slate-500/30 bg-gradient-to-br from-slate-900/80 to-slate-950/60 px-3.5 py-3 ring-1 ring-white/5">
-      <p className="text-[11px] font-semibold leading-relaxed text-slate-300">
-        코드전송 결과는{' '}
-        <span className="font-bold text-sky-300">&quot;상담진행 현황 - 발송현황&quot;</span> 에서
-        확인하세요.
-      </p>
-      <p className="mt-2 border-t border-white/10 pt-2 text-[11px] font-semibold leading-relaxed text-slate-300">
-        실패시 포인트는 실시간{' '}
-        <span className="font-bold text-amber-300">재적립</span> 됩니다.
-      </p>
-    </div>
+    <p className="rounded-xl border border-slate-500/30 bg-slate-900/50 px-3.5 py-3 text-center text-sm font-medium tabular-nums text-slate-100">
+      성공 : {success}명, 실패 : {failed}명
+    </p>
   );
 }
 
@@ -39,7 +38,7 @@ type Props = {
   confirmLabel?: string;
   onConfirm: () => void;
   zIndexClass?: string;
-  /** 내담자 추가·발송 완료 — 요약(발송 성공/실패 집계 없음) */
+  /** 내담자 추가·발송 완료 — 요약(성공/실패 명수) */
   dispatchSummary?: CounselorDispatchCompleteSummary | null;
 };
 
@@ -95,7 +94,14 @@ function DispatchCompletePanel({ summary }: { summary: CounselorDispatchComplete
         </div>
       ) : null}
 
-      {showNotify ? <DispatchCompleteStatusHint /> : null}
+      {showNotify &&
+      summary.notifySuccessCount !== undefined &&
+      summary.notifyFailedCount !== undefined ? (
+        <DispatchNotifyOutcomeLine
+          success={summary.notifySuccessCount}
+          failed={summary.notifyFailedCount}
+        />
+      ) : null}
     </div>
   );
 }
@@ -179,10 +185,6 @@ export default function CounselorActionCompleteModal({
         </div>
 
         {premium && dispatchSummary ? <DispatchCompletePanel summary={dispatchSummary} /> : null}
-
-        {premium && message && !loading ? (
-          <p className="px-4 pb-2 text-center text-sm text-red-200">{message}</p>
-        ) : null}
 
         {!loading || premium ? (
           <div className="flex justify-center border-t border-white/10 bg-black/20 px-5 py-4">
