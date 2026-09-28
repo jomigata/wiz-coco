@@ -1910,9 +1910,11 @@ export default function AssessmentDispatchPanel({
                             onOpenResult={(resultId) => openResultDetail(resultId)}
                             onRestoreTombstone={(tombstoneId) => setRestoreTombstoneId(tombstoneId)}
                             restoreLoading={restoreLoading}
-                            onRecommendAssigned={() => {
-                              setCareListRefresh((n) => n + 1);
+                            onRefreshExpandData={() => {
                               void load({ silent: true });
+                            }}
+                            onCareListRefresh={() => {
+                              setCareListRefresh((n) => n + 1);
                             }}
                             careListRefresh={careListRefresh}
                             baselineTestIds={(data?.testList || []).map((t) => t.testId).filter(Boolean)}

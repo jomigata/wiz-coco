@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { pushAssessmentsToPortals } from '@/lib/clientPortalApi';
 import {
   clearNextTestRecommendationScheduled,
@@ -54,12 +54,19 @@ export default function CounselorNextTestRecommendCard({
   const [error, setError] = useState('');
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [sendingHide, setSendingHide] = useState(false);
+  const [sendPendingUntilListed, setSendPendingUntilListed] = useState(false);
 
   const testListed = useMemo(() => {
     if (!recommendation) return false;
     return (recipient.tests || []).some((t) => t.testId === recommendation.testId);
   }, [recipient.tests, recommendation]);
+
+  useEffect(() => {
+    if (testListed && sendPendingUntilListed) {
+      setSendPendingUntilListed(false);
+      setBusy(false);
+    }
+  }, [testListed, sendPendingUntilListed]);
 
   if (!recommendation) return null;
 
@@ -96,11 +103,11 @@ export default function CounselorNextTestRecommendCard({
       } else {
         clearNextTestRecommendationScheduled(recipient.portalId, assessmentId, recommendation.testId);
         setScheduled(null);
-        setSendingHide(true);
+        setSendPendingUntilListed(true);
         onAssigned?.();
       }
     } catch (err) {
-      setSendingHide(false);
+      setSendPendingUntilListed(false);
       setError(err instanceof Error ? err.message : '검사 보내기에 실패했습니다.');
       setBusy(false);
     }
@@ -126,14 +133,7 @@ export default function CounselorNextTestRecommendCard({
     return null;
   }
 
-  if (sendingHide) {
-    return (
-      <div className="mt-3 flex items-center gap-2 rounded-lg border border-violet-500/20 bg-violet-950/15 px-4 py-2.5">
-        <LoadingSpinner size="sm" />
-        <span className="animate-pulse text-sm font-medium text-violet-200/90">보내는 중…</span>
-      </div>
-    );
-  }
+  const sendingImmediate = busy || sendPendingUntilListed;
 
   if (scheduled) {
     return (
@@ -157,15 +157,22 @@ export default function CounselorNextTestRecommendCard({
           <>
             <button
               type="button"
-              disabled={busy}
+              disabled={sendingImmediate}
               onClick={() => void handleSend()}
-              className={`${recommendPrimaryButtonClass('violet')} ${busy ? 'animate-pulse' : ''}`}
+              className={`${recommendPrimaryButtonClass('violet')} inline-flex items-center justify-center gap-1.5 ${sendingImmediate ? 'animate-pulse' : ''}`}
             >
-              {busy ? '보내는 중…' : '즉시 발송'}
+              {sendingImmediate ? (
+                <>
+                  <LoadingSpinner size="sm" className="h-3.5 w-3.5 border-[1.5px]" />
+                  보내는 중…
+                </>
+              ) : (
+                '즉시 발송'
+              )}
             </button>
             <button
               type="button"
-              disabled={busy}
+              disabled={sendingImmediate}
               onClick={() => setScheduleOpen(true)}
               className={recommendSecondaryButtonClass()}
             >
@@ -173,7 +180,7 @@ export default function CounselorNextTestRecommendCard({
             </button>
             <button
               type="button"
-              disabled={busy}
+              disabled={sendingImmediate}
               onClick={handleDelete}
               className={recommendDangerButtonClass()}
             >

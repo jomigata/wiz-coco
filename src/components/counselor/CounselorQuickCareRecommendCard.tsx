@@ -23,6 +23,7 @@ import CounselorRecommendCardLayout, {
 } from '@/components/counselor/CounselorRecommendCardLayout';
 import CounselorRecommendInlineRow from '@/components/counselor/CounselorRecommendInlineRow';
 import CounselorRecommendScheduleDialog from '@/components/counselor/CounselorRecommendScheduleDialog';
+import { LoadingSpinner } from '@/components/ui/LoadingMessage';
 import { PORTAL_APP_NOTIFY_CHANNELS } from '@/lib/clientPortalNotifyPolicy';
 
 type Props = {
@@ -108,7 +109,6 @@ export default function CounselorQuickCareRecommendCard({
         clearQuickCareRecommendationScheduled(recipient.portalId, recommendation.presetId);
         setScheduled(null);
         setAlreadyAssigned(true);
-        setBusy(true);
         onAssigned?.();
       }
     } catch (err) {
@@ -157,9 +157,16 @@ export default function CounselorQuickCareRecommendCard({
               type="button"
               disabled={busy}
               onClick={() => void handleSend()}
-              className={`${recommendPrimaryButtonClass('teal')} ${busy ? 'animate-pulse' : ''}`}
+              className={`${recommendPrimaryButtonClass('teal')} inline-flex items-center justify-center gap-1.5 ${busy ? 'animate-pulse' : ''}`}
             >
-              {busy ? '보내는 중…' : '즉시 발송'}
+              {busy ? (
+                <>
+                  <LoadingSpinner size="sm" className="h-3.5 w-3.5 border-[1.5px]" />
+                  보내는 중…
+                </>
+              ) : (
+                '즉시 발송'
+              )}
             </button>
             <button
               type="button"

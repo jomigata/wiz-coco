@@ -1812,9 +1812,11 @@ export default function CounselorClientList({
                                 ? (resultId) => openResultDetail(assessmentId, resultId)
                                 : undefined
                             }
-                            onRecommendAssigned={() => {
-                              setCareListRefresh((n) => n + 1);
+                            onRefreshExpandData={() => {
                               void load();
+                            }}
+                            onCareListRefresh={() => {
+                              setCareListRefresh((n) => n + 1);
                             }}
                             careListRefresh={careListRefresh}
                             assessmentMeta={assessmentMeta}

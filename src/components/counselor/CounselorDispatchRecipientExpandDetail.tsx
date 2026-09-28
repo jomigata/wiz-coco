@@ -63,7 +63,7 @@ function formatCompletionOrAddedColumn(row: {
     return formatCompletedAt(row.completedAt);
   }
   if (row.canRemove && row.addedAt) {
-    return formatCompletedAt(row.addedAt);
+    return `(${formatCompletedAt(row.addedAt)})`;
   }
   return '—';
 }
@@ -88,6 +88,8 @@ function renderResultCheckCell(
     status: DispatchTestResult['status'];
     resultId: string | null;
     isCare: boolean;
+    addedAt: string | null;
+    canRemove: boolean;
   },
   onOpenResult?: (resultId: string) => void,
 ): React.ReactNode {
@@ -105,6 +107,13 @@ function renderResultCheckCell(
   if (row.status === 'in_progress') {
     return <span className="text-amber-300">진행 중</span>;
   }
+  if (row.canRemove && row.addedAt) {
+    return (
+      <span className="whitespace-nowrap text-slate-400">
+        ← {formatCompletedAt(row.addedAt)}
+      </span>
+    );
+  }
   return <span className="text-slate-500">미실시</span>;
 }
 
@@ -121,6 +130,11 @@ export type CounselorDispatchRecipientExpandContentProps = {
   onOpenResult?: (resultId: string) => void;
   onRestoreTombstone?: (tombstoneId: string) => void;
   restoreLoading?: boolean;
+  /** 검사·진행 데이터만 재조회 (추천 검사 즉시 발송 등) */
+  onRefreshExpandData?: () => void;
+  /** 숙제 목록·추천 숙제 카드 재조회 */
+  onCareListRefresh?: () => void;
+  /** @deprecated onRefreshExpandData + onCareListRefresh 사용 */
   onRecommendAssigned?: () => void;
   /** 숙제 목록 재조회 (발송 후 테이블 반영) */
   careListRefresh?: number;
@@ -140,6 +154,8 @@ export function CounselorDispatchRecipientExpandContent({
   onOpenResult,
   onRestoreTombstone,
   restoreLoading = false,
+  onRefreshExpandData,
+  onCareListRefresh,
   onRecommendAssigned,
   careListRefresh = 0,
   assessmentMeta,
@@ -151,6 +167,12 @@ export function CounselorDispatchRecipientExpandContent({
   const [recommendUiRev, setRecommendUiRev] = useState(0);
   const [removeError, setRemoveError] = useState('');
   const [removingKey, setRemovingKey] = useState<string | null>(null);
+  const [optimisticRemovedTestIds, setOptimisticRemovedTestIds] = useState<Set<string>>(
+    () => new Set(),
+  );
+
+  const refreshExpandData = onRefreshExpandData ?? onRecommendAssigned;
+  const refreshCareList = onCareListRefresh ?? onRecommendAssigned;
 
   const baselineTestIds = useMemo(() => {
     if (baselineTestIdsProp?.length) {
@@ -198,7 +220,12 @@ export function CounselorDispatchRecipientExpandContent({
   const uniqueTests = useMemo(() => dedupeDispatchTestsByTestId(tests), [tests]);
 
   const tableRows = useMemo(() => {
-    const fromTests: ExpandTableRow[] = uniqueTests.map((t) => {
+    const fromTests: ExpandTableRow[] = uniqueTests
+      .filter((t) => {
+        const id = (t.testId || '').trim();
+        return !id || !optimisticRemovedTestIds.has(id);
+      })
+      .map((t) => {
       const testId = (t.testId || '').trim();
       const isBaseline = testId ? baselineTestIds.has(testId) : false;
       const canRemove = t.status === 'not_started' && Boolean(testId) && !isBaseline;
@@ -254,7 +281,35 @@ export function CounselorDispatchRecipientExpandContent({
     }
     const fromCare = Array.from(careByTitle.values());
     return [...fromTests, ...fromCare];
-  }, [uniqueTests, careItems, baselineTestIds, assessmentId, assignedAssessmentIds, assessmentMeta]);
+  }, [
+    uniqueTests,
+    careItems,
+    baselineTestIds,
+    assessmentId,
+    assignedAssessmentIds,
+    assessmentMeta,
+    optimisticRemovedTestIds,
+  ]);
+
+  useEffect(() => {
+    if (!removingKey) return;
+    if (!tableRows.some((row) => row.rowKey === removingKey)) {
+      setRemovingKey(null);
+    }
+  }, [tableRows, removingKey]);
+
+  useEffect(() => {
+    setOptimisticRemovedTestIds((prev) => {
+      if (prev.size === 0) return prev;
+      const next = new Set(prev);
+      for (const id of Array.from(prev)) {
+        if (!uniqueTests.some((t) => (t.testId || '').trim() === id)) {
+          next.delete(id);
+        }
+      }
+      return next.size === prev.size ? prev : next;
+    });
+  }, [uniqueTests]);
 
   const handleRemoveAdditional = async (row: ExpandTableRow) => {
     if (!row.canRemove || removingKey) return;
@@ -273,13 +328,16 @@ export function CounselorDispatchRecipientExpandContent({
           testId: row.testId,
           primaryAssessmentId: assessmentId,
         });
+        const tid = row.testId.trim();
+        if (tid) {
+          setOptimisticRemovedTestIds((prev) => new Set(prev).add(tid));
+        }
       } else {
         throw new Error('삭제할 항목을 확인할 수 없습니다.');
       }
-      onRecommendAssigned?.();
+      refreshExpandData?.();
     } catch (err) {
       setRemoveError(err instanceof Error ? err.message : '삭제에 실패했습니다.');
-    } finally {
       setRemovingKey(null);
     }
   };
@@ -345,7 +403,7 @@ export function CounselorDispatchRecipientExpandContent({
                 <th className="px-3 py-2 text-left font-medium">검사명</th>
                 <th className="px-3 py-2 text-left font-medium">상태</th>
                 <th className="px-3 py-2 text-left font-medium leading-tight">
-                  완료일시 / 추가일시
+                  완료일시 / (추가일시)
                 </th>
                 <th className="px-3 py-2 text-left font-medium">결과 확인</th>
                 <th className="px-1 py-2" aria-hidden="true" />
@@ -410,14 +468,17 @@ export function CounselorDispatchRecipientExpandContent({
             key={`next-reco-${recommendUiRev}`}
             assessmentId={assessmentId}
             recipient={{ ...r, tests: uniqueTests }}
-            onAssigned={onRecommendAssigned}
+            onAssigned={refreshExpandData}
             onUiChange={() => setRecommendUiRev((n) => n + 1)}
           />
           <CounselorQuickCareRecommendCard
             key={`care-reco-${recommendUiRev}`}
             recipient={{ ...r, tests: uniqueTests }}
             careListRefresh={careListRefresh}
-            onAssigned={onRecommendAssigned}
+            onAssigned={() => {
+              refreshCareList?.();
+              refreshExpandData?.();
+            }}
             onUiChange={() => setRecommendUiRev((n) => n + 1)}
           />
           <CounselorRecommendDismissedSummary
