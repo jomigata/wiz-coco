@@ -10,9 +10,12 @@ function detailPartClassName(part: ChannelDetailPart): string | undefined {
 
 export default function DispatchStatusText({ value }: { value: DispatchStatusView }) {
   const { mainText, detailParts, className, title } = value;
+  const showReason =
+    title &&
+    (mainText === '실패' || mainText.endsWith('실패') || mainText.includes('일부'));
 
   return (
-    <span className={className} title={title}>
+    <span className={className} title={showReason ? undefined : title}>
       {mainText}
       {detailParts.length > 0 ? (
         <>
@@ -25,6 +28,11 @@ export default function DispatchStatusText({ value }: { value: DispatchStatusVie
           ))}
           {')'}
         </>
+      ) : null}
+      {showReason ? (
+        <span className="mt-0.5 block text-[11px] font-normal leading-snug text-red-300/95">
+          {title}
+        </span>
       ) : null}
     </span>
   );

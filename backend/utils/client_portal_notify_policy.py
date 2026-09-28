@@ -82,6 +82,13 @@ def validate_immediate_notify_phone(phone: str) -> str | None:
     norm = normalize_recipient_phone((phone or "").strip())
     if not is_valid_kr_mobile_phone(norm):
         return "즉시 발송 시 휴대폰 번호(11자리)가 필요합니다."
+    from utils.solapi_client import recipient_conflicts_with_sender
+
+    if recipient_conflicts_with_sender(norm):
+        return (
+            "등록된 Solapi 발신번호와 같은 번호로는 알림톡·문자를 받을 수 없습니다. "
+            "다른 휴대폰 번호를 등록해 주세요."
+        )
     return None
 
 

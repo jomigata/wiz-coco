@@ -1253,6 +1253,33 @@ def resend_portal_credentials(
             continue
 
         portal_access_code = (pdata.get("accessCode") or "").strip()
+        notify_kind = resolve_notify_kind_for_credentials(pdata)
+
+        if phone and not email:
+            from utils.client_portal_notify_policy import validate_immediate_notify_phone
+
+            pre_err = validate_immediate_notify_phone(phone)
+            if pre_err:
+                from firebase_admin.firestore import SERVER_TIMESTAMP
+
+                err_code = (
+                    "sms_sender_equals_recipient"
+                    if "발신번호" in pre_err
+                    else "phone_send_failed"
+                )
+                pref.update(
+                    {
+                        "lastNotifyStatus": "failed",
+                        "lastNotifyError": err_code,
+                        "lastNotifyPhoneChannel": "failed",
+                        "lastNotifyKind": notify_kind,
+                        "lastNotifyAt": SERVER_TIMESTAMP,
+                    }
+                )
+                failed += 1
+                details.append({"portalId": pid, "status": "failed", "message": pre_err})
+                continue
+
         new_pin = generate_four_digit_password()
         magic = create_portal_magic_link_token(pid, portal_access_code)
         magic_path = f"/go?t={magic}"
@@ -1261,8 +1288,6 @@ def resend_portal_credentials(
             magic_path=magic_path,
             portal_id=pid,
         )
-
-        notify_kind = resolve_notify_kind_for_credentials(pdata)
 
         try:
             result = deliver_portal_credentials(

@@ -136,6 +136,13 @@ function notifyErrorHint(error: string | null | undefined): string | undefined {
     return '문자(SMS) 발송 설정이 되어 있지 않습니다. 관리자에게 문의해 주세요.';
   }
   if (err.includes('solapi_delivery_timeout')) return '문자 발송 결과 확인 시간이 초과되었습니다.';
+  if (err.includes('solapi_delivery_failed') || err.includes('alimtalk_send_failed')) {
+    return 'Solapi 알림톡·문자 발송이 거절되었습니다. Solapi 콘솔 발송 내역을 확인해 주세요.';
+  }
+  if (err.includes('invalid_phone')) return '휴대폰 번호 형식(11자리)을 확인해 주세요.';
+  if (err.includes('alimtalk_confirm_timeout')) {
+    return '알림톡 결과 확인 시간이 초과되어 문자 대체 발송을 시도했으나 실패했을 수 있습니다.';
+  }
   return err;
 }
 
