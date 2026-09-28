@@ -2,13 +2,14 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { fetchMyCredits } from '@/lib/commerceApi';
-import { CLIENT_PORTAL_EMAIL_NOTIFY_ENABLED } from '@/lib/clientPortalNotifyPolicy';
+import { CLIENT_PORTAL_EMAIL_NOTIFY_ENABLED, PORTAL_APP_NOTIFY_CHANNELS } from '@/lib/clientPortalNotifyPolicy';
 import {
   defaultNotifyChannelSelection,
   formatNotifyPointSummary,
   notifyChannelsToPayload,
   validateNotifyChannelSelection,
   type NotifyChannelSelection,
+  type NotifyChannelKey,
   type NotifyRecipientContact,
 } from '@/lib/counselorNotifyChannels';
 import {
@@ -38,7 +39,7 @@ type Props = {
   hideChannels?: boolean;
   /** add_recipient — 부적합 제외 등 추가 한 줄 안내 */
   addRecipientExtraLines?: string[];
-  onConfirm: (channels: ('email' | 'phone')[]) => void;
+  onConfirm: (channels: NotifyChannelKey[]) => void;
   onCancel: () => void;
 };
 
@@ -196,10 +197,10 @@ export default function CounselorNotifyConfirmDialog({
 
   const effectiveChannels = channelUiHidden ? defaultNotifyChannelSelection(recipients) : channels;
 
-  const validationError = useMemo(
-    () => validateNotifyChannelSelection(effectiveChannels, recipients),
-    [effectiveChannels, recipients],
-  );
+  const validationError = useMemo(() => {
+    if (pushCareSummary) return null;
+    return validateNotifyChannelSelection(effectiveChannels, recipients);
+  }, [pushCareSummary, effectiveChannels, recipients]);
 
   const pointSummary = useMemo(
     () =>
@@ -217,7 +218,10 @@ export default function CounselorNotifyConfirmDialog({
       return [];
     }
     if (pushCareSummary) {
-      const lines: string[] = [`대상: ${recipients.length}명`];
+      const lines: string[] = [
+        `대상: ${recipients.length}명`,
+        '전달: 내 검사실 앱 알림 (알림톡·문자 발송 없음)',
+      ];
       for (const r of recipients) {
         const name = (r.displayName || '내담자').trim();
         lines.push(`이름: ${name}`);
@@ -239,7 +243,8 @@ export default function CounselorNotifyConfirmDialog({
     };
   }, [kind, recipients, addRecipientExtraLines]);
 
-  const showPointFooter = pushCareSummary || (kind !== 'add_recipient' && (kind === 'remind' || !channelUiHidden));
+  const showPointFooter =
+    !pushCareSummary && (kind !== 'add_recipient' && (kind === 'remind' || !channelUiHidden));
 
   const insufficient = pointSummary.usePoints > balancePoints;
 
@@ -400,7 +405,13 @@ export default function CounselorNotifyConfirmDialog({
           <button
             type="button"
             disabled={loading || Boolean(validationError) || insufficient || balanceLoading}
-            onClick={() => onConfirm(notifyChannelsToPayload(effectiveChannels))}
+            onClick={() =>
+              onConfirm(
+                pushCareSummary
+                  ? [...PORTAL_APP_NOTIFY_CHANNELS]
+                  : notifyChannelsToPayload(effectiveChannels),
+              )
+            }
             className={`rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition-colors disabled:opacity-50 ${
               kind === 'add_recipient'
                 ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 shadow-emerald-950/40 hover:from-emerald-500 hover:to-emerald-400'

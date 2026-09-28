@@ -91,7 +91,7 @@ import {
 import { CounselorDispatchRecipientExpandContent } from '@/components/counselor/CounselorDispatchRecipientExpandDetail';
 import { CounselorRecipientExpandLeadingCells } from '@/components/counselor/CounselorRecipientExpandRowCells';
 import CounselorNotifyConfirmDialog from '@/components/counselor/CounselorNotifyConfirmDialog';
-import { recipientHasNotifyPhone, type NotifyRecipientContact } from '@/lib/counselorNotifyChannels';
+import { recipientHasNotifyPhone, type NotifyChannelKey, type NotifyRecipientContact } from '@/lib/counselorNotifyChannels';
 import { CLIENT_PORTAL_EMAIL_NOTIFY_ENABLED } from '@/lib/clientPortalNotifyPolicy';
 import AssessmentAddRecipientModal, {
   type AssessmentAddRecipientContext,
@@ -1273,7 +1273,7 @@ export default function AssessmentDispatchPanel({
     }
   };
 
-  const handleResend = async (notifyChannels: ('email' | 'phone')[]) => {
+  const handleResend = async (notifyChannels: NotifyChannelKey[]) => {
     if (!assessmentId || credentialTargetSelected.length === 0) return;
     const ids = credentialTargetSelected.map((r) => r.portalId);
     applySendingOverlay(ids, 'resend');
@@ -1313,7 +1313,7 @@ export default function AssessmentDispatchPanel({
     }
   };
 
-  const handleRemind = async (portalIds: string[], notifyChannels: ('email' | 'phone')[]) => {
+  const handleRemind = async (portalIds: string[], notifyChannels: NotifyChannelKey[]) => {
     if (!assessmentId || portalIds.length === 0) return;
     applySendingOverlay(portalIds, 'remind');
     setDispatchProgress({ kind: 'remind', count: portalIds.length });
@@ -1436,7 +1436,7 @@ export default function AssessmentDispatchPanel({
     }
   };
 
-  const handleNotifyConfirm = async (notifyChannels: ('email' | 'phone')[]) => {
+  const handleNotifyConfirm = async (notifyChannels: NotifyChannelKey[]) => {
     if (notifyConfirmKind === 'remind') {
       const ids = remindEligibleSelected.map((r) => r.portalId);
       setNotifyConfirmKind(null);

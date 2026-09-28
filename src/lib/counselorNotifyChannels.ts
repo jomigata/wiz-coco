@@ -8,7 +8,7 @@ import {
   formatPoints,
 } from '@/lib/pointsCatalog';
 
-export type NotifyChannelKey = 'email' | 'phone';
+export type NotifyChannelKey = 'email' | 'phone' | 'app';
 
 export type NotifyChannelSelection = {
   email: boolean;

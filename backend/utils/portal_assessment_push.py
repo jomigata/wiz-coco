@@ -99,6 +99,9 @@ def _notify_portal_push(
     )
 
     channels = _normalize_notify_channels(notify_channels)
+    from utils.client_portal_notify_policy import portal_notify_uses_app_channel
+    from utils.portal_app_notify import deliver_portal_app_notification
+
     aid = assessment["assessmentId"]
     test_list = assessment.get("testList") or []
     required = {
@@ -110,6 +113,37 @@ def _notify_portal_push(
     pending = _pending_tests_from_rows(test_rows)
     if not pending:
         return {"status": "skipped", "message": "no_pending_tests"}
+
+    if portal_notify_uses_app_channel(channels):
+        test_names = [str(t.get("name") or t.get("testId") or "").strip() for t in pending]
+        test_names = [n for n in test_names if n]
+        label = test_names[0] if len(test_names) == 1 else f"{len(test_names)}개 검사"
+        body = f"{assessment.get('title') or '추천 검사'} — {label}을(를) 진행해 주세요."
+        result = deliver_portal_app_notification(
+            db,
+            portal_id=portal_id,
+            kind="assessment_push",
+            title="새 검사 안내",
+            body=body,
+            action_path="/portal/?tab=tests",
+            metadata={
+                "assessmentId": aid,
+                "joinAccessCode": assessment.get("joinAccessCode") or "",
+                "pendingTestIds": [str(t.get("testId") or "") for t in pending],
+            },
+        )
+        status = result.get("status") or "failed"
+        db.collection(CLIENT_PORTALS_COLLECTION).document(portal_id).update(
+            {
+                "lastPushNotifyStatus": status,
+                "lastPushNotifyAt": SERVER_TIMESTAMP,
+            }
+        )
+        return {
+            "status": status,
+            "pendingCount": len(pending),
+            "sentVia": result.get("sentVia"),
+        }
 
     email = (pdata.get("email") or "").strip().lower()
     phone = (pdata.get("phone") or "").strip()

@@ -6,6 +6,8 @@
  * 포털 사용자는 Firebase Auth가 아닌 portalToken이므로 읽기/쓰기는 Flask API 전용.
  */
 
+import type { PortalNotifyChannelKey } from '@/lib/clientPortalNotifyPolicy';
+
 export const CARE_ASSIGNMENT_SCHEMA_VERSION = 1;
 
 /** 할당 유형 */
@@ -84,7 +86,7 @@ export type CreateCareAssignmentInput = {
   startAt?: string;
   dueAt?: string;
   notify?: boolean;
-  notifyChannels?: ('email' | 'phone')[];
+  notifyChannels?: PortalNotifyChannelKey[];
   source?: CareAssignmentSource;
   sourceRefId?: string;
   metadata?: Record<string, unknown>;

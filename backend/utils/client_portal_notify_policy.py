@@ -29,9 +29,21 @@ def _parse_notify_channel_list(raw) -> list[str] | None:
     out: list[str] = []
     for item in items:
         value = str(item or "").strip().lower()
-        if value in ("email", "phone") and value not in out:
+        if value in ("email", "phone", "app") and value not in out:
             out.append(value)
     return out or None
+
+
+def portal_notify_uses_app_channel(notify_channels: list[str] | None) -> bool:
+    norm = normalize_portal_notify_channels(notify_channels)
+    return bool(norm and "app" in norm)
+
+
+def portal_notify_uses_phone_channel(notify_channels: list[str] | None) -> bool:
+    norm = normalize_portal_notify_channels(notify_channels)
+    if not norm:
+        return True
+    return "phone" in norm
 
 
 def normalize_portal_notify_channels(raw) -> list[str] | None:
@@ -70,8 +82,12 @@ def validate_portal_notify_channels_for_send(notify_channels: list[str] | None) 
     if client_portal_email_notify_enabled():
         return None
     norm = normalize_portal_notify_channels(notify_channels)
-    if not norm or "phone" not in norm:
-        return "내담자 발송은 휴대폰(알림톡·문자)만 가능합니다. 휴대 번호를 등록해 주세요."
+    if not norm:
+        return "내담자 발송 채널을 선택해 주세요."
+    if "app" in norm:
+        return None
+    if "phone" not in norm:
+        return "내담자 발송은 휴대폰(알림톡·문자) 또는 내 검사실 앱 알림이 가능합니다."
     return None
 
 

@@ -5,3 +5,8 @@ export const CLIENT_PORTAL_EMAIL_NOTIFY_ENABLED =
 export function clientPortalNotifyUsesPhoneOnly(): boolean {
   return !CLIENT_PORTAL_EMAIL_NOTIFY_ENABLED;
 }
+
+/** 추천 검사·숙제 등 — SMS/알림톡 대신 내 검사실 앱 알림 */
+export type PortalNotifyChannelKey = 'email' | 'phone' | 'app';
+
+export const PORTAL_APP_NOTIFY_CHANNELS: PortalNotifyChannelKey[] = ['app'];

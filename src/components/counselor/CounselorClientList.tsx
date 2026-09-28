@@ -40,6 +40,7 @@ import CounselorActionProgressOverlay from '@/components/counselor/CounselorActi
 import CounselorActionCompleteModal from '@/components/counselor/CounselorActionCompleteModal';
 import CounselorConfirmModal from '@/components/counselor/CounselorConfirmModal';
 import CounselorNotifyConfirmDialog from '@/components/counselor/CounselorNotifyConfirmDialog';
+import type { NotifyChannelKey } from '@/lib/counselorNotifyChannels';
 import {
   buildDispatchGroupsFromSelections,
   executeGroupedDispatchNotify,
@@ -1163,7 +1164,7 @@ export default function CounselorClientList({
     setNotifyConfirmKind(kind);
   };
 
-  const handleBulkNotifyConfirm = async (notifyChannels: ('email' | 'phone')[]) => {
+  const handleBulkNotifyConfirm = async (notifyChannels: NotifyChannelKey[]) => {
     if (!notifyConfirmKind || notifyDispatchGroups.length === 0) return;
     setNotifyDispatchLoading(true);
     setError('');

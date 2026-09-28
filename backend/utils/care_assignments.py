@@ -104,15 +104,20 @@ def create_care_assignments(db, counselor_uid: str, body: dict) -> dict:
     details: list[dict] = []
 
     notify_channels = payload.get("notifyChannels")
-    if payload.get("notifyOnAssign") and notify_channels is not None:
+    from utils.assessment_dispatch import _normalize_notify_channels
+
+    channels = _normalize_notify_channels(notify_channels) if notify_channels is not None else None
+    from utils.client_portal_notify_policy import portal_notify_uses_app_channel
+
+    if payload.get("notifyOnAssign") and notify_channels is not None and not portal_notify_uses_app_channel(
+        channels
+    ):
         from utils.assessment_dispatch import (
             _apply_notify_channels_to_contact,
             _ensure_notify_phone_credits,
-            _normalize_notify_channels,
             _will_use_phone_channel,
         )
 
-        channels = _normalize_notify_channels(notify_channels)
         phone_send_count = 0
         for portal_id in payload["portalIds"]:
             portal_snap = get_portal_doc(db, portal_id)
@@ -194,52 +199,75 @@ def create_care_assignments(db, counselor_uid: str, body: dict) -> dict:
             notify_status = "skipped"
             notify_error = None
             if payload.get("notifyOnAssign"):
-                email = (pdata.get("email") or "").strip().lower()
-                phone = (pdata.get("phone") or "").strip()
-                if notify_channels is not None:
-                    from utils.assessment_dispatch import _apply_notify_channels_to_contact
+                if portal_notify_uses_app_channel(channels):
+                    from utils.portal_app_notify import deliver_portal_app_notification
 
-                    email, phone = _apply_notify_channels_to_contact(
-                        email, phone, notify_channels
-                    )
-                access_code = (pdata.get("accessCode") or "").strip()
-                if email or phone:
                     try:
-                        notify_status = _enqueue_care_assignment_notify(
+                        app_result = deliver_portal_app_notification(
                             db,
                             portal_id=portal_id,
-                            assignment_id=ass_ref.id,
-                            counselor_uid=counselor_uid,
-                            email=email,
-                            phone=phone,
-                            display_name=display_name,
-                            title=title,
-                            portal_access_code=access_code,
-                            notify_channels=notify_channels,
+                            kind="care_assignment",
+                            title="새 숙제 안내",
+                            body=f"{title} — 내 검사실에서 확인해 주세요.",
+                            action_path="/portal/?tab=tests",
+                            metadata={"assignmentId": ass_ref.id, "title": title},
                         )
-                        notify_sent += 1
-                        if notify_channels is not None:
-                            from utils.assessment_dispatch import (
-                                _consume_notify_phone_credit,
-                                _will_use_phone_channel,
-                            )
-
-                            if _will_use_phone_channel(email, phone, notify_channels):
-                                _consume_notify_phone_credit(
-                                    db,
-                                    counselor_uid=counselor_uid,
-                                    portal_id=portal_id,
-                                    assessment_id="",
-                                    reason="care_assign_phone",
-                                )
+                        notify_status = app_result.get("status") or "failed"
+                        if notify_status == "sent":
+                            notify_sent += 1
+                        else:
+                            notify_failed += 1
                     except Exception as exc:
                         notify_status = "failed"
                         notify_error = str(exc)
                         notify_failed += 1
                 else:
-                    notify_status = "skipped"
-                    notify_error = "no_contact"
-                    notify_skipped += 1
+                    email = (pdata.get("email") or "").strip().lower()
+                    phone = (pdata.get("phone") or "").strip()
+                    if notify_channels is not None:
+                        from utils.assessment_dispatch import _apply_notify_channels_to_contact
+
+                        email, phone = _apply_notify_channels_to_contact(
+                            email, phone, notify_channels
+                        )
+                    access_code = (pdata.get("accessCode") or "").strip()
+                    if email or phone:
+                        try:
+                            notify_status = _enqueue_care_assignment_notify(
+                                db,
+                                portal_id=portal_id,
+                                assignment_id=ass_ref.id,
+                                counselor_uid=counselor_uid,
+                                email=email,
+                                phone=phone,
+                                display_name=display_name,
+                                title=title,
+                                portal_access_code=access_code,
+                                notify_channels=notify_channels,
+                            )
+                            notify_sent += 1
+                            if notify_channels is not None:
+                                from utils.assessment_dispatch import (
+                                    _consume_notify_phone_credit,
+                                    _will_use_phone_channel,
+                                )
+
+                                if _will_use_phone_channel(email, phone, notify_channels):
+                                    _consume_notify_phone_credit(
+                                        db,
+                                        counselor_uid=counselor_uid,
+                                        portal_id=portal_id,
+                                        assessment_id="",
+                                        reason="care_assign_phone",
+                                    )
+                        except Exception as exc:
+                            notify_status = "failed"
+                            notify_error = str(exc)
+                            notify_failed += 1
+                    else:
+                        notify_status = "skipped"
+                        notify_error = "no_contact"
+                        notify_skipped += 1
             else:
                 notify_skipped += 1
 

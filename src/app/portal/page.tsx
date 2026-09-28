@@ -11,6 +11,8 @@ import PortalCounselorInquiryChat from '@/components/portal/PortalCounselorInqui
 import PortalCareAssignmentsPanel from '@/components/portal/PortalCareAssignmentsPanel';
 import PortalReportsPanel from '@/components/portal/PortalReportsPanel';
 import PortalResultViewModal, { type PortalResultViewState } from '@/components/portal/PortalResultViewModal';
+import PortalAppNotificationsPanel from '@/components/portal/PortalAppNotificationsPanel';
+import PortalAppInstallPrompt from '@/components/portal/PortalAppInstallPrompt';
 import {
   resultSubmittedLabel,
   resultUpdatedLabel,
@@ -40,7 +42,7 @@ function portalAssessmentGroupTitle(a: PortalAssessment): string {
   if (!title || title === org) return org;
   return `${org} / ${title}`;
 }
-type PortalTab = 'tests' | 'chat' | 'reports';
+type PortalTab = 'tests' | 'chat' | 'reports' | 'notifications';
 
 function PortalLoading() {
   return (
@@ -71,6 +73,7 @@ function ClientPortalContent() {
   const [inquiryBadgeCount, setInquiryBadgeCount] = useState(0);
   const [careTotalCount, setCareTotalCount] = useState(0);
   const [careItems, setCareItems] = useState<PortalCareAssignmentItem[]>([]);
+  const [appNotifyUnreadCount, setAppNotifyUnreadCount] = useState(0);
 
   useEffect(() => {
     if (!resultView) {
@@ -143,6 +146,9 @@ function ClientPortalContent() {
       setMyCode(data.accessCode || session.portal.accessCode);
       setAssessments(items);
       setLegacyTests(data.legacyTests || []);
+      setAppNotifyUnreadCount(
+        Number((data as { appNotifyUnreadCount?: number }).appNotifyUnreadCount) || 0,
+      );
       await loadResults(items);
       try {
         const careData = await fetchPortalCareAssignments(session.portalToken);
@@ -218,6 +224,8 @@ function ClientPortalContent() {
     const tab = (searchParams.get('tab') || '').trim();
     if (tab === 'care' || tab === 'tests') {
       setPortalTab('tests');
+    } else if (tab === 'notifications') {
+      setPortalTab('notifications');
     } else if (tab === 'chat') {
       setPortalTab('chat');
     } else if (tab === 'reports' || tab === 'materials') {
@@ -394,6 +402,21 @@ function ClientPortalContent() {
             </button>
             <button
               type="button"
+              onClick={() => setPortalTab('notifications')}
+              className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
+                portalTab === 'notifications'
+                  ? 'border-amber-400 text-amber-300'
+                  : 'border-transparent text-slate-500 hover:text-slate-300'
+              }`}
+            >
+              앱 알림 (
+              <span className={appNotifyUnreadCount > 0 ? 'text-red-400' : undefined}>
+                {appNotifyUnreadCount}
+              </span>
+              )
+            </button>
+            <button
+              type="button"
               onClick={() => setPortalTab('chat')}
               className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
                 portalTab === 'chat'
@@ -447,8 +470,17 @@ function ClientPortalContent() {
                   openResultView(accessCode, testName, resultId, roundNumber, resultItem)
                 }
               />
+            ) : portalTab === 'notifications' ? (
+              <div className="space-y-6">
+                <PortalAppInstallPrompt />
+                <PortalAppNotificationsPanel
+                  onUnreadChange={setAppNotifyUnreadCount}
+                  onOpenTests={() => setPortalTab('tests')}
+                />
+              </div>
             ) : (
               <div id="portal-results" className="space-y-6">
+              <PortalAppInstallPrompt compact />
               {assessments.length === 0 ? (
                 <p className="text-slate-400 text-sm">
                   배정된 검사가 없습니다. 담당자에게 상담(코드)·나의코드를 확인해 주세요.

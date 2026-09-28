@@ -12,6 +12,7 @@ import type { DispatchRecipient } from '@/lib/clientPortalApi';
 import CounselorNotifyConfirmDialog from '@/components/counselor/CounselorNotifyConfirmDialog';
 import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
 import type { NotifyRecipientContact } from '@/lib/counselorNotifyChannels';
+import { PORTAL_APP_NOTIFY_CHANNELS } from '@/lib/clientPortalNotifyPolicy';
 
 type Props = {
   assessmentId: string;
@@ -56,7 +57,7 @@ export default function CounselorNextTestRecommendCard({
 
   const handleSend = async (
     item: CounselorNextTestRecommendation,
-    notifyChannels: ('email' | 'phone')[],
+    notifyChannels: ('email' | 'phone' | 'app')[],
   ) => {
     setError('');
     setConfirmOpen(false);
@@ -127,7 +128,9 @@ export default function CounselorNextTestRecommendCard({
         description={`「${recommendation.name}」 검사를 안내합니다.`}
         recipients={notifyRecipients}
         confirmLabel="보내기"
-        onConfirm={(channels) => void handleSend(recommendation, channels)}
+        onConfirm={(channels) =>
+          void handleSend(recommendation, channels.length ? channels : [...PORTAL_APP_NOTIFY_CHANNELS])
+        }
         onCancel={() => {
           if (busy) return;
           setConfirmOpen(false);
@@ -142,7 +145,7 @@ export default function CounselorNextTestRecommendCard({
         open={progressPhase === 'success'}
         phase="success"
         title="검사 보내기 완료"
-        message="내담자에게 검사 안내가 발송되었습니다."
+        message="내담자 내 검사실 앱으로 검사 안내가 전달되었습니다."
         onConfirm={handleProgressConfirm}
       />
     </>

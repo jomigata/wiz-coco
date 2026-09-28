@@ -22,7 +22,7 @@ import CounselorActionCompleteModal, {
   type CounselorDispatchCompleteSummary,
 } from '@/components/counselor/CounselorActionCompleteModal';
 import CounselorNotifyConfirmDialog from '@/components/counselor/CounselorNotifyConfirmDialog';
-import type { NotifyRecipientContact } from '@/lib/counselorNotifyChannels';
+import type { NotifyChannelKey, NotifyRecipientContact } from '@/lib/counselorNotifyChannels';
 import { isValidEmailAddress } from '@/lib/emailValidation';
 import { CLIENT_PORTAL_EMAIL_NOTIFY_ENABLED } from '@/lib/clientPortalNotifyPolicy';
 
@@ -820,7 +820,7 @@ export default function AssessmentAddRecipientModal({
     void executeSubmit(undefined);
   };
 
-  const executeSubmit = async (notifyChannels: ('email' | 'phone')[] | undefined) => {
+  const executeSubmit = async (notifyChannels: NotifyChannelKey[] | undefined) => {
     if (!context) return;
     const rows = combinedRows;
     const notifyRowOpts =

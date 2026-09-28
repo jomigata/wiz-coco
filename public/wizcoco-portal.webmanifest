@@ -1,0 +1,19 @@
+{
+  "name": "위즈코코 내 검사실",
+  "short_name": "내 검사실",
+  "description": "담당 상담사가 배정한 검사·숙제·결과 확인",
+  "start_url": "/portal/login/",
+  "scope": "/portal/",
+  "display": "standalone",
+  "background_color": "#111827",
+  "theme_color": "#0f172a",
+  "lang": "ko",
+  "icons": [
+    {
+      "src": "/images/pattern.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

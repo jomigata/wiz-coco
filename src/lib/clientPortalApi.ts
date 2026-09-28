@@ -20,6 +20,9 @@ import { getCounselorToken } from '@/lib/assessmentApi';
 import { isCounselorRoleRequiredMessage, syncCounselorRoleViaApi } from '@/lib/counselorAuth';
 import { normalizeAccessCodeInput, normalizeMyCodeInput, normalizeJoinPinDigits } from '@/lib/accessCodeFormat';
 import { normalizeRecipientPhone } from '@/lib/phoneFormat';
+import type { PortalNotifyChannelKey } from '@/lib/clientPortalNotifyPolicy';
+
+export type { PortalNotifyChannelKey };
 
 const getBaseUrl = (): string => {
   if (process.env.NEXT_PUBLIC_FLASK_API_URL) {
@@ -168,6 +171,49 @@ export async function fetchPortalDashboard(portalToken: string): Promise<ClientP
   return data;
 }
 
+export type PortalAppNotificationItem = {
+  id: string;
+  kind: string;
+  title: string;
+  body: string;
+  actionPath: string;
+  metadata?: Record<string, unknown>;
+  read: boolean;
+  createdAt: string | null;
+};
+
+export async function fetchPortalAppNotifications(
+  portalToken: string,
+): Promise<{ items: PortalAppNotificationItem[]; unreadCount: number }> {
+  const res = await fetch(`${getBaseUrl()}/api/client-portals/me/app-notifications`, {
+    headers: { Authorization: `Portal ${portalToken}` },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(typeof data?.message === 'string' ? data.message : '알림 조회에 실패했습니다.');
+  }
+  return data as { items: PortalAppNotificationItem[]; unreadCount: number };
+}
+
+export async function markPortalAppNotificationsRead(
+  portalToken: string,
+  body: { notificationIds?: string[]; markAll?: boolean },
+): Promise<{ updated: number; unreadCount: number }> {
+  const res = await fetch(`${getBaseUrl()}/api/client-portals/me/app-notifications/mark-read`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Portal ${portalToken}`,
+    },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(typeof data?.message === 'string' ? data.message : '알림 처리에 실패했습니다.');
+  }
+  return data as { updated: number; unreadCount: number };
+}
+
 export async function changeClientPortalPin(
   portalToken: string,
   body: { currentPin: string; newPin: string },
@@ -291,7 +337,7 @@ export async function bulkCreateClientPortals(body: {
   scheduledAt?: string;
   /** 기존 그룹코드(개별 발급) 검사 세트 재사용 */
   assessmentId?: string;
-  notifyChannels?: ('email' | 'phone')[];
+  notifyChannels?: PortalNotifyChannelKey[];
 }): Promise<ClientPortalBulkCreateResult> {
   const token = await getCounselorToken();
   if (!token) throw new Error('전문가·상담사 로그인이 필요합니다.');
@@ -448,7 +494,7 @@ export async function fetchDispatchRecipientDetail(
 export async function resendDispatchCredentials(
   assessmentId: string,
   portalIds: string[],
-  notifyChannels?: ('email' | 'phone')[],
+  notifyChannels?: PortalNotifyChannelKey[],
 ): Promise<{
   sent: number;
   failed: number;
@@ -510,7 +556,7 @@ export async function updateDispatchRecipientContact(
 export async function sendDispatchTestReminders(
   assessmentId: string,
   portalIds: string[],
-  notifyChannels?: ('email' | 'phone')[],
+  notifyChannels?: PortalNotifyChannelKey[],
 ): Promise<{
   sent: number;
   failed: number;
@@ -823,7 +869,7 @@ export async function pushAssessmentsToPortals(body: {
   usageEndDate?: string;
   testList?: { testId: string; name: string }[];
   notify?: boolean;
-  notifyChannels?: ('email' | 'phone')[];
+  notifyChannels?: PortalNotifyChannelKey[];
 }): Promise<CounselorPushAssessmentResult> {
   const token = await getCounselorToken();
   if (!token) throw new Error('전문가·상담사 로그인이 필요합니다.');

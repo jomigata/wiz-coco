@@ -12,6 +12,7 @@ import {
 import CounselorNotifyConfirmDialog from '@/components/counselor/CounselorNotifyConfirmDialog';
 import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
 import type { NotifyRecipientContact } from '@/lib/counselorNotifyChannels';
+import { PORTAL_APP_NOTIFY_CHANNELS } from '@/lib/clientPortalNotifyPolicy';
 
 type Props = {
   recipient: DispatchRecipient;
@@ -49,7 +50,7 @@ export default function CounselorQuickCareRecommendCard({ recipient, onAssigned 
 
   const busy = progressPhase !== 'idle';
 
-  const handleSend = async (notifyChannels: ('email' | 'phone')[]) => {
+  const handleSend = async (notifyChannels: ('email' | 'phone' | 'app')[]) => {
     setError('');
     setConfirmOpen(false);
     setProgressPhase('loading');
@@ -111,7 +112,9 @@ export default function CounselorQuickCareRecommendCard({ recipient, onAssigned 
         description={`「${recommendation.title}」 숙제를 안내합니다.`}
         recipients={notifyRecipients}
         confirmLabel="보내기"
-        onConfirm={(channels) => void handleSend(channels)}
+        onConfirm={(channels) =>
+          void handleSend(channels.length ? channels : [...PORTAL_APP_NOTIFY_CHANNELS])
+        }
         onCancel={() => {
           if (busy) return;
           setConfirmOpen(false);
@@ -126,7 +129,7 @@ export default function CounselorQuickCareRecommendCard({ recipient, onAssigned 
         open={progressPhase === 'success'}
         phase="success"
         title="숙제 보내기 완료"
-        message="내담자에게 숙제 안내가 발송되었습니다."
+        message="내담자 내 검사실 앱으로 숙제 안내가 전달되었습니다."
         onConfirm={handleProgressConfirm}
       />
     </>

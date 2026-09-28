@@ -5,6 +5,7 @@ import { LoadingMessage } from '@/components/ui/LoadingMessage';
 import { genericJoinQuestions } from '@/data/genericJoinQuestions';
 import { getClientResult } from '@/lib/assessmentApi';
 import { formatCompletedAt, resultUpdatedLabel } from '@/lib/portalTestResults';
+import PortalAppInstallPrompt from '@/components/portal/PortalAppInstallPrompt';
 
 const RESPONSE_SCALE_LABELS: Record<number, string> = {
   1: '매우 그렇지 않다',
@@ -153,6 +154,7 @@ export default function PortalResultViewModal({
                   Object.keys(resultDetail.responses as object).length === 0)) ? (
                 <p className="text-slate-500 text-sm">표시할 결과 데이터가 없습니다.</p>
               ) : null}
+              <PortalAppInstallPrompt className="mt-4" />
             </>
           ) : null}
         </div>

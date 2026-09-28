@@ -198,6 +198,7 @@ def _portal_public_json(portal_doc, assessments=None, db=None):
         "counselorName": counselor_name,
         "counselorEmail": counselor_email,
         "assignedAssessments": assigned,
+        "appNotifyUnreadCount": int(d.get("appNotifyUnreadCount") or 0),
     }
 
 
@@ -461,6 +462,52 @@ def portal_me():
             "legacyTests": legacy_archive.get("legacyTests") or [],
         }
     )
+
+
+@bp.route("/me/app-notifications", methods=["GET"])
+def portal_list_app_notifications():
+    payload = get_portal_session_from_request()
+    if not payload:
+        return jsonify({"error": "Unauthorized", "message": "세션이 만료되었습니다."}), 401
+    portal_id = (payload.get("portalId") or "").strip()
+    if not portal_id or portal_id.startswith("legacy:"):
+        return jsonify({"items": [], "unreadCount": 0})
+
+    from utils.portal_app_notify import list_portal_app_notifications
+
+    limit = request.args.get("limit", "40")
+    try:
+        limit_n = max(1, min(int(limit), 100))
+    except ValueError:
+        limit_n = 40
+    db = get_firestore()
+    return jsonify(list_portal_app_notifications(db, portal_id, limit=limit_n))
+
+
+@bp.route("/me/app-notifications/mark-read", methods=["POST"])
+def portal_mark_app_notifications_read():
+    payload = get_portal_session_from_request()
+    if not payload:
+        return jsonify({"error": "Unauthorized", "message": "세션이 만료되었습니다."}), 401
+    portal_id = (payload.get("portalId") or "").strip()
+    if not portal_id or portal_id.startswith("legacy:"):
+        return jsonify({"updated": 0, "unreadCount": 0})
+
+    body = request.get_json(silent=True) or {}
+    mark_all = bool(body.get("markAll"))
+    raw_ids = body.get("notificationIds") or []
+    notification_ids = [str(x).strip() for x in raw_ids if str(x).strip()] if isinstance(raw_ids, list) else []
+
+    from utils.portal_app_notify import mark_portal_app_notifications_read
+
+    db = get_firestore()
+    result = mark_portal_app_notifications_read(
+        db,
+        portal_id,
+        notification_ids=notification_ids or None,
+        mark_all=mark_all,
+    )
+    return jsonify(result)
 
 
 @bp.route("/me/pin", methods=["POST"])

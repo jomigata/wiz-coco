@@ -21,6 +21,7 @@ import {
 import { clearJoinGuestSession, ensureJoinGuestSession } from '@/lib/joinGuestSession';
 import { resetAllSessionsBeforePortalLinkEntry } from '@/lib/portalLinkEntryReset';
 import { joinTestResponsesChanged } from '@/lib/mbtiProJoinResponses';
+import PortalAppInstallPrompt from '@/components/portal/PortalAppInstallPrompt';
 
 const SCALE_LABELS: Record<number, string> = {
   1: '매우 그렇지 않다',
@@ -343,7 +344,8 @@ export default function TestRunnerPage() {
               <p className="text-xl font-semibold text-white leading-relaxed mb-4">
                 {completionSummary.hookMessage}
               </p>
-              <p className="text-slate-400 text-sm mb-8">{completionSummary.counselorNote}</p>
+              <p className="text-slate-400 text-sm mb-6">{completionSummary.counselorNote}</p>
+              <PortalAppInstallPrompt compact className="mb-6 text-left" />
               <button
                 type="button"
                 onClick={() => navigateAfterSubmit()}

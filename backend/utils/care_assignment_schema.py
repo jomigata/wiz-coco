@@ -109,9 +109,13 @@ def validate_create_care_assignment_payload(body: dict | None) -> dict:
 
     if notify_on_assign:
         notify_channels = normalize_portal_notify_channels(notify_channels_raw)
-        if not notify_channels or "phone" not in notify_channels:
+        if not notify_channels:
             raise CareAssignmentValidationError(
-                "내담자 알림은 휴대폰(알림톡·문자)만 가능합니다."
+                "알림 채널이 필요합니다. 내 검사실 앱 또는 휴대폰(알림톡·문자)을 선택해 주세요."
+            )
+        if "phone" not in notify_channels and "app" not in notify_channels:
+            raise CareAssignmentValidationError(
+                "내담자 알림은 내 검사실 앱 또는 휴대폰(알림톡·문자)만 가능합니다."
             )
     elif notify_channels_raw is not None:
         if not isinstance(notify_channels_raw, list):
@@ -119,7 +123,7 @@ def validate_create_care_assignment_payload(body: dict | None) -> dict:
         notify_channels = [
             str(x).strip()
             for x in notify_channels_raw
-            if str(x).strip() in ("email", "phone")
+            if str(x).strip() in ("email", "phone", "app")
         ]
         if not client_portal_email_notify_enabled():
             notify_channels = [c for c in notify_channels if c != "email"]
