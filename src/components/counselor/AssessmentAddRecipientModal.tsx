@@ -23,10 +23,9 @@ import CounselorActionCompleteModal, {
 } from '@/components/counselor/CounselorActionCompleteModal';
 import CounselorNotifyConfirmDialog from '@/components/counselor/CounselorNotifyConfirmDialog';
 import type { NotifyChannelKey, NotifyRecipientContact } from '@/lib/counselorNotifyChannels';
-import { isValidEmailAddress } from '@/lib/emailValidation';
 import { CLIENT_PORTAL_EMAIL_NOTIFY_ENABLED } from '@/lib/clientPortalNotifyPolicy';
 
-type TargetSortKey = 'input' | 'name' | 'phone' | 'email' | 'invalid';
+type TargetSortKey = 'input' | 'name' | 'phone' | 'invalid';
 type TargetSortDir = 'asc' | 'desc';
 
 type ImportedFileBatch = {
@@ -39,7 +38,7 @@ type ImportedFileBatch = {
 const FILE_RECIPIENT_PREVIEW_MAX_VISIBLE = 14;
 /** 파일명 기준 말풍선 가로 오프셋(글자 수) */
 const FILE_PREVIEW_OFFSET_CH = 4;
-const FILE_PREVIEW_COLUMN_TITLE = '이름 · 휴대폰 · 이메일';
+const FILE_PREVIEW_COLUMN_TITLE = '이름 · 휴대폰';
 const FILE_PREVIEW_VIEWPORT_PAD_PX = 12;
 /** `ch` → px (뷰포트 클램프용 근사) */
 const FILE_PREVIEW_CH_PX = 8;
@@ -55,8 +54,7 @@ type FilePreviewAnchor = {
 function formatRecipientPreviewLine(row: RecipientRow): string {
   const name = row.displayName.trim();
   const phone = formatPhoneDisplay((row.phone || '').trim());
-  const email = (row.email || '').trim();
-  return [name, phone, email].map((p) => p || '—').join(' · ');
+  return [name, phone].map((p) => p || '—').join(' · ');
 }
 
 function clampFilePreviewTooltipStyle(
@@ -183,21 +181,17 @@ function MiniStat({ label, children }: { label: string; children: React.ReactNod
 
 function TargetRowContactDisplay({ row }: { row: RecipientRow }) {
   const phone = formatPhoneDisplay((row.phone || '').trim());
-  const email = (row.email || '').trim();
   const invalid = targetRowInvalid(row);
-  if (invalid && !phone && !email) {
+  if (invalid && !phone) {
     return <span className="text-red-400"> (부적합)</span>;
   }
-  const parts: string[] = [];
-  if (phone) parts.push(phone);
-  if (email) parts.push(email);
-  if (parts.length === 0) {
+  if (!phone) {
     return <span className="text-red-400"> (부적합)</span>;
   }
   return (
     <span className="text-slate-300">
       {' · '}
-      {parts.join(' · ')}
+      {phone}
       {invalid ? <span className="text-red-400"> (부적합)</span> : null}
     </span>
   );
@@ -205,11 +199,9 @@ function TargetRowContactDisplay({ row }: { row: RecipientRow }) {
 
 function targetRowInvalid(row: RecipientRow, options?: { requirePhone?: boolean }): boolean {
   const phone = normalizeRecipientPhone(row.phone);
-  const email = (row.email || '').trim();
   if (options?.requirePhone && !phone) return true;
-  if (!phone && !email) return true;
+  if (!phone) return true;
   if (phone && !isValidKrMobilePhone(phone)) return true;
-  if (email && !isValidEmailAddress(email)) return true;
   return false;
 }
 
@@ -223,7 +215,7 @@ function dispatchRecipientToRow(r: {
   return {
     displayName: (r.displayName || '').trim(),
     phone: phoneNorm ? formatPhoneDisplay(phoneNorm) : '',
-    email: (r.email || '').trim().toLowerCase(),
+    email: '',
   };
 }
 
@@ -248,7 +240,6 @@ async function loadRegisteredRowsForAssessment(assessmentId: string): Promise<Re
 function validateIndividualDraftForAssessment(
   draftName: string,
   draftPhone: string,
-  draftEmail: string,
   pendingAndImportedRows: RecipientRow[],
   registeredRows: RecipientRow[],
   options?: { requirePhone?: boolean },
@@ -259,15 +250,12 @@ function validateIndividualDraftForAssessment(
   }
 
   const phoneNorm = normalizeRecipientPhone(draftPhone);
-  const email = draftEmail.trim().toLowerCase();
 
   if (options?.requirePhone && !phoneNorm) {
     return '즉시 발송 시 휴대폰 번호(11자리)를 입력해 주세요.';
   }
-  if (!phoneNorm && !email) {
-    return CLIENT_PORTAL_EMAIL_NOTIFY_ENABLED
-      ? '휴대폰과 이메일 둘 중 하나 이상 입력해 주세요.'
-      : '휴대폰 번호(11자리)를 입력해 주세요.';
+  if (!phoneNorm) {
+    return '휴대폰 번호(11자리)를 입력해 주세요.';
   }
 
   const scopeRows = [...registeredRows, ...pendingAndImportedRows];
@@ -282,17 +270,6 @@ function validateIndividualDraftForAssessment(
     });
     if (dupPhone) {
       return `이름이「${name}」이고, 휴대폰「${phoneLabel}」인 내담자는 중복입니다.`;
-    }
-  }
-
-  if (email) {
-    const dupEmail = scopeRows.some((r) => {
-      const rEmail = (r.email || '').trim().toLowerCase();
-      if (!rEmail) return false;
-      return r.displayName.trim().toLowerCase() === nameKey && rEmail === email;
-    });
-    if (dupEmail) {
-      return `이름이「${name}」이고, 이메일이「${email}」인 내담자는 중복입니다.`;
     }
   }
 
@@ -349,27 +326,17 @@ function recipientPreviewPhoneInvalid(row: RecipientRow): boolean {
   return !isValidKrMobilePhone(normalized);
 }
 
-function recipientPreviewEmailInvalid(row: RecipientRow): boolean {
-  const email = (row.email || '').trim();
-  if (!email) return false;
-  return !isValidEmailAddress(email);
-}
-
 function recipientPreviewMissingContact(row: RecipientRow): boolean {
-  return !normalizeRecipientPhone(row.phone) && !(row.email || '').trim();
+  return !normalizeRecipientPhone(row.phone);
 }
 
 function editDraftFieldInvalidFlags(draft: RecipientRow): {
   name: boolean;
   phone: boolean;
-  email: boolean;
 } {
   const phoneRaw = (draft.phone || '').trim();
-  const emailRaw = (draft.email || '').trim();
-  // 수정 중 — 비어 있으면 적합 색(흰색). 값이 있는데 형식만 틀릴 때만 빨간색
   const phone = phoneRaw ? recipientPreviewPhoneInvalid(draft) : false;
-  const email = emailRaw ? recipientPreviewEmailInvalid(draft) : false;
-  return { name: false, phone, email };
+  return { name: false, phone };
 }
 
 function FilePreviewRecipientLine({ row }: { row: RecipientRow }) {
@@ -381,20 +348,15 @@ function FilePreviewRecipientLine({ row }: { row: RecipientRow }) {
       ? formatPhoneDisplay(normalizedPhone)
       : phoneRaw
     : '—';
-  const emailRaw = (row.email || '').trim();
-  const emailDisplay = emailRaw ? emailRaw.toLowerCase() : '—';
 
   const missingContact = recipientPreviewMissingContact(row);
   const phoneInvalid = phoneRaw ? recipientPreviewPhoneInvalid(row) : missingContact;
-  const emailInvalid = emailRaw ? recipientPreviewEmailInvalid(row) : missingContact;
 
   return (
     <span className="whitespace-nowrap font-mono text-[11px] leading-snug sm:text-xs">
       <span className="text-slate-200">{name}</span>
       <span className="text-slate-500"> · </span>
       <span className={phoneInvalid ? 'text-red-400' : 'text-slate-200'}>{phoneDisplay}</span>
-      <span className="text-slate-500"> · </span>
-      <span className={emailInvalid ? 'text-red-400' : 'text-slate-200'}>{emailDisplay}</span>
     </span>
   );
 }
@@ -407,7 +369,6 @@ export default function AssessmentAddRecipientModal({
 }: Props) {
   const [draftName, setDraftName] = useState('');
   const [draftPhone, setDraftPhone] = useState('');
-  const [draftEmail, setDraftEmail] = useState('');
   const nameInputRef = useRef<HTMLInputElement>(null);
   const bulkRecipientFileRef = useRef<HTMLInputElement>(null);
   const [pendingRows, setPendingRows] = useState<RecipientRow[]>([]);
@@ -525,9 +486,6 @@ export default function AssessmentAddRecipientModal({
       } else if (targetSortKey === 'phone') {
         av = normalizeRecipientPhone(a.row.phone);
         bv = normalizeRecipientPhone(b.row.phone);
-      } else {
-        av = (a.row.email || '').trim().toLowerCase();
-        bv = (b.row.email || '').trim().toLowerCase();
       }
       return mult * av.localeCompare(bv, 'ko');
     });
@@ -563,7 +521,6 @@ export default function AssessmentAddRecipientModal({
         .map((r) => ({
           displayName: r.displayName,
           phone: r.phone,
-          email: r.email,
           groupName: context?.cohortName,
           affiliation: context?.title,
         })),
@@ -615,7 +572,6 @@ export default function AssessmentAddRecipientModal({
   const resetForm = () => {
     setDraftName('');
     setDraftPhone('');
-    setDraftEmail('');
     setPendingRows([]);
     setAddSendNow(true);
     setAddError('');
@@ -642,7 +598,6 @@ export default function AssessmentAddRecipientModal({
     const validationError = validateIndividualDraftForAssessment(
       draftName,
       draftPhone,
-      draftEmail,
       combinedRows,
       registeredRowsForDuplicate,
       addSendNow && !CLIENT_PORTAL_EMAIL_NOTIFY_ENABLED ? { requirePhone: true } : undefined,
@@ -655,8 +610,11 @@ export default function AssessmentAddRecipientModal({
 
     const name = draftName.trim();
     const phone = normalizeRecipientPhone(draftPhone);
-    const email = draftEmail.trim().toLowerCase();
-    const newRow = { displayName: name, phone: phone ? formatPhoneDisplay(phone) : '', email };
+    const newRow = {
+      displayName: name,
+      phone: phone ? formatPhoneDisplay(phone) : '',
+      email: '',
+    };
 
     setAddError('');
     setInvalidBulkDeleteOffer(false);
@@ -665,7 +623,6 @@ export default function AssessmentAddRecipientModal({
     setPendingRows(nextPending);
     setDraftName('');
     setDraftPhone('');
-    setDraftEmail('');
     setIndividualAddFeedback({
       type: 'success',
       message: `「${name}」님을 추가 하였습니다.`,
@@ -692,8 +649,7 @@ export default function AssessmentAddRecipientModal({
     const displayName = draft.displayName.trim();
     const phoneNorm = normalizeRecipientPhone(draft.phone);
     const phone = phoneNorm ? formatPhoneDisplay(phoneNorm) : draft.phone.trim();
-    const email = draft.email.trim().toLowerCase();
-    return { displayName, phone, email };
+    return { displayName, phone, email: '' };
   };
 
   const updateTargetRow = (combinedIndex: number, draft: RecipientRow) => {
@@ -724,7 +680,7 @@ export default function AssessmentAddRecipientModal({
     setEditDraft({
       displayName: row.displayName,
       phone: row.phone,
-      email: row.email,
+      email: '',
     });
     setAddError('');
   };
@@ -745,7 +701,7 @@ export default function AssessmentAddRecipientModal({
         additions.push({
           batchId: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
           name: file.name,
-          rows: parsed,
+          rows: parsed.map((r) => ({ ...r, email: '' })),
         });
       }
       const nextBatches = [...fileBatches, ...additions];
@@ -807,7 +763,7 @@ export default function AssessmentAddRecipientModal({
       setAddError(
         notifyRowOpts
           ? '즉시 발송하려면 유효한 휴대폰(11자리)이 있는 내담자가 필요합니다.'
-          : '유효한 내담자가 없습니다. 연락처(휴대폰·이메일)를 확인해 주세요.',
+          : '유효한 내담자가 없습니다. 휴대폰 번호를 확인해 주세요.',
       );
       return;
     }
@@ -856,7 +812,6 @@ export default function AssessmentAddRecipientModal({
         rows: validRows.map((r) => ({
           displayName: r.displayName.trim(),
           phone: normalizeRecipientPhone(r.phone) || undefined,
-          email: (r.email || '').trim().toLowerCase() || undefined,
           queueNotify: addSendNow,
         })),
         queueNotify: addSendNow,
@@ -964,24 +919,6 @@ export default function AssessmentAddRecipientModal({
                       placeholder="010-1234-5678"
                     />
                   </div>
-                  <div>
-                    <label htmlFor="add-recipient-email" className={FORM_LABEL}>
-                      이메일(선택)
-                    </label>
-                    <input
-                      id="add-recipient-email"
-                      type="email"
-                      className={`${FORM_INPUT} w-full !px-2`}
-                      value={draftEmail}
-                      onChange={(e) => {
-                        setDraftEmail(e.target.value);
-                        setIndividualAddFeedback(null);
-                      }}
-                      onKeyDown={handleDraftKeyDown}
-                      disabled={addLoading}
-                      placeholder="name@example.com"
-                    />
-                  </div>
                 </div>
                 <button
                   type="button"
@@ -1012,7 +949,7 @@ export default function AssessmentAddRecipientModal({
             <section className="flex flex-col overflow-visible rounded-2xl border border-emerald-500/15 bg-gradient-to-br from-[#0f1f36]/90 via-[#0d1830]/95 to-[#0a1220]/90 p-4 shadow-inner shadow-black/20 lg:col-span-5">
               <div className="mb-3 border-b border-white/10 pb-2">
                 <h4 className="text-sm font-bold tracking-tight text-emerald-100">파일 일괄 추가</h4>
-                <p className="mt-0.5 text-xs text-slate-400">CSV·Excel — 이름(필수), 휴대폰(선택), 이메일(선택)</p>
+                <p className="mt-0.5 text-xs text-slate-400">CSV·Excel — 이름(필수), 휴대폰(선택)</p>
                 <p className="mt-1 text-sm font-semibold text-amber-300">복수 파일 가능</p>
               </div>
               <div className="rounded-xl border border-dashed border-white/15 bg-black/25 p-3">
@@ -1162,14 +1099,6 @@ export default function AssessmentAddRecipientModal({
                     핸드폰
                     <span className="text-[10px] text-slate-500">{targetSortArrow('phone')}</span>
                   </button>
-                  <button
-                    type="button"
-                    className="inline-flex items-center gap-0.5 hover:text-sky-200"
-                    onClick={() => toggleTargetSort('email')}
-                  >
-                    이메일
-                    <span className="text-[10px] text-slate-500">{targetSortArrow('email')}</span>
-                  </button>
                   {combinedRows.length > 0 && invalidRecipientCount > 0 ? (
                     <>
                       <button
@@ -1214,7 +1143,7 @@ export default function AssessmentAddRecipientModal({
                     }`}
                   >
                     {isEditing ? (
-                      <div className="grid min-w-0 flex-1 grid-cols-1 gap-1.5 sm:grid-cols-3">
+                      <div className="grid min-w-0 flex-1 grid-cols-1 gap-1.5 sm:grid-cols-2">
                         <input
                           type="text"
                           value={editDraft.displayName}
@@ -1236,16 +1165,6 @@ export default function AssessmentAddRecipientModal({
                           }
                           placeholder="휴대폰"
                           className={editInlineInputClass(editInvalid?.phone ?? false)}
-                          disabled={addLoading}
-                        />
-                        <input
-                          type="email"
-                          value={editDraft.email}
-                          onChange={(e) =>
-                            setEditDraft((d) => ({ ...d, email: e.target.value }))
-                          }
-                          placeholder="이메일"
-                          className={editInlineInputClass(editInvalid?.email ?? false)}
                           disabled={addLoading}
                         />
                       </div>
