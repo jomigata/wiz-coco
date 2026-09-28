@@ -890,6 +890,32 @@ export async function pushAssessmentsToPortals(body: {
   return data as CounselorPushAssessmentResult;
 }
 
+export async function revokePortalAdditionalAssignment(
+  portalId: string,
+  body:
+    | { kind: 'test'; testId: string; primaryAssessmentId: string }
+    | { kind: 'care'; careAssignmentId: string },
+): Promise<{ portalId?: string; testId?: string; assignmentId?: string; status?: string }> {
+  const token = await getCounselorToken();
+  if (!token) throw new Error('전문가·상담사 로그인이 필요합니다.');
+  const res = await fetch(
+    `${getBaseUrl()}/api/client-portals/portals/${encodeURIComponent(portalId)}/revoke-additional`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(body),
+    },
+  );
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(typeof data?.message === 'string' ? data.message : '추가 요청 삭제에 실패했습니다.');
+  }
+  return data;
+}
+
 export async function restoreAssessmentMove(tombstoneId: string): Promise<{
   restored: number;
   portalId: string;

@@ -81,6 +81,7 @@ from utils.client_portal_list import (
     update_portal_counselor_tags,
 )
 from utils.portal_assessment_push import push_assessments_to_portals
+from utils.portal_additional_revoke import cancel_portal_care_assignment, revoke_portal_additional_test
 from utils.counselor_monitoring import get_counselor_monitoring_hub, get_counselor_cohort_monitoring_view
 from utils.counselor_org_liaison import list_counselor_org_liaisons
 from utils.care_assignments import list_portal_care_assignments, submit_portal_care_progress
@@ -331,6 +332,38 @@ def push_assessments():
         return jsonify({"error": "Payment Required", **result}), 402
 
     return jsonify(result), 201
+
+
+@bp.route("/portals/<portal_id>/revoke-additional", methods=["POST"])
+@require_counselor
+def revoke_portal_additional(portal_id: str):
+    """미실시 추가 검사·숙제 취소."""
+    body = request.get_json(silent=True) or {}
+    kind = (body.get("kind") or "").strip().lower()
+    db = get_firestore()
+    try:
+        if kind == "test":
+            result = revoke_portal_additional_test(
+                db,
+                g.counselor_uid,
+                portal_id=portal_id,
+                primary_assessment_id=(body.get("primaryAssessmentId") or body.get("assessmentId") or "").strip(),
+                test_id=(body.get("testId") or "").strip(),
+            )
+        elif kind == "care":
+            result = cancel_portal_care_assignment(
+                db,
+                g.counselor_uid,
+                portal_id=portal_id,
+                assignment_id=(body.get("careAssignmentId") or body.get("assignmentId") or "").strip(),
+            )
+        else:
+            return jsonify({"error": "Bad Request", "message": "kind는 test 또는 care 여야 합니다."}), 400
+    except PermissionError as exc:
+        return jsonify({"error": "Forbidden", "message": str(exc)}), 403
+    except ValueError as exc:
+        return jsonify({"error": "Bad Request", "message": str(exc)}), 400
+    return jsonify(result)
 
 
 @bp.route("/move-assessments", methods=["POST"])

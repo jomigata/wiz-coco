@@ -1817,6 +1817,7 @@ export default function CounselorClientList({
                               void load();
                             }}
                             careListRefresh={careListRefresh}
+                            assessmentMeta={assessmentMeta}
                           />
                         ) : null
                       ) : null}

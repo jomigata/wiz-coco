@@ -1915,6 +1915,7 @@ export default function AssessmentDispatchPanel({
                               void load({ silent: true });
                             }}
                             careListRefresh={careListRefresh}
+                            baselineTestIds={(data?.testList || []).map((t) => t.testId).filter(Boolean)}
                           />
                           )}
                         </td>

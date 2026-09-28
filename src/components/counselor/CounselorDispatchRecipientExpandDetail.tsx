@@ -16,7 +16,9 @@ import CounselorQuickCareRecommendCard from '@/components/counselor/CounselorQui
 import CounselorRecommendDismissedSummary from '@/components/counselor/CounselorRecommendDismissedSummary';
 import CounselorRecipientExpandTestName from '@/components/counselor/CounselorRecipientExpandTestName';
 import { CounselorRecipientExpandLeadingCells } from '@/components/counselor/CounselorRecipientExpandRowCells';
+import type { AssessmentMetaEntry } from '@/lib/clientPortalRealtime';
 import type { DispatchRecipient, DispatchTestResult } from '@/lib/clientPortalApi';
+import { revokePortalAdditionalAssignment } from '@/lib/clientPortalApi';
 
 function formatCompletedAt(iso: string | null | undefined): string {
   if (!iso) return '—';
@@ -46,6 +48,31 @@ function testLetterLabel(index: number): string {
   return `${String.fromCharCode(97 + index)}.`;
 }
 
+function renderResultCheckCell(
+  row: {
+    status: DispatchTestResult['status'];
+    resultId: string | null;
+    isCare: boolean;
+  },
+  onOpenResult?: (resultId: string) => void,
+): React.ReactNode {
+  if (row.status === 'completed' && row.resultId && onOpenResult) {
+    return (
+      <button
+        type="button"
+        onClick={() => onOpenResult(row.resultId!)}
+        className="whitespace-nowrap text-blue-400 hover:text-blue-300"
+      >
+        결과 보기
+      </button>
+    );
+  }
+  if (row.status === 'in_progress') {
+    return <span className="text-amber-300">진행 중</span>;
+  }
+  return <span className="text-slate-500">미실시</span>;
+}
+
 function isMovedOutRecipient(r: DispatchRecipient): boolean {
   return r.moveStatus === 'moved_out';
 }
@@ -62,6 +89,10 @@ export type CounselorDispatchRecipientExpandContentProps = {
   onRecommendAssigned?: () => void;
   /** 숙제 목록 재조회 (발송 후 테이블 반영) */
   careListRefresh?: number;
+  /** 기본 상담(코드) 검사 — 미실시 추가요청 판별 */
+  assessmentMeta?: Record<string, AssessmentMetaEntry>;
+  /** dispatch 패널 등 testList 직접 전달 */
+  baselineTestIds?: string[];
 };
 
 export function CounselorDispatchRecipientExpandContent({
@@ -75,10 +106,26 @@ export function CounselorDispatchRecipientExpandContent({
   restoreLoading = false,
   onRecommendAssigned,
   careListRefresh = 0,
+  assessmentMeta,
+  baselineTestIds: baselineTestIdsProp,
 }: CounselorDispatchRecipientExpandContentProps) {
   const r = recipient;
   const [careItems, setCareItems] = useState<CounselorCareAssignmentListItem[]>([]);
   const [recommendUiRev, setRecommendUiRev] = useState(0);
+  const [removeError, setRemoveError] = useState('');
+  const [removingKey, setRemovingKey] = useState<string | null>(null);
+
+  const baselineTestIds = useMemo(() => {
+    if (baselineTestIdsProp?.length) {
+      return new Set(baselineTestIdsProp.map((id) => id.trim()).filter(Boolean));
+    }
+    if (!assessmentId || !assessmentMeta?.[assessmentId]?.testList?.length) {
+      return new Set<string>();
+    }
+    return new Set(
+      assessmentMeta[assessmentId].testList.map((t) => (t.testId || '').trim()).filter(Boolean),
+    );
+  }, [assessmentId, assessmentMeta, baselineTestIdsProp]);
 
   useEffect(() => {
     if (!showRecommendCards || !r.portalId) {
@@ -106,20 +153,28 @@ export function CounselorDispatchRecipientExpandContent({
     completedAt: string | null;
     resultId: string | null;
     isCare: boolean;
+    careAssignmentId?: string;
+    canRemove: boolean;
   };
 
   const uniqueTests = useMemo(() => dedupeDispatchTestsByTestId(tests), [tests]);
 
   const tableRows = useMemo(() => {
-    const fromTests: ExpandTableRow[] = uniqueTests.map((t) => ({
-      rowKey: `test-${t.testId}`,
-      name: t.testName || '',
-      testId: t.testId,
-      status: t.status,
-      completedAt: t.completedAt,
-      resultId: t.resultId,
-      isCare: false,
-    }));
+    const fromTests: ExpandTableRow[] = uniqueTests.map((t) => {
+      const testId = (t.testId || '').trim();
+      const isBaseline = testId ? baselineTestIds.has(testId) : false;
+      const canRemove = t.status === 'not_started' && Boolean(testId) && !isBaseline;
+      return {
+        rowKey: `test-${t.testId}`,
+        name: t.testName || '',
+        testId: t.testId,
+        status: t.status,
+        completedAt: t.completedAt,
+        resultId: t.resultId,
+        isCare: false,
+        canRemove,
+      };
+    });
     const testNameKeys = new Set(fromTests.map((t) => t.name.trim().toLowerCase()).filter(Boolean));
     const careByTitle = new Map<string, ExpandTableRow>();
     for (const item of careItems) {
@@ -140,6 +195,8 @@ export function CounselorDispatchRecipientExpandContent({
         completedAt: item.completedAt || item.progress?.completedAt || null,
         resultId: null,
         isCare: true,
+        careAssignmentId: item.id,
+        canRemove: status === 'not_started',
       };
       const prev = careByTitle.get(titleKey);
       if (!prev) {
@@ -154,7 +211,35 @@ export function CounselorDispatchRecipientExpandContent({
     }
     const fromCare = Array.from(careByTitle.values());
     return [...fromTests, ...fromCare];
-  }, [uniqueTests, careItems]);
+  }, [uniqueTests, careItems, baselineTestIds]);
+
+  const handleRemoveAdditional = async (row: ExpandTableRow) => {
+    if (!row.canRemove || removingKey) return;
+    setRemoveError('');
+    setRemovingKey(row.rowKey);
+    try {
+      if (row.isCare && row.careAssignmentId) {
+        await revokePortalAdditionalAssignment(r.portalId, {
+          kind: 'care',
+          careAssignmentId: row.careAssignmentId,
+        });
+        setCareItems((prev) => prev.filter((c) => c.id !== row.careAssignmentId));
+      } else if (row.testId && assessmentId) {
+        await revokePortalAdditionalAssignment(r.portalId, {
+          kind: 'test',
+          testId: row.testId,
+          primaryAssessmentId: assessmentId,
+        });
+      } else {
+        throw new Error('삭제할 항목을 확인할 수 없습니다.');
+      }
+      onRecommendAssigned?.();
+    } catch (err) {
+      setRemoveError(err instanceof Error ? err.message : '삭제에 실패했습니다.');
+    } finally {
+      setRemovingKey(null);
+    }
+  };
 
   return (
     <>
@@ -199,6 +284,9 @@ export function CounselorDispatchRecipientExpandContent({
         </p>
       ) : (
         <div className="max-w-2xl overflow-hidden rounded-lg border border-slate-600/80 bg-slate-950/55 shadow-inner">
+          {removeError ? (
+            <p className="border-b border-red-900/40 bg-red-950/20 px-3 py-1.5 text-xs text-red-300">{removeError}</p>
+          ) : null}
           <table className="w-full table-fixed text-sm">
             <colgroup>
               <col className="w-10" />
@@ -206,6 +294,7 @@ export function CounselorDispatchRecipientExpandContent({
               <col className="w-[5.5rem]" />
               <col className="w-[10.5rem]" />
               <col className="w-[5.5rem]" />
+              <col className="w-9" />
             </colgroup>
             <thead className={counselorListTheadClass}>
               <tr className="border-b border-slate-700/70 bg-slate-900/40 text-xs text-slate-400">
@@ -214,6 +303,7 @@ export function CounselorDispatchRecipientExpandContent({
                 <th className="px-3 py-2 text-left font-medium">상태</th>
                 <th className="px-3 py-2 text-left font-medium">완료일시</th>
                 <th className="px-3 py-2 text-left font-medium">결과 확인</th>
+                <th className="px-1 py-2" aria-hidden="true" />
               </tr>
             </thead>
             <tbody>
@@ -239,21 +329,24 @@ export function CounselorDispatchRecipientExpandContent({
                       {formatCompletedAt(t.completedAt)}
                     </td>
                     <td className="px-3 py-2.5 align-top">
-                      {t.isCare ? (
-                        <span className="text-slate-500">내 검사실</span>
-                      ) : t.status === 'completed' && t.resultId && onOpenResult ? (
+                      {renderResultCheckCell(t, onOpenResult)}
+                    </td>
+                    <td className="px-1 py-2.5 align-top text-center">
+                      {t.canRemove ? (
                         <button
                           type="button"
-                          onClick={() => onOpenResult(t.resultId!)}
-                          className="whitespace-nowrap text-blue-400 hover:text-blue-300"
+                          title="추가 요청 삭제"
+                          disabled={removingKey === t.rowKey}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            void handleRemoveAdditional(t);
+                          }}
+                          className="inline-flex h-6 w-6 items-center justify-center rounded text-sm font-normal text-slate-500 hover:bg-red-950/40 hover:text-red-300 disabled:opacity-40"
+                          aria-label={`${t.name} 삭제`}
                         >
-                          결과 보기
+                          ×
                         </button>
-                      ) : t.status === 'in_progress' ? (
-                        <span className="text-amber-300">진행 중</span>
-                      ) : (
-                        <span className="text-slate-500">미실시</span>
-                      )}
+                      ) : null}
                     </td>
                   </tr>
                 );
