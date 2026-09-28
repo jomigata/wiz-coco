@@ -73,6 +73,42 @@ function pickBestResultsForPortal(
   return byTest;
 }
 
+const TEST_STATUS_RANK: Record<DispatchTestResult['status'], number> = {
+  completed: 3,
+  in_progress: 2,
+  not_started: 1,
+};
+
+/** push로 생긴 여러 상담(코드)에 같은 testId가 있어도 목록·진행률은 1행으로 */
+export function dedupeDispatchTestsByTestId(tests: DispatchTestResult[]): DispatchTestResult[] {
+  const order: string[] = [];
+  const byId = new Map<string, DispatchTestResult>();
+
+  for (const row of tests) {
+    const testId = (row.testId || '').trim();
+    if (!testId) continue;
+    const prev = byId.get(testId);
+    if (!prev) {
+      byId.set(testId, row);
+      order.push(testId);
+      continue;
+    }
+    const prevRank = TEST_STATUS_RANK[prev.status] ?? 0;
+    const rank = TEST_STATUS_RANK[row.status] ?? 0;
+    if (rank > prevRank) {
+      byId.set(testId, row);
+    } else if (rank === prevRank && row.status === 'completed') {
+      if ((row.completedAt || '') >= (prev.completedAt || '')) {
+        byId.set(testId, row);
+      }
+    } else if (!prev.testName?.trim() && row.testName?.trim()) {
+      byId.set(testId, { ...prev, testName: row.testName });
+    }
+  }
+
+  return order.map((id) => byId.get(id)!);
+}
+
 export function buildTestsForPortal(
   portalId: string,
   testList: { testId: string; name: string }[],

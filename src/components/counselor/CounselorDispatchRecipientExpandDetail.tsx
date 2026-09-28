@@ -10,8 +10,10 @@ import {
 } from '@/lib/counselorListTableStyles';
 import { listCareAssignments } from '@/lib/careAssignmentApi';
 import type { CounselorCareAssignmentListItem } from '@/types/careAssignment';
+import { dedupeDispatchTestsByTestId } from '@/lib/dispatchRealtime';
 import CounselorNextTestRecommendCard from '@/components/counselor/CounselorNextTestRecommendCard';
 import CounselorQuickCareRecommendCard from '@/components/counselor/CounselorQuickCareRecommendCard';
+import CounselorRecommendDismissedSummary from '@/components/counselor/CounselorRecommendDismissedSummary';
 import CounselorRecipientExpandTestName from '@/components/counselor/CounselorRecipientExpandTestName';
 import { CounselorRecipientExpandLeadingCells } from '@/components/counselor/CounselorRecipientExpandRowCells';
 import type { DispatchRecipient, DispatchTestResult } from '@/lib/clientPortalApi';
@@ -76,6 +78,7 @@ export function CounselorDispatchRecipientExpandContent({
 }: CounselorDispatchRecipientExpandContentProps) {
   const r = recipient;
   const [careItems, setCareItems] = useState<CounselorCareAssignmentListItem[]>([]);
+  const [recommendUiRev, setRecommendUiRev] = useState(0);
 
   useEffect(() => {
     if (!showRecommendCards || !r.portalId) {
@@ -105,8 +108,10 @@ export function CounselorDispatchRecipientExpandContent({
     isCare: boolean;
   };
 
+  const uniqueTests = useMemo(() => dedupeDispatchTestsByTestId(tests), [tests]);
+
   const tableRows = useMemo(() => {
-    const fromTests: ExpandTableRow[] = tests.map((t) => ({
+    const fromTests: ExpandTableRow[] = uniqueTests.map((t) => ({
       rowKey: `test-${t.testId}`,
       name: t.testName || '',
       testId: t.testId,
@@ -115,7 +120,12 @@ export function CounselorDispatchRecipientExpandContent({
       resultId: t.resultId,
       isCare: false,
     }));
-    const fromCare: ExpandTableRow[] = careItems.map((item) => {
+    const testNameKeys = new Set(fromTests.map((t) => t.name.trim().toLowerCase()).filter(Boolean));
+    const careByTitle = new Map<string, ExpandTableRow>();
+    for (const item of careItems) {
+      const title = (item.title || '숙제').trim();
+      const titleKey = title.toLowerCase();
+      if (testNameKeys.has(titleKey)) continue;
       const progressStatus = item.progress?.status;
       const status: DispatchTestResult['status'] =
         item.status === 'completed' || progressStatus === 'completed'
@@ -123,17 +133,28 @@ export function CounselorDispatchRecipientExpandContent({
           : progressStatus === 'in_progress'
             ? 'in_progress'
             : 'not_started';
-      return {
+      const row: ExpandTableRow = {
         rowKey: `care-${item.id}`,
-        name: item.title || '숙제',
+        name: title,
         status,
         completedAt: item.completedAt || item.progress?.completedAt || null,
         resultId: null,
         isCare: true,
       };
-    });
+      const prev = careByTitle.get(titleKey);
+      if (!prev) {
+        careByTitle.set(titleKey, row);
+        continue;
+      }
+      const rank = (s: DispatchTestResult['status']) =>
+        s === 'completed' ? 3 : s === 'in_progress' ? 2 : 1;
+      if (rank(row.status) > rank(prev.status)) {
+        careByTitle.set(titleKey, row);
+      }
+    }
+    const fromCare = Array.from(careByTitle.values());
     return [...fromTests, ...fromCare];
-  }, [tests, careItems]);
+  }, [uniqueTests, careItems]);
 
   return (
     <>
@@ -245,13 +266,22 @@ export function CounselorDispatchRecipientExpandContent({
         <>
           <CounselorNextTestRecommendCard
             assessmentId={assessmentId}
-            recipient={r}
+            recipient={{ ...r, tests: uniqueTests }}
             onAssigned={onRecommendAssigned}
+            onUiChange={() => setRecommendUiRev((n) => n + 1)}
           />
           <CounselorQuickCareRecommendCard
-            recipient={r}
+            recipient={{ ...r, tests: uniqueTests }}
             careListRefresh={careListRefresh}
             onAssigned={onRecommendAssigned}
+            onUiChange={() => setRecommendUiRev((n) => n + 1)}
+          />
+          <CounselorRecommendDismissedSummary
+            portalId={r.portalId}
+            assessmentId={assessmentId}
+            tests={uniqueTests}
+            refreshKey={recommendUiRev}
+            onRestore={() => setRecommendUiRev((n) => n + 1)}
           />
         </>
       ) : null}

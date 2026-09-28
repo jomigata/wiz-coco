@@ -14,7 +14,6 @@ import {
   hideQuickCareRecommendation,
   isQuickCareRecommendationHidden,
   readQuickCareRecommendationScheduled,
-  restoreQuickCareRecommendation,
   writeQuickCareRecommendationScheduled,
 } from '@/lib/counselorRecommendCardState';
 import CounselorRecommendCardLayout, {
@@ -30,12 +29,14 @@ type Props = {
   recipient: DispatchRecipient;
   onAssigned?: () => void;
   careListRefresh?: number;
+  onUiChange?: () => void;
 };
 
 export default function CounselorQuickCareRecommendCard({
   recipient,
   onAssigned,
   careListRefresh = 0,
+  onUiChange,
 }: Props) {
   const recommendation = useMemo(
     () => resolveCounselorQuickCareRecommendation(recipient.tests || []),
@@ -119,11 +120,7 @@ export default function CounselorQuickCareRecommendCard({
     hideQuickCareRecommendation(recipient.portalId, recommendation.presetId);
     setHidden(true);
     setError('');
-  };
-
-  const handleUndoDelete = () => {
-    restoreQuickCareRecommendation(recipient.portalId, recommendation.presetId);
-    setHidden(false);
+    onUiChange?.();
   };
 
   const handleCancelSchedule = () => {
@@ -132,13 +129,7 @@ export default function CounselorQuickCareRecommendCard({
   };
 
   if (hidden) {
-    return (
-      <CounselorRecommendInlineRow
-        title={displayTitle}
-        actionLabel="삭제취소"
-        onAction={handleUndoDelete}
-      />
-    );
+    return null;
   }
 
   if (scheduled) {

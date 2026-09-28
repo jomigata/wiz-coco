@@ -59,6 +59,31 @@ def _progress_label(total: int, completed: int) -> str:
     return "in_progress"
 
 
+def _portal_unique_test_progress(
+    portal_id: str,
+    assigned_ids: list[str],
+    assessment_cache: dict,
+    completion_map: dict,
+) -> tuple[int, int]:
+    """배정된 여러 상담(코드)에 같은 testId가 있어도 진행률은 유니크 testId 기준."""
+    all_required: set[str] = set()
+    all_completed: set[str] = set()
+    for aid in assigned_ids:
+        cached = assessment_cache.get(aid)
+        if not cached:
+            continue
+        test_list = cached.get("testList") or []
+        required = {
+            str(t.get("testId") or "").strip()
+            for t in test_list
+            if t and str(t.get("testId") or "").strip()
+        }
+        all_required |= required
+        done = completion_map.get((portal_id, aid), set())
+        all_completed |= done & required
+    return len(all_completed), len(all_required)
+
+
 def list_counselor_client_portals(
     db,
     counselor_uid: str | None,
@@ -190,14 +215,9 @@ def list_counselor_client_portals(
 
         total_tests = 0
         completed_tests = 0
-        for aid in assigned_ids:
-            required = {
-                str(t.get("testId") or "").strip()
-                for t in (assessment_cache[aid].get("testList") or [])
-                if t and str(t.get("testId") or "").strip()
-            }
-            total_tests += len(required)
-            completed_tests += len(completion_map.get((portal_id, aid), set()) & required)
+        completed_tests, total_tests = _portal_unique_test_progress(
+            portal_id, assigned_ids, assessment_cache, completion_map
+        )
 
         percent = round((completed_tests / total_tests) * 100) if total_tests else 0
         progress_label = _progress_label(total_tests, completed_tests)
@@ -321,8 +341,7 @@ def get_counselor_client_portal_detail(
 
     assessments: list[dict] = []
     all_aids: set[str] = set()
-    total_tests = 0
-    completed_tests = 0
+    assessment_cache_for_progress: dict[str, dict] = {}
 
     for aid in assigned_ids:
         adoc = db.collection(ASSESSMENTS_COLLECTION).document(aid).get()
@@ -335,6 +354,7 @@ def get_counselor_client_portal_detail(
             continue
         all_aids.add(aid)
         test_list = a.get("testList") or []
+        assessment_cache_for_progress[aid] = {"testList": test_list}
         required = {
             str(t.get("testId") or "").strip()
             for t in test_list
@@ -342,8 +362,6 @@ def get_counselor_client_portal_detail(
         }
         test_info = _test_status_for_portal(db, pid, aid, required)
         tests = _test_detail_rows(db, pid, aid, test_list)
-        total_tests += test_info.get("requiredCount") or 0
-        completed_tests += test_info.get("completedCount") or 0
         assessments.append(
             {
                 "assessmentId": aid,
@@ -359,6 +377,14 @@ def get_counselor_client_portal_detail(
                 "tests": tests,
             }
         )
+
+    progress_aids = list(assessment_cache_for_progress.keys())
+    completion_map = _bulk_completed_tests_by_portal_assessment(
+        db, [pid], set(progress_aids)
+    )
+    completed_tests, total_tests = _portal_unique_test_progress(
+        pid, progress_aids, assessment_cache_for_progress, completion_map
+    )
 
     percent = round((completed_tests / total_tests) * 100) if total_tests else 0
     progress_label = _progress_label(total_tests, completed_tests)

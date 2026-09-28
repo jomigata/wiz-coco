@@ -7,6 +7,7 @@ import type {
 import type { DispatchTestResult } from '@/lib/clientPortalApi';
 import {
   buildTestsForPortal,
+  dedupeDispatchTestsByTestId,
   type RealtimeTestResultDoc,
 } from '@/lib/dispatchRealtime';
 
@@ -66,8 +67,8 @@ export function buildExpandTestsForClientList(
     if (!meta?.testList?.length) continue;
     rows.push(...buildTestsForPortal(item.portalId, meta.testList, results));
   }
-  if (rows.length > 0) return rows;
-  return fallbackPrimaryTests?.length ? fallbackPrimaryTests : [];
+  if (rows.length > 0) return dedupeDispatchTestsByTestId(rows);
+  return fallbackPrimaryTests?.length ? dedupeDispatchTestsByTestId(fallbackPrimaryTests) : [];
 }
 
 export function computePortalProgress(
@@ -76,16 +77,15 @@ export function computePortalProgress(
   assessmentMeta: Record<string, AssessmentMetaEntry>,
   results: RealtimeTestResultDoc[],
 ): CounselorClientPortalListItem['progress'] {
-  let totalTests = 0;
-  let completedTests = 0;
-
+  const merged: DispatchTestResult[] = [];
   for (const aid of assessmentIds) {
     const meta = assessmentMeta[aid];
     if (!meta) continue;
-    const tests = buildTestsForPortal(portalId, meta.testList, results);
-    totalTests += tests.length;
-    completedTests += tests.filter((t) => t.status === 'completed').length;
+    merged.push(...buildTestsForPortal(portalId, meta.testList, results));
   }
+  const unique = dedupeDispatchTestsByTestId(merged);
+  const totalTests = unique.length;
+  const completedTests = unique.filter((t) => t.status === 'completed').length;
 
   const percent = totalTests ? Math.round((completedTests / totalTests) * 100) : 0;
   return {

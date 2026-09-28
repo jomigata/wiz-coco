@@ -9,7 +9,6 @@ import {
   hideNextTestRecommendation,
   isNextTestRecommendationHidden,
   readNextTestRecommendationScheduled,
-  restoreNextTestRecommendation,
   writeNextTestRecommendationScheduled,
 } from '@/lib/counselorRecommendCardState';
 import { resolveCounselorNextTestRecommendation } from '@/lib/counselorNextTestRecommendation';
@@ -27,12 +26,14 @@ type Props = {
   assessmentId: string;
   recipient: DispatchRecipient;
   onAssigned?: () => void;
+  onUiChange?: () => void;
 };
 
 export default function CounselorNextTestRecommendCard({
   assessmentId,
   recipient,
   onAssigned,
+  onUiChange,
 }: Props) {
   const recommendation = useMemo(
     () => resolveCounselorNextTestRecommendation(recipient.tests || []),
@@ -100,11 +101,7 @@ export default function CounselorNextTestRecommendCard({
     hideNextTestRecommendation(recipient.portalId, assessmentId, recommendation.testId);
     setHidden(true);
     setError('');
-  };
-
-  const handleUndoDelete = () => {
-    restoreNextTestRecommendation(recipient.portalId, assessmentId, recommendation.testId);
-    setHidden(false);
+    onUiChange?.();
   };
 
   const handleCancelSchedule = () => {
@@ -113,13 +110,7 @@ export default function CounselorNextTestRecommendCard({
   };
 
   if (hidden) {
-    return (
-      <CounselorRecommendInlineRow
-        title={displayTitle}
-        actionLabel="삭제취소"
-        onAction={handleUndoDelete}
-      />
-    );
+    return null;
   }
 
   if (scheduled) {
