@@ -19,6 +19,7 @@ import { CounselorRecipientExpandLeadingCells } from '@/components/counselor/Cou
 import type { AssessmentMetaEntry } from '@/lib/clientPortalRealtime';
 import type { DispatchRecipient, DispatchTestResult } from '@/lib/clientPortalApi';
 import { revokePortalAdditionalAssignment } from '@/lib/clientPortalApi';
+import { LoadingSpinner } from '@/components/ui/LoadingMessage';
 
 function formatCompletedAt(iso: string | null | undefined): string {
   if (!iso) return '—';
@@ -31,6 +32,40 @@ function formatCompletedAt(iso: string | null | undefined): string {
     hour: '2-digit',
     minute: '2-digit',
   });
+}
+
+function addedAtForPushedTest(
+  testId: string,
+  primaryAssessmentId: string,
+  assignedAssessmentIds: string[],
+  assessmentMeta?: Record<string, AssessmentMetaEntry>,
+): string | null {
+  const tid = testId.trim();
+  if (!tid || !assessmentMeta) return null;
+  let latest: string | null = null;
+  for (const aid of assignedAssessmentIds) {
+    if (aid === primaryAssessmentId) continue;
+    const meta = assessmentMeta[aid];
+    if (!meta?.testList?.some((t) => (t.testId || '').trim() === tid)) continue;
+    const created = (meta.createdAt || '').trim();
+    if (created && (!latest || created > latest)) latest = created;
+  }
+  return latest;
+}
+
+function formatCompletionOrAddedColumn(row: {
+  status: DispatchTestResult['status'];
+  completedAt: string | null;
+  addedAt: string | null;
+  canRemove: boolean;
+}): string {
+  if (row.status === 'completed') {
+    return formatCompletedAt(row.completedAt);
+  }
+  if (row.canRemove && row.addedAt) {
+    return formatCompletedAt(row.addedAt);
+  }
+  return '—';
 }
 
 function testStatusLabel(status: DispatchTestResult['status']): { text: string; className: string } {
@@ -93,6 +128,7 @@ export type CounselorDispatchRecipientExpandContentProps = {
   assessmentMeta?: Record<string, AssessmentMetaEntry>;
   /** dispatch 패널 등 testList 직접 전달 */
   baselineTestIds?: string[];
+  assignedAssessmentIds?: string[];
 };
 
 export function CounselorDispatchRecipientExpandContent({
@@ -108,6 +144,7 @@ export function CounselorDispatchRecipientExpandContent({
   careListRefresh = 0,
   assessmentMeta,
   baselineTestIds: baselineTestIdsProp,
+  assignedAssessmentIds = [],
 }: CounselorDispatchRecipientExpandContentProps) {
   const r = recipient;
   const [careItems, setCareItems] = useState<CounselorCareAssignmentListItem[]>([]);
@@ -152,6 +189,7 @@ export function CounselorDispatchRecipientExpandContent({
     status: DispatchTestResult['status'];
     completedAt: string | null;
     resultId: string | null;
+    addedAt: string | null;
     isCare: boolean;
     careAssignmentId?: string;
     canRemove: boolean;
@@ -164,6 +202,9 @@ export function CounselorDispatchRecipientExpandContent({
       const testId = (t.testId || '').trim();
       const isBaseline = testId ? baselineTestIds.has(testId) : false;
       const canRemove = t.status === 'not_started' && Boolean(testId) && !isBaseline;
+      const addedAt = canRemove
+        ? addedAtForPushedTest(testId, assessmentId, assignedAssessmentIds, assessmentMeta)
+        : null;
       return {
         rowKey: `test-${t.testId}`,
         name: t.testName || '',
@@ -171,6 +212,7 @@ export function CounselorDispatchRecipientExpandContent({
         status: t.status,
         completedAt: t.completedAt,
         resultId: t.resultId,
+        addedAt,
         isCare: false,
         canRemove,
       };
@@ -194,6 +236,7 @@ export function CounselorDispatchRecipientExpandContent({
         status,
         completedAt: item.completedAt || item.progress?.completedAt || null,
         resultId: null,
+        addedAt: status === 'not_started' ? item.createdAt || null : null,
         isCare: true,
         careAssignmentId: item.id,
         canRemove: status === 'not_started',
@@ -211,7 +254,7 @@ export function CounselorDispatchRecipientExpandContent({
     }
     const fromCare = Array.from(careByTitle.values());
     return [...fromTests, ...fromCare];
-  }, [uniqueTests, careItems, baselineTestIds]);
+  }, [uniqueTests, careItems, baselineTestIds, assessmentId, assignedAssessmentIds, assessmentMeta]);
 
   const handleRemoveAdditional = async (row: ExpandTableRow) => {
     if (!row.canRemove || removingKey) return;
@@ -292,7 +335,7 @@ export function CounselorDispatchRecipientExpandContent({
               <col className="w-10" />
               <col />
               <col className="w-[5.5rem]" />
-              <col className="w-[10.5rem]" />
+              <col className="w-[11.5rem]" />
               <col className="w-[5.5rem]" />
               <col className="w-9" />
             </colgroup>
@@ -301,7 +344,9 @@ export function CounselorDispatchRecipientExpandContent({
                 <th className="px-3 py-2" aria-hidden="true" />
                 <th className="px-3 py-2 text-left font-medium">검사명</th>
                 <th className="px-3 py-2 text-left font-medium">상태</th>
-                <th className="px-3 py-2 text-left font-medium">완료일시</th>
+                <th className="px-3 py-2 text-left font-medium leading-tight">
+                  완료일시 / 추가일시
+                </th>
                 <th className="px-3 py-2 text-left font-medium">결과 확인</th>
                 <th className="px-1 py-2" aria-hidden="true" />
               </tr>
@@ -326,7 +371,7 @@ export function CounselorDispatchRecipientExpandContent({
                     </td>
                     <td className={`px-3 py-2.5 align-top ${st.className}`}>{st.text}</td>
                     <td className="px-3 py-2.5 align-top text-xs leading-relaxed text-slate-400">
-                      {formatCompletedAt(t.completedAt)}
+                      {formatCompletionOrAddedColumn(t)}
                     </td>
                     <td className="px-3 py-2.5 align-top">
                       {renderResultCheckCell(t, onOpenResult)}
@@ -341,10 +386,14 @@ export function CounselorDispatchRecipientExpandContent({
                             e.stopPropagation();
                             void handleRemoveAdditional(t);
                           }}
-                          className="inline-flex h-6 w-6 items-center justify-center rounded text-sm font-normal text-slate-500 hover:bg-red-950/40 hover:text-red-300 disabled:opacity-40"
+                          className="inline-flex h-6 w-6 items-center justify-center rounded text-slate-500 hover:bg-red-950/40 hover:text-red-300 disabled:opacity-40"
                           aria-label={`${t.name} 삭제`}
                         >
-                          ×
+                          {removingKey === t.rowKey ? (
+                            <LoadingSpinner size="sm" className="h-3.5 w-3.5 border-[1.5px]" />
+                          ) : (
+                            <span className="text-sm leading-none">×</span>
+                          )}
                         </button>
                       ) : null}
                     </td>
@@ -358,12 +407,14 @@ export function CounselorDispatchRecipientExpandContent({
       {showRecommendCards && !isMovedOutRecipient(r) ? (
         <>
           <CounselorNextTestRecommendCard
+            key={`next-reco-${recommendUiRev}`}
             assessmentId={assessmentId}
             recipient={{ ...r, tests: uniqueTests }}
             onAssigned={onRecommendAssigned}
             onUiChange={() => setRecommendUiRev((n) => n + 1)}
           />
           <CounselorQuickCareRecommendCard
+            key={`care-reco-${recommendUiRev}`}
             recipient={{ ...r, tests: uniqueTests }}
             careListRefresh={careListRefresh}
             onAssigned={onRecommendAssigned}

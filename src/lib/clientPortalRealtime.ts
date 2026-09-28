@@ -13,6 +13,7 @@ import {
 
 export type AssessmentMetaEntry = {
   testList: { testId: string; name: string }[];
+  createdAt?: string | null;
 };
 
 function progressLabel(total: number, completed: number): ClientPortalProgressLabel {

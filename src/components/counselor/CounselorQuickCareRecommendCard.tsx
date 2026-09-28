@@ -103,15 +103,16 @@ export default function CounselorQuickCareRecommendCard({
           statusText: snapshot.statusText,
         });
         setScheduled({ scheduledAt, statusText: snapshot.statusText });
+        setBusy(false);
       } else {
         clearQuickCareRecommendationScheduled(recipient.portalId, recommendation.presetId);
         setScheduled(null);
         setAlreadyAssigned(true);
+        setBusy(true);
         onAssigned?.();
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : '숙제 보내기에 실패했습니다.');
-    } finally {
       setBusy(false);
     }
   };
@@ -156,7 +157,7 @@ export default function CounselorQuickCareRecommendCard({
               type="button"
               disabled={busy}
               onClick={() => void handleSend()}
-              className={recommendPrimaryButtonClass('teal')}
+              className={`${recommendPrimaryButtonClass('teal')} ${busy ? 'animate-pulse' : ''}`}
             >
               {busy ? '보내는 중…' : '즉시 발송'}
             </button>

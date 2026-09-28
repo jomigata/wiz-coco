@@ -1818,6 +1818,7 @@ export default function CounselorClientList({
                             }}
                             careListRefresh={careListRefresh}
                             assessmentMeta={assessmentMeta}
+                            assignedAssessmentIds={item.assessments.map((a) => a.assessmentId)}
                           />
                         ) : null
                       ) : null}

@@ -20,6 +20,7 @@ import CounselorRecommendCardLayout, {
 } from '@/components/counselor/CounselorRecommendCardLayout';
 import CounselorRecommendInlineRow from '@/components/counselor/CounselorRecommendInlineRow';
 import CounselorRecommendScheduleDialog from '@/components/counselor/CounselorRecommendScheduleDialog';
+import { LoadingSpinner } from '@/components/ui/LoadingMessage';
 import { PORTAL_APP_NOTIFY_CHANNELS } from '@/lib/clientPortalNotifyPolicy';
 
 type Props = {
@@ -53,6 +54,12 @@ export default function CounselorNextTestRecommendCard({
   const [error, setError] = useState('');
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [sendingHide, setSendingHide] = useState(false);
+
+  const testListed = useMemo(() => {
+    if (!recommendation) return false;
+    return (recipient.tests || []).some((t) => t.testId === recommendation.testId);
+  }, [recipient.tests, recommendation]);
 
   if (!recommendation) return null;
 
@@ -85,14 +92,16 @@ export default function CounselorNextTestRecommendCard({
           statusText: snapshot.statusText,
         });
         setScheduled({ scheduledAt, statusText: snapshot.statusText });
+        setBusy(false);
       } else {
         clearNextTestRecommendationScheduled(recipient.portalId, assessmentId, recommendation.testId);
         setScheduled(null);
+        setSendingHide(true);
         onAssigned?.();
       }
     } catch (err) {
+      setSendingHide(false);
       setError(err instanceof Error ? err.message : '검사 보내기에 실패했습니다.');
-    } finally {
       setBusy(false);
     }
   };
@@ -111,6 +120,19 @@ export default function CounselorNextTestRecommendCard({
 
   if (hidden) {
     return null;
+  }
+
+  if (testListed) {
+    return null;
+  }
+
+  if (sendingHide) {
+    return (
+      <div className="mt-3 flex items-center gap-2 rounded-lg border border-violet-500/20 bg-violet-950/15 px-4 py-2.5">
+        <LoadingSpinner size="sm" />
+        <span className="animate-pulse text-sm font-medium text-violet-200/90">보내는 중…</span>
+      </div>
+    );
   }
 
   if (scheduled) {
@@ -137,7 +159,7 @@ export default function CounselorNextTestRecommendCard({
               type="button"
               disabled={busy}
               onClick={() => void handleSend()}
-              className={recommendPrimaryButtonClass('violet')}
+              className={`${recommendPrimaryButtonClass('violet')} ${busy ? 'animate-pulse' : ''}`}
             >
               {busy ? '보내는 중…' : '즉시 발송'}
             </button>

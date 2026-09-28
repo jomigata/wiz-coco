@@ -162,6 +162,7 @@ def list_counselor_client_portals(
             "cohortName": (a.get("cohortName") or "").strip(),
             "targetAudience": (a.get("targetAudience") or "").strip(),
             "testList": a.get("testList") or [],
+            "createdAt": _iso_timestamp(a.get("createdAt")),
         }
 
     completion_map = _bulk_completed_tests_by_portal_assessment(
@@ -278,7 +279,10 @@ def list_counselor_client_portals(
                 all_tags.add(s)
 
     assessment_meta = {
-        aid: {"testList": entry.get("testList") or []}
+        aid: {
+            "testList": entry.get("testList") or [],
+            "createdAt": entry.get("createdAt"),
+        }
         for aid, entry in assessment_cache.items()
     }
 

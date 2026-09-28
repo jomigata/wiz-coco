@@ -1916,6 +1916,7 @@ export default function AssessmentDispatchPanel({
                             }}
                             careListRefresh={careListRefresh}
                             baselineTestIds={(data?.testList || []).map((t) => t.testId).filter(Boolean)}
+                            assignedAssessmentIds={[assessmentId].filter(Boolean)}
                           />
                           )}
                         </td>
