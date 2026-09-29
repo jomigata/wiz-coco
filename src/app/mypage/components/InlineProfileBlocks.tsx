@@ -9,6 +9,7 @@ import { isCounselor } from '@/utils/roleUtils';
 import { formatPhoneDisplayOr } from '@/lib/phoneFormat';
 import { FaHeart, FaBuilding, FaKey, FaMapMarkerAlt } from 'react-icons/fa';
 import { MypagePremiumBlock, MypagePremiumBlockGrid } from '@/components/mypage/MypagePremiumBlock';
+import MypageBirthDateField, { formatBirthDateDisplay } from '@/components/mypage/MypageBirthDateField';
 
 // ─── 타입 ───────────────────────────────────────────────────────────────────
 interface UserData {
@@ -337,15 +338,12 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
             placeholder="010-0000-0000"
           />
         </div>
-        <div>
-          <label className={labelCls}>생년월일</label>
-          <input
-            type="date"
-            className={fieldCls + ' [color-scheme:dark]'}
-            value={personalForm.birthDate}
-            onChange={(e) => setPersonalForm((p) => ({ ...p, birthDate: e.target.value }))}
-          />
-        </div>
+        <MypageBirthDateField
+          labelClassName={labelCls}
+          fieldClassName={fieldCls}
+          value={personalForm.birthDate}
+          onChange={(birthDate) => setPersonalForm((p) => ({ ...p, birthDate }))}
+        />
         <div>
           <label className={labelCls}>성별</label>
           <select
@@ -379,7 +377,12 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
           ['이름', displayUser.name?.trim() || '정보 없음'],
           ['전화번호', formatPhoneDisplayOr(displayUser.phoneNumber, '정보 없음')],
           ['이메일(개인)', displayUser.email?.trim() || '정보 없음'],
-          ['생년월일', displayUser.birthDate?.trim() || '정보 없음'],
+          [
+            '생년월일',
+            displayUser.birthDate?.trim()
+              ? formatBirthDateDisplay(displayUser.birthDate.trim()) || displayUser.birthDate.trim()
+              : '정보 없음',
+          ],
           ['성별', genderLabel(displayUser.gender)],
         ].map(([k, v]) => (
           <div key={k} className="rounded-lg border border-sky-400/10 bg-[#0f1d33]/40 px-3 py-2">
