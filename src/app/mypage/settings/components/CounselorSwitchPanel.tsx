@@ -634,6 +634,16 @@ export default function CounselorSwitchPanel({
                 </button>
               )}
             </div>
+            ) : hideCounselorFooter && counselor && mypageEditing ? (
+              <div className="flex justify-end border-t border-white/10 pt-4">
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="rounded-lg bg-sky-600 px-5 py-2 text-sm font-medium text-white hover:bg-sky-500 disabled:opacity-50"
+                >
+                  {saving ? '저장 중…' : '저장'}
+                </button>
+              </div>
             ) : null}
           </form>
           </>

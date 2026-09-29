@@ -230,6 +230,21 @@ function BlockMessage({ error, success }: { error: string; success: string }) {
   return null;
 }
 
+function EditFormSaveFooter({ saving, onSave }: { saving: boolean; onSave: () => void }) {
+  return (
+    <div className="flex justify-end border-t border-white/10 pt-4">
+      <button
+        type="button"
+        onClick={onSave}
+        disabled={saving}
+        className="rounded-lg bg-sky-600 px-5 py-2 text-sm font-medium text-white hover:bg-sky-500 disabled:opacity-50"
+      >
+        {saving ? '저장 중…' : '저장'}
+      </button>
+    </div>
+  );
+}
+
 // ─── 메인 컴포넌트 ───────────────────────────────────────────────────────────
 export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, section }: Props) {
   const [displayUser, setDisplayUser] = useState<UserData>(user);
@@ -379,6 +394,19 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
           </select>
         </div>
         <BlockMessage error={blockError} success={blockSuccess} />
+        <EditFormSaveFooter
+          saving={saving}
+          onSave={() =>
+            handleSave({
+              displayName: personalForm.displayName.trim(),
+              name: personalForm.displayName.trim(),
+              phoneNumber: personalForm.phoneNumber.trim(),
+              birthDate: personalForm.birthDate,
+              gender: personalForm.gender,
+              occupation: personalForm.occupation,
+            })
+          }
+        />
       </div>
     ) : (
       <div className="grid gap-2 sm:grid-cols-2">
@@ -503,6 +531,21 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
           </div>
         ))}
         <BlockMessage error={blockError} success={blockSuccess} />
+        <EditFormSaveFooter
+          saving={saving}
+          onSave={() =>
+            handleSave({
+              organizationName: orgForm.organizationName.trim(),
+              organizationBusinessRegistrationNumber: orgForm.organizationBusinessRegistrationNumber.trim(),
+              organizationManager: orgForm.organizationManager.trim(),
+              organizationTel: orgForm.organizationTel.trim(),
+              organizationMobile: orgForm.organizationMobile.trim(),
+              organizationFax: orgForm.organizationFax.trim(),
+              organizationEmail: orgForm.organizationEmail.trim(),
+              organizationAddress: orgForm.organizationAddress.trim(),
+            })
+          }
+        />
       </div>
     ) : (
       <div className="grid gap-2 sm:grid-cols-2">
