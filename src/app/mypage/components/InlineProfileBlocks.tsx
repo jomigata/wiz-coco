@@ -10,6 +10,7 @@ import { formatPhoneDisplayOr } from '@/lib/phoneFormat';
 import { FaHeart, FaBuilding, FaKey, FaMapMarkerAlt } from 'react-icons/fa';
 import { MypagePremiumBlock, MypagePremiumBlockGrid } from '@/components/mypage/MypagePremiumBlock';
 import MypageBirthDateField, { formatBirthDateDisplay } from '@/components/mypage/MypageBirthDateField';
+import OrganizationAddressField from '@/components/mypage/OrganizationAddressField';
 import { mypageAccountClasses } from '@/components/layout/appChromeTheme';
 
 // ─── 타입 ───────────────────────────────────────────────────────────────────
@@ -483,7 +484,6 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
           { key: 'organizationMobile', label: '핸드폰번호', placeholder: '010-0000-0000' },
           { key: 'organizationFax', label: '팩스번호', placeholder: '02-0000-0000' },
           { key: 'organizationEmail', label: '이메일', placeholder: 'email@example.com' },
-          { key: 'organizationAddress', label: '주소', placeholder: '주소를 입력하세요' },
         ].map(({ key, label, placeholder }) => (
           <div key={key}>
             <label className={labelCls}>{label}</label>
@@ -495,6 +495,12 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
             />
           </div>
         ))}
+        <OrganizationAddressField
+          labelClassName={labelCls}
+          fieldClassName={fieldCls}
+          value={orgForm.organizationAddress}
+          onChange={(organizationAddress) => setOrgForm((p) => ({ ...p, organizationAddress }))}
+        />
         <BlockMessage error={blockError} success={blockSuccess} />
         <EditFormSaveFooter
           saving={saving}
