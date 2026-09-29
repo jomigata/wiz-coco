@@ -736,7 +736,7 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
     <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
       <h3 className="text-base font-semibold text-blue-100 flex items-center gap-2 mb-4">
         <FaKey className="w-4 h-4 text-purple-400" />
-        로그인·계정
+        계정 정보
       </h3>
       <div className="space-y-3">
         <div className={rowCls}><span className={keySpan}>회원 유형</span><span className={valSpan}>{roleLabel(displayUser.role)}</span></div>

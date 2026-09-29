@@ -9,8 +9,8 @@ export const MYPAGE_DEFAULT_HREF = '/mypage/account/info';
 export const mypageAccountDetailNav: MypageAccountNavItem[] = [
   {
     href: '/mypage/account/info',
-    label: '계정 정보',
-    description: '로그인·개인 정보·역할',
+    label: '개인 정보',
+    description: '로그인·개인 기본 정보',
   },
   {
     href: '/mypage/account/counselor',

@@ -175,7 +175,7 @@ export default function Navigation() {
   const pendingCounselorCount = usePendingCounselorApplicationsCount(userRole);
   const counselorResultCount = useCounselorApplicationNotificationCount(userUid, userRole);
   const mypageNavSections = useMemo(
-    () => buildMypageNavSections(userRole, { settingsBadge: counselorResultCount }),
+    () => buildMypageNavSections(userRole, { settingsBadge: counselorResultCount, variant: 'topNav' }),
     [userRole, counselorResultCount],
   );
   const counselorAccess = useCounselorProfessionalAccess();

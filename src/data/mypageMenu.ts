@@ -21,9 +21,18 @@ export type MypageNavSection = {
   items: MypageNavItem[];
 };
 
+export type MypageNavVariant = 'sidebar' | 'topNav';
+
+/** 상단 마이페이지 드롭다운에서 숨길 계정 하위 메뉴 (좌측 사이드바에는 유지) */
+export const MYPAGE_TOP_NAV_HIDDEN_ACCOUNT_HREFS = [
+  '/mypage/account/organization',
+  '/mypage/account/counselor-profile',
+  '/mypage/account/report',
+] as const;
+
 export function buildMypageNavSections(
   role: unknown,
-  options?: { settingsBadge?: number },
+  options?: { settingsBadge?: number; variant?: MypageNavVariant },
 ): MypageNavSection[] {
   const sections: MypageNavSection[] = [
     {
@@ -31,9 +40,9 @@ export function buildMypageNavSections(
       title: '계정',
       items: [
         {
-          name: '계정 정보',
+          name: '개인 정보',
           href: '/mypage/account/info',
-          description: '로그인·개인 정보',
+          description: '로그인·개인 기본 정보',
           icon: '👤',
           badge: options?.settingsBadge,
         },
@@ -117,6 +126,22 @@ export function buildMypageNavSections(
         },
       ],
     });
+  }
+
+  if (options?.variant === 'topNav') {
+    return sections.map((section) =>
+      section.id === 'account'
+        ? {
+            ...section,
+            items: section.items.filter(
+              (item) =>
+                !MYPAGE_TOP_NAV_HIDDEN_ACCOUNT_HREFS.includes(
+                  item.href as (typeof MYPAGE_TOP_NAV_HIDDEN_ACCOUNT_HREFS)[number],
+                ),
+            ),
+          }
+        : section,
+    );
   }
 
   return sections;

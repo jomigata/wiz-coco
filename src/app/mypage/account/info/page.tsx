@@ -3,8 +3,8 @@ import MypageAccountSectionPage from '@/components/mypage/MypageAccountSectionPa
 export default function MypageAccountInfoPage() {
   return (
     <MypageAccountSectionPage
-      title="계정 정보"
-      description="로그인 계정과 개인 기본 정보만 관리합니다."
+      title="개인 정보"
+      description="계정 정보와 개인 기본 정보를 관리합니다."
       section="account"
     />
   );
