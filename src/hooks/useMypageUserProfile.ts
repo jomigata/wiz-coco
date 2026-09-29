@@ -26,6 +26,10 @@ export type MypageUserProfile = {
   organizationEmail?: string;
   organizationAddress?: string;
   organizationBusinessRegistrationNumber?: string;
+  organizationRepresentativeName?: string;
+  organizationBusinessType?: string;
+  organizationBusinessItem?: string;
+  organizationTaxInvoiceEmail?: string;
   reportDisplayName?: string;
   practiceType?: 'solo' | 'organization';
   teamSharingEnabled?: boolean;
@@ -103,6 +107,10 @@ export function useMypageUserProfile() {
           organizationAddress: d.organizationAddress || d.address || '',
           organizationBusinessRegistrationNumber:
             d.organizationBusinessRegistrationNumber || d.businessRegistrationNumber || '',
+          organizationRepresentativeName: d.organizationRepresentativeName || '',
+          organizationBusinessType: d.organizationBusinessType || '',
+          organizationBusinessItem: d.organizationBusinessItem || '',
+          organizationTaxInvoiceEmail: d.organizationTaxInvoiceEmail || '',
           createdAt: normalizeDateValue(d.createdAt) || userData.createdAt,
           lastLoginAt: normalizeDateValue(d.lastLoginAt) || userData.lastLoginAt,
         });

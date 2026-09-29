@@ -6,7 +6,15 @@ import { updateProfile } from 'firebase/auth';
 import { db, auth } from '@/lib/firebase';
 import { markAuthenticatedTabSession, touchAuthHeartbeat } from '@/utils/authSessionLifecycle';
 import { isCounselor } from '@/utils/roleUtils';
-import { formatPhoneDisplayOr } from '@/lib/phoneFormat';
+import { formatPhoneDisplayOr, formatPhoneWhileTyping } from '@/lib/phoneFormat';
+import {
+  formatBusinessRegistrationDisplayOr,
+  formatBusinessRegistrationWhileTyping,
+} from '@/lib/businessRegistrationNumberFormat';
+import MypageTaxInvoiceFieldsSection, {
+  MypageContactFieldsSection,
+  MypageTaxInvoiceDisplaySection,
+} from '@/components/mypage/MypageTaxInvoiceSection';
 import { FaHeart, FaBuilding, FaKey, FaMapMarkerAlt } from 'react-icons/fa';
 import { MypagePremiumBlock, MypagePremiumBlockGrid } from '@/components/mypage/MypagePremiumBlock';
 import MypageBirthDateField, { formatBirthDateDisplay } from '@/components/mypage/MypageBirthDateField';
@@ -35,6 +43,10 @@ interface UserData {
   organizationEmail?: string;
   organizationAddress?: string;
   organizationBusinessRegistrationNumber?: string;
+  organizationRepresentativeName?: string;
+  organizationBusinessType?: string;
+  organizationBusinessItem?: string;
+  organizationTaxInvoiceEmail?: string;
   reportDisplayName?: string;
   practiceType?: 'solo' | 'organization';
   teamSharingEnabled?: boolean;
@@ -255,12 +267,33 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
   const [orgForm, setOrgForm] = useState({
     organizationName: '',
     organizationBusinessRegistrationNumber: '',
+    organizationRepresentativeName: '',
+    organizationBusinessType: '',
+    organizationBusinessItem: '',
+    organizationTaxInvoiceEmail: '',
     organizationManager: '',
     organizationTel: '',
     organizationMobile: '',
     organizationFax: '',
     organizationEmail: '',
     organizationAddress: '',
+  });
+
+  const buildOrgSavePayload = () => ({
+    organizationName: orgForm.organizationName.trim(),
+    organizationBusinessRegistrationNumber: formatBusinessRegistrationWhileTyping(
+      orgForm.organizationBusinessRegistrationNumber,
+    ).trim(),
+    organizationRepresentativeName: orgForm.organizationRepresentativeName.trim(),
+    organizationBusinessType: orgForm.organizationBusinessType.trim(),
+    organizationBusinessItem: orgForm.organizationBusinessItem.trim(),
+    organizationTaxInvoiceEmail: orgForm.organizationTaxInvoiceEmail.trim(),
+    organizationManager: orgForm.organizationManager.trim(),
+    organizationTel: orgForm.organizationTel.trim(),
+    organizationMobile: orgForm.organizationMobile.trim(),
+    organizationFax: orgForm.organizationFax.trim(),
+    organizationEmail: orgForm.organizationEmail.trim(),
+    organizationAddress: orgForm.organizationAddress.trim(),
   });
 
 
@@ -280,7 +313,13 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
     } else if (block === 'orgContact') {
       setOrgForm({
         organizationName: displayUser.organizationName || '',
-        organizationBusinessRegistrationNumber: displayUser.organizationBusinessRegistrationNumber || '',
+        organizationBusinessRegistrationNumber: formatBusinessRegistrationWhileTyping(
+          displayUser.organizationBusinessRegistrationNumber || '',
+        ),
+        organizationRepresentativeName: displayUser.organizationRepresentativeName || '',
+        organizationBusinessType: displayUser.organizationBusinessType || '',
+        organizationBusinessItem: displayUser.organizationBusinessItem || '',
+        organizationTaxInvoiceEmail: displayUser.organizationTaxInvoiceEmail || '',
         organizationManager: displayUser.organizationManager || '',
         organizationTel: displayUser.organizationTel || '',
         organizationMobile: displayUser.organizationMobile || '',
@@ -464,72 +503,188 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
 
   const orgContactBody =
     editingBlock === 'orgContact' ? (
-      <div className="space-y-4 rounded-xl bg-black/95 p-4 sm:p-5">
-        {[
-          { key: 'organizationName', label: '회사/기관명', placeholder: '기관명을 입력하세요' },
-          {
-            key: 'organizationBusinessRegistrationNumber',
-            label: '사업자등록번호',
-            placeholder: '000-00-00000',
-          },
-          { key: 'organizationManager', label: '담당자', placeholder: '담당자 이름' },
-          { key: 'organizationTel', label: '전화번호', placeholder: '02-0000-0000' },
-          { key: 'organizationMobile', label: '핸드폰번호', placeholder: '010-0000-0000' },
-          { key: 'organizationFax', label: '팩스번호', placeholder: '02-0000-0000' },
-          { key: 'organizationEmail', label: '이메일', placeholder: 'email@example.com' },
-        ].map(({ key, label, placeholder }) => (
-          <div key={key}>
-            <label className={labelEditCls}>{label}</label>
+      <div className="space-y-6 rounded-xl bg-black/95 p-4 sm:p-5">
+        <MypageContactFieldsSection>
+          <div className="space-y-4">
+          <div>
+            <label className={labelEditCls}>담당자</label>
             <input
               className={fieldEditCls}
-              value={String(orgForm[key as keyof typeof orgForm] ?? '')}
-              onChange={(e) => setOrgForm((p) => ({ ...p, [key]: e.target.value }))}
-              placeholder={placeholder}
+              value={orgForm.organizationManager}
+              onChange={(e) => setOrgForm((p) => ({ ...p, organizationManager: e.target.value }))}
+              placeholder="담당자 이름"
             />
           </div>
-        ))}
-        <OrganizationAddressField
-          labelClassName={labelEditCls}
-          fieldClassName={fieldEditCls}
-          value={orgForm.organizationAddress}
-          onChange={(organizationAddress) => setOrgForm((p) => ({ ...p, organizationAddress }))}
-        />
+          <div>
+            <label className={labelEditCls}>전화번호</label>
+            <input
+              className={fieldEditCls}
+              value={orgForm.organizationTel}
+              onChange={(e) =>
+                setOrgForm((p) => ({ ...p, organizationTel: formatPhoneWhileTyping(e.target.value) }))
+              }
+              placeholder="02-0000-0000"
+            />
+          </div>
+          <div>
+            <label className={labelEditCls}>핸드폰번호</label>
+            <input
+              className={fieldEditCls}
+              value={orgForm.organizationMobile}
+              onChange={(e) =>
+                setOrgForm((p) => ({ ...p, organizationMobile: formatPhoneWhileTyping(e.target.value) }))
+              }
+              placeholder="010-0000-0000"
+            />
+          </div>
+          <div>
+            <label className={labelEditCls}>팩스번호</label>
+            <input
+              className={fieldEditCls}
+              value={orgForm.organizationFax}
+              onChange={(e) =>
+                setOrgForm((p) => ({ ...p, organizationFax: formatPhoneWhileTyping(e.target.value) }))
+              }
+              placeholder="02-0000-0000"
+            />
+          </div>
+          <div>
+            <label className={labelEditCls}>연락 이메일</label>
+            <input
+              className={fieldEditCls}
+              type="email"
+              value={orgForm.organizationEmail}
+              onChange={(e) => setOrgForm((p) => ({ ...p, organizationEmail: e.target.value }))}
+              placeholder="contact@example.com"
+            />
+          </div>
+          </div>
+        </MypageContactFieldsSection>
+
+        <MypageTaxInvoiceFieldsSection>
+          <div>
+            <label className={labelEditCls}>사업자등록번호</label>
+            <input
+              className={fieldEditCls}
+              inputMode="numeric"
+              value={orgForm.organizationBusinessRegistrationNumber}
+              onChange={(e) =>
+                setOrgForm((p) => ({
+                  ...p,
+                  organizationBusinessRegistrationNumber: formatBusinessRegistrationWhileTyping(e.target.value),
+                }))
+              }
+              placeholder="000-00-00000"
+              autoComplete="off"
+            />
+          </div>
+          <div>
+            <label className={labelEditCls}>회사/기관명 (상호)</label>
+            <input
+              className={fieldEditCls}
+              value={orgForm.organizationName}
+              onChange={(e) => setOrgForm((p) => ({ ...p, organizationName: e.target.value }))}
+              placeholder="사업자등록증 상호"
+            />
+          </div>
+          <div>
+            <label className={labelEditCls}>대표자명</label>
+            <input
+              className={fieldEditCls}
+              value={orgForm.organizationRepresentativeName}
+              onChange={(e) => setOrgForm((p) => ({ ...p, organizationRepresentativeName: e.target.value }))}
+              placeholder="대표자 성명"
+            />
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className={labelEditCls}>업태</label>
+              <input
+                className={fieldEditCls}
+                value={orgForm.organizationBusinessType}
+                onChange={(e) => setOrgForm((p) => ({ ...p, organizationBusinessType: e.target.value }))}
+                placeholder="예: 서비스업"
+              />
+            </div>
+            <div>
+              <label className={labelEditCls}>종목</label>
+              <input
+                className={fieldEditCls}
+                value={orgForm.organizationBusinessItem}
+                onChange={(e) => setOrgForm((p) => ({ ...p, organizationBusinessItem: e.target.value }))}
+                placeholder="예: 심리상담"
+              />
+            </div>
+          </div>
+          <OrganizationAddressField
+            labelClassName={labelEditCls}
+            fieldClassName={fieldEditCls}
+            value={orgForm.organizationAddress}
+            onChange={(organizationAddress) => setOrgForm((p) => ({ ...p, organizationAddress }))}
+            placeholder="사업장 주소 (사업자등록증 주소)"
+          />
+          <div>
+            <label className={labelEditCls}>세금계산서 수신 이메일</label>
+            <input
+              className={fieldEditCls}
+              type="email"
+              value={orgForm.organizationTaxInvoiceEmail}
+              onChange={(e) => setOrgForm((p) => ({ ...p, organizationTaxInvoiceEmail: e.target.value }))}
+              placeholder="tax@example.com"
+            />
+          </div>
+        </MypageTaxInvoiceFieldsSection>
+
         <BlockMessage error={blockError} success={blockSuccess} />
-        <EditFormSaveFooter
-          saving={saving}
-          onSave={() =>
-            handleSave({
-              organizationName: orgForm.organizationName.trim(),
-              organizationBusinessRegistrationNumber: orgForm.organizationBusinessRegistrationNumber.trim(),
-              organizationManager: orgForm.organizationManager.trim(),
-              organizationTel: orgForm.organizationTel.trim(),
-              organizationMobile: orgForm.organizationMobile.trim(),
-              organizationFax: orgForm.organizationFax.trim(),
-              organizationEmail: orgForm.organizationEmail.trim(),
-              organizationAddress: orgForm.organizationAddress.trim(),
-            })
-          }
-        />
+        <EditFormSaveFooter saving={saving} onSave={() => handleSave(buildOrgSavePayload())} />
       </div>
     ) : (
-      <div className="space-y-4">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <MypageAccountFieldDisplay label="회사/기관명" value={displayUser.organizationName?.trim() || '정보 없음'} />
+      <div className="space-y-6">
+        <MypageContactFieldsSection title="연락·담당 정보" variant="display">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <MypageAccountFieldDisplay label="담당자" value={displayUser.organizationManager?.trim() || '정보 없음'} />
+            <MypageAccountFieldDisplay label="전화" value={formatPhoneDisplayOr(displayUser.organizationTel?.trim(), '—')} />
+            <MypageAccountFieldDisplay
+              label="휴대폰"
+              value={formatPhoneDisplayOr(displayUser.organizationMobile?.trim(), '—')}
+            />
+            <MypageAccountFieldDisplay label="팩스" value={displayUser.organizationFax?.trim() || '—'} />
+            <MypageAccountFieldDisplay
+              label="연락 이메일"
+              value={displayUser.organizationEmail?.trim() || '—'}
+              className="sm:col-span-2"
+            />
+          </div>
+        </MypageContactFieldsSection>
+
+        <div className="space-y-4">
+          <MypageTaxInvoiceDisplaySection>
+            <MypageAccountFieldDisplay
+              label="사업자등록번호"
+              value={formatBusinessRegistrationDisplayOr(
+                displayUser.organizationBusinessRegistrationNumber,
+                '정보 없음',
+              )}
+            />
+            <MypageAccountFieldDisplay label="회사/기관명 (상호)" value={displayUser.organizationName?.trim() || '정보 없음'} />
+            <MypageAccountFieldDisplay
+              label="대표자명"
+              value={displayUser.organizationRepresentativeName?.trim() || '정보 없음'}
+            />
+            <MypageAccountFieldDisplay label="업태" value={displayUser.organizationBusinessType?.trim() || '—'} />
+            <MypageAccountFieldDisplay label="종목" value={displayUser.organizationBusinessItem?.trim() || '—'} />
+            <MypageAccountFieldDisplay
+              label="세금계산서 수신 이메일"
+              value={displayUser.organizationTaxInvoiceEmail?.trim() || '—'}
+              className="sm:col-span-2"
+            />
+          </MypageTaxInvoiceDisplaySection>
           <MypageAccountFieldDisplay
-            label="사업자등록번호"
-            value={displayUser.organizationBusinessRegistrationNumber?.trim() || '정보 없음'}
+            label="사업장 주소"
+            multiline
+            value={displayUser.organizationAddress?.trim() || '정보 없음'}
           />
-          <MypageAccountFieldDisplay label="담당자" value={displayUser.organizationManager?.trim() || '정보 없음'} />
-          <MypageAccountFieldDisplay label="전화" value={formatPhoneDisplayOr(displayUser.organizationTel?.trim(), '—')} />
-          <MypageAccountFieldDisplay label="휴대폰" value={formatPhoneDisplayOr(displayUser.organizationMobile?.trim(), '—')} />
-          <MypageAccountFieldDisplay label="팩스" value={displayUser.organizationFax?.trim() || '—'} />
-          <MypageAccountFieldDisplay label="이메일" value={displayUser.organizationEmail?.trim() || '—'} />
         </div>
-        <MypageAccountFieldDisplay
-          label="주소"
-          multiline
-          value={displayUser.organizationAddress?.trim() || '정보 없음'}
-        />
       </div>
     );
 
@@ -548,18 +703,7 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
           saving={saving}
           locked={locked && editingBlock !== 'orgContact'}
           onEdit={() => startEdit('orgContact')}
-          onSave={() =>
-            handleSave({
-              organizationName: orgForm.organizationName.trim(),
-              organizationBusinessRegistrationNumber: orgForm.organizationBusinessRegistrationNumber.trim(),
-              organizationManager: orgForm.organizationManager.trim(),
-              organizationTel: orgForm.organizationTel.trim(),
-              organizationMobile: orgForm.organizationMobile.trim(),
-              organizationFax: orgForm.organizationFax.trim(),
-              organizationEmail: orgForm.organizationEmail.trim(),
-              organizationAddress: orgForm.organizationAddress.trim(),
-            })
-          }
+          onSave={() => handleSave(buildOrgSavePayload())}
           onCancel={cancelEdit}
         />
       }
