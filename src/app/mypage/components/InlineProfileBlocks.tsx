@@ -7,7 +7,7 @@ import { db, auth } from '@/lib/firebase';
 import { markAuthenticatedTabSession, touchAuthHeartbeat } from '@/utils/authSessionLifecycle';
 import { isCounselor } from '@/utils/roleUtils';
 import { formatPhoneDisplayOr } from '@/lib/phoneFormat';
-import { FaUser, FaHeart, FaBuilding, FaComment, FaKey, FaMapMarkerAlt } from 'react-icons/fa';
+import { FaHeart, FaBuilding, FaComment, FaKey, FaMapMarkerAlt } from 'react-icons/fa';
 import { MypagePremiumBlock, MypagePremiumBlockGrid } from '@/components/mypage/MypagePremiumBlock';
 
 // ─── 타입 ───────────────────────────────────────────────────────────────────
@@ -40,7 +40,7 @@ interface UserData {
   shareContactInReport?: boolean;
 }
 
-export type MypageProfileSection = 'account' | 'counselor' | 'organization' | 'counselorProfile' | 'report';
+export type MypageProfileSection = 'account' | 'counselor' | 'organization' | 'report';
 
 interface Props {
   user: UserData;
@@ -52,7 +52,6 @@ interface Props {
 type EditBlock =
   | 'personal'
   | 'orgContact'
-  | 'counselorPro'
   | 'reportAll'
   | 'reportCover'
   | 'reportLayout'
@@ -280,7 +279,6 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
     organizationAddress: '',
   });
 
-  const [counselorProForm, setCounselorProForm] = useState({ specialties: '' });
 
   const [coverForm, setCoverForm] = useState({ reportDisplayName: '' });
 
@@ -317,8 +315,6 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
         organizationEmail: displayUser.organizationEmail || '',
         organizationAddress: displayUser.organizationAddress || '',
       });
-    } else if (block === 'counselorPro') {
-      setCounselorProForm({ specialties: displayUser.specialties || '' });
     } else if (block === 'reportAll') {
       setCoverForm({
         reportDisplayName: displayUser.reportDisplayName || displayUser.name || '',
@@ -584,7 +580,7 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
 
   const orgContactBlock = counselor ? (
     <MypagePremiumBlock
-      index={section === 'organization' ? '01 · 기관' : '02 · 기관'}
+      index="01 · 기관"
       title="회사/기관"
       description="대외 표기·연락에 사용하는 기관 정보 / 사업자등록증 정보"
       icon={<FaMapMarkerAlt className="h-4 w-4" />}
@@ -617,48 +613,6 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
     </MypagePremiumBlock>
   ) : null;
 
-  const counselorProBlock = counselor ? (
-    <MypagePremiumBlock
-      index={section === 'counselorProfile' ? '01 · 전문' : '03 · 전문'}
-      title="상담사 프로필"
-      description="전문 분야·자격 등 대외 소개용 정보"
-      icon={<FaUser className="h-4 w-4" />}
-      headerAction={
-        <BlockHeader
-          icon={null}
-          title=""
-          compact
-          editing={editingBlock === 'counselorPro'}
-          saving={saving}
-          locked={locked && editingBlock !== 'counselorPro'}
-          onEdit={() => startEdit('counselorPro')}
-          onSave={() => handleSave({ specialties: counselorProForm.specialties.trim() })}
-          onCancel={cancelEdit}
-        />
-      }
-    >
-      {editingBlock === 'counselorPro' ? (
-        <div className="space-y-4">
-          <div>
-            <label className={labelCls}>전문 영역</label>
-            <textarea
-              className={fieldCls + ' resize-none'}
-              rows={4}
-              value={counselorProForm.specialties}
-              onChange={(e) => setCounselorProForm({ specialties: e.target.value })}
-              placeholder="상담 전문 분야·자격·경력 요약"
-            />
-          </div>
-          <BlockMessage error={blockError} success={blockSuccess} />
-        </div>
-      ) : (
-        <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-200">
-          {multilineText(displayUser.specialties, '등록된 전문 정보가 없습니다.')}
-        </p>
-      )}
-    </MypagePremiumBlock>
-  ) : null;
-
   const counselorOrgNotice = (
     <MypagePremiumBlock
       index="01 · 안내"
@@ -668,19 +622,6 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
     >
       <p className="text-sm leading-relaxed text-slate-400">
         좌측 「상담사 계정」에서 승인을 받으면 기관명·사업자·연락처·주소를 등록할 수 있습니다.
-      </p>
-    </MypagePremiumBlock>
-  );
-
-  const counselorProfileNotice = (
-    <MypagePremiumBlock
-      index="01 · 안내"
-      title="상담사 프로필"
-      description="상담사 승인 후 편집할 수 있습니다."
-      icon={<FaUser className="h-4 w-4" />}
-    >
-      <p className="text-sm leading-relaxed text-slate-400">
-        좌측 「상담사 계정」에서 승인을 받으면 전문 분야·소개를 등록할 수 있습니다.
       </p>
     </MypagePremiumBlock>
   );
@@ -797,8 +738,8 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
 
   const counselorOnlyNote = (
     <p className="rounded-lg border border-sky-400/20 bg-sky-950/30 px-4 py-3 text-sm text-slate-300">
-      상담사 승인 후 「상담사 계정」「회사/기관 정보」「상담사 프로필」「내담자용 정보」 메뉴를 이용할 수 있습니다. 신청은{' '}
-      <span className="text-sky-200">상담사 계정</span>에서 진행하세요.
+      상담사 승인 후 「상담사 계정」「회사/기관 정보」「내담자용 정보」 메뉴를 이용할 수 있습니다. 전문 분야·소개는{' '}
+      <span className="text-sky-200">상담사 계정</span>에서 등록·수정하세요.
     </p>
   );
 
@@ -814,11 +755,6 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
   if (section === 'organization') {
     if (!counselor) return counselorOrgNotice;
     return <MypagePremiumBlockGrid>{orgContactBlock}</MypagePremiumBlockGrid>;
-  }
-
-  if (section === 'counselorProfile') {
-    if (!counselor) return counselorProfileNotice;
-    return <MypagePremiumBlockGrid>{counselorProBlock}</MypagePremiumBlockGrid>;
   }
 
   if (section === 'report') {

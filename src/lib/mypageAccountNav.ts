@@ -23,11 +23,6 @@ export const mypageAccountDetailNav: MypageAccountNavItem[] = [
     description: '기관명·사업자·연락처·주소',
   },
   {
-    href: '/mypage/account/counselor-profile',
-    label: '상담사 프로필',
-    description: '전문 분야·소개',
-  },
-  {
     href: '/mypage/account/report',
     label: '내담자용 정보',
     description: '결과지 표지·표기·전달',
