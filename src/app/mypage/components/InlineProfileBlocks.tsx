@@ -52,23 +52,6 @@ interface Props {
 type EditBlock = 'personal' | 'orgContact' | null;
 
 // ─── 로컬 헬퍼 ──────────────────────────────────────────────────────────────
-const OCCUPATION_OPTIONS = [
-  { value: 'student', label: '학생' },
-  { value: 'office', label: '사무/관리직' },
-  { value: 'education', label: '교육/연구직' },
-  { value: 'healthcare', label: '의료/보건직' },
-  { value: 'service_sales', label: '서비스/영업직' },
-  { value: 'it', label: 'IT/개발직' },
-  { value: 'creative', label: '예술/디자인/콘텐츠' },
-  { value: 'public', label: '공공/군경/공무' },
-  { value: 'self_employed', label: '자영업/프리랜서' },
-  { value: 'job_seeking', label: '구직/휴직/기타' },
-];
-
-const OCCUPATION_LABEL: Record<string, string> = Object.fromEntries(
-  OCCUPATION_OPTIONS.map((o) => [o.value, o.label]),
-);
-
 function roleLabel(role?: string) {
   if (role === 'admin') return '관리자';
   if (role === 'counselor') return '상담사';
@@ -263,7 +246,6 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
     phoneNumber: '',
     birthDate: '',
     gender: '',
-    occupation: '',
   });
 
   // 상담/운영 정보 폼
@@ -291,7 +273,6 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
         phoneNumber: displayUser.phoneNumber || '',
         birthDate: displayUser.birthDate || '',
         gender: displayUser.gender || '',
-        occupation: displayUser.occupation || '',
       });
     } else if (block === 'orgContact') {
       setOrgForm({
@@ -378,21 +359,6 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
             <option value="other">기타</option>
           </select>
         </div>
-        <div>
-          <label className={labelCls}>직업/배경</label>
-          <select
-            className={fieldCls}
-            value={personalForm.occupation}
-            onChange={(e) => setPersonalForm((p) => ({ ...p, occupation: e.target.value }))}
-          >
-            <option value="">선택 안 함</option>
-            {OCCUPATION_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-        </div>
         <BlockMessage error={blockError} success={blockSuccess} />
         <EditFormSaveFooter
           saving={saving}
@@ -403,7 +369,6 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
               phoneNumber: personalForm.phoneNumber.trim(),
               birthDate: personalForm.birthDate,
               gender: personalForm.gender,
-              occupation: personalForm.occupation,
             })
           }
         />
@@ -416,10 +381,6 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
           ['이메일(개인)', displayUser.email?.trim() || '정보 없음'],
           ['생년월일', displayUser.birthDate?.trim() || '정보 없음'],
           ['성별', genderLabel(displayUser.gender)],
-          [
-            '직업/배경',
-            OCCUPATION_LABEL[displayUser.occupation || ''] || displayUser.occupation || '정보 없음',
-          ],
         ].map(([k, v]) => (
           <div key={k} className="rounded-lg border border-sky-400/10 bg-[#0f1d33]/40 px-3 py-2">
             <p className="text-[10px] text-slate-500">{k}</p>
@@ -474,7 +435,7 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
     <MypagePremiumBlock
       index="02 · 개인"
       title="개인 기본 정보"
-      description="이름·연락처·생년월일·성별·직업"
+      description="이름·연락처·생년월일·성별"
       icon={<FaHeart className="h-4 w-4" />}
       headerAction={
         <BlockHeader
@@ -492,7 +453,6 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
               phoneNumber: personalForm.phoneNumber.trim(),
               birthDate: personalForm.birthDate,
               gender: personalForm.gender,
-              occupation: personalForm.occupation,
             })
           }
           onCancel={cancelEdit}
