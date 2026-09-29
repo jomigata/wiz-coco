@@ -31,6 +31,7 @@ import {
   formatCareerYearsLabel,
 } from '@/lib/counselorCareerYear';
 import { formatPhoneDisplay, formatPhoneDisplayOr, formatPhoneWhileTyping } from '@/lib/phoneFormat';
+import { mypageAccountClasses } from '@/components/layout/appChromeTheme';
 
 export const MYPAGE_COUNSELOR_ACCOUNT_FORM_ID = 'mypage-counselor-account-form';
 
@@ -306,19 +307,19 @@ export default function CounselorSwitchPanel({
           ['지역', profile.region || '—'],
           ['기관명/회사명', profile.organizationName || '—'],
         ].map(([k, v]) => (
-          <div key={k} className="rounded-lg border border-sky-400/10 bg-[#0f1d33]/50 px-3 py-2.5">
+          <div key={k} className={`${mypageAccountClasses.fieldTile} py-2.5`}>
             <p className="text-[10px] uppercase tracking-wide text-slate-500">{k}</p>
             <p className="mt-1 text-sm text-slate-100 break-words">{v}</p>
           </div>
         ))}
       </div>
-      <div className="rounded-lg border border-sky-400/10 bg-[#0f1d33]/50 px-3 py-2.5">
+      <div className={`${mypageAccountClasses.fieldTile} py-2.5`}>
         <p className="text-[10px] uppercase tracking-wide text-slate-500">전문 분야</p>
         <p className="mt-1 text-sm text-slate-100">
           {profile.specialization.length ? profile.specialization.join(', ') : '—'}
         </p>
       </div>
-      <div className="rounded-lg border border-sky-400/10 bg-[#0f1d33]/50 px-3 py-2.5">
+      <div className={`${mypageAccountClasses.fieldTile} py-2.5`}>
         <p className="text-[10px] uppercase tracking-wide text-slate-500">소개</p>
         <p className="mt-1 whitespace-pre-wrap text-sm text-slate-100">{profile.bio?.trim() || '—'}</p>
       </div>

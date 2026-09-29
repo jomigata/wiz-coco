@@ -32,6 +32,22 @@ export const counselorHubClasses = {
   statCard: 'rounded-xl border border-sky-400/12 bg-[#142847] px-4 py-3 text-center',
 } as const;
 
+/** 마이페이지 · 계정(개인/상담사/기관) — 얇은 라인 대신 은은한 깊이감 */
+export const mypageAccountClasses = {
+  pageSection:
+    'rounded-2xl border-0 bg-gradient-to-b from-[#1b3460]/80 via-[#152a48]/88 to-[#0e1a2e]/95 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_32px_80px_-40px_rgba(0,0,0,0.92),0_12px_32px_-16px_rgba(0,0,0,0.55)]',
+  pageSectionHeader:
+    'border-b border-white/[0.04] bg-gradient-to-r from-sky-600/14 via-sky-500/6 to-transparent',
+  pageSectionBody: 'bg-transparent',
+  contentScroll: 'min-h-0 overflow-y-auto px-0.5 py-1 sm:px-1 sm:py-1.5',
+  premiumBlock:
+    'overflow-hidden rounded-xl border-0 bg-gradient-to-br from-[#1e3a63]/50 via-[#162d4f]/65 to-[#0f1d33]/80 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_16px_48px_-24px_rgba(0,0,0,0.8),inset_0_-12px_24px_-20px_rgba(0,0,0,0.35)]',
+  premiumBlockHeader:
+    'border-b border-white/[0.04] bg-gradient-to-r from-sky-600/10 via-transparent to-violet-600/6',
+  fieldTile:
+    'rounded-lg border-0 bg-[#0a1220]/45 px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_4px_16px_-10px_rgba(0,0,0,0.5)]',
+} as const;
+
 /** 데스크톱 3단 메가 메뉴 패널 — 헤더와 톤은 맞추되 배경은 한 단계 밝게 */
 export const navMegaMenuClasses = {
   panel:

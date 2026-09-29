@@ -31,7 +31,7 @@ export default function MypageManageShell({ children, settingsBadge = 0 }: Props
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-2 lg:h-[calc(100dvh-4.5rem)] lg:flex-row lg:items-stretch lg:gap-3 lg:overflow-hidden">
       <aside
-        className={`flex min-h-0 flex-col overflow-hidden rounded-xl border border-sky-400/20 max-h-[38vh] shrink-0 lg:h-full lg:max-h-[calc(100dvh-4.5rem)] lg:w-[15.5rem] lg:shrink-0 xl:w-[17rem] ${counselorHubClasses.subsection} !p-0`}
+        className={`flex min-h-0 flex-col overflow-hidden rounded-xl border-0 max-h-[38vh] shrink-0 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_20px_56px_-32px_rgba(0,0,0,0.85)] lg:h-full lg:max-h-[calc(100dvh-4.5rem)] lg:w-[15.5rem] lg:shrink-0 xl:w-[17rem] ${counselorHubClasses.subsection} !border-0 !p-0`}
         aria-label="마이페이지 메뉴"
       >
         <div className="shrink-0 border-b border-sky-400/25 bg-gradient-to-r from-sky-600/25 via-sky-500/15 to-transparent px-3 py-2">

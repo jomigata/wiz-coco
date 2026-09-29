@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { counselorHubClasses } from '@/components/layout/appChromeTheme';
+import { counselorHubClasses, mypageAccountClasses } from '@/components/layout/appChromeTheme';
 import CounselorHierarchyBreadcrumb from '@/components/counselor/CounselorHierarchyBreadcrumb';
 import { getSendStepSectionClasses } from '@/components/counselor/CounselorSendStepBlock';
 
@@ -24,6 +24,8 @@ type CounselorPageSectionProps = {
   relaxed?: boolean;
   /** 검사 보내기·상담코드 생성 단계별 그라데이션 (1·2·3) */
   sendStep?: 1 | 2 | 3;
+  /** 마이페이지 계정: 외곽 테두리 없이 입체 그림자 */
+  elevatedSurface?: boolean;
 };
 
 export default function CounselorPageSection({
@@ -40,6 +42,7 @@ export default function CounselorPageSection({
   dense = false,
   relaxed = false,
   sendStep,
+  elevatedSurface = false,
 }: CounselorPageSectionProps) {
   const hasHeader = Boolean(title || headerAction || toolbar);
   const sendStepTheme = sendStep ? getSendStepSectionClasses(sendStep) : null;
@@ -82,16 +85,22 @@ export default function CounselorPageSection({
         <CounselorHierarchyBreadcrumb className="mb-2 shrink-0" />
       ) : null}
       <section
-        className={`flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border ${
+        className={`flex min-h-0 flex-1 flex-col overflow-hidden ${
           sendStepTheme
-            ? sendStepTheme.section
-            : `border-sky-400/20 ${counselorHubClasses.subsection}`
-        } !p-0`}
+            ? `rounded-xl border ${sendStepTheme.section}`
+            : elevatedSurface
+              ? `${mypageAccountClasses.pageSection} !p-0`
+              : `rounded-xl border border-sky-400/20 ${counselorHubClasses.subsection} !p-0`
+        }`}
       >
         {hasHeader ? (
           <div
-            className={`flex w-full shrink-0 flex-col gap-2 border-b border-white/[0.07] sm:flex-row sm:items-center sm:justify-between ${headerPad} ${titleAccentClass} ${
-              sendStepTheme ? sendStepTheme.header : 'border-sky-400/25 bg-gradient-to-r from-sky-600/25 via-sky-500/15 to-transparent'
+            className={`flex w-full shrink-0 flex-col gap-2 border-b sm:flex-row sm:items-center sm:justify-between ${headerPad} ${titleAccentClass} ${
+              sendStepTheme
+                ? sendStepTheme.header
+                : elevatedSurface
+                  ? mypageAccountClasses.pageSectionHeader
+                  : 'border-white/[0.07] bg-gradient-to-r from-sky-600/25 via-sky-500/15 to-transparent'
             }`}
           >
             {title ? (
@@ -120,7 +129,11 @@ export default function CounselorPageSection({
         ) : null}
         <div
           className={`min-h-0 flex-1 overflow-y-auto overscroll-contain ${
-            sendStepTheme ? 'bg-transparent' : 'bg-[#0f1d33]/60'
+            sendStepTheme
+              ? 'bg-transparent'
+              : elevatedSurface
+                ? mypageAccountClasses.pageSectionBody
+                : 'bg-[#0f1d33]/60'
           } ${bodyPad} ${bodyClassName}`}
           data-counselor-page-scroll
         >

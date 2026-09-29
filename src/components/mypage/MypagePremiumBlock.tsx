@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { mypageAccountClasses } from '@/components/layout/appChromeTheme';
 
 type Props = {
   index?: string;
@@ -23,9 +24,9 @@ export function MypagePremiumBlock({
 }: Props) {
   return (
     <section
-      className={`overflow-hidden rounded-xl border border-sky-400/18 bg-gradient-to-br from-[#1a3358]/95 via-[#152a48]/92 to-[#0f1d33]/95 shadow-[0_28px_72px_-36px_rgba(0,0,0,0.9)] ring-1 ring-inset ring-sky-400/10 ${className}`}
+      className={`${mypageAccountClasses.premiumBlock} ${className}`}
     >
-      <div className="flex items-start justify-between gap-3 border-b border-sky-400/12 bg-gradient-to-r from-sky-600/18 via-sky-500/8 to-violet-600/10 px-5 py-3.5">
+      <div className={`flex items-start justify-between gap-3 px-5 py-3.5 ${mypageAccountClasses.premiumBlockHeader}`}>
         <div className="min-w-0">
           {index ? (
             <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-sky-300/55">{index}</p>

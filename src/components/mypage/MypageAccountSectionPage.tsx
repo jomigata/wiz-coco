@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
-import { counselorHubClasses } from '@/components/layout/appChromeTheme';
+import { mypageAccountClasses } from '@/components/layout/appChromeTheme';
 import { useMypageUserProfile } from '@/hooks/useMypageUserProfile';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import InlineProfileBlocks, { type MypageProfileSection } from '@/app/mypage/components/InlineProfileBlocks';
@@ -25,7 +25,7 @@ export default function MypageAccountSectionPage({ title, description, section }
 
   if (loading) {
     return (
-      <CounselorPageSection title={title} dense>
+      <CounselorPageSection title={title} dense elevatedSurface>
         <div className="flex min-h-[12rem] items-center justify-center">
           <div className="h-9 w-9 animate-spin rounded-full border-2 border-sky-400 border-t-transparent" />
         </div>
@@ -35,7 +35,7 @@ export default function MypageAccountSectionPage({ title, description, section }
 
   if (showLoginRequired && !user) {
     return (
-      <CounselorPageSection title={title} dense>
+      <CounselorPageSection title={title} dense elevatedSurface>
         <p className="p-4 text-sm text-slate-300">로그인이 필요합니다.</p>
       </CounselorPageSection>
     );
@@ -87,8 +87,8 @@ export default function MypageAccountSectionPage({ title, description, section }
     ) : undefined;
 
   return (
-    <CounselorPageSection title={title} dense relaxed description={description}>
-      <div className={`min-h-0 overflow-y-auto ${counselorHubClasses.subsection} !p-3 sm:!p-4`}>
+    <CounselorPageSection title={title} dense relaxed description={description} elevatedSurface>
+      <div className={mypageAccountClasses.contentScroll}>
         {section === 'counselor' ? (
           <MypagePremiumBlockGrid>
             <MypagePremiumBlock

@@ -10,6 +10,7 @@ import { formatPhoneDisplayOr } from '@/lib/phoneFormat';
 import { FaHeart, FaBuilding, FaKey, FaMapMarkerAlt } from 'react-icons/fa';
 import { MypagePremiumBlock, MypagePremiumBlockGrid } from '@/components/mypage/MypagePremiumBlock';
 import MypageBirthDateField, { formatBirthDateDisplay } from '@/components/mypage/MypageBirthDateField';
+import { mypageAccountClasses } from '@/components/layout/appChromeTheme';
 
 // ─── 타입 ───────────────────────────────────────────────────────────────────
 interface UserData {
@@ -84,6 +85,7 @@ export function applySavePatch(base: UserData, data: Record<string, unknown>): U
 // ─── 공통 스타일 ────────────────────────────────────────────────────────────
 const fieldCls = 'w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-blue-100 placeholder-blue-300/40 focus:outline-none focus:border-purple-400/60 focus:bg-white/15 transition-colors text-sm';
 const labelCls = 'block text-blue-200 text-xs mb-1';
+const fieldTileCls = mypageAccountClasses.fieldTile;
 
 // ─── 저장 함수 ───────────────────────────────────────────────────────────────
 async function saveToFirestore(data: Record<string, unknown>) {
@@ -385,7 +387,7 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
           ],
           ['성별', genderLabel(displayUser.gender)],
         ].map(([k, v]) => (
-          <div key={k} className="rounded-lg border border-sky-400/10 bg-[#0f1d33]/40 px-3 py-2">
+          <div key={k} className={fieldTileCls}>
             <p className="text-[10px] text-slate-500">{k}</p>
             <p className="mt-0.5 truncate text-sm text-slate-100">{v}</p>
           </div>
@@ -415,7 +417,7 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
             : '-',
         ],
       ].map(([k, v]) => (
-        <div key={k} className="rounded-lg border border-sky-400/10 bg-[#0f1d33]/40 px-3 py-2">
+        <div key={k} className={fieldTileCls}>
           <p className="text-[10px] text-slate-500">{k}</p>
           <p className="mt-0.5 truncate text-sm text-slate-100">{v}</p>
         </div>
@@ -524,12 +526,12 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
           ['팩스', displayUser.organizationFax?.trim() || '—'],
           ['이메일', displayUser.organizationEmail?.trim() || '—'],
         ].map(([k, v]) => (
-          <div key={k} className="rounded-lg border border-sky-400/10 bg-[#0f1d33]/40 px-3 py-2">
+          <div key={k} className={fieldTileCls}>
             <p className="text-[10px] text-slate-500">{k}</p>
             <p className="mt-0.5 truncate text-sm text-slate-100">{v}</p>
           </div>
         ))}
-        <div className="rounded-lg border border-sky-400/10 bg-[#0f1d33]/40 px-3 py-2 sm:col-span-2">
+        <div className={`${fieldTileCls} sm:col-span-2`}>
           <p className="text-[10px] text-slate-500">주소</p>
           <p className="mt-0.5 text-sm text-slate-100">{displayUser.organizationAddress?.trim() || '정보 없음'}</p>
         </div>
