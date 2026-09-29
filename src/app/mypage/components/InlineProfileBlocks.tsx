@@ -371,98 +371,161 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
 
   const locked = editingBlock !== null;
 
-  // ─── 개인 기본 정보 블록 ───────────────────────────────────────────────────
-  const personalBlock = (
-    <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
-      <BlockHeader
-        icon={<FaHeart className="w-4 h-4" />}
-        title="개인 기본 정보"
-        editing={editingBlock === 'personal'}
-        saving={saving}
-        locked={locked && editingBlock !== 'personal'}
-        onEdit={() => startEdit('personal')}
-        onSave={() =>
-          handleSave({
-            displayName: personalForm.displayName.trim(),
-            name: personalForm.displayName.trim(),
-            phoneNumber: personalForm.phoneNumber.trim(),
-            birthDate: personalForm.birthDate,
-            gender: personalForm.gender,
-            occupation: personalForm.occupation,
-          })
-        }
-        onCancel={cancelEdit}
-      />
-      {editingBlock === 'personal' ? (
-        <div className="space-y-4">
-          <div>
-            <label className={labelCls}>이름</label>
-            <input
-              className={fieldCls}
-              value={personalForm.displayName}
-              onChange={(e) => setPersonalForm((p) => ({ ...p, displayName: e.target.value }))}
-              placeholder="이름"
-            />
-          </div>
-          <div>
-            <label className={labelCls}>전화번호</label>
-            <input
-              className={fieldCls}
-              value={personalForm.phoneNumber}
-              onChange={(e) => setPersonalForm((p) => ({ ...p, phoneNumber: e.target.value }))}
-              placeholder="010-0000-0000"
-            />
-          </div>
-          <div>
-            <label className={labelCls}>생년월일</label>
-            <input
-              type="date"
-              className={fieldCls + ' [color-scheme:dark]'}
-              value={personalForm.birthDate}
-              onChange={(e) => setPersonalForm((p) => ({ ...p, birthDate: e.target.value }))}
-            />
-          </div>
-          <div>
-            <label className={labelCls}>성별</label>
-            <select
-              className={fieldCls}
-              value={personalForm.gender}
-              onChange={(e) => setPersonalForm((p) => ({ ...p, gender: e.target.value }))}
-            >
-              <option value="">선택 안 함</option>
-              <option value="male">남성</option>
-              <option value="female">여성</option>
-              <option value="other">기타</option>
-            </select>
-          </div>
-          <div>
-            <label className={labelCls}>직업/배경</label>
-            <select
-              className={fieldCls}
-              value={personalForm.occupation}
-              onChange={(e) => setPersonalForm((p) => ({ ...p, occupation: e.target.value }))}
-            >
-              <option value="">선택 안 함</option>
-              {OCCUPATION_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </select>
-          </div>
-          <BlockMessage error={blockError} success={blockSuccess} />
+  // ─── 개인 기본 정보 ─────────────────────────────────────────────────────────
+  const personalBody =
+    editingBlock === 'personal' ? (
+      <div className="space-y-4">
+        <div>
+          <label className={labelCls}>이름</label>
+          <input
+            className={fieldCls}
+            value={personalForm.displayName}
+            onChange={(e) => setPersonalForm((p) => ({ ...p, displayName: e.target.value }))}
+            placeholder="이름"
+          />
         </div>
-      ) : (
-        <div className="space-y-3">
-          <div className={rowCls}><span className={keySpan}>이름</span><span className={valSpan}>{displayUser.name || '정보 없음'}</span></div>
-          <div className={rowCls}><span className={keySpan}>전화번호</span><span className={valSpan}>{formatPhoneDisplayOr(displayUser.phoneNumber, '정보 없음')}</span></div>
-          <div className={rowCls}><span className={keySpan}>이메일(개인)</span><span className={valSpan}>{displayUser.email || '정보 없음'}</span></div>
-          <div className={rowCls}><span className={keySpan}>생년월일</span><span className={valSpan}>{displayUser.birthDate || '정보 없음'}</span></div>
-          <div className={rowCls}><span className={keySpan}>성별</span><span className={valSpan}>{genderLabel(displayUser.gender)}</span></div>
-          <div className={rowCls}><span className={keySpan}>직업/배경</span><span className={valSpan}>{OCCUPATION_LABEL[displayUser.occupation || ''] || displayUser.occupation || '정보 없음'}</span></div>
+        <div>
+          <label className={labelCls}>전화번호</label>
+          <input
+            className={fieldCls}
+            value={personalForm.phoneNumber}
+            onChange={(e) => setPersonalForm((p) => ({ ...p, phoneNumber: e.target.value }))}
+            placeholder="010-0000-0000"
+          />
         </div>
-      )}
+        <div>
+          <label className={labelCls}>생년월일</label>
+          <input
+            type="date"
+            className={fieldCls + ' [color-scheme:dark]'}
+            value={personalForm.birthDate}
+            onChange={(e) => setPersonalForm((p) => ({ ...p, birthDate: e.target.value }))}
+          />
+        </div>
+        <div>
+          <label className={labelCls}>성별</label>
+          <select
+            className={fieldCls}
+            value={personalForm.gender}
+            onChange={(e) => setPersonalForm((p) => ({ ...p, gender: e.target.value }))}
+          >
+            <option value="">선택 안 함</option>
+            <option value="male">남성</option>
+            <option value="female">여성</option>
+            <option value="other">기타</option>
+          </select>
+        </div>
+        <div>
+          <label className={labelCls}>직업/배경</label>
+          <select
+            className={fieldCls}
+            value={personalForm.occupation}
+            onChange={(e) => setPersonalForm((p) => ({ ...p, occupation: e.target.value }))}
+          >
+            <option value="">선택 안 함</option>
+            {OCCUPATION_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <BlockMessage error={blockError} success={blockSuccess} />
+      </div>
+    ) : (
+      <div className="grid gap-2 sm:grid-cols-2">
+        {[
+          ['이름', displayUser.name?.trim() || '정보 없음'],
+          ['전화번호', formatPhoneDisplayOr(displayUser.phoneNumber, '정보 없음')],
+          ['이메일(개인)', displayUser.email?.trim() || '정보 없음'],
+          ['생년월일', displayUser.birthDate?.trim() || '정보 없음'],
+          ['성별', genderLabel(displayUser.gender)],
+          [
+            '직업/배경',
+            OCCUPATION_LABEL[displayUser.occupation || ''] || displayUser.occupation || '정보 없음',
+          ],
+        ].map(([k, v]) => (
+          <div key={k} className="rounded-lg border border-sky-400/10 bg-[#0f1d33]/40 px-3 py-2">
+            <p className="text-[10px] text-slate-500">{k}</p>
+            <p className="mt-0.5 truncate text-sm text-slate-100">{v}</p>
+          </div>
+        ))}
+      </div>
+    );
+
+  const accountInfoBody = (
+    <div className="grid gap-2 sm:grid-cols-2">
+      {[
+        ['회원 유형', roleLabel(displayUser.role)],
+        ['이메일', displayUser.email?.trim() || '정보 없음'],
+        [
+          '가입일',
+          displayUser.createdAt ? new Date(displayUser.createdAt).toLocaleDateString('ko-KR') : '-',
+        ],
+        [
+          '마지막 로그인',
+          displayUser.lastLoginAt
+            ? new Date(displayUser.lastLoginAt).toLocaleString('ko-KR', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+              })
+            : '-',
+        ],
+      ].map(([k, v]) => (
+        <div key={k} className="rounded-lg border border-sky-400/10 bg-[#0f1d33]/40 px-3 py-2">
+          <p className="text-[10px] text-slate-500">{k}</p>
+          <p className="mt-0.5 truncate text-sm text-slate-100">{v}</p>
+        </div>
+      ))}
     </div>
   );
 
+  const accountInfoBlock = (
+    <MypagePremiumBlock
+      index="01 · 계정"
+      title="계정 정보"
+      description="로그인·회원 유형·가입·접속 이력"
+      icon={<FaKey className="h-4 w-4" />}
+    >
+      {accountInfoBody}
+    </MypagePremiumBlock>
+  );
+
+  const personalInfoBlock = (
+    <MypagePremiumBlock
+      index="02 · 개인"
+      title="개인 기본 정보"
+      description="이름·연락처·생년월일·성별·직업"
+      icon={<FaHeart className="h-4 w-4" />}
+      headerAction={
+        <BlockHeader
+          icon={null}
+          title=""
+          compact
+          editing={editingBlock === 'personal'}
+          saving={saving}
+          locked={locked && editingBlock !== 'personal'}
+          onEdit={() => startEdit('personal')}
+          onSave={() =>
+            handleSave({
+              displayName: personalForm.displayName.trim(),
+              name: personalForm.displayName.trim(),
+              phoneNumber: personalForm.phoneNumber.trim(),
+              birthDate: personalForm.birthDate,
+              gender: personalForm.gender,
+              occupation: personalForm.occupation,
+            })
+          }
+          onCancel={cancelEdit}
+        />
+      }
+    >
+      {personalBody}
+    </MypagePremiumBlock>
+  );
 
   const orgContactBody =
     editingBlock === 'orgContact' ? (
@@ -732,31 +795,6 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
     </MypagePremiumBlock>
   ) : null;
 
-  const accountReadOnly = (
-    <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
-      <h3 className="text-base font-semibold text-blue-100 flex items-center gap-2 mb-4">
-        <FaKey className="w-4 h-4 text-purple-400" />
-        계정 정보
-      </h3>
-      <div className="space-y-3">
-        <div className={rowCls}><span className={keySpan}>회원 유형</span><span className={valSpan}>{roleLabel(displayUser.role)}</span></div>
-        <div className={rowCls}><span className={keySpan}>이메일</span><span className={valSpan}>{displayUser.email || '정보 없음'}</span></div>
-        <div className={rowCls}>
-          <span className={keySpan}>가입일</span>
-          <span className={valSpan}>{displayUser.createdAt ? new Date(displayUser.createdAt).toLocaleDateString('ko-KR') : '-'}</span>
-        </div>
-        <div className={rowCls}>
-          <span className={keySpan}>마지막 로그인</span>
-          <span className={valSpan}>
-            {displayUser.lastLoginAt
-              ? new Date(displayUser.lastLoginAt).toLocaleString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
-              : '-'}
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-
   const counselorOnlyNote = (
     <p className="rounded-lg border border-sky-400/20 bg-sky-950/30 px-4 py-3 text-sm text-slate-300">
       상담사 승인 후 「상담사 계정」「회사/기관 정보」「상담사 프로필」「내담자용 정보」 메뉴를 이용할 수 있습니다. 신청은{' '}
@@ -766,10 +804,10 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
 
   if (section === 'account') {
     return (
-      <div className="space-y-6">
-        {accountReadOnly}
-        {personalBlock}
-      </div>
+      <MypagePremiumBlockGrid>
+        {accountInfoBlock}
+        {personalInfoBlock}
+      </MypagePremiumBlockGrid>
     );
   }
 
