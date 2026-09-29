@@ -622,12 +622,95 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
     </MypagePremiumBlock>
   );
 
-  const reportUnifiedSection = counselor ? (
-    <div className="space-y-6">
-      <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
+  const reportClientBody =
+    editingBlock === 'reportAll' ? (
+      <div className="space-y-4">
+        <div>
+          <label className={labelCls}>표지 표기명</label>
+          <input
+            className={fieldCls}
+            value={coverForm.reportDisplayName}
+            onChange={(e) => setCoverForm({ reportDisplayName: e.target.value })}
+            placeholder="결과지 표지에 표시할 상담사·기관명"
+          />
+        </div>
+        <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2.5">
+          <span className={labelCls + ' mb-0'}>기관 정보 표기</span>
+          <ToggleSwitch
+            checked={layoutForm.shareOrganizationInReport}
+            onChange={(v) => setLayoutForm((p) => ({ ...p, shareOrganizationInReport: v }))}
+          />
+        </div>
+        <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2.5">
+          <span className={labelCls + ' mb-0'}>연락처 표기</span>
+          <ToggleSwitch
+            checked={layoutForm.shareContactInReport}
+            onChange={(v) => setLayoutForm((p) => ({ ...p, shareContactInReport: v }))}
+          />
+        </div>
+        <div>
+          <label className={labelCls}>하단 서명·각인</label>
+          <textarea
+            className={fieldCls + ' resize-none'}
+            rows={3}
+            value={layoutForm.reportSignature}
+            onChange={(e) => setLayoutForm((p) => ({ ...p, reportSignature: e.target.value }))}
+            placeholder="결과지 하단에 표시될 서명 문구"
+          />
+        </div>
+        <div>
+          <label className={labelCls}>내담자·보호자 전달 문구</label>
+          <textarea
+            className={fieldCls + ' resize-none'}
+            rows={4}
+            value={deliveryForm.clientFocus}
+            onChange={(e) => setDeliveryForm({ clientFocus: e.target.value })}
+            placeholder="검사 결과와 함께 전달할 안내·유의사항"
+          />
+        </div>
+        <BlockMessage error={blockError} success={blockSuccess} />
+      </div>
+    ) : (
+      <div className="grid gap-2 sm:grid-cols-2">
+        {[
+          [
+            '표지 표기명',
+            displayUser.reportDisplayName?.trim() || displayUser.name || '정보 없음',
+          ],
+          ['기관 정보', boolLabel(displayUser.shareOrganizationInReport, '표기', '숨김')],
+          ['연락처', boolLabel(displayUser.shareContactInReport, '표기', '숨김')],
+        ].map(([k, v]) => (
+          <div key={k} className="rounded-lg border border-sky-400/10 bg-[#0f1d33]/40 px-3 py-2">
+            <p className="text-[10px] text-slate-500">{k}</p>
+            <p className="mt-0.5 truncate text-sm text-slate-100">{v}</p>
+          </div>
+        ))}
+        <div className="rounded-lg border border-sky-400/10 bg-[#0f1d33]/40 px-3 py-2 sm:col-span-2">
+          <p className="text-[10px] text-slate-500">하단 서명·각인</p>
+          <p className="mt-0.5 whitespace-pre-wrap text-sm text-slate-100">
+            {multilineText(displayUser.reportSignature, '설정된 서명이 없습니다.')}
+          </p>
+        </div>
+        <div className="rounded-lg border border-sky-400/10 bg-[#0f1d33]/40 px-3 py-2 sm:col-span-2">
+          <p className="text-[10px] text-slate-500">전달사항</p>
+          <p className="mt-0.5 whitespace-pre-wrap text-sm text-slate-100">
+            {multilineText(displayUser.clientFocus, '등록된 전달사항이 없습니다.')}
+          </p>
+        </div>
+      </div>
+    );
+
+  const reportClientBlock = counselor ? (
+    <MypagePremiumBlock
+      index="01 · 내담자"
+      title="내담자용 정보"
+      description="검사 결과지 표지·상·하단 표기·내담자 전달 문구"
+      icon={<FaComment className="h-4 w-4" />}
+      headerAction={
         <BlockHeader
-          icon={<FaComment className="w-4 h-4" />}
-          title="내담자용 정보"
+          icon={null}
+          title=""
+          compact
           editing={editingBlock === 'reportAll'}
           saving={saving}
           locked={locked && editingBlock !== 'reportAll'}
@@ -643,101 +726,10 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
           }
           onCancel={cancelEdit}
         />
-
-        {editingBlock === 'reportAll' ? (
-          <div className="space-y-8">
-            <section className="space-y-4">
-              <h4 className="text-sm font-semibold text-sky-200">검사결과지 표지</h4>
-              <div>
-                <label className={labelCls}>표지 표기명</label>
-                <input
-                  className={fieldCls}
-                  value={coverForm.reportDisplayName}
-                  onChange={(e) => setCoverForm({ reportDisplayName: e.target.value })}
-                  placeholder="결과지 표지에 표시할 상담사·기관명"
-                />
-              </div>
-            </section>
-            <section className="space-y-4 border-t border-white/10 pt-6">
-              <h4 className="text-sm font-semibold text-sky-200">상단/하단 표기</h4>
-              <div className="flex items-center justify-between">
-                <span className={labelCls + ' mb-0'}>기관 정보 표기</span>
-                <ToggleSwitch
-                  checked={layoutForm.shareOrganizationInReport}
-                  onChange={(v) => setLayoutForm((p) => ({ ...p, shareOrganizationInReport: v }))}
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <span className={labelCls + ' mb-0'}>연락처 표기</span>
-                <ToggleSwitch
-                  checked={layoutForm.shareContactInReport}
-                  onChange={(v) => setLayoutForm((p) => ({ ...p, shareContactInReport: v }))}
-                />
-              </div>
-              <div>
-                <label className={labelCls}>하단 서명·각인</label>
-                <textarea
-                  className={fieldCls + ' resize-none'}
-                  rows={3}
-                  value={layoutForm.reportSignature}
-                  onChange={(e) => setLayoutForm((p) => ({ ...p, reportSignature: e.target.value }))}
-                  placeholder="결과지 하단에 표시될 서명 문구"
-                />
-              </div>
-            </section>
-            <section className="space-y-4 border-t border-white/10 pt-6">
-              <h4 className="text-sm font-semibold text-sky-200">전달사항</h4>
-              <div>
-                <label className={labelCls}>내담자·보호자 전달 문구</label>
-                <textarea
-                  className={fieldCls + ' resize-none'}
-                  rows={4}
-                  value={deliveryForm.clientFocus}
-                  onChange={(e) => setDeliveryForm({ clientFocus: e.target.value })}
-                  placeholder="검사 결과와 함께 전달할 안내·유의사항"
-                />
-              </div>
-            </section>
-            <BlockMessage error={blockError} success={blockSuccess} />
-          </div>
-        ) : (
-          <div className="space-y-8">
-            <section className="space-y-3">
-              <h4 className="text-sm font-semibold text-sky-200">검사결과지 표지</h4>
-              <div className={rowCls}>
-                <span className={keySpan}>표지 표기명</span>
-                <span className={valSpan}>
-                  {displayUser.reportDisplayName?.trim() || displayUser.name || '정보 없음'}
-                </span>
-              </div>
-            </section>
-            <section className="space-y-3 border-t border-white/10 pt-6">
-              <h4 className="text-sm font-semibold text-sky-200">상단/하단 표기</h4>
-              <div className={rowCls}>
-                <span className={keySpan}>기관 정보</span>
-                <span className={valSpan}>{boolLabel(displayUser.shareOrganizationInReport, '표기', '숨김')}</span>
-              </div>
-              <div className={rowCls}>
-                <span className={keySpan}>연락처</span>
-                <span className={valSpan}>{boolLabel(displayUser.shareContactInReport, '표기', '숨김')}</span>
-              </div>
-              <div>
-                <div className="text-blue-200 text-xs mb-1.5">하단 서명·각인</div>
-                <div className="text-blue-100 text-sm whitespace-pre-wrap leading-relaxed">
-                  {multilineText(displayUser.reportSignature, '설정된 서명이 없습니다.')}
-                </div>
-              </div>
-            </section>
-            <section className="border-t border-white/10 pt-6">
-              <h4 className="text-sm font-semibold text-sky-200 mb-3">전달사항</h4>
-              <div className="text-blue-100 text-sm whitespace-pre-wrap leading-relaxed">
-                {multilineText(displayUser.clientFocus, '등록된 전달사항이 없습니다.')}
-              </div>
-            </section>
-          </div>
-        )}
-      </div>
-    </div>
+      }
+    >
+      {reportClientBody}
+    </MypagePremiumBlock>
   ) : null;
 
   const accountReadOnly = (
@@ -792,11 +784,8 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
   }
 
   if (section === 'report') {
-    return (
-      <div className="space-y-6">
-        {counselor ? reportUnifiedSection : counselorOnlyNote}
-      </div>
-    );
+    if (!counselor) return counselorOnlyNote;
+    return <MypagePremiumBlockGrid>{reportClientBlock}</MypagePremiumBlockGrid>;
   }
 
   return null;
