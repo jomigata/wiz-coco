@@ -19,7 +19,7 @@ import { hasAuthenticatedTabSession, markInternalNavigation, pushWithAuthSession
 
 import ProfileEditor from './components/ProfileEditor';
 import { purgeLegacyTestStorage } from '@/utils/purgeLegacyTestStorage';
-import InlineProfileBlocks, { applySavePatch } from './components/InlineProfileBlocks';
+import MypageHomeDashboard from '@/components/mypage/MypageHomeDashboard';
 import SubtleLoadingOverlay from '@/components/SubtleLoadingOverlay';
 import { counselorAssessmentTestOptions } from '@/data/counselorAssessmentTests';
 
@@ -228,12 +228,6 @@ function MyPageContent() {
   
   const [activeTab, setActiveTab] = useState<string>(initialTab);
 
-  useEffect(() => {
-    if (activeTab === 'profile') {
-      router.replace('/mypage/profile');
-    }
-  }, [activeTab, router]);
-  
   // 타 페이지에서 링크로 들어오거나 브라우저 앞/뒤로 이동 시 URL과 동기화
   useEffect(() => {
     setActiveTab(normalizeMypageTab(searchParams.get('tab')));
@@ -563,7 +557,7 @@ function MyPageContent() {
   }
 
   if (activeTab === 'profile') {
-    return <LoadingMyPage />;
+    return <MypageHomeDashboard />;
   }
 
   const awaitingAuthRestore =

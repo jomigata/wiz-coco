@@ -352,7 +352,7 @@ export default function CounselorApplicationForm({ uid, email, role }: Props) {
       </div>
 
       <p className="mt-4 text-center text-xs text-slate-500">
-        <Link href="/mypage/settings/" className="text-blue-600 hover:text-blue-700">
+        <Link href="/mypage" className="text-blue-600 hover:text-blue-700">
           마이페이지 설정
         </Link>
         {' · '}
