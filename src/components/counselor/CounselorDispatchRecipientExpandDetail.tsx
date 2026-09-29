@@ -143,7 +143,7 @@ function renderResultCheckCell(
   if (row.status === 'not_started' && row.canRemove) {
     return (
       <span className="inline-flex items-center gap-1 whitespace-nowrap text-slate-400">
-        <span>{`<- ( 추가일시 )`}</span>
+        <span>{`← ( 추가일시 )`}</span>
         {removeProps ? (
           <button
             type="button"
