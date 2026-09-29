@@ -31,11 +31,23 @@ export function buildMypageNavSections(
       title: '계정',
       items: [
         {
-          name: '내 계정',
-          href: '/mypage',
-          description: '요약 · 프로필 · 설정',
+          name: '계정 정보',
+          href: '/mypage/account/info',
+          description: '로그인·개인 정보·역할',
           icon: '👤',
           badge: options?.settingsBadge,
+        },
+        {
+          name: '회사/기관 정보',
+          href: '/mypage/account/organization',
+          description: '상담·운영·기관',
+          icon: '🏢',
+        },
+        {
+          name: '리포트 설정',
+          href: '/mypage/account/report',
+          description: '내담자용 정보 공개',
+          icon: '📋',
         },
       ],
     },

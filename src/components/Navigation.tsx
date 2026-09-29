@@ -762,7 +762,7 @@ export default function Navigation() {
                       onMouseLeave={scheduleClose}
                     >
                       <Link
-                        href="/mypage"
+                        href="/mypage/account/info"
                         className={`relative h-10 px-2.5 lg:px-3.5 inline-flex items-center justify-center gap-1 rounded-lg text-sm lg:text-[15px] font-semibold tracking-tight transition-all duration-300 whitespace-nowrap border-2 ${
                           activeItem === "/mypage" || activeItem.startsWith("/mypage/") || activeItem.startsWith("/mypage?")
                             ? "text-white bg-blue-600 border-white"
@@ -770,7 +770,7 @@ export default function Navigation() {
                             ? "text-gray-300 border-white"
                             : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
                         }`}
-                        onClick={(e) => handleNavLinkClick("/mypage", e)}
+                        onClick={(e) => handleNavLinkClick("/mypage/account/info", e)}
                       >
                         👤 마이페이지
                         {counselorResultCount > 0 && (

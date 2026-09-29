@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
 
 export default function MypageProfileRedirect() {
-  redirect('/mypage/account/profile');
+  redirect('/mypage/account/info');
 }

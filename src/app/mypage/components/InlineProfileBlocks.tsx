@@ -38,13 +38,16 @@ interface UserData {
   shareContactInReport?: boolean;
 }
 
+export type MypageProfileSection = 'account' | 'organization' | 'report';
+
 interface Props {
   user: UserData;
   firebaseUserRole?: string;
   onUpdate: (patch?: Record<string, unknown>) => void;
+  section: MypageProfileSection;
 }
 
-type EditBlock = 'profile' | 'personal' | 'org' | 'report' | null;
+type EditBlock = 'personal' | 'org' | 'report' | null;
 
 // ─── 로컬 헬퍼 ──────────────────────────────────────────────────────────────
 const OCCUPATION_OPTIONS = [
@@ -203,7 +206,7 @@ function BlockMessage({ error, success }: { error: string; success: string }) {
 }
 
 // ─── 메인 컴포넌트 ───────────────────────────────────────────────────────────
-export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate }: Props) {
+export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, section }: Props) {
   const [displayUser, setDisplayUser] = useState<UserData>(user);
   const [editingBlock, setEditingBlock] = useState<EditBlock>(null);
   const [saving, setSaving] = useState(false);
@@ -213,14 +216,6 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate }
   useEffect(() => {
     setDisplayUser(user);
   }, [user]);
-
-  // 프로필 요약 폼
-  const [profileForm, setProfileForm] = useState({
-    reportDisplayName: '',
-    practiceType: 'solo' as 'solo' | 'organization',
-    teamSharingEnabled: false,
-    shareContactInReport: true,
-  });
 
   // 개인 기본 정보 폼
   const [personalForm, setPersonalForm] = useState({
@@ -234,6 +229,7 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate }
   // 상담/운영 정보 폼
   const [orgForm, setOrgForm] = useState({
     practiceType: 'solo' as 'solo' | 'organization',
+    teamSharingEnabled: false,
     organizationName: '',
     organizationManager: '',
     organizationTel: '',
@@ -259,14 +255,7 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate }
   const startEdit = (block: EditBlock) => {
     setBlockError('');
     setBlockSuccess('');
-    if (block === 'profile') {
-      setProfileForm({
-        reportDisplayName: displayUser.reportDisplayName || displayUser.name || '',
-        practiceType: displayUser.practiceType || 'solo',
-        teamSharingEnabled: displayUser.teamSharingEnabled ?? false,
-        shareContactInReport: displayUser.shareContactInReport ?? true,
-      });
-    } else if (block === 'personal') {
+    if (block === 'personal') {
       setPersonalForm({
         displayName: displayUser.name || '',
         phoneNumber: displayUser.phoneNumber || '',
@@ -277,6 +266,7 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate }
     } else if (block === 'org') {
       setOrgForm({
         practiceType: displayUser.practiceType || 'solo',
+        teamSharingEnabled: displayUser.teamSharingEnabled ?? false,
         organizationName: displayUser.organizationName || '',
         organizationManager: displayUser.organizationManager || '',
         organizationTel: displayUser.organizationTel || '',
@@ -323,103 +313,6 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate }
   };
 
   const locked = editingBlock !== null;
-
-  // ─── 프로필 요약 블록 ──────────────────────────────────────────────────────
-  const profileBlock = (
-    <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
-      <BlockHeader
-        icon={<FaUser className="w-4 h-4" />}
-        title="프로필 요약"
-        editing={editingBlock === 'profile'}
-        saving={saving}
-        locked={locked && editingBlock !== 'profile'}
-        onEdit={() => startEdit('profile')}
-        onSave={() =>
-          handleSave({
-            reportDisplayName: profileForm.reportDisplayName.trim(),
-            practiceType: profileForm.practiceType,
-            teamSharingEnabled: profileForm.teamSharingEnabled,
-            shareContactInReport: profileForm.shareContactInReport,
-          })
-        }
-        onCancel={cancelEdit}
-      />
-      {editingBlock === 'profile' ? (
-        <div className="space-y-4">
-          <div>
-            <label className={labelCls}>리포트 표기명</label>
-            <input
-              className={fieldCls}
-              value={profileForm.reportDisplayName}
-              onChange={(e) => setProfileForm((p) => ({ ...p, reportDisplayName: e.target.value }))}
-              placeholder="리포트에 표시될 이름"
-            />
-          </div>
-          {counselor && (
-            <>
-              <div>
-                <label className={labelCls}>운영 형태</label>
-                <select
-                  className={fieldCls}
-                  value={profileForm.practiceType}
-                  onChange={(e) =>
-                    setProfileForm((p) => ({ ...p, practiceType: e.target.value as 'solo' | 'organization' }))
-                  }
-                >
-                  <option value="solo">개인 운영</option>
-                  <option value="organization">조직/기업 운영</option>
-                </select>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className={labelCls + ' mb-0'}>팀 정보 공유</span>
-                <ToggleSwitch
-                  checked={profileForm.teamSharingEnabled}
-                  onChange={(v) => setProfileForm((p) => ({ ...p, teamSharingEnabled: v }))}
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <span className={labelCls + ' mb-0'}>리포트 연락처 노출</span>
-                <ToggleSwitch
-                  checked={profileForm.shareContactInReport}
-                  onChange={(v) => setProfileForm((p) => ({ ...p, shareContactInReport: v }))}
-                />
-              </div>
-            </>
-          )}
-          <BlockMessage error={blockError} success={blockSuccess} />
-        </div>
-      ) : (
-        <div className="space-y-3">
-          <div className={rowCls}>
-            <span className={keySpan}>회원 유형</span>
-            <span className={valSpan}>{roleLabel(displayUser.role)}</span>
-          </div>
-          <div className={rowCls}>
-            <span className={keySpan}>리포트 표기명</span>
-            <span className={valSpan}>{displayUser.reportDisplayName || displayUser.name || '정보 없음'}</span>
-          </div>
-          <div className={rowCls}>
-            <span className={keySpan}>운영 형태</span>
-            <span className={valSpan}>
-              {counselor ? practiceLabel(displayUser.practiceType) : '개인 이용자'}
-            </span>
-          </div>
-          <div className={rowCls}>
-            <span className={keySpan}>팀 정보 공유</span>
-            <span className={valSpan}>
-              {counselor ? boolLabel(displayUser.teamSharingEnabled, '공유 가능', '개별 운영') : '해당 없음'}
-            </span>
-          </div>
-          <div className={rowCls}>
-            <span className={keySpan}>리포트 연락처 노출</span>
-            <span className={valSpan}>
-              {counselor ? boolLabel(displayUser.shareContactInReport, '노출', '비노출') : '기본'}
-            </span>
-          </div>
-        </div>
-      )}
-    </div>
-  );
 
   // ─── 개인 기본 정보 블록 ───────────────────────────────────────────────────
   const personalBlock = (
@@ -513,12 +406,12 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate }
     </div>
   );
 
-  // ─── 상담/운영 정보 블록 ───────────────────────────────────────────────────
+  // ─── 회사/기관 · 상담 운영 블록 ─────────────────────────────────────────────
   const orgBlock = counselor ? (
     <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
       <BlockHeader
         icon={<FaBuilding className="w-4 h-4" />}
-        title="상담/운영 정보"
+        title="회사/기관 · 상담 운영"
         editing={editingBlock === 'org'}
         saving={saving}
         locked={locked && editingBlock !== 'org'}
@@ -526,6 +419,7 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate }
         onSave={() =>
           handleSave({
             practiceType: orgForm.practiceType,
+            teamSharingEnabled: orgForm.teamSharingEnabled,
             organizationName: orgForm.organizationName.trim(),
             organizationManager: orgForm.organizationManager.trim(),
             organizationTel: orgForm.organizationTel.trim(),
@@ -550,6 +444,13 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate }
               <option value="organization">조직/기업 운영</option>
             </select>
           </div>
+          <div className="flex items-center justify-between">
+            <span className={labelCls + ' mb-0'}>팀 정보 공유</span>
+            <ToggleSwitch
+              checked={orgForm.teamSharingEnabled}
+              onChange={(v) => setOrgForm((p) => ({ ...p, teamSharingEnabled: v }))}
+            />
+          </div>
           {[
             { key: 'organizationName', label: '회사/기관명', placeholder: '기관명을 입력하세요' },
             { key: 'organizationManager', label: '담당자', placeholder: '담당자 이름' },
@@ -563,7 +464,7 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate }
               <label className={labelCls}>{label}</label>
               <input
                 className={fieldCls}
-                value={(orgForm as Record<string, string>)[key]}
+                value={String(orgForm[key as keyof typeof orgForm] ?? '')}
                 onChange={(e) => setOrgForm((p) => ({ ...p, [key]: e.target.value }))}
                 placeholder={placeholder}
               />
@@ -574,6 +475,7 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate }
       ) : (
         <div className="space-y-3">
           <div className={rowCls}><span className={keySpan}>운영 형태</span><span className={valSpan}>{practiceLabel(displayUser.practiceType)}</span></div>
+          <div className={rowCls}><span className={keySpan}>팀 정보 공유</span><span className={valSpan}>{boolLabel(displayUser.teamSharingEnabled, '공유 가능', '개별 운영')}</span></div>
           <div className={rowCls}><span className={keySpan}>회사/기관명</span><span className={valSpan}>{displayUser.organizationName?.trim() || '정보 없음'}</span></div>
           <div className={rowCls}><span className={keySpan}>담당자</span><span className={valSpan}>{displayUser.organizationManager?.trim() || '정보 없음'}</span></div>
           <div className={rowCls}><span className={keySpan}>전화번호</span><span className={valSpan}>{formatPhoneDisplayOr(displayUser.organizationTel?.trim(), '정보 없음')}</span></div>
@@ -591,7 +493,7 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate }
     <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
       <BlockHeader
         icon={<FaComment className="w-4 h-4" />}
-        title="리포트/공유 설정"
+        title="리포트 설정"
         editing={editingBlock === 'report'}
         saving={saving}
         locked={locked && editingBlock !== 'report'}
@@ -683,37 +585,56 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate }
     </div>
   ) : null;
 
-  return (
-    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-      {/* 계정 정보 (읽기 전용) */}
-      <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
-        <h3 className="text-base font-semibold text-blue-100 flex items-center gap-2 mb-4">
-          <FaKey className="w-4 h-4 text-purple-400" />
-          계정 정보
-        </h3>
-        <div className="space-y-3">
-          <div className={rowCls}><span className={keySpan}>이메일</span><span className={valSpan}>{displayUser.email || '정보 없음'}</span></div>
-          <div className={rowCls}>
-            <span className={keySpan}>가입일</span>
-            <span className={valSpan}>{displayUser.createdAt ? new Date(displayUser.createdAt).toLocaleDateString('ko-KR') : '-'}</span>
-          </div>
-          <div className={rowCls}>
-            <span className={keySpan}>마지막 로그인</span>
-            <span className={valSpan}>
-              {displayUser.lastLoginAt
-                ? new Date(displayUser.lastLoginAt).toLocaleString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
-                : '-'}
-            </span>
-          </div>
+  const accountReadOnly = (
+    <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
+      <h3 className="text-base font-semibold text-blue-100 flex items-center gap-2 mb-4">
+        <FaKey className="w-4 h-4 text-purple-400" />
+        로그인·계정
+      </h3>
+      <div className="space-y-3">
+        <div className={rowCls}><span className={keySpan}>회원 유형</span><span className={valSpan}>{roleLabel(displayUser.role)}</span></div>
+        <div className={rowCls}><span className={keySpan}>이메일</span><span className={valSpan}>{displayUser.email || '정보 없음'}</span></div>
+        <div className={rowCls}>
+          <span className={keySpan}>가입일</span>
+          <span className={valSpan}>{displayUser.createdAt ? new Date(displayUser.createdAt).toLocaleDateString('ko-KR') : '-'}</span>
+        </div>
+        <div className={rowCls}>
+          <span className={keySpan}>마지막 로그인</span>
+          <span className={valSpan}>
+            {displayUser.lastLoginAt
+              ? new Date(displayUser.lastLoginAt).toLocaleString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+              : '-'}
+          </span>
         </div>
       </div>
-
-      {profileBlock}
-      {personalBlock}
-      {orgBlock}
-      {reportBlock}
     </div>
   );
+
+  const counselorOnlyNote = (
+    <p className="rounded-lg border border-sky-400/20 bg-sky-950/30 px-4 py-3 text-sm text-slate-300">
+      상담사 승인 후 회사/기관·리포트 설정을 이용할 수 있습니다. 역할 변경은{' '}
+      <span className="text-sky-200">계정 정보</span> 메뉴에서 신청하세요.
+    </p>
+  );
+
+  if (section === 'account') {
+    return (
+      <div className="space-y-6">
+        {accountReadOnly}
+        {personalBlock}
+      </div>
+    );
+  }
+
+  if (section === 'organization') {
+    return <div className="space-y-6">{counselor ? orgBlock : counselorOnlyNote}</div>;
+  }
+
+  if (section === 'report') {
+    return <div className="space-y-6">{counselor ? reportBlock : counselorOnlyNote}</div>;
+  }
+
+  return null;
 }
 
 // ─── 토글 스위치 ─────────────────────────────────────────────────────────────

@@ -1,14 +1,9 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import AuthLink from '@/components/auth/AuthLink';
 import { buildMypageNavSections } from '@/data/mypageMenu';
-import {
-  MYPAGE_HOME_HREF,
-  mypageAccountDetailNav,
-} from '@/lib/mypageAccountNav';
 import { counselorHubClasses } from '@/components/layout/appChromeTheme';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 
@@ -20,7 +15,7 @@ type Props = {
 function navActive(pathname: string, href: string): boolean {
   const p = pathname.replace(/\/+$/, '') || '/';
   const h = href.replace(/\/+$/, '') || '/';
-  if (h === MYPAGE_HOME_HREF) return p === MYPAGE_HOME_HREF;
+  if (p === '/mypage') return h === '/mypage/account/info';
   return p === h || p.startsWith(`${h}/`);
 }
 
@@ -32,8 +27,6 @@ export default function MypageManageShell({ children, settingsBadge = 0 }: Props
     [user?.role, settingsBadge],
   );
   const displayName = user?.displayName || user?.email?.split('@')[0] || '회원';
-  const onAccountRoute =
-    navActive(pathname, MYPAGE_HOME_HREF) || pathname.startsWith('/mypage/account');
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-2 lg:h-[calc(100dvh-4.5rem)] lg:flex-row lg:items-stretch lg:gap-3 lg:overflow-hidden">
@@ -52,11 +45,14 @@ export default function MypageManageShell({ children, settingsBadge = 0 }: Props
                 <p className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
                   {section.title}
                 </p>
-              ) : null}
+              ) : (
+                <p className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                  {section.title}
+                </p>
+              )}
               <ul className="space-y-0.5">
                 {section.items.map((item) => {
                   const active = navActive(pathname, item.href);
-                  const isAccountHome = item.href === MYPAGE_HOME_HREF;
                   return (
                     <li key={item.href}>
                       <AuthLink
@@ -78,27 +74,6 @@ export default function MypageManageShell({ children, settingsBadge = 0 }: Props
                           </span>
                         ) : null}
                       </AuthLink>
-                      {isAccountHome && onAccountRoute ? (
-                        <ul className="mt-0.5 space-y-0.5 border-l border-sky-400/15 pl-2 ml-2">
-                          {mypageAccountDetailNav.map((detail) => {
-                            const detailActive = navActive(pathname, detail.href);
-                            return (
-                              <li key={detail.href}>
-                                <Link
-                                  href={detail.href}
-                                  className={`block truncate rounded-md py-1 pr-1 text-[11px] leading-snug transition-colors sm:text-xs ${
-                                    detailActive
-                                      ? 'font-semibold text-sky-200'
-                                      : 'text-slate-400 hover:text-slate-200'
-                                  }`}
-                                >
-                                  {detail.label}
-                                </Link>
-                              </li>
-                            );
-                          })}
-                        </ul>
-                      ) : null}
                     </li>
                   );
                 })}
