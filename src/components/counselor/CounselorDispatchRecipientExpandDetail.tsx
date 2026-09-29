@@ -112,6 +112,8 @@ function testLetterLabel(index: number): string {
 
 function renderResultCheckCell(
   row: {
+    rowKey: string;
+    name: string;
     status: DispatchTestResult['status'];
     resultId: string | null;
     isCare: boolean;
@@ -119,6 +121,10 @@ function renderResultCheckCell(
     canRemove: boolean;
   },
   onOpenResult?: (resultId: string) => void,
+  removeProps?: {
+    removingKey: string | null;
+    onRemove: () => void;
+  },
 ): React.ReactNode {
   if (row.status === 'completed' && row.resultId && onOpenResult) {
     return (
@@ -136,7 +142,28 @@ function renderResultCheckCell(
   }
   if (row.status === 'not_started' && row.canRemove && row.addedAt) {
     return (
-      <span className="whitespace-nowrap text-slate-400">{formatAddedAtInParens(row.addedAt)}</span>
+      <span className="inline-flex items-center gap-1 whitespace-nowrap text-slate-400">
+        <span>{`<- ${formatAddedAtInParens(row.addedAt)}`}</span>
+        {removeProps ? (
+          <button
+            type="button"
+            title="추가 요청 삭제"
+            disabled={removeProps.removingKey === row.rowKey}
+            onClick={(e) => {
+              e.stopPropagation();
+              removeProps.onRemove();
+            }}
+            className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded text-slate-500 hover:bg-red-950/40 hover:text-red-300 disabled:opacity-40"
+            aria-label={`${row.name} 삭제`}
+          >
+            {removeProps.removingKey === row.rowKey ? (
+              <LoadingSpinner size="sm" className="h-3.5 w-3.5 border-[1.5px]" />
+            ) : (
+              <span className="text-sm leading-none">×</span>
+            )}
+          </button>
+        ) : null}
+      </span>
     );
   }
   return <span className="text-slate-500">미실시</span>;
@@ -446,7 +473,7 @@ export function CounselorDispatchRecipientExpandContent({
                 <th className="px-3 py-2 text-left font-medium leading-tight">
                   완료일시 / (추가일시)
                 </th>
-                <th className="px-3 py-2 text-left font-medium leading-tight">← (추가일시)</th>
+                <th className="px-3 py-2 text-left font-medium">결과 확인</th>
                 <th className="px-1 py-2" aria-hidden="true" />
               </tr>
             </thead>
@@ -473,10 +500,15 @@ export function CounselorDispatchRecipientExpandContent({
                       {formatCompletionOrAddedColumn(t)}
                     </td>
                     <td className="px-3 py-2.5 align-top">
-                      {renderResultCheckCell(t, onOpenResult)}
+                      {renderResultCheckCell(t, onOpenResult, {
+                        removingKey,
+                        onRemove: () => {
+                          void handleRemoveAdditional(t);
+                        },
+                      })}
                     </td>
                     <td className="px-1 py-2.5 align-top text-center">
-                      {t.canRemove ? (
+                      {t.canRemove && !(t.status === 'not_started' && t.addedAt) ? (
                         <button
                           type="button"
                           title="추가 요청 삭제"
