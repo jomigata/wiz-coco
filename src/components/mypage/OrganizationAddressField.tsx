@@ -2,8 +2,6 @@
 
 import React, { useState } from 'react';
 import { formatDaumPostcodeAddress, openDaumPostcodeSearch } from '@/lib/daumPostcode';
-import { mypageAccountClasses } from '@/components/layout/appChromeTheme';
-import { MypageFieldLabel, mypageEditableFieldInputClass } from '@/components/mypage/MypageFormField';
 
 type Props = {
   value: string;
@@ -16,8 +14,9 @@ type Props = {
 export default function OrganizationAddressField({
   value,
   onChange,
-  labelClassName = mypageAccountClasses.fieldLabel,
-  fieldClassName = mypageEditableFieldInputClass(),
+  labelClassName = 'block text-blue-200 text-xs mb-1',
+  fieldClassName =
+    'w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-blue-100 placeholder-blue-300/40 focus:outline-none focus:border-purple-400/60 focus:bg-white/15 transition-colors text-sm',
   placeholder = '주소를 입력하거나 주소 찾기를 사용하세요',
 }: Props) {
   const [searchError, setSearchError] = useState('');
@@ -40,12 +39,12 @@ export default function OrganizationAddressField({
   return (
     <div>
       <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
-        <MypageFieldLabel>주소</MypageFieldLabel>
+        <label className={labelClassName}>주소</label>
         <button
           type="button"
           onClick={() => void handleSearch()}
           disabled={searching}
-          className="shrink-0 rounded-md border border-sky-400/25 bg-sky-600/20 px-2.5 py-1 text-[11px] font-medium text-sky-100 hover:bg-sky-600/35 disabled:opacity-50"
+          className="shrink-0 rounded-md border border-white/25 bg-black px-2.5 py-1 text-[11px] font-medium text-white/90 hover:bg-white/10 disabled:opacity-50"
         >
           {searching ? '불러오는 중…' : '주소 찾기'}
         </button>

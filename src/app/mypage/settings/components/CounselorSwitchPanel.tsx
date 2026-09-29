@@ -31,16 +31,11 @@ import {
   formatCareerYearsLabel,
 } from '@/lib/counselorCareerYear';
 import { formatPhoneDisplay, formatPhoneDisplayOr, formatPhoneWhileTyping } from '@/lib/phoneFormat';
-import { mypageAccountClasses } from '@/components/layout/appChromeTheme';
-import {
-  MypageFieldLabel,
-  MypageReadonlyField,
-  mypageEditableFieldInputClass,
-} from '@/components/mypage/MypageFormField';
+import { MypageAccountFieldDisplay, mypageFieldEditProps } from '@/components/mypage/MypageAccountField';
+
+const { labelClassName: labelEditCls, fieldClassName: fieldEditCls } = mypageFieldEditProps();
 
 export const MYPAGE_COUNSELOR_ACCOUNT_FORM_ID = 'mypage-counselor-account-form';
-
-const fieldCls = mypageEditableFieldInputClass();
 
 interface Props {
   uid: string;
@@ -295,34 +290,29 @@ export default function CounselorSwitchPanel({
   const hideCounselorFooter = embedded && counselor;
 
   const embeddedSummary = (
-    <div className={mypageAccountClasses.fieldStack}>
-      <MypageReadonlyField label="이름" value={profile.name || ''} emptyLabel="—" />
-      <MypageReadonlyField
-        label="리포트 표기명"
-        value={profile.reportDisplayName || profile.name || ''}
-        emptyLabel="—"
-      />
-      <MypageReadonlyField label="이메일" value={profile.email || email || ''} emptyLabel="—" />
-      <MypageReadonlyField label="핸드폰" value={formatPhoneDisplayOr(profile.phone, '')} emptyLabel="—" />
-      <MypageReadonlyField
-        label="경력 (년도)"
-        value={profile.careerStartYear ? formatCareerYearsLabel(profile.careerStartYear) : ''}
-        adornment="chevron"
-        emptyLabel="미등록"
-      />
-      <MypageReadonlyField
-        label="운영 형태"
-        value={profile.practiceType === 'organization' ? '조직/기관 운영' : '개인 운영'}
-        adornment="chevron"
-      />
-      <MypageReadonlyField label="지역" value={profile.region || ''} adornment="chevron" emptyLabel="—" />
-      <MypageReadonlyField label="기관명/회사명" value={profile.organizationName || ''} emptyLabel="—" />
-      <MypageReadonlyField
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <MypageAccountFieldDisplay label="이름" value={profile.name || '—'} />
+        <MypageAccountFieldDisplay label="리포트 표기명" value={profile.reportDisplayName || profile.name || '—'} />
+        <MypageAccountFieldDisplay label="이메일" value={profile.email || email || '—'} />
+        <MypageAccountFieldDisplay label="핸드폰" value={formatPhoneDisplayOr(profile.phone, '—')} />
+        <MypageAccountFieldDisplay
+          label="경력"
+          value={profile.careerStartYear ? formatCareerYearsLabel(profile.careerStartYear) : '미등록'}
+        />
+        <MypageAccountFieldDisplay
+          label="운영 형태"
+          selectLike
+          value={profile.practiceType === 'organization' ? '조직/기관 운영' : '개인 운영'}
+        />
+        <MypageAccountFieldDisplay label="지역" selectLike value={profile.region || '—'} />
+        <MypageAccountFieldDisplay label="기관명/회사명" value={profile.organizationName || '—'} />
+      </div>
+      <MypageAccountFieldDisplay
         label="전문 분야"
-        value={profile.specialization.length ? profile.specialization.join(', ') : ''}
-        emptyLabel="—"
+        value={profile.specialization.length ? profile.specialization.join(', ') : '—'}
       />
-      <MypageReadonlyField label="소개" value={profile.bio?.trim() || ''} multiline emptyLabel="—" />
+      <MypageAccountFieldDisplay label="소개" multiline value={profile.bio?.trim() || '—'} />
     </div>
   );
 
@@ -425,13 +415,13 @@ export default function CounselorSwitchPanel({
           <form
             id={formId}
             onSubmit={handleSubmit}
-            className={embedded ? mypageAccountClasses.fieldStack : 'space-y-4 rounded-lg border border-white/10 bg-white/5 p-4'}
+            className="space-y-4 rounded-xl bg-black/95 p-4 sm:p-5"
           >
-            <div className={`grid grid-cols-1 gap-4 ${embedded ? '' : 'sm:grid-cols-2 sm:gap-3'}`}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <MypageFieldLabel>이름 *</MypageFieldLabel>
+                <label className={labelEditCls}>이름 *</label>
                 <input
-                  className={fieldCls}
+                  className={fieldEditCls}
                   value={profile.name}
                   onChange={(e) => setProfile((p) => ({ ...p, name: e.target.value }))}
                   placeholder="실명 또는 활동명"
@@ -440,9 +430,9 @@ export default function CounselorSwitchPanel({
                 />
               </div>
               <div>
-                <MypageFieldLabel>리포트 표기명</MypageFieldLabel>
+                <label className={labelEditCls}>리포트 표기명</label>
                 <input
-                  className={fieldCls}
+                  className={fieldEditCls}
                   value={profile.reportDisplayName}
                   onChange={(e) => setProfile((p) => ({ ...p, reportDisplayName: e.target.value }))}
                   placeholder="검사 리포트에 표시될 이름"
@@ -450,13 +440,13 @@ export default function CounselorSwitchPanel({
                 />
               </div>
               <div>
-                <MypageFieldLabel>이메일</MypageFieldLabel>
-                <input className={fieldCls} value={profile.email || email} readOnly />
+                <label className={labelEditCls}>이메일</label>
+                <input className={fieldEditCls} value={profile.email || email} readOnly />
               </div>
               <div>
-                <MypageFieldLabel>핸드폰 *</MypageFieldLabel>
+                <label className={labelEditCls}>핸드폰 *</label>
                 <input
-                  className={fieldCls}
+                  className={fieldEditCls}
                   type="tel"
                   inputMode="numeric"
                   autoComplete="tel"
@@ -470,9 +460,9 @@ export default function CounselorSwitchPanel({
                 />
               </div>
               <div>
-                <MypageFieldLabel>경력 (년도)</MypageFieldLabel>
+                <label className={labelEditCls}>경력 (년도)</label>
                 <select
-                  className={fieldCls}
+                  className={fieldEditCls}
                   value={profile.careerStartYear || ''}
                   onChange={(e) =>
                     setProfile((p) => ({
@@ -496,9 +486,9 @@ export default function CounselorSwitchPanel({
                 ) : null}
               </div>
               <div>
-                <MypageFieldLabel>기관명/회사명</MypageFieldLabel>
+                <label className={labelEditCls}>기관명/회사명</label>
                 <input
-                  className={fieldCls}
+                  className={fieldEditCls}
                   value={profile.organizationName}
                   onChange={(e) => setProfile((p) => ({ ...p, organizationName: e.target.value }))}
                   placeholder="소속 기관 또는 회사명 (선택)"
@@ -508,9 +498,9 @@ export default function CounselorSwitchPanel({
             </div>
 
             <div>
-              <MypageFieldLabel>운영 형태</MypageFieldLabel>
+              <label className={labelEditCls}>운영 형태</label>
               <select
-                className={fieldCls}
+                className={fieldEditCls}
                 value={profile.practiceType}
                 onChange={(e) =>
                   setProfile((p) => ({
@@ -526,9 +516,9 @@ export default function CounselorSwitchPanel({
             </div>
 
             <div>
-              <MypageFieldLabel>지역 *</MypageFieldLabel>
+              <label className={labelEditCls}>지역 *</label>
               <select
-                className={fieldCls}
+                className={fieldEditCls}
                 value={profile.region}
                 onChange={(e) =>
                   setProfile((p) => ({ ...p, region: e.target.value, education: e.target.value }))
@@ -546,7 +536,7 @@ export default function CounselorSwitchPanel({
             </div>
 
             <div>
-              <MypageFieldLabel>전문 분야 * (복수 선택)</MypageFieldLabel>
+              <label className={labelEditCls}>전문 분야 * (복수 선택)</label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
                 {COUNSELOR_SPECIALIZATIONS.map((item) => (
                   <label
@@ -570,9 +560,9 @@ export default function CounselorSwitchPanel({
             </div>
 
             <div>
-              <MypageFieldLabel>소개</MypageFieldLabel>
+              <label className={labelEditCls}>소개</label>
               <textarea
-                className={`${fieldCls} min-h-[88px] resize-y`}
+                className={`${fieldEditCls} min-h-[88px] resize-y`}
                 value={profile.bio}
                 onChange={(e) => setProfile((p) => ({ ...p, bio: e.target.value }))}
                 placeholder="상담 경험, 상담 철학 등을 간단히 작성해주세요."

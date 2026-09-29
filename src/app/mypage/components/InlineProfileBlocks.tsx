@@ -11,8 +11,9 @@ import { FaHeart, FaBuilding, FaKey, FaMapMarkerAlt } from 'react-icons/fa';
 import { MypagePremiumBlock, MypagePremiumBlockGrid } from '@/components/mypage/MypagePremiumBlock';
 import MypageBirthDateField, { formatBirthDateDisplay } from '@/components/mypage/MypageBirthDateField';
 import OrganizationAddressField from '@/components/mypage/OrganizationAddressField';
-import { MypageFieldLabel, MypageReadonlyField, mypageEditableFieldInputClass } from '@/components/mypage/MypageFormField';
-import { mypageAccountClasses } from '@/components/layout/appChromeTheme';
+import { MypageAccountFieldDisplay, mypageFieldEditProps } from '@/components/mypage/MypageAccountField';
+
+const { labelClassName: labelEditCls, fieldClassName: fieldEditCls } = mypageFieldEditProps();
 
 // ─── 타입 ───────────────────────────────────────────────────────────────────
 interface UserData {
@@ -85,8 +86,6 @@ export function applySavePatch(base: UserData, data: Record<string, unknown>): U
 }
 
 // ─── 공통 스타일 ────────────────────────────────────────────────────────────
-const fieldCls = mypageEditableFieldInputClass();
-const labelCls = mypageAccountClasses.fieldLabel;
 
 // ─── 저장 함수 ───────────────────────────────────────────────────────────────
 async function saveToFirestore(data: Record<string, unknown>) {
@@ -322,50 +321,43 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
   // ─── 개인 기본 정보 ─────────────────────────────────────────────────────────
   const personalBody =
     editingBlock === 'personal' ? (
-      <div className={mypageAccountClasses.fieldStack}>
+      <div className="space-y-4 rounded-xl bg-black/95 p-4 sm:p-5">
         <div>
-          <MypageFieldLabel>이름</MypageFieldLabel>
+          <label className={labelEditCls}>이름</label>
           <input
-            className={fieldCls}
+            className={fieldEditCls}
             value={personalForm.displayName}
             onChange={(e) => setPersonalForm((p) => ({ ...p, displayName: e.target.value }))}
             placeholder="이름"
           />
         </div>
         <div>
-          <MypageFieldLabel>전화번호</MypageFieldLabel>
+          <label className={labelEditCls}>전화번호</label>
           <input
-            className={fieldCls}
+            className={fieldEditCls}
             value={personalForm.phoneNumber}
             onChange={(e) => setPersonalForm((p) => ({ ...p, phoneNumber: e.target.value }))}
             placeholder="010-0000-0000"
           />
         </div>
         <MypageBirthDateField
-          labelClassName={labelCls}
-          fieldClassName={fieldCls}
+          labelClassName={labelEditCls}
+          fieldClassName={fieldEditCls}
           value={personalForm.birthDate}
           onChange={(birthDate) => setPersonalForm((p) => ({ ...p, birthDate }))}
         />
         <div>
-          <MypageFieldLabel>성별</MypageFieldLabel>
-          <div className="relative">
-            <select
-              className={`${fieldCls} appearance-none pr-10`}
-              value={personalForm.gender}
-              onChange={(e) => setPersonalForm((p) => ({ ...p, gender: e.target.value }))}
-            >
-              <option value="">선택 안 함</option>
-              <option value="male">남성</option>
-              <option value="female">여성</option>
-              <option value="other">기타</option>
-            </select>
-            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sky-300/55" aria-hidden>
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </span>
-          </div>
+          <label className={labelEditCls}>성별</label>
+          <select
+            className={fieldEditCls}
+            value={personalForm.gender}
+            onChange={(e) => setPersonalForm((p) => ({ ...p, gender: e.target.value }))}
+          >
+            <option value="">선택 안 함</option>
+            <option value="male">남성</option>
+            <option value="female">여성</option>
+            <option value="other">기타</option>
+          </select>
         </div>
         <BlockMessage error={blockError} success={blockSuccess} />
         <EditFormSaveFooter
@@ -382,38 +374,35 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
         />
       </div>
     ) : (
-      <div className={mypageAccountClasses.fieldStack}>
-        <MypageReadonlyField label="이름" value={displayUser.name?.trim() || ''} />
-        <MypageReadonlyField
+      <div className="space-y-4">
+        <MypageAccountFieldDisplay label="이름" value={displayUser.name?.trim() || '정보 없음'} />
+        <MypageAccountFieldDisplay
           label="전화번호"
-          value={formatPhoneDisplayOr(displayUser.phoneNumber, '')}
+          value={formatPhoneDisplayOr(displayUser.phoneNumber, '정보 없음')}
         />
-        <MypageReadonlyField label="이메일(개인)" value={displayUser.email?.trim() || ''} />
-        <MypageReadonlyField
+        <MypageAccountFieldDisplay
           label="생년월일"
+          calendarIcon
           value={
             displayUser.birthDate?.trim()
               ? formatBirthDateDisplay(displayUser.birthDate.trim()) || displayUser.birthDate.trim()
-              : ''
+              : '정보 없음'
           }
-          adornment="calendar"
         />
-        <MypageReadonlyField label="성별" value={genderLabel(displayUser.gender)} adornment="chevron" />
+        <MypageAccountFieldDisplay label="성별" selectLike value={genderLabel(displayUser.gender)} />
+        <MypageAccountFieldDisplay label="이메일(개인)" value={displayUser.email?.trim() || '정보 없음'} />
       </div>
     );
 
   const accountInfoBody = (
-    <div className={mypageAccountClasses.fieldStack}>
-      <MypageReadonlyField label="회원 유형" value={roleLabel(displayUser.role)} />
-      <MypageReadonlyField label="이메일" value={displayUser.email?.trim() || ''} />
-      <MypageReadonlyField
+    <div className="space-y-4">
+      <MypageAccountFieldDisplay label="회원 유형" selectLike value={roleLabel(displayUser.role)} />
+      <MypageAccountFieldDisplay label="이메일" value={displayUser.email?.trim() || '정보 없음'} />
+      <MypageAccountFieldDisplay
         label="가입일"
-        value={
-          displayUser.createdAt ? new Date(displayUser.createdAt).toLocaleDateString('ko-KR') : '-'
-        }
-        emptyLabel="-"
+        value={displayUser.createdAt ? new Date(displayUser.createdAt).toLocaleDateString('ko-KR') : '-'}
       />
-      <MypageReadonlyField
+      <MypageAccountFieldDisplay
         label="마지막 로그인"
         value={
           displayUser.lastLoginAt
@@ -426,7 +415,6 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
               })
             : '-'
         }
-        emptyLabel="-"
       />
     </div>
   );
@@ -476,7 +464,7 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
 
   const orgContactBody =
     editingBlock === 'orgContact' ? (
-      <div className={mypageAccountClasses.fieldStack}>
+      <div className="space-y-4 rounded-xl bg-black/95 p-4 sm:p-5">
         {[
           { key: 'organizationName', label: '회사/기관명', placeholder: '기관명을 입력하세요' },
           {
@@ -491,9 +479,9 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
           { key: 'organizationEmail', label: '이메일', placeholder: 'email@example.com' },
         ].map(({ key, label, placeholder }) => (
           <div key={key}>
-            <MypageFieldLabel>{label}</MypageFieldLabel>
+            <label className={labelEditCls}>{label}</label>
             <input
-              className={fieldCls}
+              className={fieldEditCls}
               value={String(orgForm[key as keyof typeof orgForm] ?? '')}
               onChange={(e) => setOrgForm((p) => ({ ...p, [key]: e.target.value }))}
               placeholder={placeholder}
@@ -501,8 +489,8 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
           </div>
         ))}
         <OrganizationAddressField
-          labelClassName={labelCls}
-          fieldClassName={fieldCls}
+          labelClassName={labelEditCls}
+          fieldClassName={fieldEditCls}
           value={orgForm.organizationAddress}
           onChange={(organizationAddress) => setOrgForm((p) => ({ ...p, organizationAddress }))}
         />
@@ -524,29 +512,23 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
         />
       </div>
     ) : (
-      <div className={mypageAccountClasses.fieldStack}>
-        <MypageReadonlyField label="회사/기관명" value={displayUser.organizationName?.trim() || ''} />
-        <MypageReadonlyField
-          label="사업자등록번호"
-          value={displayUser.organizationBusinessRegistrationNumber?.trim() || ''}
-        />
-        <MypageReadonlyField label="담당자" value={displayUser.organizationManager?.trim() || ''} />
-        <MypageReadonlyField
-          label="전화번호"
-          value={formatPhoneDisplayOr(displayUser.organizationTel?.trim(), '')}
-          emptyLabel="—"
-        />
-        <MypageReadonlyField
-          label="핸드폰번호"
-          value={formatPhoneDisplayOr(displayUser.organizationMobile?.trim(), '')}
-          emptyLabel="—"
-        />
-        <MypageReadonlyField label="팩스번호" value={displayUser.organizationFax?.trim() || ''} emptyLabel="—" />
-        <MypageReadonlyField label="이메일" value={displayUser.organizationEmail?.trim() || ''} emptyLabel="—" />
-        <MypageReadonlyField
+      <div className="space-y-4">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <MypageAccountFieldDisplay label="회사/기관명" value={displayUser.organizationName?.trim() || '정보 없음'} />
+          <MypageAccountFieldDisplay
+            label="사업자등록번호"
+            value={displayUser.organizationBusinessRegistrationNumber?.trim() || '정보 없음'}
+          />
+          <MypageAccountFieldDisplay label="담당자" value={displayUser.organizationManager?.trim() || '정보 없음'} />
+          <MypageAccountFieldDisplay label="전화" value={formatPhoneDisplayOr(displayUser.organizationTel?.trim(), '—')} />
+          <MypageAccountFieldDisplay label="휴대폰" value={formatPhoneDisplayOr(displayUser.organizationMobile?.trim(), '—')} />
+          <MypageAccountFieldDisplay label="팩스" value={displayUser.organizationFax?.trim() || '—'} />
+          <MypageAccountFieldDisplay label="이메일" value={displayUser.organizationEmail?.trim() || '—'} />
+        </div>
+        <MypageAccountFieldDisplay
           label="주소"
-          value={displayUser.organizationAddress?.trim() || ''}
           multiline
+          value={displayUser.organizationAddress?.trim() || '정보 없음'}
         />
       </div>
     );
