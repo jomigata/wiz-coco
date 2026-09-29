@@ -3,8 +3,8 @@ import MypageAccountSectionPage from '@/components/mypage/MypageAccountSectionPa
 export default function MypageAccountOrganizationPage() {
   return (
     <MypageAccountSectionPage
-      title="회사/기관 정보"
-      description="운영 형태, 팀 공유, 기관 연락처 등 상담·운영에 필요한 정보입니다."
+      title="상담사 정보"
+      description="회사·기관 연락처와 상담 운영, 상담사 전문 정보를 관리합니다."
       section="organization"
     />
   );

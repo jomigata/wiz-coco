@@ -14,13 +14,13 @@ export const mypageAccountDetailNav: MypageAccountNavItem[] = [
   },
   {
     href: '/mypage/account/organization',
-    label: '회사/기관 정보',
-    description: '상담·운영·기관',
+    label: '상담사 정보',
+    description: '기관·운영·전문 분야',
   },
   {
     href: '/mypage/account/report',
-    label: '리포트 설정',
-    description: '내담자용 정보 공개',
+    label: '내담자용 정보',
+    description: '결과지 표지·표기·전달',
   },
 ];
 

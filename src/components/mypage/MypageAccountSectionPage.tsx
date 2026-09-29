@@ -6,10 +6,7 @@ import { counselorHubClasses } from '@/components/layout/appChromeTheme';
 import { useMypageUserProfile } from '@/hooks/useMypageUserProfile';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import InlineProfileBlocks, { type MypageProfileSection } from '@/app/mypage/components/InlineProfileBlocks';
-import {
-  MypageAccountRolePanel,
-  MypageProfileVisibilityPanel,
-} from '@/components/mypage/MypageAccountExtras';
+import { MypageAccountRolePanel } from '@/components/mypage/MypageAccountExtras';
 
 type Props = {
   title: string;
@@ -58,12 +55,7 @@ export default function MypageAccountSectionPage({
             void reload();
           }}
         />
-        {showAccountExtras ? (
-          <>
-            <MypageProfileVisibilityPanel />
-            <MypageAccountRolePanel uid={user.id} email={user.email} role={user.role} />
-          </>
-        ) : null}
+        {showAccountExtras ? <MypageAccountRolePanel uid={user.id} email={user.email} role={user.role} /> : null}
       </div>
     </CounselorPageSection>
   );

@@ -3,8 +3,8 @@ import MypageAccountSectionPage from '@/components/mypage/MypageAccountSectionPa
 export default function MypageAccountReportPage() {
   return (
     <MypageAccountSectionPage
-      title="리포트 설정"
-      description="내담자용 리포트에 노출할 이름·전문 정보·공개 범위·서명을 설정합니다."
+      title="내담자용 정보"
+      description="검사 결과지 표지, 상·하단 표기, 내담자 전달사항을 블록별로 설정합니다."
       section="report"
     />
   );
