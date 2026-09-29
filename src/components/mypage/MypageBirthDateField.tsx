@@ -2,6 +2,8 @@
 
 import React, { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { mypageAccountClasses } from '@/components/layout/appChromeTheme';
+import { mypageEditableFieldInputClass } from '@/components/mypage/MypageFormField';
 
 const YEAR_SPAN = 100;
 const PANEL_MAX_WIDTH = 320;
@@ -50,9 +52,8 @@ export default function MypageBirthDateField({
   value,
   onChange,
   label = '생년월일',
-  labelClassName = 'block text-blue-200 text-xs mb-1',
-  fieldClassName =
-    'w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-blue-100 placeholder-blue-300/40 focus:outline-none focus:border-purple-400/60 focus:bg-white/15 transition-colors text-sm',
+  labelClassName = mypageAccountClasses.fieldLabel,
+  fieldClassName = mypageEditableFieldInputClass('flex w-full items-center justify-between text-left cursor-pointer'),
   placeholder = '연도 · 월 · 일 선택',
 }: MypageBirthDateFieldProps) {
   const rootRef = useRef<HTMLDivElement>(null);

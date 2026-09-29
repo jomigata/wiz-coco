@@ -11,6 +11,7 @@ import { FaHeart, FaBuilding, FaKey, FaMapMarkerAlt } from 'react-icons/fa';
 import { MypagePremiumBlock, MypagePremiumBlockGrid } from '@/components/mypage/MypagePremiumBlock';
 import MypageBirthDateField, { formatBirthDateDisplay } from '@/components/mypage/MypageBirthDateField';
 import OrganizationAddressField from '@/components/mypage/OrganizationAddressField';
+import { MypageFieldLabel, MypageReadonlyField, mypageEditableFieldInputClass } from '@/components/mypage/MypageFormField';
 import { mypageAccountClasses } from '@/components/layout/appChromeTheme';
 
 // ─── 타입 ───────────────────────────────────────────────────────────────────
@@ -84,9 +85,8 @@ export function applySavePatch(base: UserData, data: Record<string, unknown>): U
 }
 
 // ─── 공통 스타일 ────────────────────────────────────────────────────────────
-const fieldCls = 'w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-blue-100 placeholder-blue-300/40 focus:outline-none focus:border-purple-400/60 focus:bg-white/15 transition-colors text-sm';
-const labelCls = 'block text-blue-200 text-xs mb-1';
-const fieldTileCls = mypageAccountClasses.fieldTile;
+const fieldCls = mypageEditableFieldInputClass();
+const labelCls = mypageAccountClasses.fieldLabel;
 
 // ─── 저장 함수 ───────────────────────────────────────────────────────────────
 async function saveToFirestore(data: Record<string, unknown>) {
@@ -322,9 +322,9 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
   // ─── 개인 기본 정보 ─────────────────────────────────────────────────────────
   const personalBody =
     editingBlock === 'personal' ? (
-      <div className="space-y-4">
+      <div className={mypageAccountClasses.fieldStack}>
         <div>
-          <label className={labelCls}>이름</label>
+          <MypageFieldLabel>이름</MypageFieldLabel>
           <input
             className={fieldCls}
             value={personalForm.displayName}
@@ -333,7 +333,7 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
           />
         </div>
         <div>
-          <label className={labelCls}>전화번호</label>
+          <MypageFieldLabel>전화번호</MypageFieldLabel>
           <input
             className={fieldCls}
             value={personalForm.phoneNumber}
@@ -348,17 +348,24 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
           onChange={(birthDate) => setPersonalForm((p) => ({ ...p, birthDate }))}
         />
         <div>
-          <label className={labelCls}>성별</label>
-          <select
-            className={fieldCls}
-            value={personalForm.gender}
-            onChange={(e) => setPersonalForm((p) => ({ ...p, gender: e.target.value }))}
-          >
-            <option value="">선택 안 함</option>
-            <option value="male">남성</option>
-            <option value="female">여성</option>
-            <option value="other">기타</option>
-          </select>
+          <MypageFieldLabel>성별</MypageFieldLabel>
+          <div className="relative">
+            <select
+              className={`${fieldCls} appearance-none pr-10`}
+              value={personalForm.gender}
+              onChange={(e) => setPersonalForm((p) => ({ ...p, gender: e.target.value }))}
+            >
+              <option value="">선택 안 함</option>
+              <option value="male">남성</option>
+              <option value="female">여성</option>
+              <option value="other">기타</option>
+            </select>
+            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sky-300/55" aria-hidden>
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </span>
+          </div>
         </div>
         <BlockMessage error={blockError} success={blockSuccess} />
         <EditFormSaveFooter
@@ -375,38 +382,40 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
         />
       </div>
     ) : (
-      <div className="grid gap-2 sm:grid-cols-2">
-        {[
-          ['이름', displayUser.name?.trim() || '정보 없음'],
-          ['전화번호', formatPhoneDisplayOr(displayUser.phoneNumber, '정보 없음')],
-          ['이메일(개인)', displayUser.email?.trim() || '정보 없음'],
-          [
-            '생년월일',
+      <div className={mypageAccountClasses.fieldStack}>
+        <MypageReadonlyField label="이름" value={displayUser.name?.trim() || ''} />
+        <MypageReadonlyField
+          label="전화번호"
+          value={formatPhoneDisplayOr(displayUser.phoneNumber, '')}
+        />
+        <MypageReadonlyField label="이메일(개인)" value={displayUser.email?.trim() || ''} />
+        <MypageReadonlyField
+          label="생년월일"
+          value={
             displayUser.birthDate?.trim()
               ? formatBirthDateDisplay(displayUser.birthDate.trim()) || displayUser.birthDate.trim()
-              : '정보 없음',
-          ],
-          ['성별', genderLabel(displayUser.gender)],
-        ].map(([k, v]) => (
-          <div key={k} className={fieldTileCls}>
-            <p className="text-[10px] text-slate-500">{k}</p>
-            <p className="mt-0.5 truncate text-sm text-slate-100">{v}</p>
-          </div>
-        ))}
+              : ''
+          }
+          adornment="calendar"
+        />
+        <MypageReadonlyField label="성별" value={genderLabel(displayUser.gender)} adornment="chevron" />
       </div>
     );
 
   const accountInfoBody = (
-    <div className="grid gap-2 sm:grid-cols-2">
-      {[
-        ['회원 유형', roleLabel(displayUser.role)],
-        ['이메일', displayUser.email?.trim() || '정보 없음'],
-        [
-          '가입일',
-          displayUser.createdAt ? new Date(displayUser.createdAt).toLocaleDateString('ko-KR') : '-',
-        ],
-        [
-          '마지막 로그인',
+    <div className={mypageAccountClasses.fieldStack}>
+      <MypageReadonlyField label="회원 유형" value={roleLabel(displayUser.role)} />
+      <MypageReadonlyField label="이메일" value={displayUser.email?.trim() || ''} />
+      <MypageReadonlyField
+        label="가입일"
+        value={
+          displayUser.createdAt ? new Date(displayUser.createdAt).toLocaleDateString('ko-KR') : '-'
+        }
+        emptyLabel="-"
+      />
+      <MypageReadonlyField
+        label="마지막 로그인"
+        value={
           displayUser.lastLoginAt
             ? new Date(displayUser.lastLoginAt).toLocaleString('ko-KR', {
                 year: 'numeric',
@@ -415,14 +424,10 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
                 hour: '2-digit',
                 minute: '2-digit',
               })
-            : '-',
-        ],
-      ].map(([k, v]) => (
-        <div key={k} className={fieldTileCls}>
-          <p className="text-[10px] text-slate-500">{k}</p>
-          <p className="mt-0.5 truncate text-sm text-slate-100">{v}</p>
-        </div>
-      ))}
+            : '-'
+        }
+        emptyLabel="-"
+      />
     </div>
   );
 
@@ -471,7 +476,7 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
 
   const orgContactBody =
     editingBlock === 'orgContact' ? (
-      <div className="space-y-4">
+      <div className={mypageAccountClasses.fieldStack}>
         {[
           { key: 'organizationName', label: '회사/기관명', placeholder: '기관명을 입력하세요' },
           {
@@ -486,7 +491,7 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
           { key: 'organizationEmail', label: '이메일', placeholder: 'email@example.com' },
         ].map(({ key, label, placeholder }) => (
           <div key={key}>
-            <label className={labelCls}>{label}</label>
+            <MypageFieldLabel>{label}</MypageFieldLabel>
             <input
               className={fieldCls}
               value={String(orgForm[key as keyof typeof orgForm] ?? '')}
@@ -519,28 +524,30 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
         />
       </div>
     ) : (
-      <div className="grid gap-2 sm:grid-cols-2">
-        {[
-          ['회사/기관명', displayUser.organizationName?.trim() || '정보 없음'],
-          [
-            '사업자등록번호',
-            displayUser.organizationBusinessRegistrationNumber?.trim() || '정보 없음',
-          ],
-          ['담당자', displayUser.organizationManager?.trim() || '정보 없음'],
-          ['전화', formatPhoneDisplayOr(displayUser.organizationTel?.trim(), '—')],
-          ['휴대폰', formatPhoneDisplayOr(displayUser.organizationMobile?.trim(), '—')],
-          ['팩스', displayUser.organizationFax?.trim() || '—'],
-          ['이메일', displayUser.organizationEmail?.trim() || '—'],
-        ].map(([k, v]) => (
-          <div key={k} className={fieldTileCls}>
-            <p className="text-[10px] text-slate-500">{k}</p>
-            <p className="mt-0.5 truncate text-sm text-slate-100">{v}</p>
-          </div>
-        ))}
-        <div className={`${fieldTileCls} sm:col-span-2`}>
-          <p className="text-[10px] text-slate-500">주소</p>
-          <p className="mt-0.5 text-sm text-slate-100">{displayUser.organizationAddress?.trim() || '정보 없음'}</p>
-        </div>
+      <div className={mypageAccountClasses.fieldStack}>
+        <MypageReadonlyField label="회사/기관명" value={displayUser.organizationName?.trim() || ''} />
+        <MypageReadonlyField
+          label="사업자등록번호"
+          value={displayUser.organizationBusinessRegistrationNumber?.trim() || ''}
+        />
+        <MypageReadonlyField label="담당자" value={displayUser.organizationManager?.trim() || ''} />
+        <MypageReadonlyField
+          label="전화번호"
+          value={formatPhoneDisplayOr(displayUser.organizationTel?.trim(), '')}
+          emptyLabel="—"
+        />
+        <MypageReadonlyField
+          label="핸드폰번호"
+          value={formatPhoneDisplayOr(displayUser.organizationMobile?.trim(), '')}
+          emptyLabel="—"
+        />
+        <MypageReadonlyField label="팩스번호" value={displayUser.organizationFax?.trim() || ''} emptyLabel="—" />
+        <MypageReadonlyField label="이메일" value={displayUser.organizationEmail?.trim() || ''} emptyLabel="—" />
+        <MypageReadonlyField
+          label="주소"
+          value={displayUser.organizationAddress?.trim() || ''}
+          multiline
+        />
       </div>
     );
 

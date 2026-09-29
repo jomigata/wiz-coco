@@ -46,6 +46,13 @@ export const mypageAccountClasses = {
     'border-b border-white/[0.04] bg-gradient-to-r from-sky-600/10 via-transparent to-violet-600/6',
   fieldTile:
     'rounded-lg border-0 bg-[#0a1220]/45 px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_4px_16px_-10px_rgba(0,0,0,0.5)]',
+  /** 마이페이지 폼 — 라벨 위 · inset 입력 (보기/수정 공통) */
+  fieldLabel: 'block text-sky-200/90 text-xs mb-1.5 font-normal',
+  fieldInput:
+    'w-full rounded-[10px] border border-sky-400/[0.22] bg-[#081222]/75 px-3 py-2.5 text-sm text-slate-100 shadow-[inset_0_2px_8px_rgba(0,0,0,0.38),inset_0_1px_0_rgba(255,255,255,0.05)] placeholder:text-slate-500/70 focus:outline-none focus:border-sky-400/40 focus:bg-[#0a1628]/90 transition-[border-color,background-color] disabled:opacity-60',
+  fieldInputReadOnly:
+    'read-only:cursor-default read-only:focus:border-sky-400/[0.22] read-only:focus:bg-[#081222]/75',
+  fieldStack: 'space-y-4',
 } as const;
 
 /** 데스크톱 3단 메가 메뉴 패널 — 헤더와 톤은 맞추되 배경은 한 단계 밝게 */

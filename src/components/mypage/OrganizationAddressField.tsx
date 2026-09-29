@@ -2,6 +2,8 @@
 
 import React, { useState } from 'react';
 import { formatDaumPostcodeAddress, openDaumPostcodeSearch } from '@/lib/daumPostcode';
+import { mypageAccountClasses } from '@/components/layout/appChromeTheme';
+import { MypageFieldLabel, mypageEditableFieldInputClass } from '@/components/mypage/MypageFormField';
 
 type Props = {
   value: string;
@@ -14,9 +16,8 @@ type Props = {
 export default function OrganizationAddressField({
   value,
   onChange,
-  labelClassName = 'block text-blue-200 text-xs mb-1',
-  fieldClassName =
-    'w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-blue-100 placeholder-blue-300/40 focus:outline-none focus:border-purple-400/60 focus:bg-white/15 transition-colors text-sm',
+  labelClassName = mypageAccountClasses.fieldLabel,
+  fieldClassName = mypageEditableFieldInputClass(),
   placeholder = '주소를 입력하거나 주소 찾기를 사용하세요',
 }: Props) {
   const [searchError, setSearchError] = useState('');
@@ -39,7 +40,7 @@ export default function OrganizationAddressField({
   return (
     <div>
       <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
-        <label className={labelClassName}>주소</label>
+        <MypageFieldLabel>주소</MypageFieldLabel>
         <button
           type="button"
           onClick={() => void handleSearch()}
