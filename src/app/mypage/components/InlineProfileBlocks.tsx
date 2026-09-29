@@ -7,7 +7,7 @@ import { db, auth } from '@/lib/firebase';
 import { markAuthenticatedTabSession, touchAuthHeartbeat } from '@/utils/authSessionLifecycle';
 import { isCounselor } from '@/utils/roleUtils';
 import { formatPhoneDisplayOr } from '@/lib/phoneFormat';
-import { FaHeart, FaBuilding, FaComment, FaKey, FaMapMarkerAlt } from 'react-icons/fa';
+import { FaHeart, FaBuilding, FaKey, FaMapMarkerAlt } from 'react-icons/fa';
 import { MypagePremiumBlock, MypagePremiumBlockGrid } from '@/components/mypage/MypagePremiumBlock';
 
 // ─── 타입 ───────────────────────────────────────────────────────────────────
@@ -40,7 +40,7 @@ interface UserData {
   shareContactInReport?: boolean;
 }
 
-export type MypageProfileSection = 'account' | 'counselor' | 'organization' | 'report';
+export type MypageProfileSection = 'account' | 'counselor' | 'organization';
 
 interface Props {
   user: UserData;
@@ -49,14 +49,7 @@ interface Props {
   section: MypageProfileSection;
 }
 
-type EditBlock =
-  | 'personal'
-  | 'orgContact'
-  | 'reportAll'
-  | 'reportCover'
-  | 'reportLayout'
-  | 'reportDelivery'
-  | null;
+type EditBlock = 'personal' | 'orgContact' | null;
 
 // ─── 로컬 헬퍼 ──────────────────────────────────────────────────────────────
 const OCCUPATION_OPTIONS = [
@@ -82,17 +75,11 @@ function roleLabel(role?: string) {
   return '일반 회원';
 }
 
-function boolLabel(v?: boolean, t = '예', f = '아니오') {
-  return v ? t : f;
-}
 function genderLabel(v?: string) {
   if (v === 'male') return '남성';
   if (v === 'female') return '여성';
   if (v === 'other') return '기타';
   return '정보 없음';
-}
-function multilineText(v?: string, fallback = '정보 없음') {
-  return (v || '').trim() || fallback;
 }
 
 /** Firestore 저장 payload → 화면 표시용 user 객체로 병합 (부모 state 동기화용 export) */
@@ -113,9 +100,6 @@ export function applySavePatch(base: UserData, data: Record<string, unknown>): U
 // ─── 공통 스타일 ────────────────────────────────────────────────────────────
 const fieldCls = 'w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-blue-100 placeholder-blue-300/40 focus:outline-none focus:border-purple-400/60 focus:bg-white/15 transition-colors text-sm';
 const labelCls = 'block text-blue-200 text-xs mb-1';
-const rowCls = 'flex justify-between gap-4 items-baseline';
-const keySpan = 'text-blue-200 shrink-0 text-sm';
-const valSpan = 'text-blue-100 text-right break-all text-sm';
 
 // ─── 저장 함수 ───────────────────────────────────────────────────────────────
 async function saveToFirestore(data: Record<string, unknown>) {
@@ -280,16 +264,6 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
   });
 
 
-  const [coverForm, setCoverForm] = useState({ reportDisplayName: '' });
-
-  const [layoutForm, setLayoutForm] = useState({
-    shareOrganizationInReport: true,
-    shareContactInReport: true,
-    reportSignature: '',
-  });
-
-  const [deliveryForm, setDeliveryForm] = useState({ clientFocus: '' });
-
   const role = firebaseUserRole || displayUser.role;
   const counselor = isCounselor(role);
 
@@ -315,28 +289,6 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
         organizationEmail: displayUser.organizationEmail || '',
         organizationAddress: displayUser.organizationAddress || '',
       });
-    } else if (block === 'reportAll') {
-      setCoverForm({
-        reportDisplayName: displayUser.reportDisplayName || displayUser.name || '',
-      });
-      setLayoutForm({
-        shareOrganizationInReport: displayUser.shareOrganizationInReport ?? true,
-        shareContactInReport: displayUser.shareContactInReport ?? true,
-        reportSignature: displayUser.reportSignature || '',
-      });
-      setDeliveryForm({ clientFocus: displayUser.clientFocus || '' });
-    } else if (block === 'reportCover') {
-      setCoverForm({
-        reportDisplayName: displayUser.reportDisplayName || displayUser.name || '',
-      });
-    } else if (block === 'reportLayout') {
-      setLayoutForm({
-        shareOrganizationInReport: displayUser.shareOrganizationInReport ?? true,
-        shareContactInReport: displayUser.shareContactInReport ?? true,
-        reportSignature: displayUser.reportSignature || '',
-      });
-    } else if (block === 'reportDelivery') {
-      setDeliveryForm({ clientFocus: displayUser.clientFocus || '' });
     }
     setEditingBlock(block);
   };
@@ -626,123 +578,6 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
     </MypagePremiumBlock>
   );
 
-  const reportClientBody =
-    editingBlock === 'reportAll' ? (
-      <div className="space-y-4">
-        <div>
-          <label className={labelCls}>표지 표기명</label>
-          <input
-            className={fieldCls}
-            value={coverForm.reportDisplayName}
-            onChange={(e) => setCoverForm({ reportDisplayName: e.target.value })}
-            placeholder="결과지 표지에 표시할 상담사·기관명"
-          />
-        </div>
-        <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2.5">
-          <span className={labelCls + ' mb-0'}>기관 정보 표기</span>
-          <ToggleSwitch
-            checked={layoutForm.shareOrganizationInReport}
-            onChange={(v) => setLayoutForm((p) => ({ ...p, shareOrganizationInReport: v }))}
-          />
-        </div>
-        <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2.5">
-          <span className={labelCls + ' mb-0'}>연락처 표기</span>
-          <ToggleSwitch
-            checked={layoutForm.shareContactInReport}
-            onChange={(v) => setLayoutForm((p) => ({ ...p, shareContactInReport: v }))}
-          />
-        </div>
-        <div>
-          <label className={labelCls}>하단 서명·각인</label>
-          <textarea
-            className={fieldCls + ' resize-none'}
-            rows={3}
-            value={layoutForm.reportSignature}
-            onChange={(e) => setLayoutForm((p) => ({ ...p, reportSignature: e.target.value }))}
-            placeholder="결과지 하단에 표시될 서명 문구"
-          />
-        </div>
-        <div>
-          <label className={labelCls}>내담자·보호자 전달 문구</label>
-          <textarea
-            className={fieldCls + ' resize-none'}
-            rows={4}
-            value={deliveryForm.clientFocus}
-            onChange={(e) => setDeliveryForm({ clientFocus: e.target.value })}
-            placeholder="검사 결과와 함께 전달할 안내·유의사항"
-          />
-        </div>
-        <BlockMessage error={blockError} success={blockSuccess} />
-      </div>
-    ) : (
-      <div className="grid gap-2 sm:grid-cols-2">
-        {[
-          [
-            '표지 표기명',
-            displayUser.reportDisplayName?.trim() || displayUser.name || '정보 없음',
-          ],
-          ['기관 정보', boolLabel(displayUser.shareOrganizationInReport, '표기', '숨김')],
-          ['연락처', boolLabel(displayUser.shareContactInReport, '표기', '숨김')],
-        ].map(([k, v]) => (
-          <div key={k} className="rounded-lg border border-sky-400/10 bg-[#0f1d33]/40 px-3 py-2">
-            <p className="text-[10px] text-slate-500">{k}</p>
-            <p className="mt-0.5 truncate text-sm text-slate-100">{v}</p>
-          </div>
-        ))}
-        <div className="rounded-lg border border-sky-400/10 bg-[#0f1d33]/40 px-3 py-2 sm:col-span-2">
-          <p className="text-[10px] text-slate-500">하단 서명·각인</p>
-          <p className="mt-0.5 whitespace-pre-wrap text-sm text-slate-100">
-            {multilineText(displayUser.reportSignature, '설정된 서명이 없습니다.')}
-          </p>
-        </div>
-        <div className="rounded-lg border border-sky-400/10 bg-[#0f1d33]/40 px-3 py-2 sm:col-span-2">
-          <p className="text-[10px] text-slate-500">전달사항</p>
-          <p className="mt-0.5 whitespace-pre-wrap text-sm text-slate-100">
-            {multilineText(displayUser.clientFocus, '등록된 전달사항이 없습니다.')}
-          </p>
-        </div>
-      </div>
-    );
-
-  const reportClientBlock = counselor ? (
-    <MypagePremiumBlock
-      index="01 · 내담자"
-      title="내담자용 정보"
-      description="검사 결과지 표지·상·하단 표기·내담자 전달 문구"
-      icon={<FaComment className="h-4 w-4" />}
-      headerAction={
-        <BlockHeader
-          icon={null}
-          title=""
-          compact
-          editing={editingBlock === 'reportAll'}
-          saving={saving}
-          locked={locked && editingBlock !== 'reportAll'}
-          onEdit={() => startEdit('reportAll')}
-          onSave={() =>
-            handleSave({
-              reportDisplayName: coverForm.reportDisplayName.trim(),
-              shareOrganizationInReport: layoutForm.shareOrganizationInReport,
-              shareContactInReport: layoutForm.shareContactInReport,
-              reportSignature: layoutForm.reportSignature.trim(),
-              clientFocus: deliveryForm.clientFocus.trim(),
-            })
-          }
-          onCancel={cancelEdit}
-        />
-      }
-    >
-      {reportClientBody}
-    </MypagePremiumBlock>
-  ) : null;
-
-  const counselorOnlyNote = (
-    <p className="rounded-lg border border-sky-400/20 bg-sky-950/30 px-4 py-3 text-sm text-slate-300">
-      상담사 승인 후 「상담사 계정」「회사/기관 정보」「내담자용 정보」 메뉴를 이용할 수 있습니다. 전문 분야·소개는{' '}
-      <span className="text-sky-200">상담사 계정</span>에서 등록·수정하세요.
-    </p>
-  );
-
   if (section === 'account') {
     return (
       <MypagePremiumBlockGrid>
@@ -757,29 +592,5 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
     return <MypagePremiumBlockGrid>{orgContactBlock}</MypagePremiumBlockGrid>;
   }
 
-  if (section === 'report') {
-    if (!counselor) return counselorOnlyNote;
-    return <MypagePremiumBlockGrid>{reportClientBlock}</MypagePremiumBlockGrid>;
-  }
-
   return null;
-}
-
-// ─── 토글 스위치 ─────────────────────────────────────────────────────────────
-function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <button
-      type="button"
-      onClick={() => onChange(!checked)}
-      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
-        checked ? 'bg-blue-600' : 'bg-white/20'
-      }`}
-    >
-      <span
-        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
-          checked ? 'translate-x-6' : 'translate-x-1'
-        }`}
-      />
-    </button>
-  );
 }

@@ -24,10 +24,7 @@ export type MypageNavSection = {
 export type MypageNavVariant = 'sidebar' | 'topNav';
 
 /** 상단 마이페이지 드롭다운에서 숨길 계정 하위 메뉴 (좌측 사이드바에는 유지) */
-export const MYPAGE_TOP_NAV_HIDDEN_ACCOUNT_HREFS = [
-  '/mypage/account/organization',
-  '/mypage/account/report',
-] as const;
+export const MYPAGE_TOP_NAV_HIDDEN_ACCOUNT_HREFS = ['/mypage/account/organization'] as const;
 
 export function buildMypageNavSections(
   role: unknown,
@@ -56,12 +53,6 @@ export function buildMypageNavSections(
           href: '/mypage/account/organization',
           description: '기관명·사업자·연락처·주소',
           icon: '🏢',
-        },
-        {
-          name: '내담자용 정보',
-          href: '/mypage/account/report',
-          description: '결과지 표지·표기·전달',
-          icon: '📋',
         },
       ],
     },
