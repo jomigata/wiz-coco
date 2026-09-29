@@ -140,10 +140,10 @@ function renderResultCheckCell(
   if (row.status === 'in_progress') {
     return <span className="text-amber-300">진행 중</span>;
   }
-  if (row.status === 'not_started' && row.canRemove && row.addedAt) {
+  if (row.status === 'not_started' && row.canRemove) {
     return (
       <span className="inline-flex items-center gap-1 whitespace-nowrap text-slate-400">
-        <span>{`<- ${formatAddedAtInParens(row.addedAt)}`}</span>
+        <span>{`<- ( 추가일시 )`}</span>
         {removeProps ? (
           <button
             type="button"
@@ -508,7 +508,7 @@ export function CounselorDispatchRecipientExpandContent({
                       })}
                     </td>
                     <td className="px-1 py-2.5 align-top text-center">
-                      {t.canRemove && !(t.status === 'not_started' && t.addedAt) ? (
+                      {t.canRemove && !(t.status === 'not_started') ? (
                         <button
                           type="button"
                           title="추가 요청 삭제"
