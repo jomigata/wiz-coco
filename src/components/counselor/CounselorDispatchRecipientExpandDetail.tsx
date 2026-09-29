@@ -136,9 +136,7 @@ function renderResultCheckCell(
   }
   if (row.status === 'not_started' && row.canRemove && row.addedAt) {
     return (
-      <span className="whitespace-nowrap text-slate-400">
-        ← {formatAddedAtInParens(row.addedAt)}
-      </span>
+      <span className="whitespace-nowrap text-slate-400">{formatAddedAtInParens(row.addedAt)}</span>
     );
   }
   return <span className="text-slate-500">미실시</span>;
@@ -448,7 +446,7 @@ export function CounselorDispatchRecipientExpandContent({
                 <th className="px-3 py-2 text-left font-medium leading-tight">
                   완료일시 / (추가일시)
                 </th>
-                <th className="px-3 py-2 text-left font-medium">결과 확인</th>
+                <th className="px-3 py-2 text-left font-medium leading-tight">← (추가일시)</th>
                 <th className="px-1 py-2" aria-hidden="true" />
               </tr>
             </thead>
