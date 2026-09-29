@@ -269,23 +269,13 @@ export default function MypageBirthDateField({
         </div>
       </div>
 
-      <div className="mt-3 flex justify-end gap-2 border-t border-white/10 pt-2">
+      <div className="mt-3 flex justify-end border-t border-white/10 pt-2">
         <button
           type="button"
           className="rounded-md px-2 py-1 text-xs text-slate-400 hover:text-slate-200"
           onClick={() => setOpen(false)}
         >
           닫기
-        </button>
-        <button
-          type="button"
-          className="rounded-md bg-purple-500/90 px-3 py-1 text-xs text-white hover:bg-purple-500"
-          onClick={() => {
-            applyDraft(draft);
-            setOpen(false);
-          }}
-        >
-          적용
         </button>
       </div>
     </div>
