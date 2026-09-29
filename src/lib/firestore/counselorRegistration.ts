@@ -6,6 +6,7 @@ import { updateProfile } from 'firebase/auth';
 import { initializeFirebase } from '@/lib/firebase';
 import type { CounselorProfileData } from '@/types/counselorProfile';
 import { resolveCounselorAffiliationTitle } from '@/lib/counselorOrgInput';
+import { computeCareerYearsFromStartYear } from '@/lib/counselorCareerYear';
 
 function getDb() {
   const { db } = initializeFirebase();
@@ -16,12 +17,18 @@ function getDb() {
 function normalizeProfile(input: CounselorProfileData, email: string): CounselorProfileData {
   const region = (input.region || input.education || '').trim();
   const organizationName = (input.organizationName || '').trim();
+  const startYear = Number(input.careerStartYear) || 0;
+  const experience =
+    startYear > 0
+      ? computeCareerYearsFromStartYear(startYear)
+      : Math.max(0, Number(input.experience) || 0);
   return {
     name: input.name.trim(),
     email: (input.email || email).trim(),
     phone: input.phone.trim(),
     specialization: input.specialization.filter(Boolean),
-    experience: Math.max(0, Number(input.experience) || 0),
+    experience,
+    careerStartYear: startYear > 0 ? startYear : undefined,
     region,
     education: region,
     bio: input.bio.trim(),
@@ -73,6 +80,13 @@ export async function loadCounselorProfile(uid: string): Promise<{
               .map((s) => s.trim())
               .filter(Boolean),
         experience: Number(stored.experience ?? 0),
+        careerStartYear: (() => {
+          const raw = Number((stored as CounselorProfileData).careerStartYear) || 0;
+          if (raw > 0) return raw;
+          const exp = Number(stored.experience ?? 0);
+          if (exp > 0) return new Date().getFullYear() - exp + 1;
+          return undefined;
+        })(),
         region,
         education: region,
         bio: String(stored.bio || ''),

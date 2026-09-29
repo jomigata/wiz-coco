@@ -7,7 +7,7 @@ import { db, auth } from '@/lib/firebase';
 import { markAuthenticatedTabSession, touchAuthHeartbeat } from '@/utils/authSessionLifecycle';
 import { isCounselor } from '@/utils/roleUtils';
 import { formatPhoneDisplayOr } from '@/lib/phoneFormat';
-import { FaUser, FaHeart, FaBuilding, FaComment, FaKey, FaCog, FaMapMarkerAlt } from 'react-icons/fa';
+import { FaUser, FaHeart, FaBuilding, FaComment, FaKey, FaMapMarkerAlt } from 'react-icons/fa';
 import { MypagePremiumBlock } from '@/components/mypage/MypagePremiumBlock';
 
 // ─── 타입 ───────────────────────────────────────────────────────────────────
@@ -29,6 +29,7 @@ interface UserData {
   organizationFax?: string;
   organizationEmail?: string;
   organizationAddress?: string;
+  organizationBusinessRegistrationNumber?: string;
   reportDisplayName?: string;
   practiceType?: 'solo' | 'organization';
   teamSharingEnabled?: boolean;
@@ -48,7 +49,7 @@ interface Props {
   section: MypageProfileSection;
 }
 
-type EditBlock = 'personal' | 'orgOps' | 'orgContact' | 'counselorPro' | 'reportCover' | 'reportLayout' | 'reportDelivery' | null;
+type EditBlock = 'personal' | 'orgContact' | 'counselorPro' | 'reportCover' | 'reportLayout' | 'reportDelivery' | null;
 
 // ─── 로컬 헬퍼 ──────────────────────────────────────────────────────────────
 const OCCUPATION_OPTIONS = [
@@ -73,11 +74,7 @@ function roleLabel(role?: string) {
   if (role === 'counselor') return '상담사';
   return '일반 회원';
 }
-function practiceLabel(v?: string) {
-  if (v === 'organization') return '조직/기업 운영';
-  if (v === 'solo') return '개인 운영';
-  return v || '-';
-}
+
 function boolLabel(v?: boolean, t = '예', f = '아니오') {
   return v ? t : f;
 }
@@ -251,9 +248,8 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
 
   // 상담/운영 정보 폼
   const [orgForm, setOrgForm] = useState({
-    practiceType: 'solo' as 'solo' | 'organization',
-    teamSharingEnabled: false,
     organizationName: '',
+    organizationBusinessRegistrationNumber: '',
     organizationManager: '',
     organizationTel: '',
     organizationMobile: '',
@@ -288,11 +284,10 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
         gender: displayUser.gender || '',
         occupation: displayUser.occupation || '',
       });
-    } else if (block === 'orgOps' || block === 'orgContact') {
+    } else if (block === 'orgContact') {
       setOrgForm({
-        practiceType: displayUser.practiceType || 'solo',
-        teamSharingEnabled: displayUser.teamSharingEnabled ?? false,
         organizationName: displayUser.organizationName || '',
+        organizationBusinessRegistrationNumber: displayUser.organizationBusinessRegistrationNumber || '',
         organizationManager: displayUser.organizationManager || '',
         organizationTel: displayUser.organizationTel || '',
         organizationMobile: displayUser.organizationMobile || '',
@@ -440,49 +435,16 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
     <div className="rounded-xl border border-sky-400/12 bg-[#101f38]/80 p-5 backdrop-blur-sm">{content}</div>
   );
 
-  const orgOpsBody =
-    editingBlock === 'orgOps' ? (
-      <div className="space-y-4">
-        <div>
-          <label className={labelCls}>운영 형태</label>
-          <select
-            className={fieldCls}
-            value={orgForm.practiceType}
-            onChange={(e) => setOrgForm((p) => ({ ...p, practiceType: e.target.value as 'solo' | 'organization' }))}
-          >
-            <option value="solo">개인 운영</option>
-            <option value="organization">조직/기업 운영</option>
-          </select>
-        </div>
-        <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2.5">
-          <span className={labelCls + ' mb-0'}>팀 정보 공유</span>
-          <ToggleSwitch
-            checked={orgForm.teamSharingEnabled}
-            onChange={(v) => setOrgForm((p) => ({ ...p, teamSharingEnabled: v }))}
-          />
-        </div>
-        <BlockMessage error={blockError} success={blockSuccess} />
-      </div>
-    ) : (
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div className="rounded-lg border border-sky-400/10 bg-[#0f1d33]/50 px-3 py-2.5">
-          <p className="text-[10px] uppercase tracking-wide text-slate-500">운영 형태</p>
-          <p className="mt-1 text-sm font-medium text-white">{practiceLabel(displayUser.practiceType)}</p>
-        </div>
-        <div className="rounded-lg border border-sky-400/10 bg-[#0f1d33]/50 px-3 py-2.5">
-          <p className="text-[10px] uppercase tracking-wide text-slate-500">팀 공유</p>
-          <p className="mt-1 text-sm font-medium text-white">
-            {boolLabel(displayUser.teamSharingEnabled, '공유', '개별')}
-          </p>
-        </div>
-      </div>
-    );
-
   const orgContactBody =
     editingBlock === 'orgContact' ? (
       <div className="space-y-4">
         {[
           { key: 'organizationName', label: '회사/기관명', placeholder: '기관명을 입력하세요' },
+          {
+            key: 'organizationBusinessRegistrationNumber',
+            label: '사업자등록번호',
+            placeholder: '000-00-00000',
+          },
           { key: 'organizationManager', label: '담당자', placeholder: '담당자 이름' },
           { key: 'organizationTel', label: '전화번호', placeholder: '02-0000-0000' },
           { key: 'organizationMobile', label: '핸드폰번호', placeholder: '010-0000-0000' },
@@ -506,6 +468,10 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
       <div className="grid gap-2 sm:grid-cols-2">
         {[
           ['회사/기관명', displayUser.organizationName?.trim() || '정보 없음'],
+          [
+            '사업자등록번호',
+            displayUser.organizationBusinessRegistrationNumber?.trim() || '정보 없음',
+          ],
           ['담당자', displayUser.organizationManager?.trim() || '정보 없음'],
           ['전화', formatPhoneDisplayOr(displayUser.organizationTel?.trim(), '—')],
           ['휴대폰', formatPhoneDisplayOr(displayUser.organizationMobile?.trim(), '—')],
@@ -524,40 +490,11 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
       </div>
     );
 
-  const orgOpsBlock = counselor ? (
-    <MypagePremiumBlock
-      index="02 · 운영"
-      title="상담 운영"
-      description="개인·기관 운영 형태와 팀 협업 설정"
-      icon={<FaCog className="h-4 w-4" />}
-      headerAction={
-        <BlockHeader
-          icon={null}
-          title=""
-          compact
-          editing={editingBlock === 'orgOps'}
-          saving={saving}
-          locked={locked && editingBlock !== 'orgOps'}
-          onEdit={() => startEdit('orgOps')}
-          onSave={() =>
-            handleSave({
-              practiceType: orgForm.practiceType,
-              teamSharingEnabled: orgForm.teamSharingEnabled,
-            })
-          }
-          onCancel={cancelEdit}
-        />
-      }
-    >
-      {orgOpsBody}
-    </MypagePremiumBlock>
-  ) : null;
-
   const orgContactBlock = counselor ? (
     <MypagePremiumBlock
-      index="03 · 기관"
+      index="02 · 기관"
       title="회사/기관"
-      description="대외 표기·연락에 사용하는 기관 정보"
+      description="대외 표기·연락에 사용하는 기관 정보 / 사업자등록증 정보"
       icon={<FaMapMarkerAlt className="h-4 w-4" />}
       headerAction={
         <BlockHeader
@@ -571,6 +508,7 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
           onSave={() =>
             handleSave({
               organizationName: orgForm.organizationName.trim(),
+              organizationBusinessRegistrationNumber: orgForm.organizationBusinessRegistrationNumber.trim(),
               organizationManager: orgForm.organizationManager.trim(),
               organizationTel: orgForm.organizationTel.trim(),
               organizationMobile: orgForm.organizationMobile.trim(),
@@ -589,7 +527,7 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
 
   const counselorProBlock = counselor ? (
     <MypagePremiumBlock
-      index="04 · 전문"
+      index="03 · 전문"
       title="상담사 프로필"
       description="전문 분야·자격 등 대외 소개용 정보"
       icon={<FaUser className="h-4 w-4" />}
@@ -824,19 +762,18 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
       return (
         <MypagePremiumBlock
           index="02 · 안내"
-          title="운영·기관·전문 정보"
+          title="기관·전문 정보"
           description="상담사 승인 후 아래 항목을 편집할 수 있습니다."
           icon={<FaBuilding className="h-4 w-4" />}
         >
           <p className="text-sm leading-relaxed text-slate-400">
-            위 「상담사 계정」에서 승인을 받으면 상담 운영, 회사/기관, 상담사 프로필 블록이 순서대로 표시됩니다.
+            위 「상담사 계정」에서 승인을 받으면 회사/기관, 상담사 프로필 블록이 순서대로 표시됩니다.
           </p>
         </MypagePremiumBlock>
       );
     }
     return (
       <>
-        {orgOpsBlock}
         {orgContactBlock}
         {counselorProBlock}
       </>

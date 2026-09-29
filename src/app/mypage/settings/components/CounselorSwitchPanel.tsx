@@ -26,6 +26,12 @@ import { markCounselorResultSeen, shouldNotifyCounselorResult } from '@/utils/co
 import { isCounselor, isAdmin } from '@/utils/roleUtils';
 import type { CounselorAttachmentItem } from '@/types/counselorApplication';
 import CounselorApplicationAttachmentsField from '@/app/mypage/settings/components/CounselorApplicationAttachmentsField';
+import {
+  careerStartYearOptions,
+  formatCareerYearsLabel,
+} from '@/lib/counselorCareerYear';
+
+export const MYPAGE_COUNSELOR_ACCOUNT_FORM_ID = 'mypage-counselor-account-form';
 
 const fieldCls =
   'w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white placeholder-blue-300/40 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm';
@@ -35,8 +41,12 @@ interface Props {
   uid: string;
   email: string;
   role?: string;
-  /** 마이페이지 프리미엄 블록 안에 넣을 때 상단 구분선 제거 */
+  /** 마이페이지 프리미엄 블록 안에 넣을 때 */
   embedded?: boolean;
+  /** embedded + 승인된 상담사: 헤더 수정 버튼과 연동 */
+  mypageEditing?: boolean;
+  formId?: string;
+  onSaved?: () => void;
 }
 
 function statusLabel(status: CounselorApplicationStatus | null): string {
@@ -70,7 +80,15 @@ function StatusBadge({
   );
 }
 
-export default function CounselorSwitchPanel({ uid, email, role, embedded = false }: Props) {
+export default function CounselorSwitchPanel({
+  uid,
+  email,
+  role,
+  embedded = false,
+  mypageEditing = false,
+  formId,
+  onSaved,
+}: Props) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -209,7 +227,8 @@ export default function CounselorSwitchPanel({ uid, email, role, embedded = fals
     try {
       if (counselor) {
         await updateCounselorProfile(uid, email, profile);
-        setSuccess('상담사 정보가 저장되었습니다.');
+        setSuccess('저장되었습니다.');
+        onSaved?.();
       } else {
         const savedAttachments = attachmentItems
           .filter((item): item is Extract<CounselorAttachmentItem, { source: 'saved' }> => item.source === 'saved')
@@ -261,6 +280,38 @@ export default function CounselorSwitchPanel({ uid, email, role, embedded = fals
         : applicationStatus === 'approved'
           ? '상담사 전환이 승인되었습니다.'
           : '승인 후 상담사 메뉴·내담자 연결 기능을 사용할 수 있습니다.';
+
+  const showEmbeddedSummary = embedded && counselor && !mypageEditing;
+  const showFormBody = embedded ? (counselor ? mypageEditing : true) : expanded;
+  const hideAttachments = embedded;
+  const hideCounselorFooter = embedded && counselor;
+
+  const embeddedSummary = (
+    <div className="grid gap-2 sm:grid-cols-2">
+      {[
+        ['이름', profile.name || '—'],
+        ['표기명', profile.reportDisplayName || profile.name || '—'],
+        ['연락처', profile.phone || '—'],
+        [
+          '경력',
+          profile.careerStartYear ? formatCareerYearsLabel(profile.careerStartYear) : '미등록',
+        ],
+        ['지역', profile.region || '—'],
+        ['운영', profile.practiceType === 'organization' ? '조직/기관' : '개인'],
+      ].map(([k, v]) => (
+        <div key={k} className="rounded-lg border border-sky-400/10 bg-[#0f1d33]/50 px-3 py-2.5">
+          <p className="text-[10px] uppercase tracking-wide text-slate-500">{k}</p>
+          <p className="mt-1 text-sm text-slate-100">{v}</p>
+        </div>
+      ))}
+      <div className="rounded-lg border border-sky-400/10 bg-[#0f1d33]/50 px-3 py-2.5 sm:col-span-2">
+        <p className="text-[10px] uppercase tracking-wide text-slate-500">전문 분야</p>
+        <p className="mt-1 text-sm text-slate-100">
+          {profile.specialization.length ? profile.specialization.join(', ') : '—'}
+        </p>
+      </div>
+    </div>
+  );
 
   return (
     <div className={embedded ? '' : 'pt-4 border-t border-white/10'}>
@@ -339,6 +390,10 @@ export default function CounselorSwitchPanel({ uid, email, role, embedded = fals
         <div className={embedded ? 'space-y-4' : 'mt-4 space-y-4'}>
           {!embedded ? <p className="text-blue-300 text-sm">{subtitle}</p> : null}
 
+          {showEmbeddedSummary ? embeddedSummary : null}
+
+          {showFormBody ? (
+          <>
           {adminReviewNotes && !counselor && (pending || hasResult) && (
             <div
               className={`rounded-lg p-3 border text-sm ${
@@ -354,7 +409,11 @@ export default function CounselorSwitchPanel({ uid, email, role, embedded = fals
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4 bg-white/5 rounded-lg p-4 border border-white/10">
+          <form
+            id={formId}
+            onSubmit={handleSubmit}
+            className="space-y-4 bg-white/5 rounded-lg p-4 border border-white/10"
+          >
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className={labelCls}>이름 *</label>
@@ -394,17 +453,30 @@ export default function CounselorSwitchPanel({ uid, email, role, embedded = fals
                 />
               </div>
               <div>
-                <label className={labelCls}>경력 (년)</label>
-                <input
+                <label className={labelCls}>경력 (년도)</label>
+                <select
                   className={fieldCls}
-                  type="number"
-                  min={0}
-                  value={profile.experience}
+                  value={profile.careerStartYear || ''}
                   onChange={(e) =>
-                    setProfile((p) => ({ ...p, experience: parseInt(e.target.value, 10) || 0 }))
+                    setProfile((p) => ({
+                      ...p,
+                      careerStartYear: parseInt(e.target.value, 10) || undefined,
+                    }))
                   }
-                  readOnly={readOnlyForm}
-                />
+                  disabled={readOnlyForm}
+                >
+                  <option value="">시작 연도 선택</option>
+                  {careerStartYearOptions().map((y) => (
+                    <option key={y} value={y}>
+                      {y}년 ({formatCareerYearsLabel(y)})
+                    </option>
+                  ))}
+                </select>
+                {profile.careerStartYear ? (
+                  <p className="mt-1.5 text-[11px] text-sky-200/70">
+                    {formatCareerYearsLabel(profile.careerStartYear)}
+                  </p>
+                ) : null}
               </div>
               <div>
                 <label className={labelCls}>기관명/회사명</label>
@@ -491,6 +563,7 @@ export default function CounselorSwitchPanel({ uid, email, role, embedded = fals
               />
             </div>
 
+            {!hideAttachments ? (
             <CounselorApplicationAttachmentsField
               items={attachmentItems}
               onChange={setAttachmentItems}
@@ -500,6 +573,7 @@ export default function CounselorSwitchPanel({ uid, email, role, embedded = fals
               error={attachmentError}
               onError={setAttachmentError}
             />
+            ) : null}
 
             {error && (
               <p className="text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
@@ -512,6 +586,7 @@ export default function CounselorSwitchPanel({ uid, email, role, embedded = fals
               </p>
             )}
 
+            {!hideCounselorFooter ? (
             <div className="flex flex-wrap gap-3">
               {counselor ? (
                 <>
@@ -543,7 +618,10 @@ export default function CounselorSwitchPanel({ uid, email, role, embedded = fals
                 </button>
               )}
             </div>
+            ) : null}
           </form>
+          </>
+          ) : null}
         </div>
       )}
     </div>

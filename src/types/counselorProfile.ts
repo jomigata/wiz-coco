@@ -5,7 +5,10 @@ export interface CounselorProfileData {
   email: string;
   phone: string;
   specialization: string[];
+  /** @deprecated UI는 careerStartYear 사용 — 저장 시 experience와 동기화 */
   experience: number;
+  /** 상담 경력 시작 연도 */
+  careerStartYear?: number;
   /** 활동 지역 (구 학력 필드 대체) */
   region: string;
   /** @deprecated Firestore 호환용 — region과 동기화 */
@@ -65,6 +68,7 @@ export const EMPTY_COUNSELOR_PROFILE: CounselorProfileData = {
   phone: '',
   specialization: [],
   experience: 0,
+  careerStartYear: undefined,
   region: '',
   education: '',
   bio: '',

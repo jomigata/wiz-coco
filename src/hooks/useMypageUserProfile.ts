@@ -25,6 +25,7 @@ export type MypageUserProfile = {
   organizationFax?: string;
   organizationEmail?: string;
   organizationAddress?: string;
+  organizationBusinessRegistrationNumber?: string;
   reportDisplayName?: string;
   practiceType?: 'solo' | 'organization';
   teamSharingEnabled?: boolean;
@@ -100,6 +101,8 @@ export function useMypageUserProfile() {
           organizationFax: d.organizationFax || d.fax || '',
           organizationEmail: d.organizationEmail || '',
           organizationAddress: d.organizationAddress || d.address || '',
+          organizationBusinessRegistrationNumber:
+            d.organizationBusinessRegistrationNumber || d.businessRegistrationNumber || '',
           createdAt: normalizeDateValue(d.createdAt) || userData.createdAt,
           lastLoginAt: normalizeDateValue(d.lastLoginAt) || userData.lastLoginAt,
         });
