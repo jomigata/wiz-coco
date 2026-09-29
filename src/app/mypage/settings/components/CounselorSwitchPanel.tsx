@@ -30,6 +30,7 @@ import {
   careerStartYearOptions,
   formatCareerYearsLabel,
 } from '@/lib/counselorCareerYear';
+import { formatPhoneDisplay, formatPhoneDisplayOr, formatPhoneWhileTyping } from '@/lib/phoneFormat';
 
 export const MYPAGE_COUNSELOR_ACCOUNT_FORM_ID = 'mypage-counselor-account-form';
 
@@ -145,6 +146,9 @@ export default function CounselorSwitchPanel({
           ...EMPTY_COUNSELOR_PROFILE,
           ...loaded.profile,
           email: loaded.profile?.email || email,
+          phone: loaded.profile?.phone
+            ? formatPhoneDisplay(loaded.profile.phone) || loaded.profile.phone
+            : '',
         });
         setApplicationStatus(application?.status ?? null);
         setAdminReviewNotes(application?.reviewNotes ?? '');
@@ -287,28 +291,36 @@ export default function CounselorSwitchPanel({
   const hideCounselorFooter = embedded && counselor;
 
   const embeddedSummary = (
-    <div className="grid gap-2 sm:grid-cols-2">
-      {[
-        ['이름', profile.name || '—'],
-        ['표기명', profile.reportDisplayName || profile.name || '—'],
-        ['연락처', profile.phone || '—'],
-        [
-          '경력',
-          profile.careerStartYear ? formatCareerYearsLabel(profile.careerStartYear) : '미등록',
-        ],
-        ['지역', profile.region || '—'],
-        ['운영', profile.practiceType === 'organization' ? '조직/기관' : '개인'],
-      ].map(([k, v]) => (
-        <div key={k} className="rounded-lg border border-sky-400/10 bg-[#0f1d33]/50 px-3 py-2.5">
-          <p className="text-[10px] uppercase tracking-wide text-slate-500">{k}</p>
-          <p className="mt-1 text-sm text-slate-100">{v}</p>
-        </div>
-      ))}
-      <div className="rounded-lg border border-sky-400/10 bg-[#0f1d33]/50 px-3 py-2.5 sm:col-span-2">
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {[
+          ['이름', profile.name || '—'],
+          ['리포트 표기명', profile.reportDisplayName || profile.name || '—'],
+          ['이메일', profile.email || email || '—'],
+          ['핸드폰', formatPhoneDisplayOr(profile.phone, '—')],
+          [
+            '경력',
+            profile.careerStartYear ? formatCareerYearsLabel(profile.careerStartYear) : '미등록',
+          ],
+          ['운영 형태', profile.practiceType === 'organization' ? '조직/기관 운영' : '개인 운영'],
+          ['지역', profile.region || '—'],
+          ['기관명/회사명', profile.organizationName || '—'],
+        ].map(([k, v]) => (
+          <div key={k} className="rounded-lg border border-sky-400/10 bg-[#0f1d33]/50 px-3 py-2.5">
+            <p className="text-[10px] uppercase tracking-wide text-slate-500">{k}</p>
+            <p className="mt-1 text-sm text-slate-100 break-words">{v}</p>
+          </div>
+        ))}
+      </div>
+      <div className="rounded-lg border border-sky-400/10 bg-[#0f1d33]/50 px-3 py-2.5">
         <p className="text-[10px] uppercase tracking-wide text-slate-500">전문 분야</p>
         <p className="mt-1 text-sm text-slate-100">
           {profile.specialization.length ? profile.specialization.join(', ') : '—'}
         </p>
+      </div>
+      <div className="rounded-lg border border-sky-400/10 bg-[#0f1d33]/50 px-3 py-2.5">
+        <p className="text-[10px] uppercase tracking-wide text-slate-500">소개</p>
+        <p className="mt-1 whitespace-pre-wrap text-sm text-slate-100">{profile.bio?.trim() || '—'}</p>
       </div>
     </div>
   );
@@ -441,12 +453,16 @@ export default function CounselorSwitchPanel({
                 <input className={fieldCls} value={profile.email || email} readOnly />
               </div>
               <div>
-                <label className={labelCls}>전화번호 *</label>
+                <label className={labelCls}>핸드폰 *</label>
                 <input
                   className={fieldCls}
                   type="tel"
+                  inputMode="numeric"
+                  autoComplete="tel"
                   value={profile.phone}
-                  onChange={(e) => setProfile((p) => ({ ...p, phone: e.target.value }))}
+                  onChange={(e) =>
+                    setProfile((p) => ({ ...p, phone: formatPhoneWhileTyping(e.target.value) }))
+                  }
                   placeholder="010-0000-0000"
                   required
                   readOnly={readOnlyForm}
@@ -468,7 +484,7 @@ export default function CounselorSwitchPanel({
                   <option value="">시작 연도 선택</option>
                   {careerStartYearOptions().map((y) => (
                     <option key={y} value={y}>
-                      {y}년 ({formatCareerYearsLabel(y)})
+                      {formatCareerYearsLabel(y)}
                     </option>
                   ))}
                 </select>

@@ -7,6 +7,7 @@ import { initializeFirebase } from '@/lib/firebase';
 import type { CounselorProfileData } from '@/types/counselorProfile';
 import { resolveCounselorAffiliationTitle } from '@/lib/counselorOrgInput';
 import { computeCareerYearsFromStartYear } from '@/lib/counselorCareerYear';
+import { normalizeRecipientPhone, isValidKrMobilePhone, formatPhoneDisplay } from '@/lib/phoneFormat';
 
 function getDb() {
   const { db } = initializeFirebase();
@@ -17,6 +18,8 @@ function getDb() {
 function normalizeProfile(input: CounselorProfileData, email: string): CounselorProfileData {
   const region = (input.region || input.education || '').trim();
   const organizationName = (input.organizationName || '').trim();
+  const phoneDigits = normalizeRecipientPhone(input.phone.trim());
+  const phone = phoneDigits ? formatPhoneDisplay(phoneDigits) : input.phone.trim();
   const startYear = Number(input.careerStartYear) || 0;
   const experience =
     startYear > 0
@@ -25,7 +28,7 @@ function normalizeProfile(input: CounselorProfileData, email: string): Counselor
   return {
     name: input.name.trim(),
     email: (input.email || email).trim(),
-    phone: input.phone.trim(),
+    phone,
     specialization: input.specialization.filter(Boolean),
     experience,
     careerStartYear: startYear > 0 ? startYear : undefined,
@@ -42,7 +45,8 @@ function normalizeProfile(input: CounselorProfileData, email: string): Counselor
 
 export function validateCounselorProfile(profile: CounselorProfileData): string | null {
   if (!profile.name) return '이름을 입력해주세요.';
-  if (!profile.phone) return '전화번호를 입력해주세요.';
+  if (!profile.phone) return '핸드폰 번호를 입력해주세요.';
+  if (!isValidKrMobilePhone(profile.phone)) return '올바른 휴대폰 번호(010-0000-0000)를 입력해주세요.';
   if (!profile.region?.trim()) return '지역을 선택해주세요.';
   if (profile.specialization.length === 0) return '전문 분야를 최소 하나 이상 선택해주세요.';
   if (profile.practiceType === 'organization' && !profile.organizationName) {

@@ -13,9 +13,19 @@ export const mypageAccountDetailNav: MypageAccountNavItem[] = [
     description: '로그인·개인 정보·역할',
   },
   {
+    href: '/mypage/account/counselor',
+    label: '상담사 계정',
+    description: '승인·등록·경력·연락처',
+  },
+  {
     href: '/mypage/account/organization',
-    label: '상담사 정보',
-    description: '기관·운영·전문 분야',
+    label: '회사/기관 정보',
+    description: '기관명·사업자·연락처·주소',
+  },
+  {
+    href: '/mypage/account/counselor-profile',
+    label: '상담사 프로필',
+    description: '전문 분야·소개',
   },
   {
     href: '/mypage/account/report',

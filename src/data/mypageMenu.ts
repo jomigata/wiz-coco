@@ -38,10 +38,22 @@ export function buildMypageNavSections(
           badge: options?.settingsBadge,
         },
         {
-          name: '상담사 정보',
-          href: '/mypage/account/organization',
-          description: '기관·운영·전문 분야',
+          name: '상담사 계정',
+          href: '/mypage/account/counselor',
+          description: '승인·등록·경력·연락처',
           icon: '👨‍⚕️',
+        },
+        {
+          name: '회사/기관 정보',
+          href: '/mypage/account/organization',
+          description: '기관명·사업자·연락처·주소',
+          icon: '🏢',
+        },
+        {
+          name: '상담사 프로필',
+          href: '/mypage/account/counselor-profile',
+          description: '전문 분야·소개',
+          icon: '📇',
         },
         {
           name: '내담자용 정보',

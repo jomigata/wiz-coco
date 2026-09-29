@@ -57,7 +57,7 @@ export default function MypageAccountSectionPage({ title, description, section }
   );
 
   const accountHeaderAction =
-    section === 'organization' && counselorUser ? (
+    section === 'counselor' && counselorUser ? (
       accountEditing ? (
         <div className="flex items-center gap-2">
           <button
@@ -89,12 +89,12 @@ export default function MypageAccountSectionPage({ title, description, section }
   return (
     <CounselorPageSection title={title} dense relaxed description={description}>
       <div className={`min-h-0 overflow-y-auto ${counselorHubClasses.subsection} !p-3 sm:!p-4`}>
-        {section === 'organization' ? (
+        {section === 'counselor' ? (
           <MypagePremiumBlockGrid>
             <MypagePremiumBlock
               index="01 · 계정"
               title="상담사 계정"
-              description="승인·전환 및 상담사 등록 정보"
+              description="승인·등록·경력·핸드폰·기관명"
               headerAction={accountHeaderAction}
             >
               <CounselorSwitchPanel
@@ -104,10 +104,12 @@ export default function MypageAccountSectionPage({ title, description, section }
                 embedded
                 mypageEditing={accountEditing}
                 formId={MYPAGE_COUNSELOR_ACCOUNT_FORM_ID}
-                onSaved={() => setAccountEditing(false)}
+                onSaved={() => {
+                  setAccountEditing(false);
+                  void reload();
+                }}
               />
             </MypagePremiumBlock>
-            {body}
           </MypagePremiumBlockGrid>
         ) : (
           body

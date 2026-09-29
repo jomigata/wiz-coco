@@ -1,14 +1,14 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { updateProfile } from 'firebase/auth';
 import { db, auth } from '@/lib/firebase';
 import { markAuthenticatedTabSession, touchAuthHeartbeat } from '@/utils/authSessionLifecycle';
 import { isCounselor } from '@/utils/roleUtils';
 import { formatPhoneDisplayOr } from '@/lib/phoneFormat';
 import { FaUser, FaHeart, FaBuilding, FaComment, FaKey, FaMapMarkerAlt } from 'react-icons/fa';
-import { MypagePremiumBlock } from '@/components/mypage/MypagePremiumBlock';
+import { MypagePremiumBlock, MypagePremiumBlockGrid } from '@/components/mypage/MypagePremiumBlock';
 
 // ─── 타입 ───────────────────────────────────────────────────────────────────
 interface UserData {
@@ -40,7 +40,7 @@ interface UserData {
   shareContactInReport?: boolean;
 }
 
-export type MypageProfileSection = 'account' | 'organization' | 'report';
+export type MypageProfileSection = 'account' | 'counselor' | 'organization' | 'counselorProfile' | 'report';
 
 interface Props {
   user: UserData;
@@ -49,7 +49,15 @@ interface Props {
   section: MypageProfileSection;
 }
 
-type EditBlock = 'personal' | 'orgContact' | 'counselorPro' | 'reportCover' | 'reportLayout' | 'reportDelivery' | null;
+type EditBlock =
+  | 'personal'
+  | 'orgContact'
+  | 'counselorPro'
+  | 'reportAll'
+  | 'reportCover'
+  | 'reportLayout'
+  | 'reportDelivery'
+  | null;
 
 // ─── 로컬 헬퍼 ──────────────────────────────────────────────────────────────
 const OCCUPATION_OPTIONS = [
@@ -115,9 +123,23 @@ async function saveToFirestore(data: Record<string, unknown>) {
   const currentUser = auth.currentUser;
   if (!currentUser) throw new Error('로그인이 필요합니다.');
   await currentUser.getIdToken(true);
+
+  const payload = { ...data };
+  if (typeof payload.organizationName === 'string') {
+    const snap = await getDoc(doc(db, 'users', currentUser.uid));
+    const existing = snap.data();
+    const cp = existing?.counselorProfile;
+    if (cp && typeof cp === 'object' && !Array.isArray(cp)) {
+      payload.counselorProfile = {
+        ...(cp as Record<string, unknown>),
+        organizationName: payload.organizationName,
+      };
+    }
+  }
+
   await setDoc(
     doc(db, 'users', currentUser.uid),
-    { ...data, updatedAt: serverTimestamp(), uid: currentUser.uid, lastModified: new Date().toISOString() },
+    { ...payload, updatedAt: serverTimestamp(), uid: currentUser.uid, lastModified: new Date().toISOString() },
     { merge: true },
   );
   if ('displayName' in data && typeof data.displayName === 'string' && data.displayName !== currentUser.displayName) {
@@ -297,6 +319,16 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
       });
     } else if (block === 'counselorPro') {
       setCounselorProForm({ specialties: displayUser.specialties || '' });
+    } else if (block === 'reportAll') {
+      setCoverForm({
+        reportDisplayName: displayUser.reportDisplayName || displayUser.name || '',
+      });
+      setLayoutForm({
+        shareOrganizationInReport: displayUser.shareOrganizationInReport ?? true,
+        shareContactInReport: displayUser.shareContactInReport ?? true,
+        reportSignature: displayUser.reportSignature || '',
+      });
+      setDeliveryForm({ clientFocus: displayUser.clientFocus || '' });
     } else if (block === 'reportCover') {
       setCoverForm({
         reportDisplayName: displayUser.reportDisplayName || displayUser.name || '',
@@ -431,9 +463,6 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
     </div>
   );
 
-  const blockShell = (content: React.ReactNode) => (
-    <div className="rounded-xl border border-sky-400/12 bg-[#101f38]/80 p-5 backdrop-blur-sm">{content}</div>
-  );
 
   const orgContactBody =
     editingBlock === 'orgContact' ? (
@@ -492,7 +521,7 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
 
   const orgContactBlock = counselor ? (
     <MypagePremiumBlock
-      index="02 · 기관"
+      index={section === 'organization' ? '01 · 기관' : '02 · 기관'}
       title="회사/기관"
       description="대외 표기·연락에 사용하는 기관 정보 / 사업자등록증 정보"
       icon={<FaMapMarkerAlt className="h-4 w-4" />}
@@ -527,7 +556,7 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
 
   const counselorProBlock = counselor ? (
     <MypagePremiumBlock
-      index="03 · 전문"
+      index={section === 'counselorProfile' ? '01 · 전문' : '03 · 전문'}
       title="상담사 프로필"
       description="전문 분야·자격 등 대외 소개용 정보"
       icon={<FaUser className="h-4 w-4" />}
@@ -567,21 +596,58 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
     </MypagePremiumBlock>
   ) : null;
 
-  const reportCoverBlock = counselor
-    ? blockShell(
-        <>
-          <BlockHeader
-            icon={<FaComment className="w-4 h-4" />}
-            title="검사결과지 표지"
-            editing={editingBlock === 'reportCover'}
-            saving={saving}
-            locked={locked && editingBlock !== 'reportCover'}
-            onEdit={() => startEdit('reportCover')}
-            onSave={() => handleSave({ reportDisplayName: coverForm.reportDisplayName.trim() })}
-            onCancel={cancelEdit}
-          />
-          {editingBlock === 'reportCover' ? (
-            <div className="space-y-4">
+  const counselorOrgNotice = (
+    <MypagePremiumBlock
+      index="01 · 안내"
+      title="회사/기관 정보"
+      description="상담사 승인 후 편집할 수 있습니다."
+      icon={<FaBuilding className="h-4 w-4" />}
+    >
+      <p className="text-sm leading-relaxed text-slate-400">
+        좌측 「상담사 계정」에서 승인을 받으면 기관명·사업자·연락처·주소를 등록할 수 있습니다.
+      </p>
+    </MypagePremiumBlock>
+  );
+
+  const counselorProfileNotice = (
+    <MypagePremiumBlock
+      index="01 · 안내"
+      title="상담사 프로필"
+      description="상담사 승인 후 편집할 수 있습니다."
+      icon={<FaUser className="h-4 w-4" />}
+    >
+      <p className="text-sm leading-relaxed text-slate-400">
+        좌측 「상담사 계정」에서 승인을 받으면 전문 분야·소개를 등록할 수 있습니다.
+      </p>
+    </MypagePremiumBlock>
+  );
+
+  const reportUnifiedSection = counselor ? (
+    <div className="space-y-6">
+      <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
+        <BlockHeader
+          icon={<FaComment className="w-4 h-4" />}
+          title="내담자용 정보"
+          editing={editingBlock === 'reportAll'}
+          saving={saving}
+          locked={locked && editingBlock !== 'reportAll'}
+          onEdit={() => startEdit('reportAll')}
+          onSave={() =>
+            handleSave({
+              reportDisplayName: coverForm.reportDisplayName.trim(),
+              shareOrganizationInReport: layoutForm.shareOrganizationInReport,
+              shareContactInReport: layoutForm.shareContactInReport,
+              reportSignature: layoutForm.reportSignature.trim(),
+              clientFocus: deliveryForm.clientFocus.trim(),
+            })
+          }
+          onCancel={cancelEdit}
+        />
+
+        {editingBlock === 'reportAll' ? (
+          <div className="space-y-8">
+            <section className="space-y-4">
+              <h4 className="text-sm font-semibold text-sky-200">검사결과지 표지</h4>
               <div>
                 <label className={labelCls}>표지 표기명</label>
                 <input
@@ -591,47 +657,9 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
                   placeholder="결과지 표지에 표시할 상담사·기관명"
                 />
               </div>
-              <p className="text-[11px] text-slate-500">
-                기관명·연락처는 「상단/하단 표기」에서 노출 여부를 설정합니다.
-              </p>
-              <BlockMessage error={blockError} success={blockSuccess} />
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <div className={rowCls}>
-                <span className={keySpan}>표지 표기명</span>
-                <span className={valSpan}>
-                  {displayUser.reportDisplayName?.trim() || displayUser.name || '정보 없음'}
-                </span>
-              </div>
-            </div>
-          )}
-        </>,
-      )
-    : null;
-
-  const reportLayoutBlock = counselor
-    ? blockShell(
-        <>
-          <BlockHeader
-            icon={<FaKey className="w-4 h-4" />}
-            title="상단/하단 표기"
-            editing={editingBlock === 'reportLayout'}
-            saving={saving}
-            locked={locked && editingBlock !== 'reportLayout'}
-            onEdit={() => startEdit('reportLayout')}
-            onSave={() =>
-              handleSave({
-                shareOrganizationInReport: layoutForm.shareOrganizationInReport,
-                shareContactInReport: layoutForm.shareContactInReport,
-                reportSignature: layoutForm.reportSignature.trim(),
-              })
-            }
-            onCancel={cancelEdit}
-          />
-          {editingBlock === 'reportLayout' ? (
-            <div className="space-y-4">
-              <p className="text-[11px] text-slate-500">결과지 상단·표지 영역에 기관·연락처를 포함할지 선택합니다.</p>
+            </section>
+            <section className="space-y-4 border-t border-white/10 pt-6">
+              <h4 className="text-sm font-semibold text-sky-200">상단/하단 표기</h4>
               <div className="flex items-center justify-between">
                 <span className={labelCls + ' mb-0'}>기관 정보 표기</span>
                 <ToggleSwitch
@@ -656,45 +684,9 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
                   placeholder="결과지 하단에 표시될 서명 문구"
                 />
               </div>
-              <BlockMessage error={blockError} success={blockSuccess} />
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <div className={rowCls}>
-                <span className={keySpan}>기관 정보</span>
-                <span className={valSpan}>{boolLabel(displayUser.shareOrganizationInReport, '표기', '숨김')}</span>
-              </div>
-              <div className={rowCls}>
-                <span className={keySpan}>연락처</span>
-                <span className={valSpan}>{boolLabel(displayUser.shareContactInReport, '표기', '숨김')}</span>
-              </div>
-              <div className="pt-2 border-t border-white/10">
-                <div className="text-blue-200 text-xs mb-1.5">하단 서명·각인</div>
-                <div className="text-blue-100 text-sm whitespace-pre-wrap leading-relaxed">
-                  {multilineText(displayUser.reportSignature, '설정된 서명이 없습니다.')}
-                </div>
-              </div>
-            </div>
-          )}
-        </>,
-      )
-    : null;
-
-  const reportDeliveryBlock = counselor
-    ? blockShell(
-        <>
-          <BlockHeader
-            icon={<FaHeart className="w-4 h-4" />}
-            title="전달사항"
-            editing={editingBlock === 'reportDelivery'}
-            saving={saving}
-            locked={locked && editingBlock !== 'reportDelivery'}
-            onEdit={() => startEdit('reportDelivery')}
-            onSave={() => handleSave({ clientFocus: deliveryForm.clientFocus.trim() })}
-            onCancel={cancelEdit}
-          />
-          {editingBlock === 'reportDelivery' ? (
-            <div className="space-y-4">
+            </section>
+            <section className="space-y-4 border-t border-white/10 pt-6">
+              <h4 className="text-sm font-semibold text-sky-200">전달사항</h4>
               <div>
                 <label className={labelCls}>내담자·보호자 전달 문구</label>
                 <textarea
@@ -705,16 +697,48 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
                   placeholder="검사 결과와 함께 전달할 안내·유의사항"
                 />
               </div>
-              <BlockMessage error={blockError} success={blockSuccess} />
-            </div>
-          ) : (
-            <div className="text-blue-100 text-sm whitespace-pre-wrap leading-relaxed">
-              {multilineText(displayUser.clientFocus, '등록된 전달사항이 없습니다.')}
-            </div>
-          )}
-        </>,
-      )
-    : null;
+            </section>
+            <BlockMessage error={blockError} success={blockSuccess} />
+          </div>
+        ) : (
+          <div className="space-y-8">
+            <section className="space-y-3">
+              <h4 className="text-sm font-semibold text-sky-200">검사결과지 표지</h4>
+              <div className={rowCls}>
+                <span className={keySpan}>표지 표기명</span>
+                <span className={valSpan}>
+                  {displayUser.reportDisplayName?.trim() || displayUser.name || '정보 없음'}
+                </span>
+              </div>
+            </section>
+            <section className="space-y-3 border-t border-white/10 pt-6">
+              <h4 className="text-sm font-semibold text-sky-200">상단/하단 표기</h4>
+              <div className={rowCls}>
+                <span className={keySpan}>기관 정보</span>
+                <span className={valSpan}>{boolLabel(displayUser.shareOrganizationInReport, '표기', '숨김')}</span>
+              </div>
+              <div className={rowCls}>
+                <span className={keySpan}>연락처</span>
+                <span className={valSpan}>{boolLabel(displayUser.shareContactInReport, '표기', '숨김')}</span>
+              </div>
+              <div>
+                <div className="text-blue-200 text-xs mb-1.5">하단 서명·각인</div>
+                <div className="text-blue-100 text-sm whitespace-pre-wrap leading-relaxed">
+                  {multilineText(displayUser.reportSignature, '설정된 서명이 없습니다.')}
+                </div>
+              </div>
+            </section>
+            <section className="border-t border-white/10 pt-6">
+              <h4 className="text-sm font-semibold text-sky-200 mb-3">전달사항</h4>
+              <div className="text-blue-100 text-sm whitespace-pre-wrap leading-relaxed">
+                {multilineText(displayUser.clientFocus, '등록된 전달사항이 없습니다.')}
+              </div>
+            </section>
+          </div>
+        )}
+      </div>
+    </div>
+  ) : null;
 
   const accountReadOnly = (
     <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
@@ -743,8 +767,8 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
 
   const counselorOnlyNote = (
     <p className="rounded-lg border border-sky-400/20 bg-sky-950/30 px-4 py-3 text-sm text-slate-300">
-      상담사 승인 후 「상담사 정보」「내담자용 정보」 메뉴를 이용할 수 있습니다. 신청은{' '}
-      <span className="text-sky-200">계정 정보</span>에서 진행하세요.
+      상담사 승인 후 「상담사 계정」「회사/기관 정보」「상담사 프로필」「내담자용 정보」 메뉴를 이용할 수 있습니다. 신청은{' '}
+      <span className="text-sky-200">상담사 계정</span>에서 진행하세요.
     </p>
   );
 
@@ -758,40 +782,19 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
   }
 
   if (section === 'organization') {
-    if (!counselor) {
-      return (
-        <MypagePremiumBlock
-          index="02 · 안내"
-          title="기관·전문 정보"
-          description="상담사 승인 후 아래 항목을 편집할 수 있습니다."
-          icon={<FaBuilding className="h-4 w-4" />}
-        >
-          <p className="text-sm leading-relaxed text-slate-400">
-            위 「상담사 계정」에서 승인을 받으면 회사/기관, 상담사 프로필 블록이 순서대로 표시됩니다.
-          </p>
-        </MypagePremiumBlock>
-      );
-    }
-    return (
-      <>
-        {orgContactBlock}
-        {counselorProBlock}
-      </>
-    );
+    if (!counselor) return counselorOrgNotice;
+    return <MypagePremiumBlockGrid>{orgContactBlock}</MypagePremiumBlockGrid>;
+  }
+
+  if (section === 'counselorProfile') {
+    if (!counselor) return counselorProfileNotice;
+    return <MypagePremiumBlockGrid>{counselorProBlock}</MypagePremiumBlockGrid>;
   }
 
   if (section === 'report') {
     return (
       <div className="space-y-6">
-        {counselor ? (
-          <>
-            {reportCoverBlock}
-            {reportLayoutBlock}
-            {reportDeliveryBlock}
-          </>
-        ) : (
-          counselorOnlyNote
-        )}
+        {counselor ? reportUnifiedSection : counselorOnlyNote}
       </div>
     );
   }
