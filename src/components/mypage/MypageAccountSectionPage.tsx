@@ -6,21 +6,16 @@ import { counselorHubClasses } from '@/components/layout/appChromeTheme';
 import { useMypageUserProfile } from '@/hooks/useMypageUserProfile';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import InlineProfileBlocks, { type MypageProfileSection } from '@/app/mypage/components/InlineProfileBlocks';
-import { MypageAccountRolePanel } from '@/components/mypage/MypageAccountExtras';
+import CounselorSwitchPanel from '@/app/mypage/settings/components/CounselorSwitchPanel';
+import { MypagePremiumBlock, MypagePremiumBlockGrid } from '@/components/mypage/MypagePremiumBlock';
 
 type Props = {
   title: string;
   description: string;
   section: MypageProfileSection;
-  showAccountExtras?: boolean;
 };
 
-export default function MypageAccountSectionPage({
-  title,
-  description,
-  section,
-  showAccountExtras = false,
-}: Props) {
+export default function MypageAccountSectionPage({ title, description, section }: Props) {
   const { showLoginRequired } = useAuthResolved();
   const { user, firebaseUser, loading, reload } = useMypageUserProfile();
 
@@ -44,18 +39,34 @@ export default function MypageAccountSectionPage({
 
   if (!user) return null;
 
+  const body = (
+    <InlineProfileBlocks
+      section={section}
+      user={user}
+      firebaseUserRole={firebaseUser?.role}
+      onUpdate={() => {
+        void reload();
+      }}
+    />
+  );
+
   return (
     <CounselorPageSection title={title} dense relaxed description={description}>
-      <div className={`min-h-0 overflow-y-auto ${counselorHubClasses.subsection} !p-4 sm:!p-5`}>
-        <InlineProfileBlocks
-          section={section}
-          user={user}
-          firebaseUserRole={firebaseUser?.role}
-          onUpdate={() => {
-            void reload();
-          }}
-        />
-        {showAccountExtras ? <MypageAccountRolePanel uid={user.id} email={user.email} role={user.role} /> : null}
+      <div className={`min-h-0 overflow-y-auto ${counselorHubClasses.subsection} !p-3 sm:!p-4`}>
+        {section === 'organization' ? (
+          <MypagePremiumBlockGrid>
+            <MypagePremiumBlock
+              index="01 · 계정"
+              title="상담사 계정"
+              description="승인·전환 및 상담사 등록 정보"
+            >
+              <CounselorSwitchPanel uid={user.id} email={user.email} role={user.role} embedded />
+            </MypagePremiumBlock>
+            {body}
+          </MypagePremiumBlockGrid>
+        ) : (
+          body
+        )}
       </div>
     </CounselorPageSection>
   );

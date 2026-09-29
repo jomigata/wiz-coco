@@ -33,7 +33,7 @@ export function buildMypageNavSections(
         {
           name: '계정 정보',
           href: '/mypage/account/info',
-          description: '로그인·개인 정보·역할',
+          description: '로그인·개인 정보',
           icon: '👤',
           badge: options?.settingsBadge,
         },

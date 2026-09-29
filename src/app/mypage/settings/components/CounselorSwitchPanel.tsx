@@ -35,6 +35,8 @@ interface Props {
   uid: string;
   email: string;
   role?: string;
+  /** 마이페이지 프리미엄 블록 안에 넣을 때 상단 구분선 제거 */
+  embedded?: boolean;
 }
 
 function statusLabel(status: CounselorApplicationStatus | null): string {
@@ -68,7 +70,7 @@ function StatusBadge({
   );
 }
 
-export default function CounselorSwitchPanel({ uid, email, role }: Props) {
+export default function CounselorSwitchPanel({ uid, email, role, embedded = false }: Props) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -107,6 +109,10 @@ export default function CounselorSwitchPanel({ uid, email, role }: Props) {
     }
     setUnreadResult(shouldNotifyCounselorResult(applicationStatus, reviewedAt, applicationId));
   };
+
+  useEffect(() => {
+    if (embedded) setExpanded(true);
+  }, [embedded]);
 
   useEffect(() => {
     let cancelled = false;
@@ -240,7 +246,7 @@ export default function CounselorSwitchPanel({ uid, email, role }: Props) {
 
   if (loading) {
     return (
-      <div className="pt-4 border-t border-white/10">
+      <div className={embedded ? '' : 'pt-4 border-t border-white/10'}>
         <LoadingMessage layout="inline" message="상담사 정보를 로딩중…" textClassName="text-blue-300 text-sm" />
       </div>
     );
@@ -257,7 +263,8 @@ export default function CounselorSwitchPanel({ uid, email, role }: Props) {
           : '승인 후 상담사 메뉴·내담자 연결 기능을 사용할 수 있습니다.';
 
   return (
-    <div className="pt-4 border-t border-white/10">
+    <div className={embedded ? '' : 'pt-4 border-t border-white/10'}>
+      {!embedded ? (
       <button
         type="button"
         onClick={handleToggleExpanded}
@@ -306,10 +313,31 @@ export default function CounselorSwitchPanel({ uid, email, role }: Props) {
           </svg>
         </div>
       </button>
+      ) : (
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          {counselor && (
+            <span className="rounded-md border border-emerald-400/25 bg-emerald-500/15 px-2 py-0.5 text-xs text-emerald-200">
+              {admin ? '관리자' : '상담사'}
+            </span>
+          )}
+          {!counselor && pending && (
+            <span className="rounded-md border border-amber-400/25 bg-amber-500/15 px-2 py-0.5 text-xs text-amber-100">
+              {statusLabel(applicationStatus)}
+            </span>
+          )}
+          {!counselor && rejected && (
+            <StatusBadge label="반려됨" toneClass="bg-red-500/20 text-red-300" showNotify={unreadResult} />
+          )}
+          {!counselor && applicationStatus === 'approved' && (
+            <StatusBadge label="승인됨" toneClass="bg-emerald-500/20 text-emerald-300" showNotify={unreadResult} />
+          )}
+          <p className="w-full text-xs leading-relaxed text-slate-400">{subtitle}</p>
+        </div>
+      )}
 
-      {expanded && (
-        <div className="mt-4 space-y-4">
-          <p className="text-blue-300 text-sm">{subtitle}</p>
+      {(embedded || expanded) && (
+        <div className={embedded ? 'space-y-4' : 'mt-4 space-y-4'}>
+          {!embedded ? <p className="text-blue-300 text-sm">{subtitle}</p> : null}
 
           {adminReviewNotes && !counselor && (pending || hasResult) && (
             <div
