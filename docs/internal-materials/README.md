@@ -28,10 +28,10 @@
 | [확인요청.md](./확인요청.md) | 사람이 확인해 줄 항목 |
 | [time-structuring/](./time-structuring/) | 시간 구조화. 기준은 60문항 |
 | [ego-ok/](./ego-ok/) | 이고그램·오케이그램. 기준은 90문항. 243 문장·형태 이름 추가 |
-| [egogram-manual/](./egogram-manual/) | 1996년 점검표 60문항과 1994년 표. 채점 기준은 아님 |
+| [egogram-manual/](./egogram-manual/) | 이고그램 5칸 1–50문항. 1994년 표는 참고 |
 | [online-exam-2020/](./online-exam-2020/) | 2020년 온라인 검사 상담사용 설명 |
 | [life-position-graph/](./life-position-graph/) | 인생태도 그래프. 참조만. 수치는 없음 |
-| [life-position-checklist/](./life-position-checklist/) | 인생태도 점검표 40문항. 흰 칸은 CP, NP, FC, AC |
+| [life-position-checklist/](./life-position-checklist/) | 오케이그램 4칸 40문항. CP, NP, FC, AC |
 | [stroke/](./stroke/) | 스트로크 체크리스트 25문항. 축은 I→U, I←U, NO STROKE |
 | [gestalt/](./gestalt/) | 게슈탈트 치료 강의 노트. 채점 자료 아님 |
 | [self-analysis-report/](./self-analysis-report/) | 2011년 자기분석 사례. 이름 익명. 참조만 |

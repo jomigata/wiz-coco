@@ -1,6 +1,6 @@
 {
   "id": "life-position-checklist-40",
-  "title": "인생 태도(삶의 자세) 점검표 (KTAA식)",
+  "title": "오케이그램 점검표 (4칸)",
   "status": "kept-separate",
   "sourceFile": "검사 - 인생태도점검표.hwp",
   "responseLabels": [
@@ -17,8 +17,8 @@
     "FC",
     "AC"
   ],
-  "scaleNote": "문항 오른쪽 흰 칸(□)이 있는 열이 그 문항의 척도다. 왼쪽부터 CP, NP, FC, AC다. 척도마다 10문항. 표 하단에 인쇄된 U- U+ I+ I- 순서는 쓰지 않는다.",
-  "relation": "이 40문항 합계는 CP, NP, FC, AC다. 90문항 오케이그램의 U− U+ I+ I−와 다르다. 인생태도 차이값 NP−CP, FC−AC도 이 합계로 바꾸지 않는다.",
+  "scaleNote": "오케이그램은 칸이 4개다. 왼쪽부터 CP, NP, FC, AC. 이고그램 5칸(CP, NP, A, FC, AC)과 다르다. 표 하단의 U- U+ I+ I- 순서는 쓰지 않는다.",
+  "relation": "4칸 오케이그램이다. 5칸 이고그램 50문항, 90문항 오케이그램 번호와 다르다. 인생태도 차이값 NP−CP, FC−AC는 그대로다.",
   "items": [
     {
       "no": 1,
@@ -261,5 +261,12 @@
       "scale": "AC"
     }
   ],
-  "responseScores": "5~1. 적는 점수는 개인마다 다르다. 기준 컷으로 쓰지 않는다."
+  "responseScores": "5~1. 적는 점수는 개인마다 다르다. 기준 컷으로 쓰지 않는다.",
+  "form": "ok-gram-4",
+  "meanings": {
+    "CP": "타인부정",
+    "NP": "타인긍정",
+    "FC": "자기긍정",
+    "AC": "자기부정"
+  }
 }

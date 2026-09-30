@@ -1,7 +1,7 @@
 {
   "id": "egogram-norms-1994-and-3level",
-  "status": "needs-confirmation",
-  "note": "2020-04-01 5단계·243 컷과 숫자가 다르다. 확인 전이라 채점에 쓰지 않는다.",
+  "status": "reference",
+  "note": "2026-10-01 확인. 참고만 한다. 채점은 2020-04-01의 5단계·243 컷을 쓴다.",
   "korea1994": {
     "columns": [
       "A 5%(95-100)",

@@ -1,6 +1,6 @@
 {
   "id": "egogram-checklist-60-1996",
-  "title": "이고그램 점검표 60문항",
+  "title": "이고그램 점검표 (5칸)",
   "status": "kept-separate",
   "sourceFile": "이고그램총합_243패턴 오타정리 2020.04.02.hwp",
   "responseLabels": [
@@ -17,7 +17,7 @@
     "FC",
     "AC"
   ],
-  "scaleNote": "흰 칸이 있는 열이다. 왼쪽부터 CP, NP, A, FC, AC. 1–50은 만점 50 그래프, 51–60은 그 뒤의 별도 10문항이다.",
+  "scaleNote": "이고그램은 칸이 5개다. 왼쪽부터 CP, NP, A, FC, AC. 쓰는 문항은 1–50이다. 51–60은 무시한다.",
   "polarity": {
     "CP+": [
       6,
@@ -77,7 +77,7 @@
     ],
     "AC+": [
       3,
-      8,
+      18,
       21,
       35,
       42
@@ -90,8 +90,8 @@
       47
     ]
   },
-  "polarityNote": "긍정·부정 번호표는 1–50만 적는다. 8번은 FC−와 AC+에 둘 다 있으나 흰 칸은 FC다.",
-  "relation": "90문항 기준본과 시간구조화 60문항이 아니다. 2020-04-01 점수 컷으로 바꾸지 않는다.",
+  "polarityNote": "긍정·부정은 1–50만 쓴다. 원고 AC+의 8번은 흰 칸이 FC라 빼고, 흰 칸이 AC인 18번을 AC+에 넣었다. 이 교체는 확인 전이다.",
+  "relation": "5칸 이고그램이다. 4칸 오케이그램(CP, NP, FC, AC)과 문항이 다르다. 90문항 기준과 2020-04-01 컷으로 바꾸지 않는다.",
   "items": [
     {
       "no": 1,
@@ -448,70 +448,87 @@
       "text": "다른 사람이 길을 물으면 친저랗게 가르쳐준다.",
       "marks": "■□■■■",
       "scale": "NP",
-      "block": "51-60"
+      "block": "51-60",
+      "status": "ignored"
     },
     {
       "no": 52,
       "text": "자기감정을 배제(排除)하고 생각하는 경향이 있다.",
       "marks": "■■□■■",
       "scale": "A",
-      "block": "51-60"
+      "block": "51-60",
+      "status": "ignored"
     },
     {
       "no": 53,
       "text": "개방적이며 자유분방하다.",
       "marks": "■■■□■",
       "scale": "FC",
-      "block": "51-60"
+      "block": "51-60",
+      "status": "ignored"
     },
     {
       "no": 54,
       "text": "성미가 급하고 화를 잘 낸다.",
       "marks": "□■■■■",
       "scale": "CP",
-      "block": "51-60"
+      "block": "51-60",
+      "status": "ignored"
     },
     {
       "no": 55,
       "text": "무슨 일이나 여러 가지 정보를 수집하여 잘 생각 한다.",
       "marks": "■■□■■",
       "scale": "A",
-      "block": "51-60"
+      "block": "51-60",
+      "status": "ignored"
     },
     {
       "no": 56,
       "text": "상대가 나를 좋아하도록 노력한다.",
       "marks": "■■■■□",
       "scale": "AC",
-      "block": "51-60"
+      "block": "51-60",
+      "status": "ignored"
     },
     {
       "no": 57,
       "text": "상대의 눈치를 본다.",
       "marks": "■■■■□",
       "scale": "AC",
-      "block": "51-60"
+      "block": "51-60",
+      "status": "ignored"
     },
     {
       "no": 58,
       "text": "감정을 곧 얼굴에 나타난다.",
       "marks": "■■■□■",
       "scale": "FC",
-      "block": "51-60"
+      "block": "51-60",
+      "status": "ignored"
     },
     {
       "no": 59,
       "text": "나는 지나칠 정도로 의리나 인정(人情)을 중요시 한다.",
       "marks": "■□■■■",
       "scale": "NP",
-      "block": "51-60"
+      "block": "51-60",
+      "status": "ignored"
     },
     {
       "no": 60,
       "text": "무슨 일이나 착수하면 끝까지 하지 않고는 못 베긴다.",
       "marks": "□■■■■",
       "scale": "CP",
-      "block": "51-60"
+      "block": "51-60",
+      "status": "ignored"
     }
-  ]
+  ],
+  "form": "egogram-5",
+  "meanings": {
+    "CP": "타인부정",
+    "NP": "타인긍정",
+    "FC": "자기긍정",
+    "AC": "자기부정"
+  }
 }
