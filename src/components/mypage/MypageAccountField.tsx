@@ -49,6 +49,27 @@ export function MypageAccountFieldDisplay({
   );
 }
 
+export function MypageAccountFieldGrid({
+  children,
+  className = '',
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div
+      className={`grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2 sm:gap-y-5 lg:grid-cols-12 lg:gap-x-6 ${className}`}
+    >
+      {children}
+    </div>
+  );
+}
+
+/** lg 12열 — half: 한 줄 2개, full: 한 줄 전체 */
+export function mypageFieldColSpan(fullWidth: boolean): string {
+  return fullWidth ? 'sm:col-span-2 lg:col-span-12' : 'lg:col-span-6';
+}
+
 export function mypageFieldEditProps() {
   return {
     labelClassName: mypageAccountClasses.fieldLabelEdit,

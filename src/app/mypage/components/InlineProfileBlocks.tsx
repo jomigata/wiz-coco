@@ -19,7 +19,7 @@ import { FaHeart, FaBuilding, FaKey, FaMapMarkerAlt } from 'react-icons/fa';
 import { MypagePremiumBlock, MypagePremiumBlockGrid } from '@/components/mypage/MypagePremiumBlock';
 import MypageBirthDateField, { formatBirthDateDisplay } from '@/components/mypage/MypageBirthDateField';
 import OrganizationAddressField from '@/components/mypage/OrganizationAddressField';
-import { MypageAccountFieldDisplay, mypageFieldEditProps } from '@/components/mypage/MypageAccountField';
+import { MypageAccountFieldDisplay, MypageAccountFieldGrid, mypageFieldColSpan, mypageFieldEditProps } from '@/components/mypage/MypageAccountField';
 
 const { labelClassName: labelEditCls, fieldClassName: fieldEditCls } = mypageFieldEditProps();
 
@@ -413,13 +413,19 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
         />
       </div>
     ) : (
-      <div className="space-y-4">
-        <MypageAccountFieldDisplay label="이름" value={displayUser.name?.trim() || '정보 없음'} />
+      <MypageAccountFieldGrid>
         <MypageAccountFieldDisplay
+          className={mypageFieldColSpan(false)}
+          label="이름"
+          value={displayUser.name?.trim() || '정보 없음'}
+        />
+        <MypageAccountFieldDisplay
+          className={mypageFieldColSpan(false)}
           label="전화번호"
           value={formatPhoneDisplayOr(displayUser.phoneNumber, '정보 없음')}
         />
         <MypageAccountFieldDisplay
+          className={mypageFieldColSpan(false)}
           label="생년월일"
           calendarIcon
           value={
@@ -428,20 +434,40 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
               : '정보 없음'
           }
         />
-        <MypageAccountFieldDisplay label="성별" selectLike value={genderLabel(displayUser.gender)} />
-        <MypageAccountFieldDisplay label="이메일(개인)" value={displayUser.email?.trim() || '정보 없음'} />
-      </div>
+        <MypageAccountFieldDisplay
+          className={mypageFieldColSpan(false)}
+          label="성별"
+          selectLike
+          value={genderLabel(displayUser.gender)}
+        />
+        <MypageAccountFieldDisplay
+          className={mypageFieldColSpan(true)}
+          label="이메일(개인)"
+          value={displayUser.email?.trim() || '정보 없음'}
+        />
+      </MypageAccountFieldGrid>
     );
 
   const accountInfoBody = (
-    <div className="space-y-4">
-      <MypageAccountFieldDisplay label="회원 유형" selectLike value={roleLabel(displayUser.role)} />
-      <MypageAccountFieldDisplay label="이메일" value={displayUser.email?.trim() || '정보 없음'} />
+    <MypageAccountFieldGrid>
       <MypageAccountFieldDisplay
+        className={mypageFieldColSpan(false)}
+        label="회원 유형"
+        selectLike
+        value={roleLabel(displayUser.role)}
+      />
+      <MypageAccountFieldDisplay
+        className={mypageFieldColSpan(false)}
         label="가입일"
         value={displayUser.createdAt ? new Date(displayUser.createdAt).toLocaleDateString('ko-KR') : '-'}
       />
       <MypageAccountFieldDisplay
+        className={mypageFieldColSpan(true)}
+        label="이메일"
+        value={displayUser.email?.trim() || '정보 없음'}
+      />
+      <MypageAccountFieldDisplay
+        className={mypageFieldColSpan(true)}
         label="마지막 로그인"
         value={
           displayUser.lastLoginAt
@@ -455,7 +481,7 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate, 
             : '-'
         }
       />
-    </div>
+    </MypageAccountFieldGrid>
   );
 
   const accountInfoBlock = (

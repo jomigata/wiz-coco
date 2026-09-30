@@ -49,9 +49,9 @@ export const mypageAccountClasses = {
   /** 보기 모드 — 수정 폼과 같은 남색 입력 상자 형태 */
   fieldLabelDisplay: 'mb-1 block text-xs text-blue-200/90',
   fieldValueDisplay:
-    'flex min-h-[2.5rem] w-full items-center rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm text-blue-100',
+    'flex min-h-[2.75rem] w-full items-center rounded-lg border border-white/20 bg-white/[0.08] px-3 py-2.5 text-sm text-blue-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]',
   fieldValueDisplayMultiline:
-    'min-h-[4.5rem] w-full whitespace-pre-wrap rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm leading-relaxed text-blue-100',
+    'min-h-[4.5rem] w-full whitespace-pre-wrap rounded-lg border border-white/20 bg-white/[0.08] px-3 py-2.5 text-sm leading-relaxed text-blue-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]',
   /** 수정 모드 — 검은 바탕·흰 글자 */
   fieldLabelEdit: 'mb-1 block text-xs text-white/85',
   fieldInputEdit:
