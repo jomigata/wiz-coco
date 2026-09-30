@@ -29,10 +29,10 @@
 | [time-structuring/](./time-structuring/) | 시간 구조화. 기준은 60문항 |
 | [ego-ok/](./ego-ok/) | 이고그램·오케이그램. 기준은 90문항. 243 문장·형태 이름 추가 |
 | [life-position-graph/](./life-position-graph/) | 인생태도 그래프. 참조만. 수치는 없음 |
-| [life-position-checklist/](./life-position-checklist/) | 인생태도 점검표 40문항. 90문항·차이값과 별도 |
-| [stroke/](./stroke/) | 스트로크 체크리스트 25문항. 축 배정은 확인 전 |
+| [life-position-checklist/](./life-position-checklist/) | 인생태도 점검표 40문항. 흰 칸은 CP, NP, FC, AC |
+| [stroke/](./stroke/) | 스트로크 체크리스트 25문항. 축은 I→U, I←U, NO STROKE |
 | [gestalt/](./gestalt/) | 게슈탈트 치료 강의 노트. 채점 자료 아님 |
-| [self-analysis-report/](./self-analysis-report/) | 2011년 자기분석 사례 글. 그래프 숫자는 없음 |
+| [self-analysis-report/](./self-analysis-report/) | 2011년 자기분석 사례. 이름 익명. 참조만 |
 | [counseling-menu/](./counseling-menu/) | 상담 프로그램 메뉴. 네 시트를 합친 목록 |
 | [ta-overview/](./ta-overview/) | 교류분석 이론 요약. 채점 기준은 바꾸지 않음 |
 | [legacy-spec/](./legacy-spec/) | 예전 검사 사이트 제작 요구 |

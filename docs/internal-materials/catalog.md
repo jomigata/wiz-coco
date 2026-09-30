@@ -35,7 +35,7 @@
 
 | 원본 파일 | 정리 위치 | 처리 |
 |---|---|---|
-| `검사 - 스트로크체크리스트.hwp` | [stroke/](./stroke/) | 25문항. 축 배정은 확인 전 |
-| `검사 - 인생태도점검표.hwp` | [life-position-checklist/](./life-position-checklist/) | 40문항. U− U+ I+ I− 각 10. 차이값과는 별도 |
+| `검사 - 스트로크체크리스트.hwp` | [stroke/](./stroke/) | 25문항. 축은 I→U, I←U, NO STROKE. A–E 삭제 |
+| `검사 - 인생태도점검표.hwp` | [life-position-checklist/](./life-position-checklist/) | 40문항. 흰 칸은 CP, NP, FC, AC. 점수는 개인마다 다름 |
 | `게슈탈트치료(B5).hwp` | [gestalt/](./gestalt/) | 강의 노트. 3개 학파에 넣지 않음 |
-| `자기분석 결과 보고서.hwp` | [self-analysis-report/](./self-analysis-report/) | 2011년 사례 글. 그래프 숫자는 없음 |
+| `자기분석 결과 보고서.hwp` | [self-analysis-report/](./self-analysis-report/) | 참조. 이름은 익명. 사례 예시만 |

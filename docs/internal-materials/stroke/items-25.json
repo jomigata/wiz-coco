@@ -1,7 +1,7 @@
 {
   "id": "stroke-checklist-25",
   "title": "스트로크 분석 (KTAA식)",
-  "status": "needs-confirmation",
+  "status": "canonical",
   "sourceFile": "검사 - 스트로크체크리스트.hwp",
   "response": {
     "매우긍정": 5,
@@ -10,13 +10,6 @@
     "약간부정": 2,
     "매우부정": 1
   },
-  "graphAxes": [
-    "A",
-    "B",
-    "C",
-    "D",
-    "E"
-  ],
   "profileLabels": [
     "I→U",
     "I→U",
@@ -24,7 +17,7 @@
     "I←U",
     "NO STROKE"
   ],
-  "note": "문항 25개와 그래프 축은 있다. 어느 문항이 어느 축인지는 문장에 없다.",
+  "note": "2026-10-01 확인. 그래프 축은 I→U, I←U, NO STROKE다. A–E는 삭제했다.",
   "items": [
     {
       "no": 1,
@@ -126,5 +119,10 @@
       "no": 25,
       "text": "나는 요즈음 다른 사람들로부터 인정받고 있는 편이다."
     }
+  ],
+  "axes": [
+    "I→U",
+    "I←U",
+    "NO STROKE"
   ]
 }
