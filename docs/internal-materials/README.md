@@ -27,4 +27,5 @@
 | [확인요청.md](./확인요청.md) | 사람이 확인해 줄 항목 |
 | [time-structuring/](./time-structuring/) | 시간 구조화. 기준은 60문항 |
 | [ego-ok/](./ego-ok/) | 이고그램·오케이그램. 기준은 90문항 |
+| [ta-overview/](./ta-overview/) | 교류분석 이론 요약. 채점 기준은 바꾸지 않음 |
 | [legacy-spec/](./legacy-spec/) | 예전 검사 사이트 제작 요구 |

@@ -14,4 +14,10 @@
 | 같은 파일 `체크리스트(수정)` | [ego-ok/items-95-revised.json](./ego-ok/items-95-revised.json) | 기준 아님. 페이크 5문항이 포함된 95문항 |
 | `검사 - 초기 종합 프로젝트 준비물.xlsx` | [legacy-spec/initial-project-prep.md](./legacy-spec/initial-project-prep.md) | 예전 사이트 제작 메모. 문항 기준은 90문항 |
 
-이전에 올려 둔 내부 자료는 없었다. 이번이 첫 비교 기준이다.
+## 2026-10-01 2차 — 이론 요약 1건
+
+| 원본 파일 | 정리 위치 | 처리 |
+|---|---|---|
+| `교류분석 요약정리.xls` | [ta-overview/](./ta-overview/) | 이론 노트. 60문항·90문항 채점은 유지. 순서·인생태도 식·23패턴 개수는 확인 전 |
+
+1차는 검사 기준이고, 2차는 이론 노트다.
