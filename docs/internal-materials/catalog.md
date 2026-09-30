@@ -39,3 +39,10 @@
 | `검사 - 인생태도점검표.hwp` | [life-position-checklist/](./life-position-checklist/) | 40문항. 흰 칸은 CP, NP, FC, AC. 점수는 개인마다 다름 |
 | `게슈탈트치료(B5).hwp` | [gestalt/](./gestalt/) | 강의 노트. 3개 학파에 넣지 않음 |
 | `자기분석 결과 보고서.hwp` | [self-analysis-report/](./self-analysis-report/) | 참조. 이름은 익명. 사례 예시만 |
+
+## 2026-10-01 5차 — 온라인 설명·이고그램 원고 2건
+
+| 원본 파일 | 정리 위치 | 처리 |
+|---|---|---|
+| `온라인검사 설명 및 활용 2020.01.04.pptx` | [online-exam-2020/](./online-exam-2020/) | 상담사용 절차 설명. 채점 기준은 바꾸지 않음 |
+| `이고그램총합_243패턴 오타정리 2020.04.02.hwp` | [egogram-manual/](./egogram-manual/) | 243 문장은 기존 202코드와 같음. 60문항 점검표와 1994년 표는 별도. 컷은 확인 전 |
