@@ -6,6 +6,7 @@
 
 - 시간 구조화 문항·척도 배정은 [60문항 기준](../time-structuring/README.md)을 유지한다. 이 노트의 활동·잡담 순서와 마름모는 이론으로만 둔다.
 - 이고-오케이 문항과 5단계·243 구간은 [90문항 기준](../ego-ok/README.md)을 유지한다. 인생태도는 CP·NP, FC·AC 차이를 U+−U−, I+−I−로 표기한다.
+- 1999년 훈련 매뉴얼은 [별도 참조](../ta-theory-practice/README.md)다. 그 활동지 문항은 여기 기준을 바꾸지 않는다.
 
 원문 추출: [source-outline.txt](./source-outline.txt). 앞 숫자는 엑셀 행 번호다.
 
