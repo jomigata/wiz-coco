@@ -12,20 +12,6 @@ export type CounselorDispatchCompleteSummary = {
   notifyFailedCount?: number;
 };
 
-function DispatchNotifyOutcomeLine({
-  success,
-  failed,
-}: {
-  success: number;
-  failed: number;
-}) {
-  return (
-    <p className="rounded-xl border border-slate-500/30 bg-slate-900/50 px-3.5 py-3 text-center text-sm font-medium tabular-nums text-slate-100">
-      성공 : {success}명, 실패 : {failed}명
-    </p>
-  );
-}
-
 type Props = {
   open: boolean;
   title: string;
@@ -38,7 +24,7 @@ type Props = {
   confirmLabel?: string;
   onConfirm: () => void;
   zIndexClass?: string;
-  /** 내담자 추가·발송 완료 — 요약(성공/실패 명수) */
+  /** 내담자 추가·발송 완료 — 요약 */
   dispatchSummary?: CounselorDispatchCompleteSummary | null;
 };
 
@@ -72,35 +58,17 @@ function DispatchStatCard({
 
 function DispatchCompletePanel({ summary }: { summary: CounselorDispatchCompleteSummary }) {
   const showNotify = summary.notifySent !== false;
-  const addedCount = summary.addedCount ?? summary.targetCount;
+  const totalCount = summary.targetCount;
+  const label = showNotify ? '총 발송 수' : '총 추가 수';
 
   return (
     <div className="space-y-3 px-4 pb-1 pt-2 text-left">
-      {showNotify ? (
-        <div className="grid grid-cols-2 gap-2">
-          <DispatchStatCard label="발송 대상" value={summary.targetCount} suffix="명" tone="sky" />
-          <DispatchStatCard label="내담자 추가" value={addedCount} suffix="명" tone="success" />
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 gap-2">
-          <DispatchStatCard label="추가 대상" value={summary.targetCount} suffix="명" tone="sky" />
-          <DispatchStatCard label="추가 완료" value={addedCount} suffix="명" tone="success" />
-        </div>
-      )}
+      <DispatchStatCard label={label} value={totalCount} suffix="명" tone="sky" />
 
       {summary.excludedText ? (
         <div className="rounded-xl border border-amber-500/30 bg-amber-950/35 px-3 py-2.5 text-xs leading-relaxed text-amber-100/95">
           {summary.excludedText}
         </div>
-      ) : null}
-
-      {showNotify &&
-      summary.notifySuccessCount !== undefined &&
-      summary.notifyFailedCount !== undefined ? (
-        <DispatchNotifyOutcomeLine
-          success={summary.notifySuccessCount}
-          failed={summary.notifyFailedCount}
-        />
       ) : null}
     </div>
   );
