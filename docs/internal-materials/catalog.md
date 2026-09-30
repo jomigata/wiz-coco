@@ -21,3 +21,12 @@
 | `교류분석 요약정리.xls` | [ta-overview/](./ta-overview/) | 이론 노트. 시간 순서는 이론만. 인생태도는 NP−CP, FC−AC. 이고그램은 붙은 이름만 |
 
 1차는 검사 기준이고, 2차는 이론 노트다.
+
+## 2026-10-01 3차 — 보고서·그래프·메뉴 3건
+
+| 원본 파일 | 정리 위치 | 처리 |
+|---|---|---|
+| `보고서 - 243패턴과 유형 정리.xlsx` 시트 `243패턴` | [ego-ok/patterns-243-reports.json](./ego-ok/patterns-243-reports.json) | 해석 문장 202코드. 없는 41개는 비움. 점수 컷은 기존 243 표 |
+| 같은 파일 시트 `44가지 패턴` | [ego-ok/patterns-44.json](./ego-ok/patterns-44.json) | 형태 이름 추가. 역U 이름이 두 개라 확인 전 |
+| `인생태도그래프.xls` | [life-position-graph/](./life-position-graph/) | 빈 양식. 계산식은 NP−CP, FC−AC 유지 |
+| `상담 프로그램 메뉴 정리중.xlsx` | [counseling-menu/](./counseling-menu/) | 초안 4벌. 기준 시트는 확인 전. 약어 검사명은 채택하지 않음 |

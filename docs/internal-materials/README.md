@@ -26,6 +26,8 @@
 | [catalog.md](./catalog.md) | 지금까지 반영한 원본 목록 |
 | [확인요청.md](./확인요청.md) | 사람이 확인해 줄 항목 |
 | [time-structuring/](./time-structuring/) | 시간 구조화. 기준은 60문항 |
-| [ego-ok/](./ego-ok/) | 이고그램·오케이그램. 기준은 90문항 |
+| [ego-ok/](./ego-ok/) | 이고그램·오케이그램. 기준은 90문항. 243 문장·형태 이름 추가 |
+| [life-position-graph/](./life-position-graph/) | 인생태도 그래프 원본. 칸만 있고 수치는 없음 |
+| [counseling-menu/](./counseling-menu/) | 상담 프로그램 메뉴 초안 4벌. 기준 시트는 확인 전 |
 | [ta-overview/](./ta-overview/) | 교류분석 이론 요약. 채점 기준은 바꾸지 않음 |
 | [legacy-spec/](./legacy-spec/) | 예전 검사 사이트 제작 요구 |
