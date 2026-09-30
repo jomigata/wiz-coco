@@ -117,6 +117,8 @@ backend/*.pyc
 *.json
 !package.json
 !package-lock.json
+# 검사 원본 보관 (서비스 계정 키와 무관)
+!docs/internal-materials/**/*.json
 !.vscode/settings.json
 !tsconfig.json
 !next.config.js
