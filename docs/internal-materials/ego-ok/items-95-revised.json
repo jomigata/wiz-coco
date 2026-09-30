@@ -1,14 +1,11 @@
 {
   "id": "ego-ok-adult-youth-child-95",
   "title": "이고-OK그램 체크리스트 (수정본, 95문항)",
-  "status": "canonical",
+  "status": "not-adopted",
   "sourceFile": "검사 - 종합 설문지 결과 기준치_2020.04.01.xlsx",
   "sourceSheet": "체크리스트(수정)",
-  "adoptedBecause": "성인 문장이 가장 다듬어져 있고, 청소년·어린이 문장과 채점코드·성실도 쌍·하위 합계가 한 시트에 있다.",
-  "supersedes": [
-    "같은 파일 시트 '체크리스트' 90문항",
-    "검사 - 초기 종합 프로젝트 준비물.xlsx 시트 '1c.검사문항(95개)' 및 '1.2 검사실시 (2)'"
-  ],
+  "adoptedBecause": "2026-09-30 확인: 기준은 90문항이다. 이 95문항본은 페이크(성실도 반복) 5문항이 있어 기준으로 쓰지 않는다. 제외 번호는 26, 46, 54, 65, 93.",
+  "supersedes": [],
   "itemCount": 95,
   "items": [
     {

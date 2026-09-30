@@ -1,7 +1,8 @@
 {
   "id": "time-structuring-v48",
   "title": "시간구조화 체크리스트 (48문항)",
-  "status": "kept-separate",
+  "status": "ignored",
+  "ignoredBecause": "2026-09-30 확인: 시간 구조화는 60문항만 쓰고 이 48문항 파일은 쓰지 않는다.",
   "sourceFile": "검사 - 시간구조화_체크리스트.csv",
   "responseScale": [
     {

@@ -25,6 +25,6 @@
 |---|---|
 | [catalog.md](./catalog.md) | 지금까지 반영한 원본 목록 |
 | [확인요청.md](./확인요청.md) | 사람이 확인해 줄 항목 |
-| [time-structuring/](./time-structuring/) | 시간 구조화 |
-| [ego-ok/](./ego-ok/) | 이고그램·오케이그램 |
+| [time-structuring/](./time-structuring/) | 시간 구조화. 기준은 60문항 |
+| [ego-ok/](./ego-ok/) | 이고그램·오케이그램. 기준은 90문항 |
 | [legacy-spec/](./legacy-spec/) | 예전 검사 사이트 제작 요구 |
