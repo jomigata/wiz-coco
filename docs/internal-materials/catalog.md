@@ -27,6 +27,15 @@
 | 원본 파일 | 정리 위치 | 처리 |
 |---|---|---|
 | `보고서 - 243패턴과 유형 정리.xlsx` 시트 `243패턴` | [ego-ok/patterns-243-reports.json](./ego-ok/patterns-243-reports.json) | 해석 문장 202코드. 없는 41개는 비움. 점수 컷은 기존 243 표 |
-| 같은 파일 시트 `44가지 패턴` | [ego-ok/patterns-44.json](./ego-ok/patterns-44.json) | 형태 이름 추가. 역U 이름이 두 개라 확인 전 |
-| `인생태도그래프.xls` | [life-position-graph/](./life-position-graph/) | 빈 양식. 계산식은 NP−CP, FC−AC 유지 |
-| `상담 프로그램 메뉴 정리중.xlsx` | [counseling-menu/](./counseling-menu/) | 초안 4벌. 기준 시트는 확인 전. 약어 검사명은 채택하지 않음 |
+| 같은 파일 시트 `44가지 패턴` | [ego-ok/patterns-44.json](./ego-ok/patterns-44.json) | 형태 이름. 역U 둘 다 유지. CP 결핍은 느슨한형 |
+| `인생태도그래프.xls` | [life-position-graph/](./life-position-graph/) | 참조만. 계산식은 NP−CP, FC−AC |
+| `상담 프로그램 메뉴 정리중.xlsx` | [counseling-menu/menu.md](./counseling-menu/menu.md) | 네 시트를 합친 메뉴. 약어는 이름이 아님 |
+
+## 2026-10-01 4차 — 점검표·강의·사례 4건
+
+| 원본 파일 | 정리 위치 | 처리 |
+|---|---|---|
+| `검사 - 스트로크체크리스트.hwp` | [stroke/](./stroke/) | 25문항. 축 배정은 확인 전 |
+| `검사 - 인생태도점검표.hwp` | [life-position-checklist/](./life-position-checklist/) | 40문항. U− U+ I+ I− 각 10. 차이값과는 별도 |
+| `게슈탈트치료(B5).hwp` | [gestalt/](./gestalt/) | 강의 노트. 3개 학파에 넣지 않음 |
+| `자기분석 결과 보고서.hwp` | [self-analysis-report/](./self-analysis-report/) | 2011년 사례 글. 그래프 숫자는 없음 |
