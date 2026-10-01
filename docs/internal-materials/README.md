@@ -51,4 +51,5 @@
 | [parent-education/](./parent-education/) | 부모교육 강의. 설명만. 50문항 셀프테스트는 채점 아님 |
 | [psych-tests/](./psych-tests/) | 발표용 심리검사. 이름과 형식만. 48문항 시간표는 채점 아님 |
 | [expert-course/](./expert-course/) | 전문가과정 발표. 설명만. 강의의 문항·눈금·시간 순서는 채점 아님 |
+| [hakjisa-samples/](./hakjisa-samples/) | 학지사 결과 견본. 검사 이름만. 243 수정 시트는 채점 아님 |
 | [legacy-spec/](./legacy-spec/) | 예전 검사 사이트 제작 요구 |
