@@ -39,4 +39,5 @@
 | [ta-overview/](./ta-overview/) | 교류분석 이론 요약. 채점 기준은 바꾸지 않음 |
 | [ta-theory-practice/](./ta-theory-practice/) | 1999년 훈련 매뉴얼. 검사 수치는 무시. 설명·원인·대책만 사용 |
 | [relationship-aesthetics/](./relationship-aesthetics/) | 2010년 『관계의 미학, TA』. 설명만. 채점 없음 |
+| [ta-today/](./ta-today/) | 2010년 『현대의 교류분석』. 설명만. 채점 없음 |
 | [legacy-spec/](./legacy-spec/) | 예전 검사 사이트 제작 요구 |

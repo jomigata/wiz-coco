@@ -8,6 +8,7 @@
 - 이고-오케이 문항과 5단계·243 구간은 [90문항 기준](../ego-ok/README.md)을 유지한다. 인생태도는 CP·NP, FC·AC 차이를 U+−U−, I+−I−로 표기한다.
 - 1999년 훈련 매뉴얼은 [별도 참조](../ta-theory-practice/README.md)다. 그 활동지 문항은 여기 기준을 바꾸지 않는다.
 - 2010년 『관계의 미학, TA』도 [별도 참조](../relationship-aesthetics/README.md)다. 설명만 쓰고 채점은 바꾸지 않는다.
+- 2010년 『현대의 교류분석』도 [별도 참조](../ta-today/README.md)다. 설명만 쓰고 채점은 바꾸지 않는다.
 
 원문 추출: [source-outline.txt](./source-outline.txt). 앞 숫자는 엑셀 행 번호다.
 
