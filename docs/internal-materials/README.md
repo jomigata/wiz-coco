@@ -49,4 +49,6 @@
 | [counseling-forms/](./counseling-forms/) | 상담 빈 서식. 기록 칸과 자격 과제만. 척도 문항은 없음 |
 | [presentation-notes/](./presentation-notes/) | 발표용 요점과 그림. 기존 책·243과 겹치면 다시 두지 않음 |
 | [parent-education/](./parent-education/) | 부모교육 강의. 설명만. 50문항 셀프테스트는 채점 아님 |
+| [psych-tests/](./psych-tests/) | 발표용 심리검사. 이름과 형식만. 48문항 시간표는 채점 아님 |
+| [psych-tests/](./psych-tests/) | 심리검사 색인. 시간 구조화 한글은 48문항과 같음. 임상 문항은 없음 |
 | [legacy-spec/](./legacy-spec/) | 예전 검사 사이트 제작 요구 |
