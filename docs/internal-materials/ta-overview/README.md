@@ -12,6 +12,7 @@
 - 우재현 『심성개발을 위한 교류분석』도 [별도 참조](../mind-development/README.md)다. 설명만 쓰고 채점은 바꾸지 않는다.
 - 2003년 『상담의 디딤돌』도 [별도 참조](../counseling-elements/README.md)다. 상담 일반 원리다. 학파와 채점은 바꾸지 않는다.
 - 2008년 『마음의 해부학』도 [별도 참조](../im-ok-youre-ok/README.md)다. 설명만 쓰고 채점은 바꾸지 않는다.
+- 구조 분석·교류 패턴 일부 스캔도 [별도 참조](../ta-cases/README.md)다. 대화 예와 채점표는 쓰지 않는다.
 
 원문 추출: [source-outline.txt](./source-outline.txt). 앞 숫자는 엑셀 행 번호다.
 

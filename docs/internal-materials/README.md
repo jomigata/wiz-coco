@@ -43,4 +43,5 @@
 | [mind-development/](./mind-development/) | 2002년 제7판 『심성개발을 위한 교류분석』. 설명만. 채점 없음 |
 | [counseling-elements/](./counseling-elements/) | 2003년 『상담의 디딤돌』 제4판. 상담 원리 색인. 채점 없음 |
 | [im-ok-youre-ok/](./im-ok-youre-ok/) | 2008년 『마음의 해부학』. 설명만. 채점 없음 |
+| [ta-cases/](./ta-cases/) | 구조 분석·교류 패턴 일부 스캔. 설명만. 사례 본문 없음 |
 | [legacy-spec/](./legacy-spec/) | 예전 검사 사이트 제작 요구 |
