@@ -48,4 +48,5 @@
 | [ktaa-ego-okgram-guide/](./ktaa-ego-okgram-guide/) | 협회 이고-오케이그램 안내서. 그래프 읽기만. 채점은 90문항·2020 컷 |
 | [counseling-forms/](./counseling-forms/) | 상담 빈 서식. 기록 칸과 자격 과제만. 척도 문항은 없음 |
 | [presentation-notes/](./presentation-notes/) | 발표용 요점과 그림. 기존 책·243과 겹치면 다시 두지 않음 |
+| [parent-education/](./parent-education/) | 부모교육 강의. 설명만. 50문항 셀프테스트는 채점 아님 |
 | [legacy-spec/](./legacy-spec/) | 예전 검사 사이트 제작 요구 |
