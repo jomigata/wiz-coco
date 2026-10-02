@@ -90,20 +90,62 @@ function KtaaPlotLabelColumns({
 
 function KtaaPlotLayoutReporter(props: {
   offset?: { left: number; top: number; width: number; height: number };
+  xAxisMap?: Record<string, { scale: XBandScale }>;
   onPlotBox?: (box: KtaaPlotBox) => void;
 }) {
-  const { offset, onPlotBox } = props;
+  const { offset, xAxisMap, onPlotBox } = props;
   useLayoutEffect(() => {
-    if (offset?.width && onPlotBox) {
-      onPlotBox({ left: offset.left, width: offset.width });
-    }
-  }, [offset?.left, offset?.width, onPlotBox]);
+    if (!offset?.width || !onPlotBox) return;
+    const columns = getKtaaColumnLayouts(offset, xAxisMap);
+    if (columns.length === 0) return;
+    const first = columns[0];
+    const last = columns[columns.length - 1];
+    onPlotBox({ left: first.x, width: last.x + last.width - first.x });
+  }, [offset, xAxisMap, onPlotBox]);
   return null;
 }
 
 const PLOT_FRAME_STROKE = '#64748b';
 
 type YScale = ((v: number) => number) & { bandwidth?: () => number };
+type XBandScale = ((v: string) => number) & { bandwidth?: () => number };
+
+type KtaaColumnLayout = { code: (typeof COLUMN_ORDER)[number]; x: number; width: number };
+
+function getKtaaColumnLayouts(
+  offset: { left: number; top: number; width: number; height: number },
+  xAxisMap?: Record<string, { scale: XBandScale }>,
+): KtaaColumnLayout[] {
+  const xScale = Object.values(xAxisMap ?? {})[0]?.scale;
+  if (!xScale) {
+    const colW = offset.width / COLUMN_ORDER.length;
+    return COLUMN_ORDER.map((code, i) => ({
+      code,
+      x: offset.left + i * colW,
+      width: colW,
+    }));
+  }
+
+  const bandW = xScale.bandwidth?.();
+  const firstX = xScale(COLUMN_ORDER[0]);
+  if (typeof bandW === 'number' && bandW > 0 && typeof firstX === 'number' && !Number.isNaN(firstX)) {
+    return COLUMN_ORDER.map((code) => ({
+      code,
+      x: offset.left + xScale(code),
+      width: bandW,
+    }));
+  }
+
+  const centers = COLUMN_ORDER.map((code) => offset.left + xScale(code));
+  return COLUMN_ORDER.map((code, i) => {
+    const leftEdge = i === 0 ? offset.left : (centers[i - 1] + centers[i]) / 2;
+    const rightEdge =
+      i === COLUMN_ORDER.length - 1
+        ? offset.left + offset.width
+        : (centers[i] + centers[i + 1]) / 2;
+    return { code, x: leftEdge, width: rightEdge - leftEdge };
+  });
+}
 
 function ktaaZoneRects(
   x: number,
@@ -117,7 +159,7 @@ function ktaaZoneRects(
     const y1 = scale(from);
     const y2 = scale(to);
     const y = Math.min(y1, y2);
-    const h = Math.abs(y2 - y1) + 0.75;
+    const h = Math.abs(y2 - y1);
     return <rect key={key} x={x} y={y} width={w} height={h} fill={fill} />;
   };
   return [
@@ -127,19 +169,19 @@ function ktaaZoneRects(
   ];
 }
 
-/** 플롯 사각형 안에만 배경·열 구분선 (Recharts offset과 1:1) */
+/** 플롯 사각형 안 배경·열 구분선 — X축 band 위치와 막대 열 정렬 */
 function KtaaPlotBackground(props: {
   offset?: { left: number; top: number; width: number; height: number };
+  xAxisMap?: Record<string, { scale: XBandScale }>;
   yAxisMap?: Record<string, { scale: YScale }>;
 }) {
-  const { offset, yAxisMap } = props;
+  const { offset, xAxisMap, yAxisMap } = props;
   if (!offset?.width || !yAxisMap) return null;
-  const scale = Object.values(yAxisMap)[0]?.scale;
-  if (!scale) return null;
+  const yScale = Object.values(yAxisMap)[0]?.scale;
+  if (!yScale) return null;
 
   const { left, top, width, height } = offset;
-  const colW = width / COLUMN_ORDER.length;
-  const halfW = colW / 2;
+  const columns = getKtaaColumnLayouts(offset, xAxisMap);
   const clipId = 'ktaa-plot-clip';
 
   return (
@@ -150,30 +192,16 @@ function KtaaPlotBackground(props: {
         </clipPath>
       </defs>
       <g clipPath={`url(#${clipId})`}>
-        {COLUMN_ORDER.map((code, i) => {
-          const xCol = left + i * colW;
+        {columns.map(({ code, x: xCol, width: colW }) => {
+          const halfW = colW / 2;
           return (
             <g key={code}>
-              <rect
-                x={xCol}
-                y={top}
-                width={halfW}
-                height={height}
-                fill={GENDER_ZONE_COLORS.male.middle}
-              />
-              <rect
-                x={xCol + halfW}
-                y={top}
-                width={halfW}
-                height={height}
-                fill={GENDER_ZONE_COLORS.female.middle}
-              />
               {ktaaZoneRects(
                 xCol,
                 halfW,
                 KTAA_GRAPH_ZONES.male[code],
                 GENDER_ZONE_COLORS.male,
-                scale,
+                yScale,
                 `${code}-m`,
               )}
               {ktaaZoneRects(
@@ -181,7 +209,7 @@ function KtaaPlotBackground(props: {
                 halfW,
                 KTAA_GRAPH_ZONES.female[code],
                 GENDER_ZONE_COLORS.female,
-                scale,
+                yScale,
                 `${code}-f`,
               )}
               <line
@@ -196,12 +224,12 @@ function KtaaPlotBackground(props: {
             </g>
           );
         })}
-        {[1, 2, 3, 4].map((k) => (
+        {columns.slice(0, -1).map(({ code, x, width: colW }) => (
           <line
-            key={`col-${k}`}
-            x1={left + k * colW}
+            key={`col-div-${code}`}
+            x1={x + colW}
             y1={top}
-            x2={left + k * colW}
+            x2={x + colW}
             y2={top + height}
             stroke={PLOT_FRAME_STROKE}
             strokeWidth={2}
@@ -388,7 +416,13 @@ export default function EgoOkKtaaCompositeChart({
 
       <div className="relative w-full leading-none" style={{ height: CHART_PLOT_HEIGHT_PX }}>
         <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart data={data} margin={CHART_MARGIN} style={{ background: 'transparent' }}>
+          <ComposedChart
+            data={data}
+            margin={CHART_MARGIN}
+            barCategoryGap={0}
+            barGap={0}
+            style={{ background: 'transparent' }}
+          >
             <Customized component={KtaaPlotBackground} />
             <ReferenceLine
               y={12.5}
@@ -409,6 +443,7 @@ export default function EgoOkKtaaCompositeChart({
             />
             <XAxis
               dataKey="xLabel"
+              scale="band"
               hide
               height={0}
               padding={{ left: 0, right: 0 }}
@@ -442,8 +477,15 @@ export default function EgoOkKtaaCompositeChart({
             />
             <Customized component={KtaaPlotFrameBorder} />
             <Customized
-              component={(props: { offset?: { left: number; top: number; width: number; height: number } }) => (
-                <KtaaPlotLayoutReporter offset={props.offset} onPlotBox={handlePlotBox} />
+              component={(props: {
+                offset?: { left: number; top: number; width: number; height: number };
+                xAxisMap?: Record<string, { scale: XBandScale }>;
+              }) => (
+                <KtaaPlotLayoutReporter
+                  offset={props.offset}
+                  xAxisMap={props.xAxisMap}
+                  onPlotBox={handlePlotBox}
+                />
               )}
             />
           </ComposedChart>
