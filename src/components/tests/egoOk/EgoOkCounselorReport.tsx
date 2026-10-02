@@ -19,7 +19,6 @@ import {
   Tooltip,
   Cell,
   Customized,
-  LabelList,
   type TooltipProps,
 } from 'recharts';
 import EgoOkKtaaCompositeChart from '@/components/tests/egoOk/EgoOkKtaaCompositeChart';
@@ -93,34 +92,40 @@ function egogramRadarTooltipLine(row: EgogramRadarRow): string {
   return line.length > 24 ? `${line.slice(0, 22)}…` : line;
 }
 
-function EgogramRadarVertexMarkers({
+function EgogramRadarPeakVertexLayer({
+  data,
   peakScore,
-  x,
-  y,
-  cx,
-  cy,
-  payload,
+  cx = 0,
+  cy = 0,
+  outerRadius = 0,
 }: {
+  data: EgogramRadarRow[];
   peakScore: number;
-  x?: number;
-  y?: number;
   cx?: number;
   cy?: number;
-  payload?: EgogramRadarRow;
+  outerRadius?: number;
 }) {
-  const px = cx ?? x;
-  const py = cy ?? y;
-  if (px == null || py == null || !payload) return null;
-  if (isEgogramPeakScore(payload.score, peakScore)) {
-    return (
-      <g pointerEvents="none">
-        <circle cx={px} cy={py} r={9} fill={EGOGRAM_RADAR_PINK} fillOpacity={0.35} />
-        <circle cx={px} cy={py} r={6.5} fill={EGOGRAM_RADAR_PINK} stroke="#ffffff" strokeWidth={2.5} />
-      </g>
-    );
-  }
+  if (outerRadius <= 0 || peakScore <= 0) return null;
+  const n = data.length;
+  const step = 360 / n;
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+
   return (
-    <circle cx={px} cy={py} r={4} fill="#eef2ff" stroke="#818cf8" strokeWidth={2} pointerEvents="none" />
+    <g pointerEvents="none">
+      {data.map((row, i) => {
+        if (!isEgogramPeakScore(row.score, peakScore)) return null;
+        const mid = 90 - step * i;
+        const r = outerRadius * (row.score / row.fullMark);
+        const x = cx + r * Math.cos(toRad(mid));
+        const y = cy - r * Math.sin(toRad(mid));
+        return (
+          <g key={`peak-${row.scale}`}>
+            <circle cx={x} cy={y} r={9} fill={EGOGRAM_RADAR_PINK} fillOpacity={0.35} />
+            <circle cx={x} cy={y} r={6.5} fill={EGOGRAM_RADAR_PINK} stroke="#ffffff" strokeWidth={2.5} />
+          </g>
+        );
+      })}
+    </g>
   );
 }
 
@@ -153,6 +158,20 @@ function EgogramRadarScaleTick({
   );
 }
 
+function createEgogramRadarPeakLayer(data: EgogramRadarRow[], peakScore: number) {
+  return function EgogramRadarPeakLayer(props: { cx?: number; cy?: number; outerRadius?: number }) {
+    return (
+      <EgogramRadarPeakVertexLayer
+        data={data}
+        peakScore={peakScore}
+        cx={props.cx}
+        cy={props.cy}
+        outerRadius={props.outerRadius}
+      />
+    );
+  };
+}
+
 function EgogramFiveScaleRadarChart({ data }: { data: EgogramRadarRow[] }) {
   const gradientId = useId().replace(/:/g, '');
   const peakScore = useMemo(() => Math.max(...data.map((d) => d.score), 0), [data]);
@@ -161,16 +180,38 @@ function EgogramFiveScaleRadarChart({ data }: { data: EgogramRadarRow[] }) {
     [data, peakScore],
   );
 
-  const VertexMarkers = useMemo(
+  const PeakLayer = useMemo(
+    () => createEgogramRadarPeakLayer(data, peakScore),
+    [data, peakScore],
+  );
+
+  /** 최고점은 PeakLayer 고정 분홍만 사용 — dot는 툴팁 hit 영역만 */
+  const RadarVertexDot = useMemo(
     () =>
-      function EgogramRadarVertexMarkersLayer(props: {
-        x?: number;
-        y?: number;
-        cx?: number;
-        cy?: number;
-        payload?: EgogramRadarRow;
-      }) {
-        return <EgogramRadarVertexMarkers peakScore={peakScore} {...props} />;
+      function EgogramRadarVertexDot(props: { cx?: number; cy?: number; payload?: EgogramRadarRow }) {
+        const { cx, cy, payload } = props;
+        if (cx == null || cy == null || !payload) return null;
+        if (isEgogramPeakScore(payload.score, peakScore)) {
+          return <circle cx={cx} cy={cy} r={10} fill="transparent" stroke="none" pointerEvents="all" />;
+        }
+        return (
+          <circle cx={cx} cy={cy} r={4} fill="#eef2ff" stroke="#818cf8" strokeWidth={2} />
+        );
+      },
+    [peakScore],
+  );
+
+  const RadarVertexActiveDot = useMemo(
+    () =>
+      function EgogramRadarVertexActiveDot(props: { cx?: number; cy?: number; payload?: EgogramRadarRow }) {
+        const { cx, cy, payload } = props;
+        if (cx == null || cy == null || !payload) return null;
+        if (isEgogramPeakScore(payload.score, peakScore)) {
+          return null;
+        }
+        return (
+          <circle cx={cx} cy={cy} r={6} fill="#ffffff" stroke="#a5b4fc" strokeWidth={2} />
+        );
       },
     [peakScore],
   );
@@ -231,12 +272,11 @@ function EgogramFiveScaleRadarChart({ data }: { data: EgogramRadarRow[] }) {
           fillOpacity={1}
           strokeWidth={2.5}
           isAnimationActive={false}
-          dot={false}
-          activeDot={false}
-        >
-          <LabelList content={<VertexMarkers />} />
-        </Radar>
+          dot={<RadarVertexDot />}
+          activeDot={<RadarVertexActiveDot />}
+        />
         <Customized component={EgogramRadarCenterMark} />
+        <Customized component={PeakLayer} />
         <Tooltip content={<EgogramRadarTooltip />} />
       </RadarChart>
     </ResponsiveContainer>
