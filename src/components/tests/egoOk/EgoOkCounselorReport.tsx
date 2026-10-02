@@ -113,7 +113,7 @@ function egogramRadarScorePolygonPath(verts: { x: number; y: number }[]): string
   return `M ${first.x} ${first.y} ${rest.map((p) => `L ${p.x} ${p.y}`).join(' ')} Z`;
 }
 
-/** 합계 오각형 내부: 중심 0 하늘 → 바깥(합) 분홍, 바깥일수록 더 투명 */
+/** 합계 오각형 내부: 중심 0 하늘 → 바깥(합) 분홍 (불투명) */
 function createEgogramRadarBackground(rows: EgogramRadarRow[]) {
   const gradId = 'egogram-radar-pentagon-radial';
   return function EgogramRadarBackground(props: { cx?: number; cy?: number; outerRadius?: number }) {
@@ -141,11 +141,10 @@ function createEgogramRadarBackground(rows: EgogramRadarRow[]) {
             cy={cy}
             r={maxVertexR}
           >
-            <stop offset="0%" stopColor={EGOGRAM_RADAR_SKY} stopOpacity={0.48} />
-            <stop offset="28%" stopColor={EGOGRAM_RADAR_SKY} stopOpacity={0.28} />
-            <stop offset="58%" stopColor={EGOGRAM_RADAR_PINK} stopOpacity={0.16} />
-            <stop offset="82%" stopColor={EGOGRAM_RADAR_PINK} stopOpacity={0.08} />
-            <stop offset="100%" stopColor={EGOGRAM_RADAR_PINK} stopOpacity={0.02} />
+            <stop offset="0%" stopColor={EGOGRAM_RADAR_SKY} />
+            <stop offset="35%" stopColor={EGOGRAM_RADAR_SKY} />
+            <stop offset="65%" stopColor="#e8b4cc" />
+            <stop offset="100%" stopColor={EGOGRAM_RADAR_PINK} />
           </radialGradient>
         </defs>
         <path d={polygonPath} fill={`url(#${gradId})`} stroke="none" />
