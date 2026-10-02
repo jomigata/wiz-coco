@@ -26,9 +26,10 @@ const EGO_POS_COLOR = '#9cc9e8';
 const EGO_TOTAL_BOX_STROKE = '#0284c7';
 const OK_LINE_COLOR = '#d32f2f';
 /** KTAA: 좌=남(청), 우=여(붉은) — C/B/A 구간 모두 성별 톤 (협회 안내서) */
+/** C/B/A 구간 — 좌(남·청) / 우(여·붉은) 톤이 상·중·하 모두 이어지도록 (중간도 순백 제외) */
 const GENDER_ZONE_COLORS = {
-  male: { bottom: '#bdd8e8', middle: '#eef6fb', top: '#d6e8f5' },
-  female: { bottom: '#f5d6d6', middle: '#ffffff', top: '#ecd6d6' },
+  male: { bottom: '#bdd8e8', middle: '#d4e8f2', top: '#d6e8f5' },
+  female: { bottom: '#f5d6d6', middle: '#f2dede', top: '#ecd6d6' },
 } as const;
 
 const CHART_PLOT_HEIGHT_PX = Math.round(680 * (2 / 3) * 1.2);
@@ -116,7 +117,7 @@ function ktaaZoneRects(
     const y1 = scale(from);
     const y2 = scale(to);
     const y = Math.min(y1, y2);
-    const h = Math.abs(y2 - y1);
+    const h = Math.abs(y2 - y1) + 0.75;
     return <rect key={key} x={x} y={y} width={w} height={h} fill={fill} />;
   };
   return [
@@ -153,6 +154,20 @@ function KtaaPlotBackground(props: {
           const xCol = left + i * colW;
           return (
             <g key={code}>
+              <rect
+                x={xCol}
+                y={top}
+                width={halfW}
+                height={height}
+                fill={GENDER_ZONE_COLORS.male.middle}
+              />
+              <rect
+                x={xCol + halfW}
+                y={top}
+                width={halfW}
+                height={height}
+                fill={GENDER_ZONE_COLORS.female.middle}
+              />
               {ktaaZoneRects(
                 xCol,
                 halfW,
@@ -285,14 +300,14 @@ function EgoTotalBoxLabel(props: {
         height={boxH}
         rx={0}
         fill="#fff"
-        stroke="#475569"
-        strokeWidth={1}
+        stroke={EGO_TOTAL_BOX_STROKE}
+        strokeWidth={1.5}
       />
       <text
         x={cx}
         y={boxY + 13}
         textAnchor="middle"
-        fill="#334155"
+        fill="#0c4a6e"
         fontSize={11}
         fontWeight={700}
       >
@@ -385,6 +400,8 @@ export default function EgoOkKtaaCompositeChart({
             <CartesianGrid stroke="#cbd5e1" strokeDasharray="0" vertical horizontal fillOpacity={0} />
             <YAxis
               domain={[0, 50]}
+              allowDataOverflow
+              padding={{ top: 0, bottom: 0 }}
               ticks={Y_TICKS}
               tick={{ fill: '#64748b', fontSize: 10 }}
               axisLine={{ stroke: '#94a3b8' }}
