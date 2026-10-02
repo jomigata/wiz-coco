@@ -18,5 +18,14 @@
     "safe": [3, 4, 5],
     "excess": [6, 7, 8, 9]
   },
-  "patternPlusOrder": ["CP", "NP", "A", "FC", "AC"]
+  "patternPlusOrder": ["CP", "NP", "A", "FC", "AC"],
+  "display": {
+    "label": "243+ 플러스",
+    "glyph": "letter + stage digit 1-9 (e.g. B5)",
+    "digitColors": {
+      "1-3": "#7dd3fc",
+      "4-6": "#34d399",
+      "7-9": "#f472b6"
+    }
+  }
 }

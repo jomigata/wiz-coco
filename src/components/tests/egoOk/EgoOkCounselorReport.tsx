@@ -14,7 +14,12 @@ import {
   buildPeakEgogramEnergyInsight,
   formatEgogramEnergyHeadline,
 } from '@/lib/egogramEnergyStageComments';
-import { EGO_SCALE_PATTERN_ORDER, type Pattern243Plus, type Plus243Tier } from '@/lib/egogram243Plus';
+import {
+  EGO_SCALE_PATTERN_ORDER,
+  plus243StageDigitColor,
+  type Pattern243Plus,
+  type Plus243Tier,
+} from '@/lib/egogram243Plus';
 import { OK_LABELS, OK_SCALE_HINTS } from '@/lib/egoOkScoring';
 import { egoOkGenderToLabel } from '@/lib/egoOkTestGender';
 import type { ClientInfo } from '@/components/tests/MbtiProClientInfo';
@@ -93,18 +98,23 @@ function pickExtremeEgogramScale(scales: EgoOkScaleScore[], mode: 'max' | 'min')
 
 function Plus243TierGlyph({ tier, className }: { tier: Plus243Tier; className?: string }) {
   return (
-    <span className={className}>
-      {tier.letter}
-      <sup className="ml-px align-super text-[0.55em] font-bold leading-none text-fuchsia-300">{tier.degree}</sup>
+    <span className={`inline-flex items-baseline ${className ?? ''}`}>
+      <span className="font-mono text-sm font-semibold text-slate-200">{tier.letter}</span>
+      <span
+        className="font-mono text-sm font-bold leading-none"
+        style={{ color: plus243StageDigitColor(tier.stage) }}
+      >
+        {tier.stage}
+      </span>
     </span>
   );
 }
 
 function Pattern243PlusCode({ plus, className }: { plus: Pattern243Plus; className?: string }) {
   return (
-    <span className={`inline-flex items-baseline font-mono tracking-wide ${className ?? ''}`}>
+    <span className={`inline-flex flex-wrap items-baseline gap-0.5 font-mono tracking-wide ${className ?? ''}`}>
       {EGO_SCALE_PATTERN_ORDER.map((id) => (
-        <Plus243TierGlyph key={id} tier={plus.byScale[id]} className="text-indigo-100" />
+        <Plus243TierGlyph key={id} tier={plus.byScale[id]} />
       ))}
     </span>
   );
@@ -135,7 +145,7 @@ function EgogramRadarSummarySubtitle({
         </span>
         <span className="text-slate-500">·</span>
         <span className="inline-flex flex-wrap items-baseline gap-1">
-          <span>243+ 패턴</span>
+          <span>243+ 플러스</span>
           <Pattern243PlusCode plus={pattern243Plus} />
         </span>
         {basicPattern ? <span className="text-slate-300">· {basicPattern}</span> : null}
@@ -344,9 +354,11 @@ function EgogramRadarScaleTick({
   );
 }
 
-function EgogramOkRadarVertexDot(props: { cx?: number; cy?: number; payload?: EgogramRadarRow }) {
+function createEgogramOkRadarVertexDot(highlightScores: Set<number>) {
+  return function EgogramOkRadarVertexDot(props: { cx?: number; cy?: number; payload?: EgogramRadarRow }) {
   const { cx, cy, payload } = props;
   if (cx == null || cy == null || !payload || payload.okScore == null) return null;
+  if (highlightScores.has(payload.score)) return null;
   return (
     <circle
       cx={cx}
@@ -358,11 +370,16 @@ function EgogramOkRadarVertexDot(props: { cx?: number; cy?: number; payload?: Eg
       pointerEvents="none"
     />
   );
+  };
 }
 
 function EgogramFiveScaleRadarChart({ data }: { data: EgogramRadarRow[] }) {
   const gradientId = useId().replace(/:/g, '');
   const highlightScores = useMemo(() => egogramRadarHighlightScores(data), [data]);
+  const OkRadarVertexDot = useMemo(
+    () => createEgogramOkRadarVertexDot(highlightScores),
+    [highlightScores],
+  );
   const okRadarData = useMemo(
     () => data.map((row) => ({ ...row, okRadarValue: row.okScore ?? row.score })),
     [data],
@@ -475,6 +492,16 @@ function EgogramFiveScaleRadarChart({ data }: { data: EgogramRadarRow[] }) {
           )}
         />
         <Radar
+          name="오케이"
+          dataKey="okRadarValue"
+          stroke="none"
+          fill="none"
+          isAnimationActive={false}
+          dot={<OkRadarVertexDot />}
+          activeDot={false}
+          legendType="none"
+        />
+        <Radar
           name="점수"
           dataKey="score"
           stroke="#c7d2fe"
@@ -484,16 +511,6 @@ function EgogramFiveScaleRadarChart({ data }: { data: EgogramRadarRow[] }) {
           isAnimationActive={false}
           dot={<RadarVertexDot />}
           activeDot={<RadarVertexActiveDot />}
-        />
-        <Radar
-          name="오케이"
-          dataKey="okRadarValue"
-          stroke="none"
-          fill="none"
-          isAnimationActive={false}
-          dot={<EgogramOkRadarVertexDot />}
-          activeDot={false}
-          legendType="none"
         />
         <Customized component={EgogramRadarCenterMark} />
         <Tooltip content={<EgogramRadarTooltip />} />
@@ -696,7 +713,7 @@ export default function EgoOkCounselorReport({
               </dd>
             </div>
             <div className="rounded-xl bg-white/[0.04] px-4 py-3 ring-1 ring-white/10">
-              <dt className="text-xs text-slate-500">243 / 243+ 패턴</dt>
+              <dt className="text-xs text-slate-500">243 / 243+ 플러스</dt>
               <dd className="mt-1 font-mono text-lg font-bold tracking-widest text-indigo-200">
                 {report.patternCode}
               </dd>
@@ -821,27 +838,27 @@ export default function EgoOkCounselorReport({
           <div className="rounded-xl bg-white/[0.04] p-5 ring-1 ring-white/10">
             <p className="text-xs uppercase tracking-wide text-slate-500">CP + NP</p>
             <p className="mt-2 text-3xl font-bold text-white">{report.plus243.cpNpSum}</p>
-            <p className="mt-2 font-mono text-lg text-fuchsia-200">
+            <p className="mt-2 text-lg">
               <Plus243TierGlyph tier={report.pattern243Plus.groups.cpNp.tier} />
             </p>
           </div>
           <div className="rounded-xl bg-white/[0.04] p-5 ring-1 ring-white/10">
             <p className="text-xs uppercase tracking-wide text-slate-500">A (성인)</p>
             <p className="mt-2 text-3xl font-bold text-white">{report.plus243.aSum}</p>
-            <p className="mt-2 font-mono text-lg text-fuchsia-200">
+            <p className="mt-2 text-lg">
               <Plus243TierGlyph tier={report.pattern243Plus.groups.a.tier} />
             </p>
           </div>
           <div className="rounded-xl bg-white/[0.04] p-5 ring-1 ring-white/10">
             <p className="text-xs uppercase tracking-wide text-slate-500">FC + AC</p>
             <p className="mt-2 text-3xl font-bold text-white">{report.plus243.fcAcSum}</p>
-            <p className="mt-2 font-mono text-lg text-fuchsia-200">
+            <p className="mt-2 text-lg">
               <Plus243TierGlyph tier={report.pattern243Plus.groups.fcAc.tier} />
             </p>
           </div>
         </div>
         <p className="mt-4 text-sm text-slate-400">
-          243+ 5척도 패턴{' '}
+          243+ 플러스 (5척도){' '}
           <Pattern243PlusCode plus={report.pattern243Plus} className="ml-1 align-middle" />
         </p>
       </SectionCard>

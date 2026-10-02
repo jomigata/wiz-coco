@@ -56,15 +56,22 @@ export function rawScoreToPlus243Tier(raw: number): Plus243Tier {
   };
 }
 
-/** ASCII 코드 (A1, B3 …) — 저장·로그용 */
+/** 243+ 플러스 표기 — 글자(A/B/C) + 9단계 숫자(1~9) */
 export function plus243TierToAscii(tier: Plus243Tier): string {
-  return `${tier.letter}${tier.degree}`;
+  return `${tier.letter}${tier.stage}`;
+}
+
+/** 1~3 하늘 · 4~6 녹색 · 7~9 분홍 */
+export function plus243StageDigitColor(stage: Plus243Stage): string {
+  if (stage <= 3) return '#7dd3fc';
+  if (stage <= 6) return '#34d399';
+  return '#f472b6';
 }
 
 export type Pattern243Plus = {
-  /** CP→NP→A→FC→AC 순 5자 (예: A1B2C3A2B1) */
+  /** CP→NP→A→FC→AC 순 (예: B5B6B3B6B5 — 숫자는 9단계) */
   codeAscii: string;
-  /** 유니코드 지수 연결 (예: A¹B²C³) */
+  /** codeAscii와 동일 (레거시 필드) */
   codeLabel: string;
   byScale: Record<EgoScaleId, Plus243Tier>;
   /** CP+NP, A 단독, FC+AC 그룹 (243Plus 요약) */
@@ -82,7 +89,7 @@ export function buildPattern243Plus(egogram: EgoOkScaleScore[]): Pattern243Plus 
     byScale[id] = rawScoreToPlus243Tier(byId[id].raw);
   }
   const codeAscii = EGO_SCALE_PATTERN_ORDER.map((id) => plus243TierToAscii(byScale[id])).join('');
-  const codeLabel = EGO_SCALE_PATTERN_ORDER.map((id) => byScale[id].label).join('');
+  const codeLabel = codeAscii;
 
   const cp = byId.CP.raw;
   const np = byId.NP.raw;
@@ -113,5 +120,5 @@ export function plus243StageBand(stage: Plus243Stage): 'deficit' | 'safe' | 'exc
 export function formatPlus243StageLabel(tier: Plus243Tier): string {
   const band = plus243StageBand(tier.stage);
   const bandKo = band === 'safe' ? '안전성(3~5단계)' : band === 'excess' ? '과함(6~9단계)' : '부족(1~2단계)';
-  return `243+ ${tier.label} · ${tier.stage}단계/9 · ${bandKo} (${tier.min}~${tier.max}점)`;
+  return `243+ 플러스 ${plus243TierToAscii(tier)} · ${tier.stage}단계/9 · ${bandKo} (${tier.min}~${tier.max}점)`;
 }
