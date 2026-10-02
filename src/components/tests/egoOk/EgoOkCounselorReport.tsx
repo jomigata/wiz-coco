@@ -266,37 +266,6 @@ function egogramRadarTopTwoScaleIds(rows: EgogramRadarRow[]): Set<string> {
   return new Set(rows.filter((r) => topTwo.has(r.score)).map((r) => r.scale));
 }
 
-function egogramRadarPeakScaleRow(rows: EgogramRadarRow[]): EgogramRadarRow {
-  return rows.reduce((pick, row) => {
-    if (row.score > pick.score) return row;
-    if (row.score === pick.score) {
-      const pickIdx = EGOGRAM_RADAR_AXIS_ORDER.indexOf(pick.scale as (typeof EGOGRAM_RADAR_AXIS_ORDER)[number]);
-      const rowIdx = EGOGRAM_RADAR_AXIS_ORDER.indexOf(row.scale as (typeof EGOGRAM_RADAR_AXIS_ORDER)[number]);
-      return rowIdx >= 0 && (pickIdx < 0 || rowIdx < pickIdx) ? row : pick;
-    }
-    return pick;
-  });
-}
-
-function egogramRadarVertexPoint(
-  cx: number,
-  cy: number,
-  outerRadius: number,
-  rowIndex: number,
-  rowCount: number,
-  score: number,
-  fullMark: number,
-): { x: number; y: number } {
-  const step = 360 / rowCount;
-  const deg = 90 - step * rowIndex;
-  const rad = (deg * Math.PI) / 180;
-  const r = outerRadius * (score / fullMark);
-  return {
-    x: cx + r * Math.cos(rad),
-    y: cy - r * Math.sin(rad),
-  };
-}
-
 function resolveEgogramRadarTickRow(
   rows: EgogramRadarRow[],
   payload?: { value?: string | number; index?: number },
@@ -372,41 +341,9 @@ function EgogramRadarScaleTick({
   );
 }
 
-function createEgogramRadarPeakAxisLayer(rows: EgogramRadarRow[]) {
-  return function EgogramRadarPeakAxisLayer(props: { cx?: number; cy?: number; outerRadius?: number }) {
-    const { cx, cy, outerRadius = 0 } = props;
-    if (cx == null || cy == null || outerRadius <= 0 || rows.length === 0) return null;
-    const peak = egogramRadarPeakScaleRow(rows);
-    const idx = rows.findIndex((r) => r.scale === peak.scale);
-    if (idx < 0) return null;
-    const { x: x2, y: y2 } = egogramRadarVertexPoint(
-      cx,
-      cy,
-      outerRadius,
-      idx,
-      rows.length,
-      peak.score,
-      peak.fullMark,
-    );
-    return (
-      <line
-        x1={cx}
-        y1={cy}
-        x2={x2}
-        y2={y2}
-        stroke={EGOGRAM_RADAR_PINK}
-        strokeWidth={2.5}
-        strokeOpacity={0.95}
-        pointerEvents="none"
-      />
-    );
-  };
-}
-
 function EgogramFiveScaleRadarChart({ data }: { data: EgogramRadarRow[] }) {
   const gradientId = useId().replace(/:/g, '');
   const highlightScaleIds = useMemo(() => egogramRadarTopTwoScaleIds(data), [data]);
-  const PeakAxisLayer = useMemo(() => createEgogramRadarPeakAxisLayer(data), [data]);
 
   const RadarVertexDot = useMemo(
     () =>
@@ -525,7 +462,6 @@ function EgogramFiveScaleRadarChart({ data }: { data: EgogramRadarRow[] }) {
           dot={<RadarVertexDot />}
           activeDot={<RadarVertexActiveDot />}
         />
-        <Customized component={PeakAxisLayer} />
         <Customized component={EgogramRadarCenterMark} />
         <Tooltip content={<EgogramRadarTooltip />} />
       </RadarChart>
