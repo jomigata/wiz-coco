@@ -36,10 +36,20 @@ function EgoOkResultContent() {
       : undefined
     : draft?.clientInfo?.gender;
 
-  const report = useMemo(() => {
+  const reportError = useMemo(() => {
     if (!draft) return null;
-    return computeEgoOkReport(draft.answers, reportGenderLabel);
+    try {
+      computeEgoOkReport(draft.answers, reportGenderLabel);
+      return null;
+    } catch (e) {
+      return e instanceof Error ? e.message : '채점할 수 없습니다.';
+    }
   }, [draft, reportGenderLabel]);
+
+  const report = useMemo(() => {
+    if (!draft || reportError) return null;
+    return computeEgoOkReport(draft.answers, reportGenderLabel);
+  }, [draft, reportGenderLabel, reportError]);
 
   const handleTestGenderChange = (gender: EgoOkGender) => {
     saveStoredTestGender(gender);
@@ -69,6 +79,17 @@ function EgoOkResultContent() {
     return (
       <div className="flex min-h-[50vh] items-center justify-center bg-[#070b14]">
         <LoadingMessage textClassName="text-slate-300" />
+      </div>
+    );
+  }
+
+  if (reportError) {
+    return (
+      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 bg-[#070b14] px-4 text-center">
+        <p className="text-slate-300">{reportError}</p>
+        <Link href="/tests/ego-ok-pro?localDirect=1" className="text-sky-400 hover:text-sky-300">
+          검사 다시 시작
+        </Link>
       </div>
     );
   }

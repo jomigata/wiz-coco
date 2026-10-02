@@ -75,7 +75,75 @@ const COLUMN_TRAIT_TITLE_CLASS =
 
 const COLUMN_DIVIDER_CLASS = 'border-r-2 border-slate-500/80';
 
-type KtaaPlotBox = { left: number; width: number };
+type KtaaPlotBox = { left: number; top: number; width: number; height: number };
+
+type YScale = ((v: number) => number) & { bandwidth?: () => number };
+
+type PlotBackgroundProps = {
+  offset?: { left: number; top: number; width: number; height: number };
+  yAxisMap?: Record<string, { scale: YScale }>;
+};
+
+type EgogramDominance = 'positive' | 'negative' | 'even';
+
+function columnDominance(col: EgoOkCompositeColumn): EgogramDominance {
+  if (col.egoPositive > col.egoNegative) return 'positive';
+  if (col.egoNegative > col.egoPositive) return 'negative';
+  return 'even';
+}
+
+function createKtaaColumnHoverLayer(
+  hoveredId: (typeof COLUMN_ORDER)[number] | null,
+  columns: EgoOkCompositeColumn[],
+) {
+  return function KtaaColumnHoverLayer(props: PlotBackgroundProps) {
+    const { offset } = props;
+    if (!hoveredId || !offset?.width) return null;
+    const colIndex = COLUMN_ORDER.indexOf(hoveredId);
+    if (colIndex < 0) return null;
+    const col = columns.find((c) => c.id === hoveredId);
+    if (!col) return null;
+    const { left, top, width, height } = offset;
+    const colW = width / COLUMN_ORDER.length;
+    const x = left + colIndex * colW;
+    const dom = columnDominance(col);
+    const gradId = `ktaa-hover-${hoveredId}`;
+    const stops =
+      dom === 'positive'
+        ? (
+            <>
+              <stop offset="0%" stopColor={EGO_POS_COLOR} stopOpacity={0.45} />
+              <stop offset="55%" stopColor="#ffffff" stopOpacity={0.08} />
+              <stop offset="100%" stopColor="#ffffff" stopOpacity={0} />
+            </>
+          )
+        : dom === 'negative'
+          ? (
+              <>
+                <stop offset="0%" stopColor="#ffffff" stopOpacity={0} />
+                <stop offset="45%" stopColor="#ffffff" stopOpacity={0.06} />
+                <stop offset="100%" stopColor={EGO_NEG_COLOR} stopOpacity={0.45} />
+              </>
+            )
+          : (
+              <>
+                <stop offset="0%" stopColor={EGO_POS_COLOR} stopOpacity={0.22} />
+                <stop offset="100%" stopColor={EGO_NEG_COLOR} stopOpacity={0.22} />
+              </>
+            );
+
+    return (
+      <g pointerEvents="none">
+        <defs>
+          <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+            {stops}
+          </linearGradient>
+        </defs>
+        <rect x={x} y={top} width={colW} height={height} fill={`url(#${gradId})`} />
+      </g>
+    );
+  };
+}
 
 /** Recharts offset과 동일한 픽셀 박스로 5열 라벨 정렬 */
 function KtaaPlotLabelColumns({
@@ -111,15 +179,18 @@ function KtaaPlotLayoutReporter(props: {
   const { offset, onPlotBox } = props;
   useLayoutEffect(() => {
     if (offset?.width && onPlotBox) {
-      onPlotBox({ left: offset.left, width: offset.width });
+      onPlotBox({
+        left: offset.left,
+        top: offset.top,
+        width: offset.width,
+        height: offset.height,
+      });
     }
-  }, [offset?.left, offset?.width, onPlotBox]);
+  }, [offset?.left, offset?.top, offset?.width, offset?.height, onPlotBox]);
   return null;
 }
 
 const PLOT_FRAME_STROKE = '#64748b';
-
-type YScale = ((v: number) => number) & { bandwidth?: () => number };
 
 function ktaaZoneRects(
   x: number,
@@ -142,11 +213,6 @@ function ktaaZoneRects(
     yBand(band.whiteTop, 50, colors.top, `${keyPrefix}-a`),
   ];
 }
-
-type PlotBackgroundProps = {
-  offset?: { left: number; top: number; width: number; height: number };
-  yAxisMap?: Record<string, { scale: YScale }>;
-};
 
 /** 내담자 성별 기준: 열 전체 동일 색·동일 C/B/A 구간 높이(남 또는 여 컷) */
 function createKtaaPlotBackground(displayGender: EgoOkGender) {
@@ -557,12 +623,30 @@ export default function EgoOkKtaaCompositeChart({
 
   const OkEgoSumLabelsLayer = useMemo(() => createKtaaOkEgoSumLabels(data), [data]);
 
+  const [hoveredId, setHoveredId] = useState<(typeof COLUMN_ORDER)[number] | null>(null);
+  const ColumnHoverLayer = useMemo(
+    () => createKtaaColumnHoverLayer(hoveredId, columns),
+    [hoveredId, columns],
+  );
+
   const [plotBox, setPlotBox] = useState<KtaaPlotBox | null>(null);
   const handlePlotBox = useCallback((box: KtaaPlotBox) => {
     setPlotBox((prev) =>
-      prev && prev.left === box.left && prev.width === box.width ? prev : box,
+      prev &&
+      prev.left === box.left &&
+      prev.top === box.top &&
+      prev.width === box.width &&
+      prev.height === box.height
+        ? prev
+        : box,
     );
   }, []);
+
+  const bindColumnHover = (id: (typeof COLUMN_ORDER)[number]) => ({
+    onMouseEnter: () => setHoveredId(id),
+    onMouseLeave: () => setHoveredId((prev) => (prev === id ? null : prev)),
+  });
+
   return (
     <div className="overflow-hidden rounded-xl border border-sky-200 bg-white text-gray-900 shadow-inner">
       <div className="border-b border-sky-100 bg-gradient-to-r from-sky-50 to-white px-4 py-3">
@@ -572,22 +656,29 @@ export default function EgoOkKtaaCompositeChart({
       </div>
 
       <KtaaPlotLabelColumns plotBox={plotBox} style={TRAIT_LABEL_PLOT_GAP_TOP}>
-        {columns.map((col, index) => (
-          <div
-            key={col.id}
-            className={`${COLUMN_TRAIT_TITLE_CLASS} ${
-              index < columns.length - 1 ? COLUMN_DIVIDER_CLASS : ''
-            }`}
-          >
-            {col.topLabel}
-          </div>
-        ))}
+        {columns.map((col, index) => {
+          const hovered = hoveredId === col.id;
+          const dom = columnDominance(col);
+          const topStrong = hovered && (dom === 'positive' || dom === 'even');
+          return (
+            <div
+              key={col.id}
+              {...bindColumnHover(col.id)}
+              className={`${COLUMN_TRAIT_TITLE_CLASS} ${
+                index < columns.length - 1 ? COLUMN_DIVIDER_CLASS : ''
+              } ${topStrong ? 'font-extrabold text-sky-900' : ''} ${hovered && dom === 'negative' ? 'text-gray-400' : ''}`}
+            >
+              {col.topLabel}
+            </div>
+          );
+        })}
       </KtaaPlotLabelColumns>
 
       <div className="relative w-full leading-none" style={{ height: CHART_PLOT_HEIGHT_PX }}>
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={data} margin={CHART_MARGIN} style={{ background: 'transparent' }}>
             <Customized component={PlotBackgroundLayer} />
+            <Customized component={ColumnHoverLayer} />
             <ReferenceLine
               y={12.5}
               stroke="#e57373"
@@ -646,35 +737,60 @@ export default function EgoOkKtaaCompositeChart({
             />
           </ComposedChart>
         </ResponsiveContainer>
+        {plotBox ? (
+          <div className="pointer-events-none absolute inset-0">
+            {columns.map((col, index) => (
+              <div
+                key={`hit-${col.id}`}
+                className="pointer-events-auto absolute top-0"
+                style={{
+                  top: plotBox.top,
+                  left: plotBox.left + (index * plotBox.width) / COLUMN_ORDER.length,
+                  width: plotBox.width / COLUMN_ORDER.length,
+                  height: plotBox.height,
+                }}
+                {...bindColumnHover(col.id)}
+              />
+            ))}
+          </div>
+        ) : null}
       </div>
 
       <KtaaPlotLabelColumns plotBox={plotBox} style={TRAIT_LABEL_PLOT_GAP_BOTTOM}>
-        {columns.map((col, index) => (
-          <div
-            key={`${col.id}-bottom`}
-            className={`${COLUMN_TRAIT_TITLE_CLASS} ${
-              index < columns.length - 1 ? COLUMN_DIVIDER_CLASS : ''
-            }`}
-          >
-            {col.bottomLabel}
-          </div>
-        ))}
+        {columns.map((col, index) => {
+          const hovered = hoveredId === col.id;
+          const dom = columnDominance(col);
+          const bottomStrong = hovered && (dom === 'negative' || dom === 'even');
+          return (
+            <div
+              key={`${col.id}-bottom`}
+              {...bindColumnHover(col.id)}
+              className={`${COLUMN_TRAIT_TITLE_CLASS} ${
+                index < columns.length - 1 ? COLUMN_DIVIDER_CLASS : ''
+              } ${bottomStrong ? 'font-extrabold text-orange-800' : ''} ${hovered && dom === 'positive' ? 'text-gray-400' : ''}`}
+            >
+              {col.bottomLabel}
+            </div>
+          );
+        })}
       </KtaaPlotLabelColumns>
 
       <KtaaPlotLabelColumns plotBox={plotBox} className={`pb-2 ${BOTTOM_TRAIT_TO_CODE_GAP}`}>
         {columns.map((col, index) => {
           const isA = col.id === 'A';
+          const hovered = hoveredId === col.id;
           return (
             <div
               key={`${col.id}-code`}
+              {...bindColumnHover(col.id)}
               className={`flex items-center justify-center ${
                 index < columns.length - 1 ? COLUMN_DIVIDER_CLASS : ''
               }`}
             >
               <span
-                className={`rounded border px-2 py-0.5 text-xs font-bold ${
-                  isA ? 'border-sky-500 text-sky-700' : 'border-red-400 text-red-600'
-                }`}
+                className={`rounded border px-2 py-0.5 text-xs ${
+                  hovered ? 'font-extrabold scale-105' : 'font-bold'
+                } ${isA ? 'border-sky-500 text-sky-700' : 'border-red-400 text-red-600'}`}
               >
                 {col.codeLabel}
                 {col.okTag ? (

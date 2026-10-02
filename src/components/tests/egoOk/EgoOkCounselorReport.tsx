@@ -1,6 +1,8 @@
 'use client';
 
-import type { EgoOkGender, EgoOkReport } from '@/lib/egoOkScoring';
+import { useState } from 'react';
+import type { EgoOkGender, EgoOkReport, OkScaleId } from '@/lib/egoOkScoring';
+import { OK_LABELS, OK_SCALE_HINTS } from '@/lib/egoOkScoring';
 import { egoOkGenderToLabel } from '@/lib/egoOkTestGender';
 import type { ClientInfo } from '@/components/tests/MbtiProClientInfo';
 import {
@@ -15,21 +17,20 @@ import {
   YAxis,
   Tooltip,
   Cell,
+  type TooltipProps,
 } from 'recharts';
 import EgoOkKtaaCompositeChart from '@/components/tests/egoOk/EgoOkKtaaCompositeChart';
 
-const LEVEL_STYLE: Record<string, string> = {
+const THREE_LEVEL_STYLE: Record<string, string> = {
   A: 'bg-emerald-500/20 text-emerald-200 ring-emerald-400/40',
   B: 'bg-sky-500/20 text-sky-200 ring-sky-400/40',
   C: 'bg-amber-500/20 text-amber-100 ring-amber-400/40',
-  D: 'bg-orange-500/20 text-orange-100 ring-orange-400/40',
-  E: 'bg-rose-500/20 text-rose-100 ring-rose-400/40',
 };
 
-function LevelBadge({ level }: { level: string }) {
+function ThreeLevelBadge({ level }: { level: string }) {
   return (
     <span
-      className={`inline-flex min-w-[2rem] items-center justify-center rounded-md px-2 py-0.5 text-xs font-bold ring-1 ${LEVEL_STYLE[level] || 'bg-white/10 text-white ring-white/20'}`}
+      className={`inline-flex min-w-[2rem] items-center justify-center rounded-md px-2 py-0.5 text-xs font-bold ring-1 ${THREE_LEVEL_STYLE[level] || 'bg-white/10 text-white ring-white/20'}`}
     >
       {level}
     </span>
@@ -53,6 +54,107 @@ function SectionCard({
       </header>
       {children}
     </section>
+  );
+}
+
+type EgogramDominance = 'positive' | 'negative' | 'even';
+
+function egogramDominance(positive: number, negative: number): EgogramDominance {
+  if (positive > negative) return 'positive';
+  if (negative > positive) return 'negative';
+  return 'even';
+}
+
+function EgogramScaleRow({
+  id,
+  label,
+  raw,
+  threeLevel,
+  positive,
+  negative,
+  topTrait,
+  bottomTrait,
+}: {
+  id: string;
+  label: string;
+  raw: number;
+  threeLevel: string;
+  positive: number;
+  negative: number;
+  topTrait: string;
+  bottomTrait: string;
+}) {
+  const [hover, setHover] = useState(false);
+  const dom = egogramDominance(positive, negative);
+  const posStrong = dom === 'positive' || dom === 'even';
+  const negStrong = dom === 'negative' || dom === 'even';
+
+  const bgStyle =
+    hover && dom === 'positive'
+      ? { background: 'linear-gradient(180deg, rgba(56,189,248,0.35) 0%, rgba(15,23,42,0.2) 55%, rgba(15,23,42,0.05) 100%)' }
+      : hover && dom === 'negative'
+        ? { background: 'linear-gradient(180deg, rgba(15,23,42,0.05) 0%, rgba(15,23,42,0.2) 45%, rgba(251,146,60,0.35) 100%)' }
+        : hover
+          ? { background: 'linear-gradient(180deg, rgba(56,189,248,0.15) 0%, rgba(251,146,60,0.15) 100%)' }
+          : undefined;
+
+  return (
+    <li
+      className="rounded-xl ring-1 ring-white/5 transition-shadow hover:ring-indigo-400/30"
+      style={bgStyle}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+    >
+      <div className="flex flex-wrap items-center gap-3 px-4 py-2">
+        <span
+          className={`w-8 font-mono text-sm ${hover ? 'font-extrabold text-indigo-100' : 'font-bold text-indigo-300'}`}
+        >
+          {id}
+        </span>
+        <span className="min-w-0 flex-1 text-sm text-slate-200">{label}</span>
+        <span className="font-mono text-sm text-white">
+          {raw}
+          <span className="text-slate-500">/50</span>
+        </span>
+        <ThreeLevelBadge level={threeLevel} />
+      </div>
+      {hover ? (
+        <div className="border-t border-white/5 px-4 py-2 text-xs leading-relaxed text-slate-300">
+          <p>
+            <span className={posStrong ? 'font-bold text-sky-200' : 'text-slate-400'}>{topTrait}</span>
+            {' · '}
+            긍정 {positive}
+            <span className="mx-2 text-slate-600">|</span>
+            <span className={negStrong ? 'font-bold text-orange-200' : 'text-slate-400'}>{bottomTrait}</span>
+            {' · '}
+            부정 {negative}
+          </p>
+          <p className="mt-1 text-slate-500">243 구간: {threeLevel} · 더 높은 층 쪽이 상대적으로 많이 사용된 자아 상태입니다.</p>
+        </div>
+      ) : null}
+    </li>
+  );
+}
+
+type OkBarRow = {
+  name: OkScaleId;
+  score: number;
+  label: string;
+  hint: string;
+};
+
+function OkBarTooltip({ active, payload }: TooltipProps<number, string>) {
+  if (!active || !payload?.length) return null;
+  const row = payload[0].payload as OkBarRow;
+  return (
+    <div className="max-w-xs rounded-lg border border-white/10 bg-slate-950/95 px-3 py-2 text-xs shadow-lg">
+      <p className="font-semibold text-white">{row.label}</p>
+      <p className="mt-1 text-sky-200">
+        점수 {row.score}
+        <span className="text-slate-500"> /50</span>
+      </p>
+      <p className="mt-1 leading-relaxed text-slate-400">{row.hint}</p>
+    </div>
   );
 }
 
@@ -82,13 +184,19 @@ export default function EgoOkCounselorReport({
     fullMark: 50,
   }));
 
-  const okBarData = report.okgram.map((s) => ({
+  const okBarData: OkBarRow[] = report.okgram.map((s) => ({
     name: s.id,
     score: s.raw,
+    label: OK_LABELS[s.id],
+    hint: OK_SCALE_HINTS[s.id],
   }));
+
+  const compositeById = Object.fromEntries(report.compositeChart.map((c) => [c.id, c]));
 
   const sectionOrder = ['1', '2', '3', '4'] as const;
   const barColors = ['#38bdf8', '#818cf8', '#34d399', '#f472b6'];
+
+  const [lifeHover, setLifeHover] = useState(false);
 
   return (
     <div className="mx-auto max-w-5xl space-y-8 pb-16">
@@ -98,14 +206,13 @@ export default function EgoOkCounselorReport({
           <p className="text-xs font-medium uppercase tracking-[0.2em] text-indigo-300/80">Counselor report</p>
           <h1 className="mt-2 text-3xl font-bold text-white">TA 이고-오케이그램 검사 · 전문가 해석</h1>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-300">
-            2020.04.01 기준 90문항 · 5단계(A~E) · 243패턴(3단계) · 인생태도(NP−CP, FC−AC)를 종합한 상담
-            참고 리포트입니다.
+            2020.04.01 기준 90문항 · 243패턴(척도별 A/B/C) · 인생태도(NP−CP, FC−AC)를 종합한 상담 참고
+            리포트입니다.
           </p>
           {localTestMode ? (
             <p className="mt-3 max-w-2xl rounded-lg border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-xs leading-relaxed text-amber-100">
               로컬 테스트 모드 — 저장·발송되지 않습니다. 상단 <strong>성별</strong>에서 남/여를 바꾸면
-              5단계·243패턴·그래프 배경이 즉시 갱신됩니다. 페이지 새로고침(F5) 시 성별 기준이 남↔여로
-              교대됩니다.
+              243 구간·그래프 배경이 즉시 갱신됩니다. 페이지 새로고침(F5) 시 성별 기준이 남↔여로 교대됩니다.
             </p>
           ) : null}
           <dl className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -168,15 +275,15 @@ export default function EgoOkCounselorReport({
         <header className="mb-4">
           <h2 className="text-lg font-semibold text-white">이고-오케이그램 (Ego-Ok) 진단 결과 그래프</h2>
           <p className="mt-1 text-sm text-slate-400">
-            90문항 채점 결과를 KTAA 종합 그래프 형식으로 표시합니다. 막대=이고그램(부정·긍정 층+총점),
-            적색 선=오케이그램(U−/U+/I+/I−, A열 제외). 아래 안내에서 점수 계산을 정리했습니다.
+            90문항 채점 결과를 KTAA 종합 그래프 형식으로 표시합니다. 열에 마우스를 올리면 많이 사용하는
+            자아 상태 쪽으로 배경 그라데이션이 표시됩니다.
           </p>
         </header>
         <EgoOkKtaaCompositeChart columns={report.compositeChart} gender={chartGender} />
       </section>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <SectionCard title="이고그램 5척도" subtitle="원점수 50 만점 · 5단계(A~E) · 243 구간(A/B/C)">
+        <SectionCard title="이고그램 5척도" subtitle="원점수 50 만점 · 243 구간(A/B/C) — 항목에 마우스를 올려 보세요">
           <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart data={radarData} outerRadius="75%">
@@ -194,37 +301,32 @@ export default function EgoOkCounselorReport({
             </ResponsiveContainer>
           </div>
           <ul className="mt-4 space-y-3">
-            {report.egogram.map((s) => (
-              <li
-                key={s.id}
-                className="flex flex-wrap items-center gap-3 rounded-xl bg-black/25 px-4 py-3 ring-1 ring-white/5"
-              >
-                <span className="w-8 font-mono text-sm font-bold text-indigo-300">{s.id}</span>
-                <span className="min-w-0 flex-1 text-sm text-slate-200">{s.label}</span>
-                <span className="font-mono text-sm text-white">
-                  {s.raw}
-                  <span className="text-slate-500">/50</span>
-                </span>
-                <LevelBadge level={s.fiveLevel} />
-                <span className="text-xs text-slate-500">243:{s.threeLevel}</span>
-              </li>
-            ))}
+            {report.egogram.map((s) => {
+              const col = compositeById[s.id];
+              return (
+                <EgogramScaleRow
+                  key={s.id}
+                  id={s.id}
+                  label={s.label}
+                  raw={s.raw}
+                  threeLevel={s.threeLevel}
+                  positive={s.positiveRaw}
+                  negative={s.negativeRaw}
+                  topTrait={col?.topLabel ?? '—'}
+                  bottomTrait={col?.bottomLabel ?? '—'}
+                />
+              );
+            })}
           </ul>
         </SectionCard>
 
-        <SectionCard title="오케이그램 · 인생태도" subtitle="문항 합계 및 TA 인생태도 축">
+        <SectionCard title="오케이그램 · 인생태도" subtitle="막대에 마우스를 올리면 축 설명이 표시됩니다">
           <div className="h-52 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={okBarData} layout="vertical" margin={{ left: 8, right: 16 }}>
                 <XAxis type="number" domain={[0, 50]} tick={{ fill: '#94a3b8', fontSize: 11 }} />
                 <YAxis type="category" dataKey="name" width={36} tick={{ fill: '#e2e8f0', fontSize: 12 }} />
-                <Tooltip
-                  contentStyle={{
-                    background: '#0f172a',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: 8,
-                  }}
-                />
+                <Tooltip content={<OkBarTooltip />} cursor={{ fill: 'rgba(255,255,255,0.06)' }} />
                 <Bar dataKey="score" radius={[0, 6, 6, 0]}>
                   {okBarData.map((_, i) => (
                     <Cell key={okBarData[i].name} fill={barColors[i % barColors.length]} />
@@ -237,38 +339,41 @@ export default function EgoOkCounselorReport({
             <div className="rounded-xl bg-white/[0.03] p-4 ring-1 ring-white/10">
               <p className="text-xs text-slate-500">타인 축 (NP − CP)</p>
               <p className="mt-1 text-2xl font-semibold text-white">{report.lifePosition.uAxis}</p>
+              <p className="mt-1 text-xs text-slate-500">U+−U− 차이 {report.okDifference.uDiff}</p>
             </div>
             <div className="rounded-xl bg-white/[0.03] p-4 ring-1 ring-white/10">
               <p className="text-xs text-slate-500">자기 축 (FC − AC)</p>
               <p className="mt-1 text-2xl font-semibold text-white">{report.lifePosition.iAxis}</p>
+              <p className="mt-1 text-xs text-slate-500">I+−I− 차이 {report.okDifference.iDiff}</p>
             </div>
           </div>
-          <div className="mt-4 rounded-xl border border-indigo-400/20 bg-indigo-500/10 p-4">
+          <div
+            className="mt-4 rounded-xl border border-indigo-400/20 bg-indigo-500/10 p-4 transition-colors hover:border-indigo-300/40 hover:bg-indigo-500/15"
+            onMouseEnter={() => setLifeHover(true)}
+            onMouseLeave={() => setLifeHover(false)}
+          >
             <p className="text-sm font-semibold text-indigo-100">인생태도: {report.lifePosition.kind}</p>
             <p className="mt-2 text-sm leading-relaxed text-slate-300">{report.lifePosition.summary}</p>
-          </div>
-          <div className="mt-4 flex flex-wrap gap-4 text-sm">
-            <span className="text-slate-400">
-              U+−U− 차이 등급: <LevelBadge level={report.okDifference.uGrade} />
-            </span>
-            <span className="text-slate-400">
-              I+−I− 차이 등급: <LevelBadge level={report.okDifference.iGrade} />
-            </span>
+            {lifeHover ? (
+              <p className="mt-3 border-t border-indigo-400/20 pt-3 text-xs leading-relaxed text-indigo-200/90">
+                TA 인생태도는 이고그램 CP·NP·FC·AC 점수로 계산한 <strong>타인 축</strong>(NP−CP)과{' '}
+                <strong>자기 축</strong>(FC−AC)의 부호·크기로 분류합니다. 오케이그램 U+/U−/I+/I− 합과는
+                별도로, 자아(Ego) 상태의 상대적 강도를 나타냅니다.
+              </p>
+            ) : null}
           </div>
         </SectionCard>
       </div>
 
-      <SectionCard title="243Plus 요약" subtitle="CP+NP · FC+AC 합산 구간 (243 수정 시트)">
+      <SectionCard title="243Plus 요약" subtitle="CP+NP · FC+AC 합산 (243 보조 지표)">
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="rounded-xl bg-white/[0.04] p-5 ring-1 ring-white/10">
             <p className="text-xs uppercase tracking-wide text-slate-500">CP + NP</p>
             <p className="mt-2 text-3xl font-bold text-white">{report.plus243.cpNpSum}</p>
-            <p className="mt-1 text-indigo-300">{report.plus243.cpNpLevel}</p>
           </div>
           <div className="rounded-xl bg-white/[0.04] p-5 ring-1 ring-white/10">
             <p className="text-xs uppercase tracking-wide text-slate-500">FC + AC</p>
             <p className="mt-2 text-3xl font-bold text-white">{report.plus243.fcAcSum}</p>
-            <p className="mt-1 text-indigo-300">{report.plus243.fcAcLevel}</p>
           </div>
         </div>
       </SectionCard>
@@ -284,7 +389,7 @@ export default function EgoOkCounselorReport({
         {report.pattern243.missing ? (
           <p className="text-sm leading-relaxed text-slate-400">
             척도별 243 구간(A/B/C) 조합은 <strong className="text-slate-200">{report.patternCode}</strong>
-            입니다. 상담 시 5단계 점수·인생태도·오케이그램 그래프를 함께 참고하세요.
+            입니다. 상담 시 KTAA 그래프·인생태도·오케이그램 막대를 함께 참고하세요.
           </p>
         ) : (
           <div className="space-y-6">

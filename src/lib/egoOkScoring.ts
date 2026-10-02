@@ -110,11 +110,18 @@ const EGO_LABELS: Record<EgoScaleId, string> = {
   AC: '순응하는 아이 (AC)',
 };
 
-const OK_LABELS: Record<OkScaleId, string> = {
+export const OK_LABELS: Record<OkScaleId, string> = {
   'U+': '타인 긍정 (U+)',
   'U-': '타인 부정 (U−)',
   'I+': '자기 긍정 (I+)',
   'I-': '자기 부정 (I−)',
+};
+
+export const OK_SCALE_HINTS: Record<OkScaleId, string> = {
+  'U+': '타인을 긍정적으로 수용·신뢰하는 경향(10문항 합)',
+  'U-': '타인을 비판·통제하려는 경향(10문항 합)',
+  'I+': '자기 자신을 긍정·수용하는 경향(10문항 합)',
+  'I-': '자기 자신을 부정·억압하는 경향(10문항 합)',
 };
 
 const FIVE_LEVEL_CUTS: Record<EgoOkGender, Record<EgoScaleId, { min: Record<FiveLevel, number> }>> = {
@@ -220,6 +227,37 @@ export function roundScaleTotal(sum: number): number {
   return Math.round(sum);
 }
 
+export function isEgoOkLikertAnswer(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 1 && value <= 6;
+}
+
+/** 미응답·범위 밖 문항 번호(1-based). 없으면 빈 배열 */
+export function findEgoOkIncompleteQuestionNumbers(answers: Record<string, number>): number[] {
+  const missing: number[] = [];
+  for (let index = 0; index < EGO_OK_QUESTIONS.length; index += 1) {
+    const raw = answers[String(index)] ?? answers[index];
+    if (!isEgoOkLikertAnswer(raw)) missing.push(index + 1);
+  }
+  return missing;
+}
+
+function reconcileEgoSubtotals(
+  raw: number,
+  positiveRounded: number,
+  negativeRounded: number,
+): { positiveRaw: number; negativeRaw: number } {
+  let positiveRaw = positiveRounded;
+  let negativeRaw = negativeRounded;
+  if (positiveRaw + negativeRaw !== raw) {
+    negativeRaw = raw - positiveRaw;
+  }
+  if (negativeRaw < 0) {
+    negativeRaw = 0;
+    positiveRaw = raw;
+  }
+  return { positiveRaw, negativeRaw };
+}
+
 function sumInRange(score: number, cuts: { aMin: number; bMin: number; cMin: number }): ThreeLevel {
   if (score >= cuts.aMin) return 'A';
   if (score >= cuts.bMin) return 'B';
@@ -318,6 +356,15 @@ export function computeEgoOkReport(
   answers: Record<string, number>,
   genderInput: string | undefined,
 ): EgoOkReport {
+  const incomplete = findEgoOkIncompleteQuestionNumbers(answers);
+  if (incomplete.length > 0) {
+    const preview =
+      incomplete.length <= 5
+        ? incomplete.join(', ')
+        : `${incomplete.slice(0, 5).join(', ')} 외 ${incomplete.length - 5}문항`;
+    throw new Error(`90문항 모두 응답해야 합니다. 미응답 또는 잘못된 응답: ${preview}`);
+  }
+
   const gender = normalizeEgoOkGender(genderInput);
   const egoSums: Record<EgoScaleId, number> = { CP: 0, NP: 0, A: 0, FC: 0, AC: 0 };
   const egoNeg: Record<EgoScaleId, number> = { CP: 0, NP: 0, A: 0, FC: 0, AC: 0 };
@@ -326,11 +373,7 @@ export function computeEgoOkReport(
   const orderedAnswers: number[] = [];
 
   EGO_OK_QUESTIONS.forEach((q, index) => {
-    const raw = answers[String(index)] ?? answers[index];
-    if (raw === undefined) {
-      orderedAnswers.push(0);
-      return;
-    }
+    const raw = answers[String(index)] ?? answers[index]!;
     orderedAnswers.push(raw);
     const pts = likertToItemPoints(raw);
     const key = scaleFromType(q.scaleType);
@@ -346,12 +389,11 @@ export function computeEgoOkReport(
 
   const egogram: EgoOkScaleScore[] = (['CP', 'NP', 'A', 'FC', 'AC'] as EgoScaleId[]).map((id) => {
     const raw = roundScaleTotal(egoSums[id]);
-    const positiveRaw = roundScaleTotal(egoPos[id]);
-    let negativeRaw = roundScaleTotal(egoNeg[id]);
-    if (positiveRaw + negativeRaw !== raw) {
-      negativeRaw = raw - positiveRaw;
-    }
-    negativeRaw = Math.max(0, negativeRaw);
+    const { positiveRaw, negativeRaw } = reconcileEgoSubtotals(
+      raw,
+      roundScaleTotal(egoPos[id]),
+      roundScaleTotal(egoNeg[id]),
+    );
     const fiveLevel = toFiveLevel(raw, gender, id);
     return {
       id,

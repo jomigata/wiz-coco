@@ -9,6 +9,7 @@ import {
   isLocalPsychTestDirectActive,
 } from '@/lib/localPsychTestDirectStart';
 import { saveEgoOkReportDraft } from '@/lib/egoOkReportSession';
+import { findEgoOkIncompleteQuestionNumbers } from '@/lib/egoOkScoring';
 import Link from 'next/link';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -418,6 +419,21 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
     setIsLoading(true); // 로딩 시작
     
     try {
+      if (isEgoOkFlow) {
+        const incomplete = findEgoOkIncompleteQuestionNumbers(answers);
+        if (incomplete.length > 0) {
+          window.alert(
+            `90문항 모두 응답해야 결과를 볼 수 있습니다.\n미응답·오류 문항: ${
+              incomplete.length <= 8
+                ? incomplete.join(', ')
+                : `${incomplete.slice(0, 8).join(', ')} … (${incomplete.length}개)`
+            }`,
+          );
+          setIsLoading(false);
+          return;
+        }
+      }
+
       if (localDirect && isEgoOkFlow) {
         clearTestProgress(testId);
         saveEgoOkReportDraft({ answers, clientInfo });
