@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 import type { EgoOkGender, EgoOkReport, OkScaleId } from '@/lib/egoOkScoring';
 import { OK_LABELS, OK_SCALE_HINTS } from '@/lib/egoOkScoring';
 import { egoOkGenderToLabel } from '@/lib/egoOkTestGender';
@@ -88,28 +88,70 @@ function egogramRadarTooltipLine(row: EgogramRadarRow): string {
   return line.length > 24 ? `${line.slice(0, 22)}…` : line;
 }
 
-const EGOGRAM_RADAR_FILL_GRADIENT_ID = 'egogram-radar-pentagon-radial';
+function EgogramFiveScaleRadarChart({ data }: { data: EgogramRadarRow[] }) {
+  const gradientId = useId().replace(/:/g, '');
+  const FillGradientDefs = useMemo(
+    () =>
+      function EgogramRadarFillGradientDefs() {
+        return (
+          <defs>
+            <radialGradient
+              id={gradientId}
+              gradientUnits="objectBoundingBox"
+              cx="0.5"
+              cy="0.5"
+              r="0.5"
+              fx="0.5"
+              fy="0.5"
+            >
+              <stop offset="0%" stopColor={EGOGRAM_RADAR_SKY} />
+              <stop offset="38%" stopColor={EGOGRAM_RADAR_SKY} />
+              <stop offset="72%" stopColor="#f0abfc" />
+              <stop offset="100%" stopColor={EGOGRAM_RADAR_PINK} />
+            </radialGradient>
+          </defs>
+        );
+      },
+    [gradientId],
+  );
 
-/** Recharts가 넘기는 cx·cy·outerRadius로 SVG gradient 정의 (Radar fill과 동일 좌표계) */
-function EgogramRadarGradientDefs(props: { cx?: number; cy?: number; outerRadius?: number }) {
-  const cx = props.cx ?? 0;
-  const cy = props.cy ?? 0;
-  const r = Math.max(props.outerRadius ?? 0, 1);
   return (
-    <defs>
-      <radialGradient
-        id={EGOGRAM_RADAR_FILL_GRADIENT_ID}
-        gradientUnits="userSpaceOnUse"
-        cx={cx}
-        cy={cy}
-        r={r}
-      >
-        <stop offset="0%" stopColor={EGOGRAM_RADAR_SKY} />
-        <stop offset="35%" stopColor={EGOGRAM_RADAR_SKY} />
-        <stop offset="65%" stopColor="#e8b4cc" />
-        <stop offset="100%" stopColor={EGOGRAM_RADAR_PINK} />
-      </radialGradient>
-    </defs>
+    <ResponsiveContainer width="100%" height="100%">
+      <RadarChart data={data} outerRadius="78%" cx="50%" cy="52%">
+        <Customized component={FillGradientDefs} />
+        <PolarGrid
+          gridType="polygon"
+          radialLines
+          stroke="#64748b"
+          strokeOpacity={0.28}
+          strokeWidth={1}
+        />
+        <PolarRadiusAxis
+          domain={[0, 50]}
+          angle={90}
+          axisLine={false}
+          tickCount={6}
+          tick={{ fill: '#64748b', fontSize: 9 }}
+        />
+        <PolarAngleAxis
+          dataKey="scale"
+          tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 600 }}
+        />
+        <Radar
+          name="점수"
+          dataKey="score"
+          stroke="#c7d2fe"
+          fill={`url(#${gradientId})`}
+          fillOpacity={1}
+          strokeWidth={2.5}
+          isAnimationActive={false}
+          dot={{ r: 4, fill: '#eef2ff', stroke: '#818cf8', strokeWidth: 2 }}
+          activeDot={{ r: 6, fill: '#ffffff', stroke: '#a5b4fc', strokeWidth: 2 }}
+        />
+        <Customized component={EgogramRadarCenterMark} />
+        <Tooltip content={<EgogramRadarTooltip />} />
+      </RadarChart>
+    </ResponsiveContainer>
   );
 }
 
@@ -318,41 +360,7 @@ export default function EgoOkCounselorReport({
       <div className="grid gap-6 lg:grid-cols-2">
         <SectionCard title="이고그램 5척도" subtitle="0~50 · 243 구간(A/B/C) — 방사형 그래프에 마우스를 올리면 요약이 표시됩니다">
           <div className="h-72 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <RadarChart data={radarData} outerRadius="78%" cx="50%" cy="52%">
-                <Customized component={EgogramRadarGradientDefs} />
-                <PolarGrid
-                  gridType="polygon"
-                  radialLines
-                  stroke="#64748b"
-                  strokeOpacity={0.28}
-                  strokeWidth={1}
-                />
-                <PolarRadiusAxis
-                  domain={[0, 50]}
-                  angle={90}
-                  axisLine={false}
-                  tickCount={6}
-                  tick={{ fill: '#64748b', fontSize: 9 }}
-                />
-                <PolarAngleAxis
-                  dataKey="scale"
-                  tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 600 }}
-                />
-                <Radar
-                  name="점수"
-                  dataKey="score"
-                  stroke="#c7d2fe"
-                  fill={`url(#${EGOGRAM_RADAR_FILL_GRADIENT_ID})`}
-                  fillOpacity={1}
-                  strokeWidth={2.5}
-                  dot={{ r: 4, fill: '#eef2ff', stroke: '#818cf8', strokeWidth: 2 }}
-                  activeDot={{ r: 6, fill: '#ffffff', stroke: '#a5b4fc', strokeWidth: 2 }}
-                />
-                <Customized component={EgogramRadarCenterMark} />
-                <Tooltip content={<EgogramRadarTooltip />} />
-              </RadarChart>
-            </ResponsiveContainer>
+            <EgogramFiveScaleRadarChart data={radarData} />
           </div>
           <ul className="mt-4 space-y-3">
             {report.egogram.map((s) => (
