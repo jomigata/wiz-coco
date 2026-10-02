@@ -269,15 +269,29 @@ const EGO_TO_OK_SCORE: Record<EgoScaleId, OkScaleId | null> = {
 /** 방사형 꼭짓점 순서(12시부터 시계): A 상단 · FC 우상 · AC 우하 · CP 좌하 · NP 좌상 */
 const EGOGRAM_RADAR_AXIS_ORDER = ['A', 'FC', 'AC', 'CP', 'NP'] as const;
 
-/** 1·2위 합계(서로 다른 점수 상위 2개 — 동점 척도 포함) */
-function egogramRadarHighlightScores(rows: EgogramRadarRow[]): Set<number> {
-  const ranked = Array.from(new Set(rows.map((r) => r.score)))
-    .filter((s) => s > 0)
-    .sort((a, b) => b - a);
-  const set = new Set<number>();
-  if (ranked[0] != null) set.add(ranked[0]);
-  if (ranked[1] != null) set.add(ranked[1]);
-  return set;
+/** 1·2위 합계 척도 ID (동점 1위·2위 모두 포함) — Recharts dot payload와 score Set 불일치 방지 */
+function egogramRadarTopTwoScaleIds(rows: EgogramRadarRow[]): Set<string> {
+  const sorted = [...rows].sort((a, b) => b.score - a.score);
+  const ids = new Set<string>();
+  if (sorted.length === 0) return ids;
+  const top = sorted[0].score;
+  for (const r of sorted) {
+    if (r.score === top) ids.add(r.scale);
+  }
+  const secondScore = sorted.find((r) => r.score < top)?.score;
+  if (secondScore != null) {
+    for (const r of sorted) {
+      if (r.score === secondScore) ids.add(r.scale);
+    }
+  }
+  return ids;
+}
+
+function egogramRadarRowIsTopTwo(
+  row: EgogramRadarRow | undefined,
+  highlightScaleIds: Set<string>,
+): boolean {
+  return row != null && highlightScaleIds.has(row.scale);
 }
 
 function resolveEgogramRadarTickRow(
@@ -305,7 +319,7 @@ function EgogramRadarScaleTick({
   payload,
   index: tickIndex,
   rows,
-  highlightScores,
+  highlightScaleIds,
   textAnchor,
 }: {
   x?: number;
@@ -313,24 +327,26 @@ function EgogramRadarScaleTick({
   payload?: { value?: string | number; index?: number };
   index?: number;
   rows: EgogramRadarRow[];
-  highlightScores: Set<number>;
+  highlightScaleIds: Set<string>;
   textAnchor?: string;
 }) {
   if (x == null || y == null) return null;
   const row = resolveEgogramRadarTickRow(rows, payload, tickIndex);
   if (!row) return null;
   const { scale, score } = row;
-  const isHighlight = highlightScores.has(score);
+  const isHighlight = egogramRadarRowIsTopTwo(row, highlightScaleIds);
   const peakPink = EGOGRAM_RADAR_PINK;
   const titleFill = isHighlight ? peakPink : '#94a3b8';
   const scoreFill = isHighlight ? peakPink : '#64748b';
   const anchor = textAnchor as 'middle' | 'start' | 'end' | 'inherit' | undefined;
+  const titleY = scale === 'A' ? y + 5 : y;
+  const scoreY = scale === 'A' ? y + 19 : y + 14;
 
   return (
     <g style={{ pointerEvents: 'none' }}>
       <text
         x={x}
-        y={y}
+        y={titleY}
         textAnchor={anchor}
         fill={titleFill}
         stroke="none"
@@ -341,7 +357,7 @@ function EgogramRadarScaleTick({
       </text>
       <text
         x={x}
-        y={y + 14}
+        y={scoreY}
         textAnchor={anchor}
         fill={scoreFill}
         stroke="none"
@@ -354,11 +370,103 @@ function EgogramRadarScaleTick({
   );
 }
 
-function createEgogramOkRadarVertexDot(highlightScores: Set<number>) {
-  return function EgogramOkRadarVertexDot(props: { cx?: number; cy?: number; payload?: EgogramRadarRow }) {
-  const { cx, cy, payload } = props;
-  if (cx == null || cy == null || !payload || payload.okScore == null) return null;
-  if (highlightScores.has(payload.score)) return null;
+function resolveEgogramRadarDotRow(
+  chartRows: EgogramRadarRow[],
+  props: { payload?: unknown; index?: number },
+): EgogramRadarRow | undefined {
+  const idx = props.index;
+  if (typeof idx === 'number' && chartRows[idx]) return chartRows[idx];
+  const raw = props.payload;
+  if (!raw || typeof raw !== 'object') return undefined;
+  const p = raw as Record<string, unknown>;
+  if (typeof p.scale === 'string') {
+    return chartRows.find((r) => r.scale === p.scale) ?? (raw as EgogramRadarRow);
+  }
+  if (p.payload && typeof p.payload === 'object') {
+    return resolveEgogramRadarDotRow(chartRows, { payload: p.payload, index: idx });
+  }
+  return undefined;
+}
+
+function renderEgogramRadarPeakDot(cx: number, cy: number) {
+  return (
+    <g pointerEvents="all">
+      <circle cx={cx} cy={cy} r={10} fill={EGOGRAM_RADAR_PINK} fillOpacity={0.38} pointerEvents="none" />
+      <circle
+        cx={cx}
+        cy={cy}
+        r={7}
+        fill={EGOGRAM_RADAR_PINK}
+        stroke="#ffffff"
+        strokeWidth={2.5}
+        pointerEvents="none"
+      />
+      <circle cx={cx} cy={cy} r={11} fill="transparent" stroke="none" />
+    </g>
+  );
+}
+
+/** Recharts dot 콜백과 무관하게 1·2위 꼭짓점 분홍 (data 순서 = PolarAngleAxis) */
+function EgogramRadarPeakDotsLayer({
+  chartRows,
+  highlightScaleIds,
+  cx,
+  cy,
+  outerRadius,
+}: {
+  chartRows: EgogramRadarRow[];
+  highlightScaleIds: Set<string>;
+  cx?: number;
+  cy?: number;
+  outerRadius?: number;
+}) {
+  if (cx == null || cy == null || outerRadius == null || outerRadius <= 0) return null;
+  const n = chartRows.length;
+  if (n === 0) return null;
+  const step = 360 / n;
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+
+  return (
+    <g pointerEvents="none">
+      {chartRows.map((row, i) => {
+        if (!highlightScaleIds.has(row.scale)) return null;
+        const mid = 90 - step * i;
+        const r = outerRadius * (row.score / row.fullMark);
+        const x = cx + r * Math.cos(toRad(mid));
+        const y = cy - r * Math.sin(toRad(mid));
+        return <g key={`radar-peak-${row.scale}`}>{renderEgogramRadarPeakDot(x, y)}</g>;
+      })}
+    </g>
+  );
+}
+
+function createEgogramRadarPeakDotsLayer(
+  chartRows: EgogramRadarRow[],
+  highlightScaleIds: Set<string>,
+) {
+  return function EgogramRadarPeakDotsCustomized(props: { cx?: number; cy?: number; outerRadius?: number }) {
+    return (
+      <EgogramRadarPeakDotsLayer
+        chartRows={chartRows}
+        highlightScaleIds={highlightScaleIds}
+        cx={props.cx}
+        cy={props.cy}
+        outerRadius={props.outerRadius}
+      />
+    );
+  };
+}
+
+function createEgogramOkRadarVertexDot(
+  chartRows: EgogramRadarRow[],
+  highlightScaleIds: Set<string>,
+) {
+  return function EgogramOkRadarVertexDot(props: { cx?: number; cy?: number; payload?: EgogramRadarRow; index?: number }) {
+  const { cx, cy } = props;
+  if (cx == null || cy == null) return null;
+  const row = resolveEgogramRadarDotRow(chartRows, props);
+  if (!row || row.okScore == null) return null;
+  if (egogramRadarRowIsTopTwo(row, highlightScaleIds)) return null;
   return (
     <circle
       cx={cx}
@@ -375,58 +483,52 @@ function createEgogramOkRadarVertexDot(highlightScores: Set<number>) {
 
 function EgogramFiveScaleRadarChart({ data }: { data: EgogramRadarRow[] }) {
   const gradientId = useId().replace(/:/g, '');
-  const highlightScores = useMemo(() => egogramRadarHighlightScores(data), [data]);
-  const OkRadarVertexDot = useMemo(
-    () => createEgogramOkRadarVertexDot(highlightScores),
-    [highlightScores],
-  );
+  const highlightScaleIds = useMemo(() => egogramRadarTopTwoScaleIds(data), [data]);
   const okRadarData = useMemo(
     () => data.map((row) => ({ ...row, okRadarValue: row.okScore ?? row.score })),
     [data],
   );
 
+  const OkRadarVertexDot = useMemo(
+    () => createEgogramOkRadarVertexDot(okRadarData, highlightScaleIds),
+    [okRadarData, highlightScaleIds],
+  );
+
+  const PeakDotsLayer = useMemo(
+    () => createEgogramRadarPeakDotsLayer(okRadarData, highlightScaleIds),
+    [okRadarData, highlightScaleIds],
+  );
+
   const RadarVertexDot = useMemo(
     () =>
-      function EgogramRadarVertexDot(props: { cx?: number; cy?: number; payload?: EgogramRadarRow }) {
-        const { cx, cy, payload } = props;
-        if (cx == null || cy == null || !payload) return null;
-        if (highlightScores.has(payload.score)) {
-          return (
-            <g pointerEvents="all">
-              <circle cx={cx} cy={cy} r={9} fill={EGOGRAM_RADAR_PINK} fillOpacity={0.35} pointerEvents="none" />
-              <circle
-                cx={cx}
-                cy={cy}
-                r={6.5}
-                fill={EGOGRAM_RADAR_PINK}
-                stroke="#ffffff"
-                strokeWidth={2.5}
-                pointerEvents="none"
-              />
-              <circle cx={cx} cy={cy} r={10} fill="transparent" stroke="none" />
-            </g>
-          );
+      function EgogramRadarVertexDot(props: { cx?: number; cy?: number; payload?: EgogramRadarRow; index?: number }) {
+        const { cx, cy } = props;
+        if (cx == null || cy == null) return null;
+        const row = resolveEgogramRadarDotRow(okRadarData, props);
+        if (egogramRadarRowIsTopTwo(row, highlightScaleIds)) {
+          return null;
         }
         return (
           <circle cx={cx} cy={cy} r={4} fill="#eef2ff" stroke="#818cf8" strokeWidth={2} />
         );
       },
-    [highlightScores],
+    [okRadarData, highlightScaleIds],
   );
 
   const RadarVertexActiveDot = useMemo(
     () =>
-      function EgogramRadarVertexActiveDot(props: { cx?: number; cy?: number; payload?: EgogramRadarRow }) {
-        const { cx, cy, payload } = props;
-        if (cx == null || cy == null || !payload) return null;
-        if (highlightScores.has(payload.score)) {
+      function EgogramRadarVertexActiveDot(props: { cx?: number; cy?: number; payload?: EgogramRadarRow; index?: number }) {
+        const { cx, cy } = props;
+        if (cx == null || cy == null) return null;
+        const row = resolveEgogramRadarDotRow(okRadarData, props);
+        if (egogramRadarRowIsTopTwo(row, highlightScaleIds)) {
           return null;
         }
         return (
           <circle cx={cx} cy={cy} r={6} fill="#ffffff" stroke="#a5b4fc" strokeWidth={2} />
         );
       },
-    [highlightScores],
+    [okRadarData, highlightScaleIds],
   );
 
   const FillOpacityMaskDefs = useMemo(
@@ -454,13 +556,13 @@ function EgogramFiveScaleRadarChart({ data }: { data: EgogramRadarRow[] }) {
   );
 
   return (
-    <ResponsiveContainer width="100%" height="100%" className="[&_.recharts-wrapper]:!overflow-visible">
+    <ResponsiveContainer width="100%" height="100%" className="[&_.recharts-surface]:overflow-visible [&_.recharts-wrapper]:!overflow-visible">
       <RadarChart
         data={okRadarData}
-        outerRadius="92%"
+        outerRadius="86%"
         cx="50%"
-        cy="50%"
-        margin={{ top: 0, right: 6, bottom: 0, left: 6 }}
+        cy="53%"
+        margin={{ top: 28, right: 12, bottom: 8, left: 12 }}
       >
         <Customized component={FillOpacityMaskDefs} />
         <PolarGrid
@@ -487,7 +589,7 @@ function EgogramFiveScaleRadarChart({ data }: { data: EgogramRadarRow[] }) {
               index={tickProps.index}
               textAnchor={tickProps.textAnchor}
               rows={data}
-              highlightScores={highlightScores}
+              highlightScaleIds={highlightScaleIds}
             />
           )}
         />
@@ -513,6 +615,7 @@ function EgogramFiveScaleRadarChart({ data }: { data: EgogramRadarRow[] }) {
           activeDot={<RadarVertexActiveDot />}
         />
         <Customized component={EgogramRadarCenterMark} />
+        <Customized component={PeakDotsLayer} />
         <Tooltip content={<EgogramRadarTooltip />} />
       </RadarChart>
     </ResponsiveContainer>
@@ -758,8 +861,8 @@ export default function EgoOkCounselorReport({
             />
           }
         >
-          <div className="min-h-[22rem] w-full px-0.5 py-1">
-            <div className="h-[22rem] w-full">
+          <div className="min-h-[23rem] w-full px-1 pt-2">
+            <div className="h-[23rem] w-full">
               <EgogramFiveScaleRadarChart data={radarData} />
             </div>
           </div>
