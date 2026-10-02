@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import type { EgoOkGender, EgoOkReport, OkScaleId } from '@/lib/egoOkScoring';
 import { OK_LABELS, OK_SCALE_HINTS } from '@/lib/egoOkScoring';
 import { egoOkGenderToLabel } from '@/lib/egoOkTestGender';
@@ -88,73 +88,42 @@ function egogramRadarTooltipLine(row: EgogramRadarRow): string {
   return line.length > 24 ? `${line.slice(0, 22)}…` : line;
 }
 
-function egogramRadarScoreVertices(
-  cx: number,
-  cy: number,
-  outerRadius: number,
-  rows: EgogramRadarRow[],
-): { x: number; y: number }[] {
-  const n = rows.length;
-  const step = 360 / n;
-  const toRad = (deg: number) => (deg * Math.PI) / 180;
-  return rows.map((row, i) => {
-    const mid = 90 - step * i;
-    const r = outerRadius * (row.score / row.fullMark);
-    return {
-      x: cx + r * Math.cos(toRad(mid)),
-      y: cy - r * Math.sin(toRad(mid)),
-    };
-  });
+const EGOGRAM_RADAR_FILL_GRADIENT_ID = 'egogram-radar-pentagon-radial';
+
+/** Recharts가 넘기는 cx·cy·outerRadius로 SVG gradient 정의 (Radar fill과 동일 좌표계) */
+function EgogramRadarGradientDefs(props: { cx?: number; cy?: number; outerRadius?: number }) {
+  const cx = props.cx ?? 0;
+  const cy = props.cy ?? 0;
+  const r = Math.max(props.outerRadius ?? 0, 1);
+  return (
+    <defs>
+      <radialGradient
+        id={EGOGRAM_RADAR_FILL_GRADIENT_ID}
+        gradientUnits="userSpaceOnUse"
+        cx={cx}
+        cy={cy}
+        r={r}
+      >
+        <stop offset="0%" stopColor={EGOGRAM_RADAR_SKY} />
+        <stop offset="35%" stopColor={EGOGRAM_RADAR_SKY} />
+        <stop offset="65%" stopColor="#e8b4cc" />
+        <stop offset="100%" stopColor={EGOGRAM_RADAR_PINK} />
+      </radialGradient>
+    </defs>
+  );
 }
 
-function egogramRadarScorePolygonPath(verts: { x: number; y: number }[]): string | null {
-  if (verts.length < 3) return null;
-  const [first, ...rest] = verts;
-  return `M ${first.x} ${first.y} ${rest.map((p) => `L ${p.x} ${p.y}`).join(' ')} Z`;
-}
-
-/** 합계 오각형 내부: 중심 0 하늘 → 바깥(합) 분홍 (불투명) */
-function createEgogramRadarBackground(rows: EgogramRadarRow[]) {
-  const gradId = 'egogram-radar-pentagon-radial';
-  return function EgogramRadarBackground(props: { cx?: number; cy?: number; outerRadius?: number }) {
-    const cx = props.cx ?? 0;
-    const cy = props.cy ?? 0;
-    const outerRadius = props.outerRadius ?? 0;
-    if (outerRadius <= 0 || rows.length < 3) return null;
-
-    const verts = egogramRadarScoreVertices(cx, cy, outerRadius, rows);
-    const polygonPath = egogramRadarScorePolygonPath(verts);
-    if (!polygonPath) return null;
-
-    const maxVertexR = Math.max(
-      ...rows.map((row) => outerRadius * (row.score / row.fullMark)),
-      1,
-    );
-
-    return (
-      <g>
-        <defs>
-          <radialGradient
-            id={gradId}
-            gradientUnits="userSpaceOnUse"
-            cx={cx}
-            cy={cy}
-            r={maxVertexR}
-          >
-            <stop offset="0%" stopColor={EGOGRAM_RADAR_SKY} />
-            <stop offset="35%" stopColor={EGOGRAM_RADAR_SKY} />
-            <stop offset="65%" stopColor="#e8b4cc" />
-            <stop offset="100%" stopColor={EGOGRAM_RADAR_PINK} />
-          </radialGradient>
-        </defs>
-        <path d={polygonPath} fill={`url(#${gradId})`} stroke="none" />
-        <circle cx={cx} cy={cy} r={3.5} fill="#e0f2fe" stroke="#64748b" strokeOpacity={0.55} strokeWidth={1} />
-        <text x={cx} y={cy + 16} textAnchor="middle" fill="#64748b" fontSize={9} fontWeight={600}>
-          0
-        </text>
-      </g>
-    );
-  };
+function EgogramRadarCenterMark(props: { cx?: number; cy?: number }) {
+  const cx = props.cx ?? 0;
+  const cy = props.cy ?? 0;
+  return (
+    <g pointerEvents="none">
+      <circle cx={cx} cy={cy} r={3.5} fill="#e0f2fe" stroke="#64748b" strokeOpacity={0.55} strokeWidth={1} />
+      <text x={cx} y={cy + 16} textAnchor="middle" fill="#64748b" fontSize={9} fontWeight={600}>
+        0
+      </text>
+    </g>
+  );
 }
 
 function EgogramRadarTooltip({ active, payload }: TooltipProps<number, string>) {
@@ -262,11 +231,6 @@ export default function EgoOkCounselorReport({
 
   const [lifeHover, setLifeHover] = useState(false);
 
-  const EgogramRadarBackgroundLayer = useMemo(
-    () => createEgogramRadarBackground(radarData),
-    [radarData],
-  );
-
   return (
     <div className="mx-auto max-w-5xl space-y-8 pb-16">
       <div className="relative overflow-hidden rounded-3xl border border-indigo-400/20 bg-gradient-to-br from-indigo-950 via-slate-950 to-[#070b14] p-8 shadow-2xl">
@@ -356,7 +320,7 @@ export default function EgoOkCounselorReport({
           <div className="h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart data={radarData} outerRadius="78%" cx="50%" cy="52%">
-                <Customized component={EgogramRadarBackgroundLayer} />
+                <Customized component={EgogramRadarGradientDefs} />
                 <PolarGrid
                   gridType="polygon"
                   radialLines
@@ -379,12 +343,13 @@ export default function EgoOkCounselorReport({
                   name="점수"
                   dataKey="score"
                   stroke="#c7d2fe"
-                  fill="#6366f1"
-                  fillOpacity={0}
+                  fill={`url(#${EGOGRAM_RADAR_FILL_GRADIENT_ID})`}
+                  fillOpacity={1}
                   strokeWidth={2.5}
                   dot={{ r: 4, fill: '#eef2ff', stroke: '#818cf8', strokeWidth: 2 }}
                   activeDot={{ r: 6, fill: '#ffffff', stroke: '#a5b4fc', strokeWidth: 2 }}
                 />
+                <Customized component={EgogramRadarCenterMark} />
                 <Tooltip content={<EgogramRadarTooltip />} />
               </RadarChart>
             </ResponsiveContainer>
