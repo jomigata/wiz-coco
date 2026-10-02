@@ -182,8 +182,7 @@ function EgogramEnergyInsightPanel({
   return (
     <div className="mt-5 space-y-4 border-t border-white/10 pt-5">
       <p className="text-xs text-slate-500">
-        코멘트 기준: 243+ 9단계(docs/ego-ok · 10~50) — 1~2 부족 · 3~5 안전성 · 6~9 과함, 단계별 강도
-        적용
+        코멘트 기준: 243+ 플러스 9단계 — 1~3 부족 · 4~6 보통 · 7~9 과함 (단계별 세부 설명)
       </p>
       <article className="rounded-xl bg-fuchsia-500/10 p-4 ring-1 ring-fuchsia-400/20">
         <h3 className="text-sm font-semibold text-fuchsia-100">
@@ -561,10 +560,7 @@ function EgogramScaleRow({
     <li className="flex flex-wrap items-center gap-3 rounded-xl bg-black/25 px-4 py-3 ring-1 ring-white/5">
       <span className="w-8 font-mono text-sm font-bold text-indigo-300">{id}</span>
       <span className="min-w-0 flex-1 text-sm text-slate-200">{label}</span>
-      <span className="font-mono text-sm text-white">
-        {raw}
-        <span className="text-slate-500">/50</span>
-      </span>
+      <span className="font-mono text-sm text-white">{raw}</span>
       <ThreeLevelBadge level={threeLevel} />
     </li>
   );
@@ -584,8 +580,7 @@ function OkBarTooltip({ active, payload }: TooltipProps<number, string>) {
     <div className="max-w-xs rounded-lg border border-white/10 bg-slate-950/95 px-3 py-2 text-xs shadow-lg">
       <p className="font-semibold text-white">{row.label}</p>
       <p className="mt-1 text-sky-200">
-        점수 {row.score}
-        <span className="text-slate-500"> /50</span>
+        합계 {row.score}
       </p>
       <p className="mt-1 leading-relaxed text-slate-400">{row.hint}</p>
     </div>

@@ -14,9 +14,9 @@
     { "stage": 1, "letter": "C", "degree": 1, "min": 10, "max": 14 }
   ],
   "commentBands": {
-    "deficit": [1, 2],
-    "safe": [3, 4, 5],
-    "excess": [6, 7, 8, 9]
+    "deficit": [1, 2, 3],
+    "normal": [4, 5, 6],
+    "excess": [7, 8, 9]
   },
   "patternPlusOrder": ["CP", "NP", "A", "FC", "AC"],
   "display": {

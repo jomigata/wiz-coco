@@ -125,14 +125,22 @@ export function buildPattern243Plus(egogram: EgoOkScaleScore[]): Pattern243Plus 
   };
 }
 
-export function plus243StageBand(stage: Plus243Stage): 'deficit' | 'safe' | 'excess' {
-  if (stage <= 2) return 'deficit';
-  if (stage <= 5) return 'safe';
+export type Plus243StageBand = 'deficit' | 'normal' | 'excess';
+
+/** 보고서 설명 기준: 1~3 부족 · 4~6 보통 · 7~9 과함 */
+export function plus243StageBand(stage: Plus243Stage): Plus243StageBand {
+  if (stage <= 3) return 'deficit';
+  if (stage <= 6) return 'normal';
   return 'excess';
+}
+
+export function plus243StageBandLabel(band: Plus243StageBand): string {
+  if (band === 'deficit') return '부족';
+  if (band === 'normal') return '보통';
+  return '과함';
 }
 
 export function formatPlus243StageLabel(tier: Plus243Tier): string {
   const band = plus243StageBand(tier.stage);
-  const bandKo = band === 'safe' ? '안전성(3~5단계)' : band === 'excess' ? '과함(6~9단계)' : '부족(1~2단계)';
-  return `243+ 플러스 ${tier.stage}단계/9 · ${bandKo} (${tier.min}~${tier.max}점)`;
+  return `243+ 플러스 ${tier.stage}단계 · ${plus243StageBandLabel(band)}`;
 }
