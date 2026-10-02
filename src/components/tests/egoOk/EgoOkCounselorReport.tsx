@@ -134,26 +134,34 @@ function EgogramRadarScaleTick({
   y,
   payload,
   peakScales,
+  scoreByScale,
   textAnchor,
 }: {
   x?: number;
   y?: number;
   payload?: { value?: string };
   peakScales: Set<string>;
+  scoreByScale: Record<string, number>;
   textAnchor?: string;
 }) {
   if (x == null || y == null || !payload?.value) return null;
-  const isPeak = peakScales.has(payload.value);
+  const scale = payload.value;
+  const score = scoreByScale[scale];
+  const isPeak = peakScales.has(scale);
+  const titleFill = isPeak ? EGOGRAM_RADAR_PINK : '#94a3b8';
+  const scoreFill = isPeak ? EGOGRAM_RADAR_PINK : '#64748b';
+  const anchor = textAnchor as 'middle' | 'start' | 'end' | 'inherit' | undefined;
+
   return (
-    <text
-      x={x}
-      y={y}
-      textAnchor={textAnchor as 'middle' | 'start' | 'end' | 'inherit' | undefined}
-      fill={isPeak ? EGOGRAM_RADAR_PINK : '#94a3b8'}
-      fontSize={12}
-      fontWeight={isPeak ? 800 : 600}
-    >
-      {payload.value}
+    <text x={x} y={y} textAnchor={anchor}>
+      <tspan x={x} dy={0} fill={titleFill} fontSize={12} fontWeight={isPeak ? 800 : 600}>
+        {scale}
+      </tspan>
+      {score != null ? (
+        <tspan x={x} dy={14} fill={scoreFill} fontSize={10} fontWeight={isPeak ? 700 : 500}>
+          {score}
+        </tspan>
+      ) : null}
     </text>
   );
 }
@@ -178,6 +186,10 @@ function EgogramFiveScaleRadarChart({ data }: { data: EgogramRadarRow[] }) {
   const peakScales = useMemo(
     () => new Set(data.filter((d) => isEgogramPeakScore(d.score, peakScore)).map((d) => d.scale)),
     [data, peakScore],
+  );
+  const scoreByScale = useMemo(
+    () => Object.fromEntries(data.map((d) => [d.scale, d.score])),
+    [data],
   );
 
   const PeakLayer = useMemo(
@@ -242,7 +254,7 @@ function EgogramFiveScaleRadarChart({ data }: { data: EgogramRadarRow[] }) {
 
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <RadarChart data={data} outerRadius="78%" cx="50%" cy="52%">
+      <RadarChart data={data} outerRadius="72%" cx="50%" cy="52%" margin={{ top: 8, right: 28, bottom: 8, left: 28 }}>
         <Customized component={FillOpacityMaskDefs} />
         <PolarGrid
           gridType="polygon"
@@ -261,7 +273,7 @@ function EgogramFiveScaleRadarChart({ data }: { data: EgogramRadarRow[] }) {
         <PolarAngleAxis
           dataKey="scale"
           tick={(tickProps) => (
-            <EgogramRadarScaleTick {...tickProps} peakScales={peakScales} />
+            <EgogramRadarScaleTick {...tickProps} peakScales={peakScales} scoreByScale={scoreByScale} />
           )}
         />
         <Radar
