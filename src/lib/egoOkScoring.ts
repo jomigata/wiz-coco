@@ -23,6 +23,8 @@ export type EgoOkScaleScore = {
   label: string;
   raw: number;
   max: number;
+  /** 10문항 모두 최저(1점) 응답 시 10 */
+  min: number;
   /** 부정 문항 합 (막대 하단·주황) */
   negativeRaw: number;
   /** 긍정 문항 합 (막대 상단·하늘) */
@@ -50,6 +52,7 @@ export type EgoOkOkScore = {
   label: string;
   raw: number;
   max: number;
+  min: number;
 };
 
 export type EgoOkReport = {
@@ -195,12 +198,26 @@ function scaleFromType(scaleType: string): EgoScaleId | OkScaleId | null {
   return null;
 }
 
-/** 6점 척도(1~6) → 문항 0~5점 */
-function itemPoints(rawAnswer: number): number {
+/** 6점 척도(1~6) → 문항 1~5점 (협회 KTAA 환산) */
+const ITEM_POINTS_BY_LIKERT: Record<number, number> = {
+  1: 1,
+  2: 2,
+  3: 2.75,
+  4: 3.25,
+  5: 4,
+  6: 5,
+};
+
+export function likertToItemPoints(rawAnswer: number): number {
   const v = Math.round(rawAnswer);
-  if (v <= 1) return 0;
-  if (v >= 6) return 5;
-  return v - 1;
+  if (v <= 1) return ITEM_POINTS_BY_LIKERT[1];
+  if (v >= 6) return ITEM_POINTS_BY_LIKERT[6];
+  return ITEM_POINTS_BY_LIKERT[v] ?? 1;
+}
+
+/** 척도 합계: 소수 합산 후 0.5 이상 반올림(정수) */
+export function roundScaleTotal(sum: number): number {
+  return Math.round(sum);
 }
 
 function sumInRange(score: number, cuts: { aMin: number; bMin: number; cMin: number }): ThreeLevel {
@@ -315,7 +332,7 @@ export function computeEgoOkReport(
       return;
     }
     orderedAnswers.push(raw);
-    const pts = itemPoints(raw);
+    const pts = likertToItemPoints(raw);
     const key = scaleFromType(q.scaleType);
     if (!key) return;
     if (key === 'CP' || key === 'NP' || key === 'A' || key === 'FC' || key === 'AC') {
@@ -328,15 +345,18 @@ export function computeEgoOkReport(
   });
 
   const egogram: EgoOkScaleScore[] = (['CP', 'NP', 'A', 'FC', 'AC'] as EgoScaleId[]).map((id) => {
-    const raw = egoSums[id];
+    const raw = roundScaleTotal(egoSums[id]);
+    const negativeRaw = roundScaleTotal(egoNeg[id]);
+    const positiveRaw = Math.max(0, raw - negativeRaw);
     const fiveLevel = toFiveLevel(raw, gender, id);
     return {
       id,
       label: EGO_LABELS[id],
       raw,
       max: 50,
-      negativeRaw: egoNeg[id],
-      positiveRaw: egoPos[id],
+      min: 10,
+      negativeRaw,
+      positiveRaw,
       fiveLevel,
       threeLevel: sumInRange(raw, THREE_LEVEL_CUTS[gender][id]),
       negativePercent: negativePercentForLevel(fiveLevel),
@@ -346,18 +366,23 @@ export function computeEgoOkReport(
   const okgram: EgoOkOkScore[] = (['U+', 'U-', 'I+', 'I-'] as OkScaleId[]).map((id) => ({
     id,
     label: OK_LABELS[id],
-    raw: okSums[id],
+    raw: roundScaleTotal(okSums[id]),
     max: 50,
+    min: 10,
   }));
 
-  const np = egoSums.NP;
-  const cp = egoSums.CP;
-  const fc = egoSums.FC;
-  const ac = egoSums.AC;
+  const np = egogram.find((s) => s.id === 'NP')!.raw;
+  const cp = egogram.find((s) => s.id === 'CP')!.raw;
+  const fc = egogram.find((s) => s.id === 'FC')!.raw;
+  const ac = egogram.find((s) => s.id === 'AC')!.raw;
   const uAxis = np - cp;
   const iAxis = fc - ac;
-  const uOkDiff = okSums['U+'] - okSums['U-'];
-  const iOkDiff = okSums['I+'] - okSums['I-'];
+  const uPlus = okgram.find((s) => s.id === 'U+')!.raw;
+  const uMinus = okgram.find((s) => s.id === 'U-')!.raw;
+  const iPlus = okgram.find((s) => s.id === 'I+')!.raw;
+  const iMinus = okgram.find((s) => s.id === 'I-')!.raw;
+  const uOkDiff = uPlus - uMinus;
+  const iOkDiff = iPlus - iMinus;
 
   const patternCode = egogram.map((s) => s.threeLevel).join('');
   const bank = patternSource as {
@@ -378,7 +403,8 @@ export function computeEgoOkReport(
     (id) => {
       const meta = COMPOSITE_COLUMN_META[id];
       const ego = egogram.find((s) => s.id === id)!;
-      const okLine = meta.okKey != null ? okSums[meta.okKey] : null;
+      const okLine =
+        meta.okKey != null ? okgram.find((s) => s.id === meta.okKey)!.raw : null;
       return {
         id,
         topLabel: meta.topLabel,

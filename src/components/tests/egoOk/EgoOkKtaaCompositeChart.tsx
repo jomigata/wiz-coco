@@ -691,7 +691,8 @@ export default function EgoOkKtaaCompositeChart({
         <ol className="list-decimal space-y-2 pl-4 text-gray-800">
           <li>
             <strong>응답 → 문항 점수</strong>: 각 문항은 6점 척도(1=매우 아니다 ~ 6=매우 그렇다)로
-            답하고, 채점 시 <strong>0~5점</strong>으로 환산합니다(6→5, 5→4, …, 1→0).
+            답하고, 채점 시 문항 <strong>1~5점</strong>으로 환산합니다(6→5, 5→4, 4→3.25, 3→2.75, 2→2,
+            1→1). 척도 10문항 합은 <strong>10~50</strong>이며, 소수 합산 후 <strong>0.5 이상 반올림</strong>합니다.
           </li>
           <li>
             <strong>막대 = 이고그램(CP·NP·A·FC·AC)</strong>: 척도마다 긍정 문항 5개·부정 문항 5개(합 10문항,
