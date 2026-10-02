@@ -25,14 +25,14 @@ const EGO_NEG_COLOR = '#e8954a';
 const EGO_POS_COLOR = '#9cc9e8';
 const EGO_TOTAL_BOX_STROKE = '#0284c7';
 const OK_LINE_COLOR = '#d32f2f';
-/**
- * KTAA 3단계 배경 — A(상·하늘) / B(중·흰) / C(하·분홍).
- * 5열·좌(남)·우(여) 모두 동일 색 (구간 높이만 KTAA_GRAPH_ZONES).
- */
-const KTAA_TIER_FILL = {
-  top: { male: '#d6e8f5', female: '#d6e8f5' },
-  middle: { male: '#ffffff', female: '#ffffff' },
-  bottom: { male: '#f5d6d6', female: '#f5d6d6' },
+/** KTAA 종합 그래프: 열 반쪽마다 C(하)·B(중)·A(상). 좌=남 하늘 / 우=여 분홍, B는 흰색 (5열 동일) */
+const ZONE_WHITE = '#ffffff';
+const ZONE_SKY = '#d6e8f5';
+const ZONE_PINK = '#f5d6d6';
+
+const GENDER_ZONE_COLORS = {
+  male: { bottom: ZONE_SKY, middle: ZONE_WHITE, top: ZONE_SKY },
+  female: { bottom: ZONE_PINK, middle: ZONE_WHITE, top: ZONE_PINK },
 } as const;
 
 const CHART_PLOT_HEIGHT_PX = Math.round(680 * (2 / 3) * 1.2);
@@ -112,7 +112,7 @@ function ktaaZoneRects(
   x: number,
   w: number,
   band: KtaaGraphZoneBounds,
-  tint: keyof typeof KTAA_TIER_FILL.top,
+  colors: (typeof GENDER_ZONE_COLORS)[keyof typeof GENDER_ZONE_COLORS],
   scale: YScale,
   keyPrefix: string,
 ) {
@@ -120,13 +120,13 @@ function ktaaZoneRects(
     const y1 = scale(from);
     const y2 = scale(to);
     const y = Math.min(y1, y2);
-    const h = Math.abs(y2 - y1) + 0.75;
+    const h = Math.abs(y2 - y1);
     return <rect key={key} x={x} y={y} width={w} height={h} fill={fill} />;
   };
   return [
-    yBand(0, band.redTop, KTAA_TIER_FILL.bottom[tint], `${keyPrefix}-c`),
-    yBand(band.redTop, band.whiteTop, KTAA_TIER_FILL.middle[tint], `${keyPrefix}-b`),
-    yBand(band.whiteTop, 50, KTAA_TIER_FILL.top[tint], `${keyPrefix}-a`),
+    yBand(0, band.redTop, colors.bottom, `${keyPrefix}-c`),
+    yBand(band.redTop, band.whiteTop, colors.middle, `${keyPrefix}-b`),
+    yBand(band.whiteTop, 50, colors.top, `${keyPrefix}-a`),
   ];
 }
 
@@ -161,7 +161,7 @@ function KtaaPlotBackground(props: {
                 xCol,
                 halfW,
                 KTAA_GRAPH_ZONES.male[code],
-                'male',
+                GENDER_ZONE_COLORS.male,
                 scale,
                 `${code}-m`,
               )}
@@ -169,7 +169,7 @@ function KtaaPlotBackground(props: {
                 xCol + halfW,
                 halfW,
                 KTAA_GRAPH_ZONES.female[code],
-                'female',
+                GENDER_ZONE_COLORS.female,
                 scale,
                 `${code}-f`,
               )}
@@ -500,17 +500,14 @@ export default function EgoOkKtaaCompositeChart({
             이고 합계(0~50)는 사각 테두리 안 숫자로 표시합니다.
           </li>
           <li>
-            <strong>배경색 3단계</strong>: 상단 A{' '}
-            <span
-              className="inline-block h-2 w-3 rounded-sm border border-sky-200 align-middle"
-              style={{ background: KTAA_TIER_FILL.top.male }}
-            />{' '}
-            하늘 · 중간 B 흰색 · 하단 C{' '}
-            <span
-              className="inline-block h-2 w-3 rounded-sm border border-red-200 align-middle"
-              style={{ background: KTAA_TIER_FILL.bottom.male }}
-            />{' '}
-            분홍. 5열·좌(남)·우(여) 색은 동일하고, 구간 높이만 척도·성별(3단계 컷)마다 다릅니다. 점선(12.5)은
+            <strong>배경색(5열 공통 형태)</strong>: 각 열을 <strong>왼쪽=남(하늘)</strong>,{' '}
+            <strong>오른쪽=여(분홍)</strong>으로 나누고, 반쪽마다{' '}
+            <span className="inline-block h-2 w-3 rounded-sm border border-sky-200 align-middle" style={{ background: ZONE_SKY }} />{' '}
+            하단(C)·{' '}
+            <span className="inline-block h-2 w-3 rounded-sm border border-gray-200 align-middle bg-white" />{' '}
+            중간(B)·{' '}
+            <span className="inline-block h-2 w-3 rounded-sm border border-sky-200 align-middle" style={{ background: ZONE_SKY }} />{' '}
+            상단(A) 3단(여성은 분홍). 구간 <strong>높이</strong>만 척도·성별마다 다릅니다(3단계 컷). 점선(12.5)은
             참고 기준선입니다.
             {genderInput ? (
               <>
