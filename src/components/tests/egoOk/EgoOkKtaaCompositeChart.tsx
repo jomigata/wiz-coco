@@ -231,6 +231,9 @@ type ChartRow = EgoOkCompositeColumn & {
 const OK_DOT_R = 7;
 const OK_LABEL_BOX_H = 18;
 const OK_LABEL_GAP = 4;
+const EGO_TOTAL_LABEL_GAP = 3;
+const PX_PER_SCORE =
+  (CHART_PLOT_HEIGHT_PX - CHART_MARGIN.top - CHART_MARGIN.bottom) / 50;
 
 function boxesOverlap(
   a: { x: number; y: number; w: number; h: number },
@@ -283,6 +286,47 @@ function okLabelBoxForDot(
   }
 }
 
+function estimateEgoTotalLabelBox(
+  cx: number,
+  cyOk: number,
+  okValue: number,
+  egoTotal: number,
+): { x: number; y: number; w: number; h: number } | null {
+  if (egoTotal <= 0) return null;
+  const egoBoxW = Math.max(26, String(egoTotal).length * 8 + 10);
+  const cyBarTop = cyOk + (okValue - egoTotal) * PX_PER_SCORE;
+  const y = cyBarTop - OK_LABEL_BOX_H - EGO_TOTAL_LABEL_GAP;
+  return { x: cx - egoBoxW / 2, y, w: egoBoxW, h: OK_LABEL_BOX_H };
+}
+
+function okLabelCandidates(
+  cx: number,
+  cy: number,
+  boxW: number,
+  columnId: ChartRow['id'] | undefined,
+): ReturnType<typeof okLabelBoxForDot>[] {
+  const preferRight = columnId === 'CP' || columnId === 'NP';
+  const sides: Array<'left' | 'right' | 'above' | 'below'> = [
+    'above',
+    ...(preferRight ? (['right', 'left'] as const) : (['left', 'right'] as const)),
+    'below',
+  ];
+  const layouts: ReturnType<typeof okLabelBoxForDot>[] = [];
+  for (const side of sides) {
+    layouts.push(okLabelBoxForDot(cx, cy, boxW, side));
+    if (side === 'above') {
+      const base = layouts[layouts.length - 1];
+      layouts.push({ ...base, x: base.x + 14, textX: base.textX + 14 });
+      layouts.push({ ...base, x: base.x - 14, textX: base.textX - 14 });
+      layouts.push({
+        ...base,
+        y: base.y - OK_LABEL_BOX_H * 0.45,
+      });
+    }
+  }
+  return layouts;
+}
+
 function pickOkLabelPlacement(
   cx: number,
   cy: number,
@@ -297,22 +341,14 @@ function pickOkLabelPlacement(
     w: OK_DOT_R * 2,
     h: OK_DOT_R * 2,
   };
-  const nearEgoTotal = Math.abs(okValue - egoTotal) <= 6;
+  const egoBox = estimateEgoTotalLabelBox(cx, cy, okValue, egoTotal);
   const preferRight = columnId === 'CP' || columnId === 'NP';
-  const sides: Array<'left' | 'right' | 'above' | 'below'> = nearEgoTotal
-    ? preferRight
-      ? ['right', 'left']
-      : ['left', 'right']
-    : preferRight
-      ? ['right', 'left', 'above', 'below']
-      : ['left', 'right', 'above', 'below'];
 
-  for (const side of sides) {
-    const layout = okLabelBoxForDot(cx, cy, boxW, side);
+  for (const layout of okLabelCandidates(cx, cy, boxW, columnId)) {
     const labelBox = { x: layout.x, y: layout.y, w: boxW, h: OK_LABEL_BOX_H };
-    if (!boxesOverlap(labelBox, dotBox)) {
-      return layout;
-    }
+    if (boxesOverlap(labelBox, dotBox)) continue;
+    if (egoBox && boxesOverlap(labelBox, egoBox, 3)) continue;
+    return layout;
   }
   return okLabelBoxForDot(cx, cy, boxW, preferRight ? 'right' : 'left');
 }
