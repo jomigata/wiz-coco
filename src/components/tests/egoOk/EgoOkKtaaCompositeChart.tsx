@@ -103,9 +103,9 @@ export default function EgoOkKtaaCompositeChart({ columns }: { columns: EgoOkCom
         ))}
       </div>
 
-      <div className="h-[340px] w-full px-1 pt-1">
+      <div className="h-[680px] w-full px-1 pt-1">
         <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart data={data} margin={{ top: 24, right: 12, left: 4, bottom: 8 }}>
+          <ComposedChart data={data} margin={{ top: 32, right: 16, left: 6, bottom: 12 }}>
             <ReferenceArea y1={0} y2={12.5} fill={ZONE_LOW} fillOpacity={0.85} ifOverflow="extendDomain" />
             <ReferenceArea y1={12.5} y2={37.5} fill={ZONE_MID} fillOpacity={0.85} ifOverflow="extendDomain" />
             <ReferenceArea y1={37.5} y2={50} fill={ZONE_LOW} fillOpacity={0.85} ifOverflow="extendDomain" />
@@ -115,7 +115,7 @@ export default function EgoOkKtaaCompositeChart({ columns }: { columns: EgoOkCom
               ticks={Y_TICKS}
               tick={{ fill: '#64748b', fontSize: 10 }}
               axisLine={{ stroke: '#94a3b8' }}
-              width={28}
+              width={32}
             />
             <XAxis
               dataKey="xLabel"
@@ -177,18 +177,39 @@ export default function EgoOkKtaaCompositeChart({ columns }: { columns: EgoOkCom
         })}
       </div>
 
-      <div className="mx-3 mb-4 rounded border border-sky-300 bg-sky-50/80 px-3 py-2 text-[11px] leading-relaxed text-gray-800 sm:text-xs">
-        <span className="font-bold text-red-600">CP</span> : (비판적, 지배적, 느슨함) ·{' '}
-        <span className="font-bold text-red-600">NP</span> : (과보호, 헌신적, 방임적) ·{' '}
-        <span className="font-bold text-sky-700">A</span> : (기계적, 현실적, 즉흥적) ·{' '}
-        <span className="font-bold text-red-600">FC</span> : (개구쟁이, 개방적, 폐쇄적) ·{' '}
-        <span className="font-bold text-red-600">AC</span> : (자기비하, 의존적, 독단적)
-        <p className="mt-1 text-gray-600">
-          <span className="inline-block h-2 w-3 rounded-sm align-middle" style={{ background: EGO_NEG_COLOR }} />{' '}
-          이고그램(부정·하단) +{' '}
-          <span className="inline-block h-2 w-3 rounded-sm align-middle" style={{ background: EGO_POS_COLOR }} />{' '}
-          이고그램(긍정·상단) ·{' '}
-          <span className="font-bold text-red-600">—</span> 오케이그램(적색 선, A열 제외)
+      <div className="mx-3 mb-4 space-y-3 rounded border border-sky-300 bg-sky-50/80 px-4 py-3 text-[11px] leading-relaxed text-gray-800 sm:text-xs">
+        <p className="font-bold text-sky-900">점수가 그래프에 표시되는 방식</p>
+        <ol className="list-decimal space-y-2 pl-4 text-gray-800">
+          <li>
+            <strong>응답 → 문항 점수</strong>: 각 문항은 6점 척도(1=매우 아니다 ~ 6=매우 그렇다)로
+            답하고, 채점 시 <strong>0~5점</strong>으로 환산합니다(6→5, 5→4, …, 1→0).
+          </li>
+          <li>
+            <strong>막대 = 이고그램(CP·NP·A·FC·AC)</strong>: 척도마다 긍정 문항 5개·부정 문항 5개(합 10문항,
+            만점 50).{' '}
+            <span className="inline-block h-2 w-3 rounded-sm align-middle" style={{ background: EGO_NEG_COLOR }} />{' '}
+            <strong>주황(아래)</strong>은 부정 문항 합(0~25),{' '}
+            <span className="inline-block h-2 w-3 rounded-sm align-middle" style={{ background: EGO_POS_COLOR }} />{' '}
+            <strong>하늘(위)</strong>은 긍정 문항 합(0~25). 막대 안 숫자는 각 층 점수,{' '}
+            <strong>막대 꼭대기 숫자</strong>는 두 층을 더한 <strong>이고그램 척도 총점(0~50)</strong>입니다.
+          </li>
+          <li>
+            <strong>적색 선 = 오케이그램</strong>: U−·U+·I+·I− 척도 각 10문항 합(0~50)을 같은 열에
+            표시합니다. <strong>CP→U−, NP→U+, FC→I+, AC→I−</strong>. 성인(A) 열에는 오케이 선이 없습니다.
+            선 위 숫자가 해당 오케이 척도 원점수입니다.
+          </li>
+          <li>
+            <strong>세로축(Y)</strong>: 0~50, 5점 간격. 연분홍(0~12.5·37.5~50)과 연하늘(12.5~37.5) 구간은
+            KTAA 종합 그래프와 같은 <strong>참고 눈금대</strong>이며, 5단계 A~E·243패턴 해석은 리포트
+            하단 수치·문장을 함께 보시면 됩니다.
+          </li>
+        </ol>
+        <p className="border-t border-sky-200 pt-2 text-gray-700">
+          <span className="font-bold text-red-600">CP</span> (비판적·지배적 / 느슨함) ·{' '}
+          <span className="font-bold text-red-600">NP</span> (과보호·헌신적 / 방임적) ·{' '}
+          <span className="font-bold text-sky-700">A</span> (기계적·현실적 / 즉흥적) ·{' '}
+          <span className="font-bold text-red-600">FC</span> (개구쟁이·개방적 / 폐쇄적) ·{' '}
+          <span className="font-bold text-red-600">AC</span> (자기비하·의존적 / 독단적)
         </p>
       </div>
     </div>

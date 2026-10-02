@@ -130,7 +130,8 @@ export default function EgoOkCounselorReport({
         <header className="mb-4">
           <h2 className="text-lg font-semibold text-white">이고-오케이그램 (Ego-Ok) 진단 결과 그래프</h2>
           <p className="mt-1 text-sm text-slate-400">
-            KTAA 종합 결과 형식 — 막대(주황·하늘)=이고그램 긍·부정 합, 적색 선=오케이그램(U−, U+, I+, I−)
+            90문항 채점 결과를 KTAA 종합 그래프 형식으로 표시합니다. 막대=이고그램(부정·긍정 층+총점),
+            적색 선=오케이그램(U−/U+/I+/I−, A열 제외). 아래 안내에서 점수 계산을 정리했습니다.
           </p>
         </header>
         <EgoOkKtaaCompositeChart columns={report.compositeChart} />
