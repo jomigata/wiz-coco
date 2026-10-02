@@ -148,21 +148,36 @@ function EgogramRadarScaleTick({
   const scale = payload.value;
   const score = scoreByScale[scale];
   const isPeak = peakScales.has(scale);
-  const titleFill = isPeak ? EGOGRAM_RADAR_PINK : '#94a3b8';
-  const scoreFill = isPeak ? EGOGRAM_RADAR_PINK : '#64748b';
+  const peakPink = EGOGRAM_RADAR_PINK;
+  const titleFill = isPeak ? peakPink : '#94a3b8';
+  const scoreFill = isPeak ? peakPink : '#64748b';
   const anchor = textAnchor as 'middle' | 'start' | 'end' | 'inherit' | undefined;
 
   return (
-    <text x={x} y={y} textAnchor={anchor}>
-      <tspan x={x} dy={0} fill={titleFill} fontSize={12} fontWeight={isPeak ? 800 : 600}>
+    <g>
+      <text
+        x={x}
+        y={y}
+        textAnchor={anchor}
+        fill={titleFill}
+        fontSize={12}
+        fontWeight={isPeak ? 800 : 600}
+      >
         {scale}
-      </tspan>
+      </text>
       {score != null ? (
-        <tspan x={x} dy={14} fill={scoreFill} fontSize={10} fontWeight={isPeak ? 700 : 500}>
+        <text
+          x={x}
+          y={y + 14}
+          textAnchor={anchor}
+          fill={scoreFill}
+          fontSize={10}
+          fontWeight={isPeak ? 800 : 500}
+        >
           {score}
-        </tspan>
+        </text>
       ) : null}
-    </text>
+    </g>
   );
 }
 
