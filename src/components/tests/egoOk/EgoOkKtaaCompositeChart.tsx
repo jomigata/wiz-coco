@@ -228,7 +228,94 @@ type ChartRow = EgoOkCompositeColumn & {
   okLineFcAc: number | null;
 };
 
-const OK_LABEL_ABOVE_MIN_CY = 36;
+const OK_DOT_R = 7;
+const OK_LABEL_BOX_H = 18;
+const OK_LABEL_GAP = 4;
+
+function boxesOverlap(
+  a: { x: number; y: number; w: number; h: number },
+  b: { x: number; y: number; w: number; h: number },
+  pad = 2,
+): boolean {
+  return !(
+    a.x + a.w + pad < b.x ||
+    b.x + b.w + pad < a.x ||
+    a.y + a.h + pad < b.y ||
+    b.y + b.h + pad < a.y
+  );
+}
+
+function okLabelBoxForDot(
+  cx: number,
+  cy: number,
+  boxW: number,
+  side: 'left' | 'right' | 'above' | 'below',
+): { x: number; y: number; textX: number; textAnchor: 'middle' | 'start' | 'end' } {
+  switch (side) {
+    case 'right':
+      return {
+        x: cx + OK_DOT_R + OK_LABEL_GAP,
+        y: cy - OK_LABEL_BOX_H / 2,
+        textX: cx + OK_DOT_R + OK_LABEL_GAP + boxW / 2,
+        textAnchor: 'middle',
+      };
+    case 'left':
+      return {
+        x: cx - OK_DOT_R - OK_LABEL_GAP - boxW,
+        y: cy - OK_LABEL_BOX_H / 2,
+        textX: cx - OK_DOT_R - OK_LABEL_GAP - boxW / 2,
+        textAnchor: 'middle',
+      };
+    case 'above':
+      return {
+        x: cx - boxW / 2,
+        y: cy - OK_DOT_R - OK_LABEL_GAP - OK_LABEL_BOX_H,
+        textX: cx,
+        textAnchor: 'middle',
+      };
+    case 'below':
+      return {
+        x: cx - boxW / 2,
+        y: cy + OK_DOT_R + OK_LABEL_GAP,
+        textX: cx,
+        textAnchor: 'middle',
+      };
+  }
+}
+
+function pickOkLabelPlacement(
+  cx: number,
+  cy: number,
+  boxW: number,
+  columnId: ChartRow['id'] | undefined,
+  egoTotal: number,
+  okValue: number,
+): ReturnType<typeof okLabelBoxForDot> {
+  const dotBox = {
+    x: cx - OK_DOT_R,
+    y: cy - OK_DOT_R,
+    w: OK_DOT_R * 2,
+    h: OK_DOT_R * 2,
+  };
+  const nearEgoTotal = Math.abs(okValue - egoTotal) <= 6;
+  const preferRight = columnId === 'CP' || columnId === 'NP';
+  const sides: Array<'left' | 'right' | 'above' | 'below'> = nearEgoTotal
+    ? preferRight
+      ? ['right', 'left']
+      : ['left', 'right']
+    : preferRight
+      ? ['right', 'left', 'above', 'below']
+      : ['left', 'right', 'above', 'below'];
+
+  for (const side of sides) {
+    const layout = okLabelBoxForDot(cx, cy, boxW, side);
+    const labelBox = { x: layout.x, y: layout.y, w: boxW, h: OK_LABEL_BOX_H };
+    if (!boxesOverlap(labelBox, dotBox)) {
+      return layout;
+    }
+  }
+  return okLabelBoxForDot(cx, cy, boxW, preferRight ? 'right' : 'left');
+}
 
 function OkLineDot(props: {
   cx?: number;
@@ -244,24 +331,39 @@ function OkLineDot(props: {
         ? payload.okLineFcAc
         : null;
   if (cx == null || cy == null || v == null) return null;
-  const labelAbove = cy >= OK_LABEL_ABOVE_MIN_CY;
-  const rectY = labelAbove ? cy - 28 : cy + 10;
-  const textY = labelAbove ? cy - 15 : cy + 23;
+  const text = String(v);
+  const boxW = Math.max(28, text.length * 8 + 10);
+  const layout = pickOkLabelPlacement(
+    cx,
+    cy,
+    boxW,
+    payload?.id,
+    payload?.egoTotal ?? 0,
+    v,
+  );
+  const textY = layout.y + 13;
   return (
     <g>
-      <circle cx={cx} cy={cy} r={7} fill={OK_LINE_COLOR} stroke="#fff" strokeWidth={2} />
+      <circle cx={cx} cy={cy} r={OK_DOT_R} fill={OK_LINE_COLOR} stroke="#fff" strokeWidth={2} />
       <rect
-        x={cx - 14}
-        y={rectY}
-        width={28}
-        height={18}
+        x={layout.x}
+        y={layout.y}
+        width={boxW}
+        height={OK_LABEL_BOX_H}
         rx={0}
         fill="#fff"
         stroke={OK_LINE_COLOR}
         strokeWidth={1}
       />
-      <text x={cx} y={textY} textAnchor="middle" fill={OK_LINE_COLOR} fontSize={11} fontWeight={700}>
-        {v}
+      <text
+        x={layout.textX}
+        y={textY}
+        textAnchor={layout.textAnchor}
+        fill={OK_LINE_COLOR}
+        fontSize={11}
+        fontWeight={700}
+      >
+        {text}
       </text>
     </g>
   );
