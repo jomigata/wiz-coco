@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { EgoOkGender, EgoOkReport, OkScaleId } from '@/lib/egoOkScoring';
 import { OK_LABELS, OK_SCALE_HINTS } from '@/lib/egoOkScoring';
 import { egoOkGenderToLabel } from '@/lib/egoOkTestGender';
@@ -79,59 +79,115 @@ type EgogramRadarRow = {
   bottomTrait: string;
 };
 
-const EGOGRAM_RADAR_GRADIENT_ID = 'egogram-radar-radial-fill';
+const EGOGRAM_RADAR_SKY = '#7dd3fc';
+const EGOGRAM_RADAR_PINK = '#f9a8d4';
 
-function EgogramRadarBackground(props: { cx?: number; cy?: number; outerRadius?: number }) {
-  const cx = props.cx ?? 0;
-  const cy = props.cy ?? 0;
-  const outerRadius = props.outerRadius ?? 0;
-  if (outerRadius <= 0) return null;
-  return (
-    <g>
-      <defs>
-        <radialGradient
-          id={EGOGRAM_RADAR_GRADIENT_ID}
-          gradientUnits="userSpaceOnUse"
-          cx={cx}
-          cy={cy}
-          r={outerRadius}
-        >
-          <stop offset="0%" stopColor="#f8fafc" stopOpacity={0.15} />
-          <stop offset="40%" stopColor="#818cf8" stopOpacity={0.22} />
-          <stop offset="100%" stopColor="#312e81" stopOpacity={0.62} />
-        </radialGradient>
-      </defs>
-      <circle cx={cx} cy={cy} r={outerRadius} fill={`url(#${EGOGRAM_RADAR_GRADIENT_ID})`} />
-      <circle cx={cx} cy={cy} r={4} fill="#f1f5f9" stroke="#94a3b8" strokeWidth={1.5} />
-      <text x={cx} y={cy + 17} textAnchor="middle" fill="#94a3b8" fontSize={10} fontWeight={700}>
-        0
-      </text>
-    </g>
-  );
+function egogramRadarTooltipLine(row: EgogramRadarRow): string {
+  const name = row.label.replace(/\s*\([A-Za-z+]+\)\s*$/, '').replace(/\s+/g, '');
+  const line = `${row.scale}.${name}`;
+  return line.length > 24 ? `${line.slice(0, 22)}…` : line;
+}
+
+function egogramRadarWedgePath(
+  cx: number,
+  cy: number,
+  r: number,
+  startDeg: number,
+  endDeg: number,
+): string {
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+  const x1 = cx + r * Math.cos(toRad(startDeg));
+  const y1 = cy - r * Math.sin(toRad(startDeg));
+  const x2 = cx + r * Math.cos(toRad(endDeg));
+  const y2 = cy - r * Math.sin(toRad(endDeg));
+  const large = Math.abs(endDeg - startDeg) > 180 ? 1 : 0;
+  return `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} Z`;
+}
+
+function createEgogramRadarBackground(rows: EgogramRadarRow[]) {
+  const baseGradId = 'egogram-radar-base-radial';
+  return function EgogramRadarBackground(props: { cx?: number; cy?: number; outerRadius?: number }) {
+    const cx = props.cx ?? 0;
+    const cy = props.cy ?? 0;
+    const outerRadius = props.outerRadius ?? 0;
+    if (outerRadius <= 0 || rows.length === 0) return null;
+
+    const n = rows.length;
+    const step = 360 / n;
+    const half = step / 2;
+
+    return (
+      <g>
+        <defs>
+          <radialGradient
+            id={baseGradId}
+            gradientUnits="userSpaceOnUse"
+            cx={cx}
+            cy={cy}
+            r={outerRadius}
+          >
+            <stop offset="0%" stopColor={EGOGRAM_RADAR_SKY} stopOpacity={0.1} />
+            <stop offset="35%" stopColor={EGOGRAM_RADAR_SKY} stopOpacity={0.06} />
+            <stop offset="72%" stopColor={EGOGRAM_RADAR_PINK} stopOpacity={0.18} />
+            <stop offset="100%" stopColor={EGOGRAM_RADAR_PINK} stopOpacity={0.42} />
+          </radialGradient>
+          {rows.map((row, i) => {
+            const wedgeId = `egogram-radar-wedge-${row.scale}`;
+            const mid = 90 - step * i;
+            const rad = (mid * Math.PI) / 180;
+            const gx = cx + outerRadius * 0.55 * Math.cos(rad);
+            const gy = cy - outerRadius * 0.55 * Math.sin(rad);
+            const usage = row.score / row.fullMark;
+            const dom = egogramDominance(row.positive, row.negative);
+            const emphasis = dom === 'even' ? 0.55 : 1;
+            const outerAlpha = 0.08 + 0.42 * usage * emphasis;
+            return (
+              <radialGradient
+                key={wedgeId}
+                id={wedgeId}
+                gradientUnits="userSpaceOnUse"
+                cx={cx}
+                cy={cy}
+                r={outerRadius}
+                fx={gx}
+                fy={gy}
+              >
+                <stop offset="0%" stopColor={EGOGRAM_RADAR_SKY} stopOpacity={0} />
+                <stop offset="45%" stopColor={EGOGRAM_RADAR_SKY} stopOpacity={0.04} />
+                <stop offset="100%" stopColor={EGOGRAM_RADAR_PINK} stopOpacity={outerAlpha} />
+              </radialGradient>
+            );
+          })}
+        </defs>
+        <circle cx={cx} cy={cy} r={outerRadius} fill={`url(#${baseGradId})`} />
+        {rows.map((row, i) => {
+          const mid = 90 - step * i;
+          const start = mid - half;
+          const end = mid + half;
+          return (
+            <path
+              key={`wedge-${row.scale}`}
+              d={egogramRadarWedgePath(cx, cy, outerRadius, start, end)}
+              fill={`url(#egogram-radar-wedge-${row.scale})`}
+              stroke="none"
+            />
+          );
+        })}
+        <circle cx={cx} cy={cy} r={3.5} fill="#e0f2fe" stroke="#64748b" strokeOpacity={0.55} strokeWidth={1} />
+        <text x={cx} y={cy + 16} textAnchor="middle" fill="#64748b" fontSize={9} fontWeight={600}>
+          0
+        </text>
+      </g>
+    );
+  };
 }
 
 function EgogramRadarTooltip({ active, payload }: TooltipProps<number, string>) {
   if (!active || !payload?.length) return null;
   const row = payload[0].payload as EgogramRadarRow;
-  const dom = egogramDominance(row.positive, row.negative);
-  const dominantLabel =
-    dom === 'positive' ? row.topTrait : dom === 'negative' ? row.bottomTrait : '긍정·부정 균형';
   return (
-    <div className="max-w-xs rounded-lg border border-indigo-400/35 bg-slate-950/95 px-3 py-2 text-xs shadow-lg">
-      <p className="font-bold text-indigo-100">
-        {row.scale} · {row.label}
-      </p>
-      <p className="mt-1 text-white">
-        총점 <span className="font-mono text-sky-300">{row.score}</span>
-        <span className="text-slate-500">/50</span>
-        <span className="ml-2 text-slate-400">243 구간 {row.threeLevel}</span>
-      </p>
-      <p className="mt-1 text-slate-400">
-        긍정 {row.positive} · 부정 {row.negative}
-      </p>
-      <p className="mt-1 leading-relaxed text-slate-300">
-        상대적으로 많이 사용: <strong className="text-slate-100">{dominantLabel}</strong>
-      </p>
+    <div className="rounded-md border border-white/10 bg-slate-950/90 px-2.5 py-1.5 text-xs shadow-md">
+      <p className="font-semibold text-slate-100">{egogramRadarTooltipLine(row)}</p>
     </div>
   );
 }
@@ -231,6 +287,11 @@ export default function EgoOkCounselorReport({
 
   const [lifeHover, setLifeHover] = useState(false);
 
+  const EgogramRadarBackgroundLayer = useMemo(
+    () => createEgogramRadarBackground(radarData),
+    [radarData],
+  );
+
   return (
     <div className="mx-auto max-w-5xl space-y-8 pb-16">
       <div className="relative overflow-hidden rounded-3xl border border-indigo-400/20 bg-gradient-to-br from-indigo-950 via-slate-950 to-[#070b14] p-8 shadow-2xl">
@@ -320,13 +381,13 @@ export default function EgoOkCounselorReport({
           <div className="h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart data={radarData} outerRadius="78%" cx="50%" cy="52%">
-                <Customized component={EgogramRadarBackground} />
+                <Customized component={EgogramRadarBackgroundLayer} />
                 <PolarGrid
                   gridType="polygon"
                   radialLines
-                  stroke="#cbd5e1"
-                  strokeOpacity={0.85}
-                  strokeWidth={1.4}
+                  stroke="#64748b"
+                  strokeOpacity={0.28}
+                  strokeWidth={1}
                 />
                 <PolarRadiusAxis
                   domain={[0, 50]}
@@ -337,7 +398,7 @@ export default function EgoOkCounselorReport({
                 />
                 <PolarAngleAxis
                   dataKey="scale"
-                  tick={{ fill: '#e2e8f0', fontSize: 12, fontWeight: 700 }}
+                  tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 600 }}
                 />
                 <Radar
                   name="점수"
