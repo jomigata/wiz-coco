@@ -10,6 +10,7 @@ import {
   RadarChart,
   PolarGrid,
   PolarAngleAxis,
+  PolarRadiusAxis,
   ResponsiveContainer,
   BarChart,
   Bar,
@@ -17,6 +18,7 @@ import {
   YAxis,
   Tooltip,
   Cell,
+  Customized,
   type TooltipProps,
 } from 'recharts';
 import EgoOkKtaaCompositeChart from '@/components/tests/egoOk/EgoOkKtaaCompositeChart';
@@ -65,73 +67,95 @@ function egogramDominance(positive: number, negative: number): EgogramDominance 
   return 'even';
 }
 
-function EgogramScaleRow({
-  id,
-  label,
-  raw,
-  threeLevel,
-  positive,
-  negative,
-  topTrait,
-  bottomTrait,
-}: {
-  id: string;
+type EgogramRadarRow = {
+  scale: string;
+  score: number;
+  fullMark: number;
   label: string;
-  raw: number;
   threeLevel: string;
   positive: number;
   negative: number;
   topTrait: string;
   bottomTrait: string;
-}) {
-  const [hover, setHover] = useState(false);
-  const dom = egogramDominance(positive, negative);
-  const posStrong = dom === 'positive' || dom === 'even';
-  const negStrong = dom === 'negative' || dom === 'even';
+};
 
-  const bgStyle =
-    hover && dom === 'positive'
-      ? { background: 'linear-gradient(180deg, rgba(56,189,248,0.35) 0%, rgba(15,23,42,0.2) 55%, rgba(15,23,42,0.05) 100%)' }
-      : hover && dom === 'negative'
-        ? { background: 'linear-gradient(180deg, rgba(15,23,42,0.05) 0%, rgba(15,23,42,0.2) 45%, rgba(251,146,60,0.35) 100%)' }
-        : hover
-          ? { background: 'linear-gradient(180deg, rgba(56,189,248,0.15) 0%, rgba(251,146,60,0.15) 100%)' }
-          : undefined;
+const EGOGRAM_RADAR_GRADIENT_ID = 'egogram-radar-radial-fill';
 
+function EgogramRadarBackground(props: { cx?: number; cy?: number; outerRadius?: number }) {
+  const cx = props.cx ?? 0;
+  const cy = props.cy ?? 0;
+  const outerRadius = props.outerRadius ?? 0;
+  if (outerRadius <= 0) return null;
   return (
-    <li
-      className="rounded-xl ring-1 ring-white/5 transition-shadow hover:ring-indigo-400/30"
-      style={bgStyle}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-    >
-      <div className="flex flex-wrap items-center gap-3 px-4 py-2">
-        <span
-          className={`w-8 font-mono text-sm ${hover ? 'font-extrabold text-indigo-100' : 'font-bold text-indigo-300'}`}
+    <g>
+      <defs>
+        <radialGradient
+          id={EGOGRAM_RADAR_GRADIENT_ID}
+          gradientUnits="userSpaceOnUse"
+          cx={cx}
+          cy={cy}
+          r={outerRadius}
         >
-          {id}
-        </span>
-        <span className="min-w-0 flex-1 text-sm text-slate-200">{label}</span>
-        <span className="font-mono text-sm text-white">
-          {raw}
-          <span className="text-slate-500">/50</span>
-        </span>
-        <ThreeLevelBadge level={threeLevel} />
-      </div>
-      {hover ? (
-        <div className="border-t border-white/5 px-4 py-2 text-xs leading-relaxed text-slate-300">
-          <p>
-            <span className={posStrong ? 'font-bold text-sky-200' : 'text-slate-400'}>{topTrait}</span>
-            {' · '}
-            긍정 {positive}
-            <span className="mx-2 text-slate-600">|</span>
-            <span className={negStrong ? 'font-bold text-orange-200' : 'text-slate-400'}>{bottomTrait}</span>
-            {' · '}
-            부정 {negative}
-          </p>
-          <p className="mt-1 text-slate-500">243 구간: {threeLevel} · 더 높은 층 쪽이 상대적으로 많이 사용된 자아 상태입니다.</p>
-        </div>
-      ) : null}
+          <stop offset="0%" stopColor="#f8fafc" stopOpacity={0.15} />
+          <stop offset="40%" stopColor="#818cf8" stopOpacity={0.22} />
+          <stop offset="100%" stopColor="#312e81" stopOpacity={0.62} />
+        </radialGradient>
+      </defs>
+      <circle cx={cx} cy={cy} r={outerRadius} fill={`url(#${EGOGRAM_RADAR_GRADIENT_ID})`} />
+      <circle cx={cx} cy={cy} r={4} fill="#f1f5f9" stroke="#94a3b8" strokeWidth={1.5} />
+      <text x={cx} y={cy + 17} textAnchor="middle" fill="#94a3b8" fontSize={10} fontWeight={700}>
+        0
+      </text>
+    </g>
+  );
+}
+
+function EgogramRadarTooltip({ active, payload }: TooltipProps<number, string>) {
+  if (!active || !payload?.length) return null;
+  const row = payload[0].payload as EgogramRadarRow;
+  const dom = egogramDominance(row.positive, row.negative);
+  const dominantLabel =
+    dom === 'positive' ? row.topTrait : dom === 'negative' ? row.bottomTrait : '긍정·부정 균형';
+  return (
+    <div className="max-w-xs rounded-lg border border-indigo-400/35 bg-slate-950/95 px-3 py-2 text-xs shadow-lg">
+      <p className="font-bold text-indigo-100">
+        {row.scale} · {row.label}
+      </p>
+      <p className="mt-1 text-white">
+        총점 <span className="font-mono text-sky-300">{row.score}</span>
+        <span className="text-slate-500">/50</span>
+        <span className="ml-2 text-slate-400">243 구간 {row.threeLevel}</span>
+      </p>
+      <p className="mt-1 text-slate-400">
+        긍정 {row.positive} · 부정 {row.negative}
+      </p>
+      <p className="mt-1 leading-relaxed text-slate-300">
+        상대적으로 많이 사용: <strong className="text-slate-100">{dominantLabel}</strong>
+      </p>
+    </div>
+  );
+}
+
+function EgogramScaleRow({
+  id,
+  label,
+  raw,
+  threeLevel,
+}: {
+  id: string;
+  label: string;
+  raw: number;
+  threeLevel: string;
+}) {
+  return (
+    <li className="flex flex-wrap items-center gap-3 rounded-xl bg-black/25 px-4 py-3 ring-1 ring-white/5">
+      <span className="w-8 font-mono text-sm font-bold text-indigo-300">{id}</span>
+      <span className="min-w-0 flex-1 text-sm text-slate-200">{label}</span>
+      <span className="font-mono text-sm text-white">
+        {raw}
+        <span className="text-slate-500">/50</span>
+      </span>
+      <ThreeLevelBadge level={threeLevel} />
     </li>
   );
 }
@@ -178,11 +202,22 @@ export default function EgoOkCounselorReport({
       : [clientInfo?.gender, clientInfo?.birthYear ? `${clientInfo.birthYear}년` : '']
           .filter(Boolean)
           .join(' · ') || '—';
-  const radarData = report.egogram.map((s) => ({
-    scale: s.id,
-    score: s.raw,
-    fullMark: 50,
-  }));
+  const compositeById = Object.fromEntries(report.compositeChart.map((c) => [c.id, c]));
+
+  const radarData: EgogramRadarRow[] = report.egogram.map((s) => {
+    const col = compositeById[s.id];
+    return {
+      scale: s.id,
+      score: s.raw,
+      fullMark: 50,
+      label: s.label,
+      threeLevel: s.threeLevel,
+      positive: s.positiveRaw,
+      negative: s.negativeRaw,
+      topTrait: col?.topLabel ?? '—',
+      bottomTrait: col?.bottomLabel ?? '—',
+    };
+  });
 
   const okBarData: OkBarRow[] = report.okgram.map((s) => ({
     name: s.id,
@@ -190,8 +225,6 @@ export default function EgoOkCounselorReport({
     label: OK_LABELS[s.id],
     hint: OK_SCALE_HINTS[s.id],
   }));
-
-  const compositeById = Object.fromEntries(report.compositeChart.map((c) => [c.id, c]));
 
   const sectionOrder = ['1', '2', '3', '4'] as const;
   const barColors = ['#38bdf8', '#818cf8', '#34d399', '#f472b6'];
@@ -283,40 +316,53 @@ export default function EgoOkCounselorReport({
       </section>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <SectionCard title="이고그램 5척도" subtitle="원점수 50 만점 · 243 구간(A/B/C) — 항목에 마우스를 올려 보세요">
-          <div className="h-64 w-full">
+        <SectionCard title="이고그램 5척도" subtitle="0~50 · 243 구간(A/B/C) — 방사형 그래프에 마우스를 올리면 요약이 표시됩니다">
+          <div className="h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <RadarChart data={radarData} outerRadius="75%">
-                <PolarGrid stroke="rgba(148,163,184,0.25)" />
-                <PolarAngleAxis dataKey="scale" tick={{ fill: '#cbd5e1', fontSize: 12 }} />
+              <RadarChart data={radarData} outerRadius="78%" cx="50%" cy="52%">
+                <Customized component={EgogramRadarBackground} />
+                <PolarGrid
+                  gridType="polygon"
+                  radialLines
+                  stroke="#cbd5e1"
+                  strokeOpacity={0.85}
+                  strokeWidth={1.4}
+                />
+                <PolarRadiusAxis
+                  domain={[0, 50]}
+                  angle={90}
+                  axisLine={false}
+                  tickCount={6}
+                  tick={{ fill: '#64748b', fontSize: 9 }}
+                />
+                <PolarAngleAxis
+                  dataKey="scale"
+                  tick={{ fill: '#e2e8f0', fontSize: 12, fontWeight: 700 }}
+                />
                 <Radar
                   name="점수"
                   dataKey="score"
-                  stroke="#818cf8"
+                  stroke="#c7d2fe"
                   fill="#6366f1"
-                  fillOpacity={0.35}
-                  strokeWidth={2}
+                  fillOpacity={0.42}
+                  strokeWidth={2.5}
+                  dot={{ r: 4, fill: '#eef2ff', stroke: '#818cf8', strokeWidth: 2 }}
+                  activeDot={{ r: 6, fill: '#ffffff', stroke: '#a5b4fc', strokeWidth: 2 }}
                 />
+                <Tooltip content={<EgogramRadarTooltip />} />
               </RadarChart>
             </ResponsiveContainer>
           </div>
           <ul className="mt-4 space-y-3">
-            {report.egogram.map((s) => {
-              const col = compositeById[s.id];
-              return (
-                <EgogramScaleRow
-                  key={s.id}
-                  id={s.id}
-                  label={s.label}
-                  raw={s.raw}
-                  threeLevel={s.threeLevel}
-                  positive={s.positiveRaw}
-                  negative={s.negativeRaw}
-                  topTrait={col?.topLabel ?? '—'}
-                  bottomTrait={col?.bottomLabel ?? '—'}
-                />
-              );
-            })}
+            {report.egogram.map((s) => (
+              <EgogramScaleRow
+                key={s.id}
+                id={s.id}
+                label={s.label}
+                raw={s.raw}
+                threeLevel={s.threeLevel}
+              />
+            ))}
           </ul>
         </SectionCard>
 
