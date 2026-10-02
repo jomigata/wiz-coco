@@ -47,23 +47,6 @@ function isClientGenderProvided(genderInput: string | undefined): boolean {
   return g.length > 0 && g !== '—' && g !== '-';
 }
 
-const TEST_BG_GENDER_STORAGE_KEY = 'wizcoco-ego-ok-ktaa-test-bg-gender';
-const TEST_BG_GENDER_SESSION_KEY = 'wizcoco-ego-ok-ktaa-test-bg-session';
-
-/** 성별 미입력 테스트: 새로고침마다 남↔여 배경 교대 (Strict Mode 이중 마운트 방지) */
-function takeAlternatingTestBackgroundGender(): EgoOkGender {
-  if (typeof window === 'undefined') return 'male';
-  if (sessionStorage.getItem(TEST_BG_GENDER_SESSION_KEY)) {
-    const stored = localStorage.getItem(TEST_BG_GENDER_STORAGE_KEY);
-    return stored === 'female' ? 'female' : 'male';
-  }
-  const prev = localStorage.getItem(TEST_BG_GENDER_STORAGE_KEY);
-  const next: EgoOkGender = prev === 'female' ? 'male' : 'female';
-  localStorage.setItem(TEST_BG_GENDER_STORAGE_KEY, next);
-  sessionStorage.setItem(TEST_BG_GENDER_SESSION_KEY, '1');
-  return next;
-}
-
 const CHART_PLOT_HEIGHT_PX = Math.round(680 * (2 / 3) * 1.2);
 
 const Y_TICKS = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50];
@@ -358,10 +341,9 @@ export default function EgoOkKtaaCompositeChart({
   gender?: string;
 }) {
   const genderProvided = isClientGenderProvided(genderInput);
-  const [testBackgroundGender] = useState<EgoOkGender>(() => takeAlternatingTestBackgroundGender());
   const backgroundGender: EgoOkGender = genderProvided
     ? normalizeEgoOkGender(genderInput)
-    : testBackgroundGender;
+    : 'male';
 
   const PlotBackgroundLayer = useMemo(
     () => createKtaaPlotBackground(backgroundGender),
@@ -545,7 +527,7 @@ export default function EgoOkKtaaCompositeChart({
             배경 기준:{' '}
             <strong>{backgroundGender === 'female' ? '여성(분홍)' : '남성(하늘)'}</strong>
             {!genderProvided ? (
-              <span className="text-gray-600"> — 성별 미입력, 새로고침마다 남/여 배경 교대</span>
+              <span className="text-gray-600"> — 성별 미입력(기본 남성 기준)</span>
             ) : null}
             .
           </li>

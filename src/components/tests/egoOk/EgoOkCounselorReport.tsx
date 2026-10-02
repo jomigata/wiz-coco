@@ -1,6 +1,7 @@
 'use client';
 
-import type { EgoOkReport } from '@/lib/egoOkScoring';
+import type { EgoOkGender, EgoOkReport } from '@/lib/egoOkScoring';
+import { egoOkGenderToLabel } from '@/lib/egoOkTestGender';
 import type { ClientInfo } from '@/components/tests/MbtiProClientInfo';
 import {
   Radar,
@@ -59,11 +60,22 @@ export default function EgoOkCounselorReport({
   report,
   clientInfo,
   localTestMode,
+  testGender,
+  onTestGenderChange,
 }: {
   report: EgoOkReport;
   clientInfo: ClientInfo | null;
   localTestMode?: boolean;
+  testGender?: EgoOkGender;
+  onTestGenderChange?: (gender: EgoOkGender) => void;
 }) {
+  const chartGender = localTestMode && testGender ? egoOkGenderToLabel(testGender) : clientInfo?.gender;
+  const displayGenderLine =
+    localTestMode && testGender
+      ? egoOkGenderToLabel(testGender)
+      : [clientInfo?.gender, clientInfo?.birthYear ? `${clientInfo.birthYear}년` : '']
+          .filter(Boolean)
+          .join(' · ') || '—';
   const radarData = report.egogram.map((s) => ({
     scale: s.id,
     score: s.raw,
@@ -90,8 +102,10 @@ export default function EgoOkCounselorReport({
             참고 리포트입니다.
           </p>
           {localTestMode ? (
-            <p className="mt-3 inline-block rounded-lg border border-amber-400/30 bg-amber-500/10 px-3 py-1 text-xs text-amber-100">
-              로컬 테스트 모드 — 저장·발송되지 않습니다
+            <p className="mt-3 max-w-2xl rounded-lg border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-xs leading-relaxed text-amber-100">
+              로컬 테스트 모드 — 저장·발송되지 않습니다. 상단 <strong>성별</strong>에서 남/여를 바꾸면
+              5단계·243패턴·그래프 배경이 즉시 갱신됩니다. 페이지 새로고침(F5) 시 성별 기준이 남↔여로
+              교대됩니다.
             </p>
           ) : null}
           <dl className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -102,9 +116,33 @@ export default function EgoOkCounselorReport({
             <div className="rounded-xl bg-white/[0.04] px-4 py-3 ring-1 ring-white/10">
               <dt className="text-xs text-slate-500">성별 · 출생</dt>
               <dd className="mt-1 font-medium text-white">
-                {[clientInfo?.gender, clientInfo?.birthYear ? `${clientInfo.birthYear}년` : '']
-                  .filter(Boolean)
-                  .join(' · ') || '—'}
+                {localTestMode && onTestGenderChange && testGender ? (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="inline-flex rounded-lg border border-white/15 bg-white/5 p-0.5">
+                      {(['male', 'female'] as const).map((g) => (
+                        <button
+                          key={g}
+                          type="button"
+                          onClick={() => onTestGenderChange(g)}
+                          className={`rounded-md px-2.5 py-1 text-xs font-semibold transition ${
+                            testGender === g
+                              ? g === 'male'
+                                ? 'bg-sky-600 text-white'
+                                : 'bg-rose-600 text-white'
+                              : 'text-slate-300 hover:text-white'
+                          }`}
+                        >
+                          {egoOkGenderToLabel(g)}
+                        </button>
+                      ))}
+                    </span>
+                    {clientInfo?.birthYear ? (
+                      <span className="text-slate-400">· {clientInfo.birthYear}년</span>
+                    ) : null}
+                  </div>
+                ) : (
+                  displayGenderLine
+                )}
               </dd>
             </div>
             <div className="rounded-xl bg-white/[0.04] px-4 py-3 ring-1 ring-white/10">
@@ -134,7 +172,7 @@ export default function EgoOkCounselorReport({
             적색 선=오케이그램(U−/U+/I+/I−, A열 제외). 아래 안내에서 점수 계산을 정리했습니다.
           </p>
         </header>
-        <EgoOkKtaaCompositeChart columns={report.compositeChart} gender={clientInfo?.gender} />
+        <EgoOkKtaaCompositeChart columns={report.compositeChart} gender={chartGender} />
       </section>
 
       <div className="grid gap-6 lg:grid-cols-2">
