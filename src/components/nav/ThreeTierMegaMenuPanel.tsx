@@ -4,6 +4,7 @@ import Link from 'next/link';
 import type { RefObject } from 'react';
 import type { TestCategory, TestMenuItem, TestSubcategory } from '@/data/psychologyTestMenu';
 import { navMegaMenuClasses } from '@/components/layout/appChromeTheme';
+import { psychologyTestMenuHref } from '@/lib/localPsychTestDirectStart';
 
 type ThreeTierMegaMenuPanelProps = {
   panelRef: RefObject<HTMLDivElement | null>;
@@ -47,7 +48,7 @@ function LeafItem({
 }) {
   return (
     <Link
-      href={item.href}
+      href={psychologyTestMenuHref(item.href)}
       className={`group ml-8 flex items-center gap-3 rounded-lg border px-3 py-2 shadow-sm transition-all duration-300 hover:shadow-md ${
         highlightBorder ? navMegaMenuClasses.leafItemActive : navMegaMenuClasses.leafItemIdle
       }`}

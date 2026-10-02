@@ -5,8 +5,12 @@ import { questions } from '@/data/mbtiProQuestions';
 import { EGO_OK_QUESTIONS, type EgoOkScaleKind } from '@/data/egoOkQuestions';
 import { getEgoOkAnswerOptions } from '@/lib/egoOkAnswerScale';
 import { buildEgoOkJoinResponses } from '@/lib/egoOkJoinResponses';
+import {
+  createLocalPsychTestClientInfo,
+  isLocalPsychTestDirectActive,
+} from '@/lib/localPsychTestDirectStart';
 import Link from 'next/link';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import MbtiProClientInfo, { ClientInfo } from './MbtiProClientInfo';
 import { clearTestProgress, generateTestId } from '@/utils/testResume';
@@ -68,6 +72,8 @@ interface MbtiProTestProps {
 export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: MbtiProTestProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const localDirect = isLocalPsychTestDirectActive(searchParams);
   const uiTheme = flow.uiTheme ?? 'emerald';
   const v = getMbtiProVisualTheme(uiTheme);
   const pageShell = resolveMbtiProPageShell(flow.pageShellClassName, uiTheme);
@@ -118,6 +124,11 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
   }, []);
 
   useEffect(() => {
+    if (localDirect) {
+      setJoinAccessReady(true);
+      setJoinAccessError('');
+      return;
+    }
     const code = joinAccessCode;
     if (!code || !isValidAccessCodeInput(code)) {
       setJoinAccessReady(true);
@@ -159,7 +170,13 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
     return () => {
       cancelled = true;
     };
-  }, [joinAccessCode, joinFromPortal]);
+  }, [joinAccessCode, joinFromPortal, localDirect]);
+
+  useEffect(() => {
+    if (!localDirect || !urlParsed || clientInfo) return;
+    setClientInfo(createLocalPsychTestClientInfo());
+    setCurrentStep('test');
+  }, [localDirect, urlParsed, clientInfo]);
 
   useEffect(() => {
     const code = joinAccessCode;
@@ -401,6 +418,14 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
     setIsLoading(true); // 로딩 시작
     
     try {
+      if (localDirect) {
+        clearTestProgress(testId);
+        window.alert('로컬 테스트 모드: 검사가 완료되었습니다. (결과는 저장하지 않습니다)');
+        router.push('/tests');
+        setIsLoading(false);
+        return;
+      }
+
       clearTestProgress(testId);
       try {
         if (typeof window !== 'undefined') {
@@ -566,8 +591,12 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
     },
   };
 
-  // 포털 상담(코드) 전용: accessCode 없이 직접 접근 차단
-  if (urlParsed && (!joinAccessCode || !isValidAccessCodeInput(joinAccessCode))) {
+  // 포털 상담(코드) 전용: accessCode 없이 직접 접근 차단 (로컬 메뉴 테스트는 예외)
+  if (
+    urlParsed &&
+    !localDirect &&
+    (!joinAccessCode || !isValidAccessCodeInput(joinAccessCode))
+  ) {
     return (
       <div className={`flex min-h-screen flex-col items-center justify-center gap-4 px-4 ${pageShell}`}>
         <p className="text-center text-slate-300">
@@ -581,7 +610,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
   }
 
   // 단계별 렌더링
-  if (joinAccessCode && isValidAccessCodeInput(joinAccessCode)) {
+  if (!localDirect && joinAccessCode && isValidAccessCodeInput(joinAccessCode)) {
     if (!joinAccessReady || editResultLoading) {
       return (
         <div className={`flex min-h-screen items-center justify-center ${pageShell}`}>
@@ -730,6 +759,9 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
       
       <div className="max-w-2xl mx-auto relative z-10" onMouseMove={handleMouseMove}>
           <div className="text-center mb-2">
+            {localDirect ? (
+              <p className="mb-2 text-xs font-medium text-amber-200/90">로컬 테스트 모드 — 상담코드·저장 생략</p>
+            ) : null}
             <h1 className="text-2xl font-bold text-white mb-1">{screenTitle}</h1>
             <p className={`${v.subtitle} max-w-lg mx-auto`}>
               {screenSubtitle}

@@ -1,7 +1,7 @@
 'use client';
 
-import LegacyTestRedirect from '@/components/LegacyTestRedirect';
+import LocalPsychLegacyTestPage from '@/components/tests/LocalPsychLegacyTestPage';
 
 export default function InsideMbtiLegacyRedirectPage() {
-  return <LegacyTestRedirect />;
+  return <LocalPsychLegacyTestPage kind="inside-mbti" />;
 }

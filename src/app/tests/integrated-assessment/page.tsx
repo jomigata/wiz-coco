@@ -6,11 +6,13 @@ import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { clearTestProgress, generateTestId } from '@/utils/testResume';
 import { motion } from 'framer-motion';
+import { isLocalPsychTestDirectActive } from '@/lib/localPsychTestDirectStart';
 
 function IntegratedAssessmentPageContent() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const testId = generateTestId(pathname || '/tests/integrated-assessment');
+  const localDirect = isLocalPsychTestDirectActive(searchParams);
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<{[key: string]: any}>({});
   const [isCompleted, setIsCompleted] = useState(false);
@@ -21,6 +23,17 @@ function IntegratedAssessmentPageContent() {
     studentId: '',
     year: '2024'
   });
+
+  useEffect(() => {
+    if (!localDirect || currentStep !== 0) return;
+    setStudentInfo({
+      name: '로컬테스트',
+      major: '기타',
+      studentId: 'LOCAL001',
+      year: String(new Date().getFullYear()),
+    });
+    setCurrentStep(1);
+  }, [localDirect, currentStep]);
 
   const assessmentSteps = [
     {

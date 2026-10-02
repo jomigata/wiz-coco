@@ -13,6 +13,7 @@ import {
 import { pushWithAuthSession } from '@/utils/authSessionLifecycle';
 import { logSearch } from '@/utils/firebaseAnalytics';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
+import { psychologyTestMenuHref } from '@/lib/localPsychTestDirectStart';
 
 type TestMenuSearchProps = {
   categories: TestCategory[];
@@ -70,7 +71,7 @@ export default function TestMenuSearch({
   }, [query, runSearch]);
 
   const handleSelect = (href: string) => {
-    pushWithAuthSession(router, href);
+    pushWithAuthSession(router, psychologyTestMenuHref(href));
     setQuery('');
     setResults([]);
     setFocused(false);

@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import type { TestCategory, TestSubcategory } from '@/data/psychologyTestMenu';
+import { psychologyTestMenuHref } from '@/lib/localPsychTestDirectStart';
 
 type ThreeTierMobileMenuSectionProps = {
   sectionTitle: string;
@@ -98,7 +99,7 @@ export default function ThreeTierMobileMenuSection({
                         {subcategory.items.map((item) => (
                           <Link
                             key={item.name}
-                            href={item.href}
+                            href={psychologyTestMenuHref(item.href)}
                             className="block px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-blue-800/30 rounded-lg transition-all duration-300"
                             onClick={onCloseMenu}
                           >

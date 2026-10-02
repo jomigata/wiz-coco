@@ -22,6 +22,7 @@ import { pushWithAuthSession, markInternalNavigation } from '@/utils/authSession
 import TestMenuSearch from '@/components/tests/TestMenuSearch';
 import ThreeTierMegaMenuPanel from '@/components/nav/ThreeTierMegaMenuPanel';
 import CounselorMainCategoryDropdown from '@/components/nav/CounselorMainCategoryDropdown';
+import { psychologyTestMenuHref } from '@/lib/localPsychTestDirectStart';
 import ThreeTierMobileMenuSection from '@/components/nav/ThreeTierMobileMenuSection';
 import { readClientPortalSession } from '@/lib/clientPortalSession';
 import { navigateToClientPortalLogin } from '@/lib/portalLoginNavigation';
@@ -397,7 +398,7 @@ export default function Navigation() {
     }
     const href = subcategory.items[0]?.href;
     if (href) {
-      navigateTo(href);
+      navigateTo(psychologyTestMenuHref(href));
       setActiveMenu(null);
     }
   };

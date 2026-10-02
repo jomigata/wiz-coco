@@ -1,7 +1,7 @@
 'use client';
 
-import LegacyTestRedirect from '@/components/LegacyTestRedirect';
+import LocalPsychLegacyTestPage from '@/components/tests/LocalPsychLegacyTestPage';
 
 export default function AiProfilingLegacyRedirectPage() {
-  return <LegacyTestRedirect />;
+  return <LocalPsychLegacyTestPage kind="ai-profiling" />;
 }

@@ -9,6 +9,7 @@ import {
   getVisibleTestMenuItems,
   TEST_CATEGORY_SLUGS,
 } from '@/data/psychologyTestMenu';
+import { psychologyTestMenuHref } from '@/lib/localPsychTestDirectStart';
 
 function TestsContent() {
   const searchParams = useSearchParams();
@@ -81,7 +82,7 @@ function TestsContent() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredTests.map((test) => (
-            <Link key={test.href} href={test.href} className="block">
+            <Link key={test.href} href={psychologyTestMenuHref(test.href)} className="block">
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/20 hover:bg-white/15 hover:scale-[1.02] transition-all duration-300 flex flex-col h-full cursor-pointer">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-12 h-12 bg-white/10 rounded-lg flex items-center justify-center text-lg flex-shrink-0">
