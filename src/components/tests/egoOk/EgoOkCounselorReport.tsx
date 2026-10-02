@@ -1,7 +1,7 @@
 'use client';
 
 import { useId, useMemo, useState } from 'react';
-import type { EgoOkGender, EgoOkReport, OkScaleId } from '@/lib/egoOkScoring';
+import type { EgoOkGender, EgoOkReport, EgoScaleId, OkScaleId } from '@/lib/egoOkScoring';
 import { OK_LABELS, OK_SCALE_HINTS } from '@/lib/egoOkScoring';
 import { egoOkGenderToLabel } from '@/lib/egoOkTestGender';
 import type { ClientInfo } from '@/components/tests/MbtiProClientInfo';
@@ -71,6 +71,8 @@ type EgogramRadarRow = {
   scale: string;
   score: number;
   fullMark: number;
+  /** 오케이 4척도 합(10~50). A는 null — 빨간 꼭짓점 없음 */
+  okScore: number | null;
   label: string;
   threeLevel: string;
   positive: number;
@@ -81,6 +83,16 @@ type EgogramRadarRow = {
 
 const EGOGRAM_RADAR_SKY = '#7dd3fc';
 const EGOGRAM_RADAR_PINK = '#f472b6';
+const EGOGRAM_RADAR_OK_RED = '#ef4444';
+
+/** 이고 척도 → 오케이 합계 척도 (KTAA·종합그래프와 동일) */
+const EGO_TO_OK_SCORE: Record<EgoScaleId, OkScaleId | null> = {
+  CP: 'U-',
+  NP: 'U+',
+  A: null,
+  FC: 'I+',
+  AC: 'I-',
+};
 
 /** 방사형 꼭짓점 순서(12시부터 시계): A 상단 · FC 우상 · AC 우하 · CP 좌하 · NP 좌상 */
 const EGOGRAM_RADAR_AXIS_ORDER = ['A', 'FC', 'AC', 'CP', 'NP'] as const;
@@ -170,9 +182,29 @@ function EgogramRadarScaleTick({
   );
 }
 
+function EgogramOkRadarVertexDot(props: { cx?: number; cy?: number; payload?: EgogramRadarRow }) {
+  const { cx, cy, payload } = props;
+  if (cx == null || cy == null || !payload || payload.okScore == null) return null;
+  return (
+    <circle
+      cx={cx}
+      cy={cy}
+      r={5.5}
+      fill={EGOGRAM_RADAR_OK_RED}
+      stroke="#ffffff"
+      strokeWidth={2}
+      pointerEvents="none"
+    />
+  );
+}
+
 function EgogramFiveScaleRadarChart({ data }: { data: EgogramRadarRow[] }) {
   const gradientId = useId().replace(/:/g, '');
   const highlightScores = useMemo(() => egogramRadarHighlightScores(data), [data]);
+  const okRadarData = useMemo(
+    () => data.map((row) => ({ ...row, okRadarValue: row.okScore ?? row.score })),
+    [data],
+  );
 
   const RadarVertexDot = useMemo(
     () =>
@@ -243,8 +275,14 @@ function EgogramFiveScaleRadarChart({ data }: { data: EgogramRadarRow[] }) {
   );
 
   return (
-    <ResponsiveContainer width="100%" height="100%">
-      <RadarChart data={data} outerRadius="72%" cx="50%" cy="52%" margin={{ top: 8, right: 28, bottom: 8, left: 28 }}>
+    <ResponsiveContainer width="100%" height="100%" className="[&_.recharts-wrapper]:!overflow-visible">
+      <RadarChart
+        data={okRadarData}
+        outerRadius="92%"
+        cx="50%"
+        cy="50%"
+        margin={{ top: 0, right: 6, bottom: 0, left: 6 }}
+      >
         <Customized component={FillOpacityMaskDefs} />
         <PolarGrid
           gridType="polygon"
@@ -255,10 +293,10 @@ function EgogramFiveScaleRadarChart({ data }: { data: EgogramRadarRow[] }) {
         />
         <PolarRadiusAxis
           domain={[0, 50]}
-          angle={90}
+          angle={72}
           axisLine={false}
           tickCount={6}
-          tick={{ fill: '#64748b', fontSize: 9 }}
+          tick={{ fill: '#64748b', fontSize: 8 }}
         />
         <PolarAngleAxis
           dataKey="scale"
@@ -285,6 +323,16 @@ function EgogramFiveScaleRadarChart({ data }: { data: EgogramRadarRow[] }) {
           dot={<RadarVertexDot />}
           activeDot={<RadarVertexActiveDot />}
         />
+        <Radar
+          name="오케이"
+          dataKey="okRadarValue"
+          stroke="none"
+          fill="none"
+          isAnimationActive={false}
+          dot={<EgogramOkRadarVertexDot />}
+          activeDot={false}
+          legendType="none"
+        />
         <Customized component={EgogramRadarCenterMark} />
         <Tooltip content={<EgogramRadarTooltip />} />
       </RadarChart>
@@ -298,7 +346,7 @@ function EgogramRadarCenterMark(props: { cx?: number; cy?: number }) {
   return (
     <g pointerEvents="none">
       <circle cx={cx} cy={cy} r={3.5} fill="#e0f2fe" stroke="#64748b" strokeOpacity={0.55} strokeWidth={1} />
-      <text x={cx} y={cy + 16} textAnchor="middle" fill="#64748b" fontSize={9} fontWeight={600}>
+      <text x={cx} y={cy + 12} textAnchor="middle" fill="#64748b" fontSize={8} fontWeight={600}>
         0
       </text>
     </g>
@@ -384,15 +432,19 @@ export default function EgoOkCounselorReport({
   const compositeById = Object.fromEntries(report.compositeChart.map((c) => [c.id, c]));
 
   const egogramById = Object.fromEntries(report.egogram.map((s) => [s.id, s]));
+  const okRawById = Object.fromEntries(report.okgram.map((s) => [s.id, s.raw]));
   const radarData: EgogramRadarRow[] = EGOGRAM_RADAR_AXIS_ORDER.flatMap((id) => {
     const s = egogramById[id];
     if (!s) return [];
     const col = compositeById[id];
+    const okKey = EGO_TO_OK_SCORE[id];
+    const okScore = okKey != null ? (okRawById[okKey] ?? null) : null;
     return [
       {
         scale: s.id,
         score: s.raw,
         fullMark: 50,
+        okScore,
         label: s.label,
         threeLevel: s.threeLevel,
         positive: s.positiveRaw,
@@ -501,8 +553,10 @@ export default function EgoOkCounselorReport({
 
       <div className="grid gap-6 lg:grid-cols-2">
         <SectionCard title="이고그램 5척도" subtitle="0~50 · 243 구간(A/B/C) — 방사형 그래프에 마우스를 올리면 요약이 표시됩니다">
-          <div className="h-72 w-full">
-            <EgogramFiveScaleRadarChart data={radarData} />
+          <div className="min-h-[22rem] w-full px-0.5 py-1">
+            <div className="h-[22rem] w-full">
+              <EgogramFiveScaleRadarChart data={radarData} />
+            </div>
           </div>
           <ul className="mt-4 space-y-3">
             {report.egogram.map((s) => (
