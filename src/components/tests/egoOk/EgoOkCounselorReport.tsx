@@ -81,6 +81,7 @@ type EgogramRadarRow = {
 
 const EGOGRAM_RADAR_SKY = '#7dd3fc';
 const EGOGRAM_RADAR_PINK = '#f9a8d4';
+const EGOGRAM_RADAR_PEAK_STROKE = '#dc2626';
 
 function egogramRadarTooltipLine(row: EgogramRadarRow): string {
   const name = row.label.replace(/\s*\([A-Za-z+]+\)\s*$/, '').replace(/\s+/g, '');
@@ -100,7 +101,14 @@ function EgogramFiveScaleRadarChart({ data }: { data: EgogramRadarRow[] }) {
         const isPeak = peakScore > 0 && payload.score === peakScore;
         if (isPeak) {
           return (
-            <circle cx={cx} cy={cy} r={6} fill={EGOGRAM_RADAR_PINK} stroke="#ffffff" strokeWidth={2} />
+            <circle
+              cx={cx}
+              cy={cy}
+              r={6}
+              fill={EGOGRAM_RADAR_PINK}
+              stroke={EGOGRAM_RADAR_PEAK_STROKE}
+              strokeWidth={2.5}
+            />
           );
         }
         return (
@@ -118,7 +126,14 @@ function EgogramFiveScaleRadarChart({ data }: { data: EgogramRadarRow[] }) {
         const isPeak = peakScore > 0 && payload.score === peakScore;
         if (isPeak) {
           return (
-            <circle cx={cx} cy={cy} r={7} fill={EGOGRAM_RADAR_PINK} stroke="#ffffff" strokeWidth={2.5} />
+            <circle
+              cx={cx}
+              cy={cy}
+              r={7}
+              fill={EGOGRAM_RADAR_PINK}
+              stroke={EGOGRAM_RADAR_PEAK_STROKE}
+              strokeWidth={3}
+            />
           );
         }
         return (
