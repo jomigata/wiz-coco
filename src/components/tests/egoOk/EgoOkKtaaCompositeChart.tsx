@@ -22,10 +22,11 @@ import {
 const EGO_NEG_COLOR = '#e8954a';
 const EGO_POS_COLOR = '#9cc9e8';
 const OK_LINE_COLOR = '#d32f2f';
-/** KTAA 종합 그래프 열별 배경 (하단 연분홍 · 중간 흰색 · 상단 연하늘) — y 0~50 */
-const ZONE_RED = '#f5d6d6';
-const ZONE_WHITE = '#ffffff';
-const ZONE_BLUE = '#d6e8f5';
+/** KTAA: 좌=남(청), 우=여(붉은) — C/B/A 구간 모두 성별 톤 (협회 안내서) */
+const GENDER_ZONE_COLORS = {
+  male: { bottom: '#bdd8e8', middle: '#eef6fb', top: '#d6e8f5' },
+  female: { bottom: '#f5d6d6', middle: '#ffffff', top: '#ecd6d6' },
+} as const;
 
 const CHART_PLOT_HEIGHT_PX = Math.round(680 * (2 / 3) * 1.2);
 
@@ -40,16 +41,21 @@ function KtaaZoneStack({ band, tint }: { band: KtaaGraphZoneBounds; tint: 'male'
   const redH = (band.redTop / 50) * 100;
   const whiteH = ((band.whiteTop - band.redTop) / 50) * 100;
   const blueH = ((50 - band.whiteTop) / 50) * 100;
-  const red = tint === 'male' ? '#e8d4d4' : ZONE_RED;
-  const blue = tint === 'male' ? ZONE_BLUE : '#ecd6d6';
+  const colors = GENDER_ZONE_COLORS[tint];
   return (
     <>
-      <div className="absolute inset-x-0 bottom-0" style={{ height: `${redH}%`, backgroundColor: red }} />
+      <div
+        className="absolute inset-x-0 bottom-0"
+        style={{ height: `${redH}%`, backgroundColor: colors.bottom }}
+      />
       <div
         className="absolute inset-x-0"
-        style={{ bottom: `${redH}%`, height: `${whiteH}%`, backgroundColor: ZONE_WHITE }}
+        style={{ bottom: `${redH}%`, height: `${whiteH}%`, backgroundColor: colors.middle }}
       />
-      <div className="absolute inset-x-0 top-0" style={{ height: `${blueH}%`, backgroundColor: blue }} />
+      <div
+        className="absolute inset-x-0 top-0"
+        style={{ height: `${blueH}%`, backgroundColor: colors.top }}
+      />
     </>
   );
 }
@@ -62,11 +68,8 @@ function KtaaColumnBackgrounds() {
       style={{ top: PLOT_INSET.top, right: PLOT_INSET.right, bottom: PLOT_INSET.bottom, left: PLOT_INSET.left }}
     >
       {COLUMN_ORDER.map((code) => (
-        <div
-          key={code}
-          className="relative flex h-full min-w-0 flex-1 border-r border-slate-300/40 last:border-r-0"
-        >
-          <div className="relative h-full w-1/2 border-r border-slate-300/30">
+        <div key={code} className="relative flex h-full min-w-0 flex-1">
+          <div className="relative h-full w-1/2 border-r border-slate-400/70">
             <KtaaZoneStack band={KTAA_GRAPH_ZONES.male[code]} tint="male" />
           </div>
           <div className="relative h-full w-1/2">
@@ -78,10 +81,29 @@ function KtaaColumnBackgrounds() {
   );
 }
 
+/** 5개 척도 열 구분선 (배경·차트 위) */
+function KtaaColumnDividers() {
+  return (
+    <div
+      className="pointer-events-none absolute z-[2] flex"
+      style={{ top: PLOT_INSET.top, right: PLOT_INSET.right, bottom: PLOT_INSET.bottom, left: PLOT_INSET.left }}
+    >
+      {COLUMN_ORDER.map((code, index) => (
+        <div
+          key={`div-${code}`}
+          className={`h-full min-w-0 flex-1 ${index < COLUMN_ORDER.length - 1 ? 'border-r-2 border-slate-500/75' : ''}`}
+        />
+      ))}
+    </div>
+  );
+}
+
 type ChartRow = EgoOkCompositeColumn & {
   xLabel: string;
   okLinePlot: number | null;
 };
+
+const OK_LABEL_ABOVE_MIN_CY = 36;
 
 function OkLineDot(props: {
   cx?: number;
@@ -92,12 +114,15 @@ function OkLineDot(props: {
   const { cx, cy, payload } = props;
   if (cx == null || cy == null || payload?.okLinePlot == null) return null;
   const v = payload.okLinePlot;
+  const labelAbove = cy >= OK_LABEL_ABOVE_MIN_CY;
+  const rectY = labelAbove ? cy - 28 : cy + 10;
+  const textY = labelAbove ? cy - 15 : cy + 23;
   return (
     <g>
       <circle cx={cx} cy={cy} r={7} fill={OK_LINE_COLOR} stroke="#fff" strokeWidth={2} />
       <rect
         x={cx - 14}
-        y={cy - 28}
+        y={rectY}
         width={28}
         height={18}
         rx={2}
@@ -105,7 +130,7 @@ function OkLineDot(props: {
         stroke={OK_LINE_COLOR}
         strokeWidth={1}
       />
-      <text x={cx} y={cy - 15} textAnchor="middle" fill={OK_LINE_COLOR} fontSize={11} fontWeight={700}>
+      <text x={cx} y={textY} textAnchor="middle" fill={OK_LINE_COLOR} fontSize={11} fontWeight={700}>
         {v}
       </text>
     </g>
@@ -161,9 +186,12 @@ export default function EgoOkKtaaCompositeChart({
         </p>
       </div>
 
-      <div className="grid grid-cols-5 gap-0 border-b border-gray-100 px-2 pt-3 text-center text-[10px] leading-tight text-gray-700 sm:text-xs">
-        {columns.map((col) => (
-          <div key={col.id} className="px-1 font-medium">
+      <div className="grid grid-cols-5 gap-0 border-b border-gray-200 px-2 pt-3 text-center text-[10px] leading-tight text-gray-700 sm:text-xs">
+        {columns.map((col, index) => (
+          <div
+            key={col.id}
+            className={`px-1 font-medium ${index < columns.length - 1 ? 'border-r-2 border-slate-400/60' : ''}`}
+          >
             {col.topLabel}
           </div>
         ))}
@@ -174,12 +202,15 @@ export default function EgoOkKtaaCompositeChart({
         <span className="text-rose-600">여(붉은) →</span>
       </p>
 
-      <div className="relative w-full px-1 pt-1" style={{ height: CHART_PLOT_HEIGHT_PX }}>
+      <div
+        className="relative w-full overflow-hidden px-1 pt-1"
+        style={{ height: CHART_PLOT_HEIGHT_PX }}
+      >
         <KtaaColumnBackgrounds />
         <ResponsiveContainer width="100%" height="100%" className="relative z-[1]">
           <ComposedChart
             data={data}
-            margin={{ top: 32, right: 16, left: 38, bottom: 12 }}
+            margin={{ top: 40, right: 16, left: 38, bottom: 12 }}
             style={{ background: 'transparent' }}
           >
             <ReferenceLine
@@ -222,11 +253,12 @@ export default function EgoOkKtaaCompositeChart({
               strokeWidth={3}
               dot={<OkLineDot />}
               activeDot={false}
-              connectNulls={false}
+              connectNulls
               isAnimationActive={false}
             />
           </ComposedChart>
         </ResponsiveContainer>
+        <KtaaColumnDividers />
       </div>
 
       <div className="grid grid-cols-5 gap-0 border-t border-gray-100 px-2 py-2 text-center text-[10px] text-gray-600 sm:text-xs">
@@ -282,12 +314,16 @@ export default function EgoOkKtaaCompositeChart({
             <strong>배경색(열·성별마다 다름)</strong>: KTAA 종합 그래프와 같이 각 열을{' '}
             <strong>왼쪽=남성(청)</strong>, <strong>오른쪽=여성(붉은)</strong> 기준으로 나누고, 하단 C · 중간 B ·
             상단 A 구간 높이가 척도·성별마다 다릅니다(3단계 컷 bMin/aMin과 동일).{' '}
-            <span className="inline-block h-2 w-3 rounded-sm border border-red-200 align-middle" style={{ background: ZONE_RED }} />{' '}
-            하단 ·{' '}
-            <span className="inline-block h-2 w-3 rounded-sm border border-gray-200 align-middle bg-white" />{' '}
-            중간 ·{' '}
-            <span className="inline-block h-2 w-3 rounded-sm border border-sky-200 align-middle" style={{ background: ZONE_BLUE }} />{' '}
-            상단. 점선(12.5)은 참고 기준선입니다.
+            <span
+              className="inline-block h-2 w-3 rounded-sm border border-sky-200 align-middle"
+              style={{ background: GENDER_ZONE_COLORS.male.bottom }}
+            />{' '}
+            남 하단 ·{' '}
+            <span
+              className="inline-block h-2 w-3 rounded-sm border border-red-200 align-middle"
+              style={{ background: GENDER_ZONE_COLORS.female.bottom }}
+            />{' '}
+            여 하단 · 상단도 각각 청/붉은 톤. 점선(12.5)은 참고 기준선입니다.
             {genderInput ? (
               <>
                 {' '}
