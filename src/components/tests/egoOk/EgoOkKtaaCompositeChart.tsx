@@ -40,6 +40,16 @@ const Y_AXIS_WIDTH = 32;
 /** 상단: 이고 합계 사각 라벨 여유만 (HTML 타이틀과 플롯 사이 공백 최소화) */
 const CHART_MARGIN = { top: 8, right: 16, left: Y_AXIS_WIDTH, bottom: 0 };
 
+/** 상·하 척도명 — 그래프와 동일 간격 (Tailwind spacing) */
+const PLOT_EDGE_LABEL_GAP = 'pb-1.5';
+const PLOT_BOTTOM_LABEL_GAP = 'pt-1.5';
+const BOTTOM_TRAIT_TO_CODE_GAP = 'pt-2.5';
+
+const COLUMN_TRAIT_TITLE_CLASS =
+  'flex items-center justify-center px-0.5 text-center text-[10px] font-semibold leading-tight text-gray-700 sm:text-xs';
+
+const COLUMN_DIVIDER_CLASS = 'border-r-2 border-slate-500/80';
+
 type KtaaPlotBox = { left: number; width: number };
 
 /** Recharts offset과 동일한 픽셀 박스로 5열 라벨 정렬 */
@@ -338,12 +348,12 @@ export default function EgoOkKtaaCompositeChart({
         </p>
       </div>
 
-      <KtaaPlotLabelColumns plotBox={plotBox} className="leading-none">
+      <KtaaPlotLabelColumns plotBox={plotBox} className={PLOT_EDGE_LABEL_GAP}>
         {columns.map((col, index) => (
           <div
             key={col.id}
-            className={`flex items-center justify-center px-0.5 text-center text-[10px] font-medium leading-tight text-gray-700 sm:text-xs ${
-              index < columns.length - 1 ? 'border-r-2 border-slate-500/80' : ''
+            className={`${COLUMN_TRAIT_TITLE_CLASS} ${
+              index < columns.length - 1 ? COLUMN_DIVIDER_CLASS : ''
             }`}
           >
             {col.topLabel}
@@ -413,12 +423,12 @@ export default function EgoOkKtaaCompositeChart({
         </ResponsiveContainer>
       </div>
 
-      <KtaaPlotLabelColumns plotBox={plotBox} className="leading-none">
+      <KtaaPlotLabelColumns plotBox={plotBox} className={PLOT_BOTTOM_LABEL_GAP}>
         {columns.map((col, index) => (
           <div
             key={`${col.id}-bottom`}
-            className={`flex items-center justify-center px-0.5 text-center text-[10px] text-gray-600 sm:text-xs ${
-              index < columns.length - 1 ? 'border-r-2 border-slate-500/80' : ''
+            className={`${COLUMN_TRAIT_TITLE_CLASS} ${
+              index < columns.length - 1 ? COLUMN_DIVIDER_CLASS : ''
             }`}
           >
             {col.bottomLabel}
@@ -426,14 +436,14 @@ export default function EgoOkKtaaCompositeChart({
         ))}
       </KtaaPlotLabelColumns>
 
-      <KtaaPlotLabelColumns plotBox={plotBox} className="pb-2 leading-none">
+      <KtaaPlotLabelColumns plotBox={plotBox} className={`pb-2 ${BOTTOM_TRAIT_TO_CODE_GAP}`}>
         {columns.map((col, index) => {
           const isA = col.id === 'A';
           return (
             <div
               key={`${col.id}-code`}
               className={`flex items-center justify-center ${
-                index < columns.length - 1 ? 'border-r-2 border-slate-500/80' : ''
+                index < columns.length - 1 ? COLUMN_DIVIDER_CLASS : ''
               }`}
             >
               <span
