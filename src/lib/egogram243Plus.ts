@@ -68,12 +68,17 @@ export function plus243StageDigitColor(stage: Plus243Stage): string {
   return '#f472b6';
 }
 
+export type Plus243ScaleEntry = {
+  tier: Plus243Tier;
+  /** 243패턴(A/B/C) — 척도별 threeLevel */
+  pattern243Letter: 'A' | 'B' | 'C';
+};
+
 export type Pattern243Plus = {
-  /** CP→NP→A→FC→AC 순 (예: B5B6B3B6B5 — 숫자는 9단계) */
+  /** CP→NP→A→FC→AC — 243글자+9단계 (예: B⁵B⁶…) */
   codeAscii: string;
-  /** codeAscii와 동일 (레거시 필드) */
   codeLabel: string;
-  byScale: Record<EgoScaleId, Plus243Tier>;
+  byScale: Record<EgoScaleId, Plus243ScaleEntry>;
   /** CP+NP, A 단독, FC+AC 그룹 (243Plus 요약) */
   groups: {
     cpNp: { sum: number; tier: Plus243Tier };
@@ -82,13 +87,22 @@ export type Pattern243Plus = {
   };
 };
 
+export function plus243DisplayAscii(entry: Plus243ScaleEntry): string {
+  return `${entry.pattern243Letter}${entry.tier.stage}`;
+}
+
 export function buildPattern243Plus(egogram: EgoOkScaleScore[]): Pattern243Plus {
   const byId = Object.fromEntries(egogram.map((s) => [s.id, s])) as Record<EgoScaleId, EgoOkScaleScore>;
-  const byScale = {} as Record<EgoScaleId, Plus243Tier>;
+  const byScale = {} as Record<EgoScaleId, Plus243ScaleEntry>;
   for (const id of EGO_SCALE_PATTERN_ORDER) {
-    byScale[id] = rawScoreToPlus243Tier(byId[id].raw);
+    const three = byId[id].threeLevel;
+    const letter = three === 'A' || three === 'B' || three === 'C' ? three : 'C';
+    byScale[id] = {
+      tier: rawScoreToPlus243Tier(byId[id].raw),
+      pattern243Letter: letter,
+    };
   }
-  const codeAscii = EGO_SCALE_PATTERN_ORDER.map((id) => plus243TierToAscii(byScale[id])).join('');
+  const codeAscii = EGO_SCALE_PATTERN_ORDER.map((id) => plus243DisplayAscii(byScale[id])).join('');
   const codeLabel = codeAscii;
 
   const cp = byId.CP.raw;
@@ -120,5 +134,5 @@ export function plus243StageBand(stage: Plus243Stage): 'deficit' | 'safe' | 'exc
 export function formatPlus243StageLabel(tier: Plus243Tier): string {
   const band = plus243StageBand(tier.stage);
   const bandKo = band === 'safe' ? '안전성(3~5단계)' : band === 'excess' ? '과함(6~9단계)' : '부족(1~2단계)';
-  return `243+ 플러스 ${plus243TierToAscii(tier)} · ${tier.stage}단계/9 · ${bandKo} (${tier.min}~${tier.max}점)`;
+  return `243+ 플러스 ${tier.stage}단계/9 · ${bandKo} (${tier.min}~${tier.max}점)`;
 }

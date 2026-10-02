@@ -18,6 +18,7 @@ import {
   EGO_SCALE_PATTERN_ORDER,
   plus243StageDigitColor,
   type Pattern243Plus,
+  type Plus243ScaleEntry,
   type Plus243Tier,
 } from '@/lib/egogram243Plus';
 import { OK_LABELS, OK_SCALE_HINTS } from '@/lib/egoOkScoring';
@@ -96,16 +97,32 @@ function pickExtremeEgogramScale(scales: EgoOkScaleScore[], mode: 'max' | 'min')
   });
 }
 
-function Plus243TierGlyph({ tier, className }: { tier: Plus243Tier; className?: string }) {
+function Plus243PlusGlyph({ entry, className }: { entry: Plus243ScaleEntry; className?: string }) {
+  const { tier, pattern243Letter } = entry;
   return (
     <span className={`inline-flex items-baseline ${className ?? ''}`}>
-      <span className="font-mono text-sm font-semibold text-slate-200">{tier.letter}</span>
-      <span
-        className="font-mono text-sm font-bold leading-none"
+      <span className="font-mono text-sm font-semibold text-slate-200">{pattern243Letter}</span>
+      <sup
+        className="ml-px font-mono text-[0.55em] font-bold leading-none"
         style={{ color: plus243StageDigitColor(tier.stage) }}
       >
         {tier.stage}
-      </span>
+      </sup>
+    </span>
+  );
+}
+
+/** 그룹(CP+NP 등) — 243+ 구간 글자 + 9단계 지수 */
+function Plus243GroupGlyph({ tier, className }: { tier: Plus243Tier; className?: string }) {
+  return (
+    <span className={`inline-flex items-baseline ${className ?? ''}`}>
+      <span className="font-mono text-sm font-semibold text-slate-200">{tier.letter}</span>
+      <sup
+        className="ml-px font-mono text-[0.55em] font-bold leading-none"
+        style={{ color: plus243StageDigitColor(tier.stage) }}
+      >
+        {tier.stage}
+      </sup>
     </span>
   );
 }
@@ -114,7 +131,7 @@ function Pattern243PlusCode({ plus, className }: { plus: Pattern243Plus; classNa
   return (
     <span className={`inline-flex flex-wrap items-baseline gap-0.5 font-mono tracking-wide ${className ?? ''}`}>
       {EGO_SCALE_PATTERN_ORDER.map((id) => (
-        <Plus243TierGlyph key={id} tier={plus.byScale[id]} />
+        <Plus243PlusGlyph key={id} entry={plus.byScale[id]} />
       ))}
     </span>
   );
@@ -122,13 +139,11 @@ function Pattern243PlusCode({ plus, className }: { plus: Pattern243Plus; classNa
 
 function EgogramRadarSummarySubtitle({
   peakScale,
-  patternCode,
   pattern243Plus,
   basicPattern,
   missing,
 }: {
   peakScale: EgoOkScaleScore;
-  patternCode: string;
   pattern243Plus: Pattern243Plus;
   basicPattern: string;
   missing: boolean;
@@ -139,11 +154,6 @@ function EgogramRadarSummarySubtitle({
         최고 이고그램 에너지 : {formatEgogramEnergyHeadline(peakScale)}
       </p>
       <p className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-slate-400">
-        <span>
-          243 패턴{' '}
-          <span className="font-mono font-semibold tracking-wide text-indigo-200">{patternCode}</span>
-        </span>
-        <span className="text-slate-500">·</span>
         <span className="inline-flex flex-wrap items-baseline gap-1">
           <span>243+ 플러스</span>
           <Pattern243PlusCode plus={pattern243Plus} />
@@ -160,13 +170,11 @@ function EgogramEnergyInsightPanel({
   lowScale,
   highCol,
   lowCol,
-  patternSnippet,
 }: {
   highScale: EgoOkScaleScore;
   lowScale: EgoOkScaleScore;
   highCol: EgoOkCompositeColumn;
   lowCol: EgoOkCompositeColumn;
-  patternSnippet: string | null;
 }) {
   const high = buildPeakEgogramEnergyInsight(highScale, highCol);
   const low = buildLowEgogramEnergyInsight(lowScale, lowCol);
@@ -229,12 +237,6 @@ function EgogramEnergyInsightPanel({
         </div>
       </article>
 
-      {patternSnippet ? (
-        <p className="text-xs leading-relaxed text-slate-500">
-          <span className="font-medium text-slate-400">243 패턴 참고 · </span>
-          {patternSnippet}
-        </p>
-      ) : null}
     </div>
   );
 }
@@ -481,13 +483,7 @@ function EgogramFiveScaleRadarChart({ data }: { data: EgogramRadarRow[] }) {
           strokeOpacity={0.28}
           strokeWidth={1}
         />
-        <PolarRadiusAxis
-          domain={[0, 50]}
-          angle={72}
-          axisLine={false}
-          tickCount={6}
-          tick={{ fill: '#64748b', fontSize: 8 }}
-        />
+        <PolarRadiusAxis domain={[0, 50]} angle={72} axisLine={false} tick={false} />
         <PolarAngleAxis
           dataKey="scale"
           tick={(tickProps) => (
@@ -536,9 +532,6 @@ function EgogramRadarCenterMark(props: { cx?: number; cy?: number }) {
   return (
     <g pointerEvents="none">
       <circle cx={cx} cy={cy} r={3.5} fill="#e0f2fe" stroke="#64748b" strokeOpacity={0.55} strokeWidth={1} />
-      <text x={cx} y={cy + 12} textAnchor="middle" fill="#64748b" fontSize={8} fontWeight={600}>
-        0
-      </text>
     </g>
   );
 }
@@ -659,14 +652,6 @@ export default function EgoOkCounselorReport({
   const lowEgogram = pickExtremeEgogramScale(report.egogram, 'min');
   const peakComposite = compositeById[peakEgogram.id];
   const lowComposite = compositeById[lowEgogram.id];
-  const patternSnippetRaw = report.pattern243.sections['1']?.trim();
-  const patternSnippet =
-    !report.pattern243.missing && patternSnippetRaw
-      ? patternSnippetRaw.length > 300
-        ? `${patternSnippetRaw.slice(0, 298)}…`
-        : patternSnippetRaw
-      : null;
-
   const [lifeHover, setLifeHover] = useState(false);
 
   return (
@@ -724,10 +709,7 @@ export default function EgoOkCounselorReport({
               </dd>
             </div>
             <div className="rounded-xl bg-white/[0.04] px-4 py-3 ring-1 ring-white/10">
-              <dt className="text-xs text-slate-500">243 / 243+ 플러스</dt>
-              <dd className="mt-1 font-mono text-lg font-bold tracking-widest text-indigo-200">
-                {report.patternCode}
-              </dd>
+              <dt className="text-xs text-slate-500">243+ 플러스</dt>
               <dd className="mt-1.5 text-base">
                 <Pattern243PlusCode plus={report.pattern243Plus} />
               </dd>
@@ -762,7 +744,6 @@ export default function EgoOkCounselorReport({
           subtitle={
             <EgogramRadarSummarySubtitle
               peakScale={peakEgogram}
-              patternCode={report.patternCode}
               pattern243Plus={report.pattern243Plus}
               basicPattern={report.pattern243.basicPattern}
               missing={report.pattern243.missing}
@@ -780,7 +761,6 @@ export default function EgoOkCounselorReport({
               lowScale={lowEgogram}
               highCol={peakComposite}
               lowCol={lowComposite}
-              patternSnippet={patternSnippet}
             />
           ) : null}
           <ul className="mt-4 space-y-3">
@@ -850,21 +830,21 @@ export default function EgoOkCounselorReport({
             <p className="text-xs uppercase tracking-wide text-slate-500">CP + NP</p>
             <p className="mt-2 text-3xl font-bold text-white">{report.plus243.cpNpSum}</p>
             <p className="mt-2 text-lg">
-              <Plus243TierGlyph tier={report.pattern243Plus.groups.cpNp.tier} />
+              <Plus243GroupGlyph tier={report.pattern243Plus.groups.cpNp.tier} />
             </p>
           </div>
           <div className="rounded-xl bg-white/[0.04] p-5 ring-1 ring-white/10">
             <p className="text-xs uppercase tracking-wide text-slate-500">A (성인)</p>
             <p className="mt-2 text-3xl font-bold text-white">{report.plus243.aSum}</p>
             <p className="mt-2 text-lg">
-              <Plus243TierGlyph tier={report.pattern243Plus.groups.a.tier} />
+              <Plus243GroupGlyph tier={report.pattern243Plus.groups.a.tier} />
             </p>
           </div>
           <div className="rounded-xl bg-white/[0.04] p-5 ring-1 ring-white/10">
             <p className="text-xs uppercase tracking-wide text-slate-500">FC + AC</p>
             <p className="mt-2 text-3xl font-bold text-white">{report.plus243.fcAcSum}</p>
             <p className="mt-2 text-lg">
-              <Plus243TierGlyph tier={report.pattern243Plus.groups.fcAc.tier} />
+              <Plus243GroupGlyph tier={report.pattern243Plus.groups.fcAc.tier} />
             </p>
           </div>
         </div>

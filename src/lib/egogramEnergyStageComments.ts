@@ -204,7 +204,7 @@ export function buildPeakEgogramEnergyInsight(
     bandComment = `${stageText}에 해당합니다. 절대적으로는 ${inten} 부족(243+ 1~2단계)이나, 다섯 척도 중에서는 가장 높게 나타납니다.`;
   }
 
-  const comment = `${name}(${scale.raw}/50, 243-${scale.threeLevel}, ${tier.label}) · ${bandComment} ${poleLabel(dom)} 기준 「${trait}」 양상이 두드러집니다.`;
+  const comment = `${name}(${scale.raw}/50, 243+ ${tier.stage}단계) · ${bandComment} ${poleLabel(dom)} 기준 「${trait}」 양상이 두드러집니다.`;
 
   return wrapInsight(
     tier,
@@ -235,7 +235,7 @@ export function buildLowEgogramEnergyInsight(
     bandComment = `${stageText}으로 절대 점수는 ${inten} 높은 편(243+ 6~9단계)이나, 다섯 척도 중 상대 최저입니다. 과함보다는 다른 척도와의 균형·분배 이슈로 읽는 것이 타당합니다.`;
   }
 
-  const comment = `${name}(${scale.raw}/50, 243-${scale.threeLevel}, ${tier.label}) · ${bandComment} (많이 쓰는 쪽: ${col.topLabel} · 상대적으로 약한 쪽: ${col.bottomLabel})`;
+  const comment = `${name}(${scale.raw}/50, 243+ ${tier.stage}단계) · ${bandComment} (많이 쓰는 쪽: ${col.topLabel} · 상대적으로 약한 쪽: ${col.bottomLabel})`;
 
   const strengths =
     band === 'excess'
