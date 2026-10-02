@@ -107,8 +107,15 @@ function egogramRadarScoreVertices(
   });
 }
 
-/** 중심 0(하늘) → 각 척도 합 꼭짓점(분홍) 방향으로 오각형 내부만 채움 */
+function egogramRadarScorePolygonPath(verts: { x: number; y: number }[]): string | null {
+  if (verts.length < 3) return null;
+  const [first, ...rest] = verts;
+  return `M ${first.x} ${first.y} ${rest.map((p) => `L ${p.x} ${p.y}`).join(' ')} Z`;
+}
+
+/** 합계 오각형 내부: 중심 0 하늘 → 바깥(합) 분홍, 바깥일수록 더 투명 */
 function createEgogramRadarBackground(rows: EgogramRadarRow[]) {
+  const gradId = 'egogram-radar-pentagon-radial';
   return function EgogramRadarBackground(props: { cx?: number; cy?: number; outerRadius?: number }) {
     const cx = props.cx ?? 0;
     const cy = props.cy ?? 0;
@@ -116,46 +123,32 @@ function createEgogramRadarBackground(rows: EgogramRadarRow[]) {
     if (outerRadius <= 0 || rows.length < 3) return null;
 
     const verts = egogramRadarScoreVertices(cx, cy, outerRadius, rows);
-    const n = verts.length;
+    const polygonPath = egogramRadarScorePolygonPath(verts);
+    if (!polygonPath) return null;
+
+    const maxVertexR = Math.max(
+      ...rows.map((row) => outerRadius * (row.score / row.fullMark)),
+      1,
+    );
 
     return (
       <g>
         <defs>
-          {rows.map((row, i) => {
-            const v = verts[i];
-            const usage = row.score / row.fullMark;
-            const gradId = `egogram-radar-spoke-${row.scale}`;
-            return (
-              <linearGradient
-                key={gradId}
-                id={gradId}
-                gradientUnits="userSpaceOnUse"
-                x1={cx}
-                y1={cy}
-                x2={v.x}
-                y2={v.y}
-              >
-                <stop offset="0%" stopColor={EGOGRAM_RADAR_SKY} stopOpacity={0.16} />
-                <stop offset="55%" stopColor={EGOGRAM_RADAR_SKY} stopOpacity={0.05} />
-                <stop offset="100%" stopColor={EGOGRAM_RADAR_PINK} stopOpacity={0.12 + 0.52 * usage} />
-              </linearGradient>
-            );
-          })}
+          <radialGradient
+            id={gradId}
+            gradientUnits="userSpaceOnUse"
+            cx={cx}
+            cy={cy}
+            r={maxVertexR}
+          >
+            <stop offset="0%" stopColor={EGOGRAM_RADAR_SKY} stopOpacity={0.48} />
+            <stop offset="28%" stopColor={EGOGRAM_RADAR_SKY} stopOpacity={0.28} />
+            <stop offset="58%" stopColor={EGOGRAM_RADAR_PINK} stopOpacity={0.16} />
+            <stop offset="82%" stopColor={EGOGRAM_RADAR_PINK} stopOpacity={0.08} />
+            <stop offset="100%" stopColor={EGOGRAM_RADAR_PINK} stopOpacity={0.02} />
+          </radialGradient>
         </defs>
-        {rows.map((row, i) => {
-          const next = (i + 1) % n;
-          const v0 = verts[i];
-          const v1 = verts[next];
-          const d = `M ${cx} ${cy} L ${v0.x} ${v0.y} L ${v1.x} ${v1.y} Z`;
-          return (
-            <path
-              key={`tri-${row.scale}`}
-              d={d}
-              fill={`url(#egogram-radar-spoke-${row.scale})`}
-              stroke="none"
-            />
-          );
-        })}
+        <path d={polygonPath} fill={`url(#${gradId})`} stroke="none" />
         <circle cx={cx} cy={cy} r={3.5} fill="#e0f2fe" stroke="#64748b" strokeOpacity={0.55} strokeWidth={1} />
         <text x={cx} y={cy + 16} textAnchor="middle" fill="#64748b" fontSize={9} fontWeight={600}>
           0
