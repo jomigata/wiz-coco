@@ -1,7 +1,14 @@
 'use client';
 
 import { useId, useMemo, useState } from 'react';
-import type { EgoOkGender, EgoOkReport, EgoScaleId, OkScaleId } from '@/lib/egoOkScoring';
+import type {
+  EgoOkCompositeColumn,
+  EgoOkGender,
+  EgoOkReport,
+  EgoOkScaleScore,
+  EgoScaleId,
+  OkScaleId,
+} from '@/lib/egoOkScoring';
 import { OK_LABELS, OK_SCALE_HINTS } from '@/lib/egoOkScoring';
 import { egoOkGenderToLabel } from '@/lib/egoOkTestGender';
 import type { ClientInfo } from '@/components/tests/MbtiProClientInfo';
@@ -45,7 +52,7 @@ function SectionCard({
   children,
 }: {
   title: string;
-  subtitle?: string;
+  subtitle?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
@@ -65,6 +72,254 @@ function egogramDominance(positive: number, negative: number): EgogramDominance 
   if (positive > negative) return 'positive';
   if (negative > positive) return 'negative';
   return 'even';
+}
+
+const EGO_SCALE_RANK_ORDER: EgoScaleId[] = ['CP', 'NP', 'A', 'FC', 'AC'];
+
+const EGO_ENERGY_DISPLAY_NAMES: Record<EgoScaleId, string> = {
+  CP: '비판적 부모',
+  NP: '양육적 부모',
+  A: '성인 자아',
+  FC: '자유로운 아이',
+  AC: '순응하는 아이',
+};
+
+function formatEgogramEnergyHeadline(scale: EgoOkScaleScore): string {
+  return `${scale.id} - ${EGO_ENERGY_DISPLAY_NAMES[scale.id]} (${scale.raw})`;
+}
+
+function pickExtremeEgogramScale(scales: EgoOkScaleScore[], mode: 'max' | 'min'): EgoOkScaleScore {
+  return scales.reduce((pick, s) => {
+    if (mode === 'max') {
+      if (s.raw > pick.raw) return s;
+      if (s.raw === pick.raw && EGO_SCALE_RANK_ORDER.indexOf(s.id) < EGO_SCALE_RANK_ORDER.indexOf(pick.id)) {
+        return s;
+      }
+      return pick;
+    }
+    if (s.raw < pick.raw) return s;
+    if (s.raw === pick.raw && EGO_SCALE_RANK_ORDER.indexOf(s.id) > EGO_SCALE_RANK_ORDER.indexOf(pick.id)) {
+      return s;
+    }
+    return pick;
+  });
+}
+
+type EgogramEnergyInsight = {
+  comment: string;
+  strengths: string[];
+  cautions: string[];
+};
+
+const EGO_HIGH_POSITIVE_STRENGTH: Record<EgoScaleId, string> = {
+  CP: '원칙·기준을 세우고 질서와 책임을 요구하는 데 강합니다.',
+  NP: '돌봄·격려·헌신으로 관계를 보호하고 지지하는 데 강합니다.',
+  A: '사실·논리·현실 검토로 문제를 정리하고 판단하는 데 강합니다.',
+  FC: '창의·호기심·유연한 시도로 새로운 가능성을 여는 데 강합니다.',
+  AC: '협력·배려·규칙 준수로 관계 조율과 적응에 강합니다.',
+};
+
+const EGO_HIGH_POSITIVE_CAUTION: Record<EgoScaleId, string> = {
+  CP: '비판·통제·완벽주의가 과하면 타인과의 긴장·저항을 키울 수 있습니다.',
+  NP: '과보호·희생이 과하면 상대의 자율성을 줄이거나 소진될 수 있습니다.',
+  A: '감정·직관을 지나치게 배제하면 냉정·기계적으로 비칠 수 있습니다.',
+  FC: '즉흥·자유가 과하면 계획·약속·현실 제약을 놓치기 쉽습니다.',
+  AC: '순응·의존이 과하면 자기주장·욕구 표현이 약해질 수 있습니다.',
+};
+
+const EGO_HIGH_NEGATIVE_STRENGTH: Record<EgoScaleId, string> = {
+  CP: '경직된 통제 대신 유연·관용으로 관계 부담을 줄이는 데 도움이 됩니다.',
+  NP: '과잉 돌봄 대신 거리·자율을 두어 방임적 유연성을 보일 수 있습니다.',
+  A: '과도한 분석 대신 직관·즉흥으로 상황에 맞춰 움직일 여지가 있습니다.',
+  FC: '과한 자유 대신 절제·폐쇄로 안정·예측 가능성을 택할 수 있습니다.',
+  AC: '과한 순응 대신 독단·자기 확신으로 방향을 잡을 수 있습니다.',
+};
+
+const EGO_HIGH_NEGATIVE_CAUTION: Record<EgoScaleId, string> = {
+  CP: '기준·책임이 약해지면 규범 공백·회피로 이어질 수 있습니다.',
+  NP: '돌봄이 약해지면 관계·팀에서 방임·무관심으로 읽힐 수 있습니다.',
+  A: '현실 검토가 약해지면 충동·비합리적 결정이 늘 수 있습니다.',
+  FC: '표현·개방이 약해지면 답답함·창의 저하로 이어질 수 있습니다.',
+  AC: '협력·배려가 약해지면 고집·관계 마찰이 커질 수 있습니다.',
+};
+
+const EGO_LOW_UPSIDE: Record<EgoScaleId, string> = {
+  CP: '비판·통제 에너지가 낮아 관계에서 압박감이 상대적으로 적을 수 있습니다.',
+  NP: '돌봄·헌신 압력이 낮아 자율·거리두기가 편할 수 있습니다.',
+  A: '분석·판단 부담이 낮아 감정·직관·관계에 더 기대는 경향이 있을 수 있습니다.',
+  FC: '자유·개방 에너지가 낮아 절제·안정·규칙을 선호할 수 있습니다.',
+  AC: '순응·의존이 낮아 자기주장·독립적 태도가 상대적으로 뚜렷할 수 있습니다.',
+};
+
+const EGO_LOW_GROWTH: Record<EgoScaleId, string> = {
+  CP: '필요할 때 기준·책임·피드백을 의식적으로 쓰는 연습이 균형에 도움이 됩니다.',
+  NP: '타인·자신을 돌보는 언어와 행동을 늘리면 관계 회복력이 커질 수 있습니다.',
+  A: '사실 확인·선택지 정리·I-메시지로 어른 자아를 의식적으로 활성화해 보세요.',
+  FC: '작은 실험·유머·창의적 표현을 허용하면 에너지·동기가 살아날 수 있습니다.',
+  AC: '협력·경청·합의를 의식하면 팀·가족에서 조율 역할을 회복하기 쉽습니다.',
+};
+
+const EGO_LOW_RISK: Record<EgoScaleId, string> = {
+  CP: '기준·경계가 부족하면 책임 회피·혼란으로 비칠 수 있습니다.',
+  NP: '지지·돌봄이 부족하면 고립·냉담함으로 읽힐 수 있습니다.',
+  A: '현실·논리 검토가 부족하면 충동·오해가 늘 수 있습니다.',
+  FC: '즐거움·창의가 부족하면 무기력·답답함을 느끼기 쉽습니다.',
+  AC: '배려·협력이 부족하면 관계에서 딱딱함·고집으로 보일 수 있습니다.',
+};
+
+function buildHighEgogramEnergyInsight(
+  scale: EgoOkScaleScore,
+  col: EgoOkCompositeColumn,
+): EgogramEnergyInsight {
+  const dom = egogramDominance(scale.positiveRaw, scale.negativeRaw);
+  const dominantTrait =
+    dom === 'negative' ? col.bottomLabel : dom === 'positive' ? col.topLabel : `${col.topLabel} · ${col.bottomLabel}`;
+  const pole =
+    dom === 'negative' ? '부정(하단) 소계' : dom === 'positive' ? '긍정(상단) 소계' : '긍정·부정 소계';
+
+  const comment = `${EGO_ENERGY_DISPLAY_NAMES[scale.id]}(${scale.raw}/50, 243-${scale.threeLevel})에서 이고 에너지가 가장 크게 나타납니다. ${pole} 기준으로 「${dominantTrait}」 양상이 두드러집니다.`;
+
+  if (dom === 'negative') {
+    return {
+      comment,
+      strengths: [EGO_HIGH_NEGATIVE_STRENGTH[scale.id]],
+      cautions: [EGO_HIGH_NEGATIVE_CAUTION[scale.id]],
+    };
+  }
+  if (dom === 'positive') {
+    return {
+      comment,
+      strengths: [EGO_HIGH_POSITIVE_STRENGTH[scale.id]],
+      cautions: [EGO_HIGH_POSITIVE_CAUTION[scale.id]],
+    };
+  }
+  return {
+    comment,
+    strengths: [EGO_HIGH_POSITIVE_STRENGTH[scale.id], '긍정·부정 소계가 비슷해 상황에 따라 양쪽 양상을 오갈 수 있습니다.'],
+    cautions: [EGO_HIGH_POSITIVE_CAUTION[scale.id], EGO_HIGH_NEGATIVE_CAUTION[scale.id]],
+  };
+}
+
+function buildLowEgogramEnergyInsight(
+  scale: EgoOkScaleScore,
+  col: EgoOkCompositeColumn,
+): EgogramEnergyInsight {
+  const comment = `${EGO_ENERGY_DISPLAY_NAMES[scale.id]}(${scale.raw}/50, 243-${scale.threeLevel})는 다섯 척도 중 상대적으로 가장 낮아, 일상에서 이 자아 상태를 덜 의식적으로 쓰는 경향을 시사합니다. (많이 쓰는 쪽: ${col.topLabel} · 상대적으로 약한 쪽: ${col.bottomLabel})`;
+
+  return {
+    comment,
+    strengths: [EGO_LOW_UPSIDE[scale.id]],
+    cautions: [EGO_LOW_RISK[scale.id], EGO_LOW_GROWTH[scale.id]],
+  };
+}
+
+function EgogramRadarSummarySubtitle({
+  peakScale,
+  patternCode,
+  basicPattern,
+  missing,
+}: {
+  peakScale: EgoOkScaleScore;
+  patternCode: string;
+  basicPattern: string;
+  missing: boolean;
+}) {
+  return (
+    <div className="mt-1 space-y-1.5 text-sm">
+      <p className="font-medium text-indigo-100">
+        최고 이고그램 에너지 : {formatEgogramEnergyHeadline(peakScale)}
+      </p>
+      <p className="text-slate-400">
+        243 패턴{' '}
+        <span className="font-mono font-semibold tracking-wide text-indigo-200">{patternCode}</span>
+        {basicPattern ? (
+          <>
+            {' '}
+            · <span className="text-slate-300">{basicPattern}</span>
+          </>
+        ) : null}
+        {missing ? <span className="text-amber-200/80"> · 기준 보고서 문장 없음</span> : null}
+      </p>
+    </div>
+  );
+}
+
+function EgogramEnergyInsightPanel({
+  highScale,
+  lowScale,
+  highCol,
+  lowCol,
+  patternSnippet,
+}: {
+  highScale: EgoOkScaleScore;
+  lowScale: EgoOkScaleScore;
+  highCol: EgoOkCompositeColumn;
+  lowCol: EgoOkCompositeColumn;
+  patternSnippet: string | null;
+}) {
+  const high = buildHighEgogramEnergyInsight(highScale, highCol);
+  const low = buildLowEgogramEnergyInsight(lowScale, lowCol);
+
+  return (
+    <div className="mt-5 space-y-4 border-t border-white/10 pt-5">
+      <article className="rounded-xl bg-fuchsia-500/10 p-4 ring-1 ring-fuchsia-400/20">
+        <h3 className="text-sm font-semibold text-fuchsia-100">
+          최고 사용에너지 · {formatEgogramEnergyHeadline(highScale)}
+        </h3>
+        <p className="mt-2 text-sm leading-relaxed text-slate-300">{high.comment}</p>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-emerald-300/90">장점</p>
+            <ul className="mt-1.5 list-inside list-disc space-y-1 text-sm text-slate-300">
+              {high.strengths.map((line) => (
+                <li key={line}>{line}</li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-amber-300/90">주의·단점</p>
+            <ul className="mt-1.5 list-inside list-disc space-y-1 text-sm text-slate-300">
+              {high.cautions.map((line) => (
+                <li key={line}>{line}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </article>
+
+      <article className="rounded-xl bg-sky-500/10 p-4 ring-1 ring-sky-400/20">
+        <h3 className="text-sm font-semibold text-sky-100">
+          부족한 사용에너지 · {formatEgogramEnergyHeadline(lowScale)}
+        </h3>
+        <p className="mt-2 text-sm leading-relaxed text-slate-300">{low.comment}</p>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-emerald-300/90">장점(낮을 때)</p>
+            <ul className="mt-1.5 list-inside list-disc space-y-1 text-sm text-slate-300">
+              {low.strengths.map((line) => (
+                <li key={line}>{line}</li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-amber-300/90">보완·주의</p>
+            <ul className="mt-1.5 list-inside list-disc space-y-1 text-sm text-slate-300">
+              {low.cautions.map((line) => (
+                <li key={line}>{line}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </article>
+
+      {patternSnippet ? (
+        <p className="text-xs leading-relaxed text-slate-500">
+          <span className="font-medium text-slate-400">243 패턴 참고 · </span>
+          {patternSnippet}
+        </p>
+      ) : null}
+    </div>
+  );
 }
 
 type EgogramRadarRow = {
@@ -465,6 +720,18 @@ export default function EgoOkCounselorReport({
   const sectionOrder = ['1', '2', '3', '4'] as const;
   const barColors = ['#38bdf8', '#818cf8', '#34d399', '#f472b6'];
 
+  const peakEgogram = pickExtremeEgogramScale(report.egogram, 'max');
+  const lowEgogram = pickExtremeEgogramScale(report.egogram, 'min');
+  const peakComposite = compositeById[peakEgogram.id];
+  const lowComposite = compositeById[lowEgogram.id];
+  const patternSnippetRaw = report.pattern243.sections['1']?.trim();
+  const patternSnippet =
+    !report.pattern243.missing && patternSnippetRaw
+      ? patternSnippetRaw.length > 300
+        ? `${patternSnippetRaw.slice(0, 298)}…`
+        : patternSnippetRaw
+      : null;
+
   const [lifeHover, setLifeHover] = useState(false);
 
   return (
@@ -552,12 +819,31 @@ export default function EgoOkCounselorReport({
       </section>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <SectionCard title="이고그램 5척도" subtitle="0~50 · 243 구간(A/B/C) — 방사형 그래프에 마우스를 올리면 요약이 표시됩니다">
+        <SectionCard
+          title="이고그램 5척도"
+          subtitle={
+            <EgogramRadarSummarySubtitle
+              peakScale={peakEgogram}
+              patternCode={report.patternCode}
+              basicPattern={report.pattern243.basicPattern}
+              missing={report.pattern243.missing}
+            />
+          }
+        >
           <div className="min-h-[22rem] w-full px-0.5 py-1">
             <div className="h-[22rem] w-full">
               <EgogramFiveScaleRadarChart data={radarData} />
             </div>
           </div>
+          {peakComposite && lowComposite ? (
+            <EgogramEnergyInsightPanel
+              highScale={peakEgogram}
+              lowScale={lowEgogram}
+              highCol={peakComposite}
+              lowCol={lowComposite}
+              patternSnippet={patternSnippet}
+            />
+          ) : null}
           <ul className="mt-4 space-y-3">
             {report.egogram.map((s) => (
               <EgogramScaleRow
