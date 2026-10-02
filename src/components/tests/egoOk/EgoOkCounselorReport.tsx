@@ -82,8 +82,28 @@ type EgogramRadarRow = {
 const EGOGRAM_RADAR_SKY = '#7dd3fc';
 const EGOGRAM_RADAR_PINK = '#f472b6';
 
-function isEgogramPeakScore(score: number, peakScore: number): boolean {
-  return peakScore > 0 && score === peakScore;
+/** 1·2위 합계(서로 다른 점수 상위 2개 — 동점 척도 포함) */
+function egogramRadarHighlightScores(rows: EgogramRadarRow[]): Set<number> {
+  const ranked = Array.from(new Set(rows.map((r) => r.score)))
+    .filter((s) => s > 0)
+    .sort((a, b) => b - a);
+  const set = new Set<number>();
+  if (ranked[0] != null) set.add(ranked[0]);
+  if (ranked[1] != null) set.add(ranked[1]);
+  return set;
+}
+
+function resolveEgogramRadarTickRow(
+  rows: EgogramRadarRow[],
+  payload?: { value?: string | number; index?: number },
+  tickIndex?: number,
+): EgogramRadarRow | undefined {
+  const idx = payload?.index ?? tickIndex;
+  if (typeof idx === 'number' && rows[idx]) return rows[idx];
+  const raw = payload?.value;
+  if (raw == null) return undefined;
+  const key = String(raw);
+  return rows.find((r) => r.scale === key);
 }
 
 function egogramRadarTooltipLine(row: EgogramRadarRow): string {
@@ -94,18 +114,18 @@ function egogramRadarTooltipLine(row: EgogramRadarRow): string {
 
 function EgogramRadarPeakVertexLayer({
   data,
-  peakScore,
+  highlightScores,
   cx = 0,
   cy = 0,
   outerRadius = 0,
 }: {
   data: EgogramRadarRow[];
-  peakScore: number;
+  highlightScores: Set<number>;
   cx?: number;
   cy?: number;
   outerRadius?: number;
 }) {
-  if (outerRadius <= 0 || peakScore <= 0) return null;
+  if (outerRadius <= 0 || highlightScores.size === 0) return null;
   const n = data.length;
   const step = 360 / n;
   const toRad = (deg: number) => (deg * Math.PI) / 180;
@@ -113,7 +133,7 @@ function EgogramRadarPeakVertexLayer({
   return (
     <g pointerEvents="none">
       {data.map((row, i) => {
-        if (!isEgogramPeakScore(row.score, peakScore)) return null;
+        if (!highlightScores.has(row.score)) return null;
         const mid = 90 - step * i;
         const r = outerRadius * (row.score / row.fullMark);
         const x = cx + r * Math.cos(toRad(mid));
@@ -133,60 +153,63 @@ function EgogramRadarScaleTick({
   x,
   y,
   payload,
-  peakScales,
-  scoreByScale,
+  index: tickIndex,
+  rows,
+  highlightScores,
   textAnchor,
 }: {
   x?: number;
   y?: number;
-  payload?: { value?: string };
-  peakScales: Set<string>;
-  scoreByScale: Record<string, number>;
+  payload?: { value?: string | number; index?: number };
+  index?: number;
+  rows: EgogramRadarRow[];
+  highlightScores: Set<number>;
   textAnchor?: string;
 }) {
-  if (x == null || y == null || !payload?.value) return null;
-  const scale = payload.value;
-  const score = scoreByScale[scale];
-  const isPeak = peakScales.has(scale);
+  if (x == null || y == null) return null;
+  const row = resolveEgogramRadarTickRow(rows, payload, tickIndex);
+  if (!row) return null;
+  const { scale, score } = row;
+  const isHighlight = highlightScores.has(score);
   const peakPink = EGOGRAM_RADAR_PINK;
-  const titleFill = isPeak ? peakPink : '#94a3b8';
-  const scoreFill = isPeak ? peakPink : '#64748b';
+  const titleFill = isHighlight ? peakPink : '#94a3b8';
+  const scoreFill = isHighlight ? peakPink : '#64748b';
   const anchor = textAnchor as 'middle' | 'start' | 'end' | 'inherit' | undefined;
 
   return (
-    <g>
+    <g style={{ pointerEvents: 'none' }}>
       <text
         x={x}
         y={y}
         textAnchor={anchor}
         fill={titleFill}
+        stroke="none"
         fontSize={12}
-        fontWeight={isPeak ? 800 : 600}
+        fontWeight={isHighlight ? 800 : 600}
       >
         {scale}
       </text>
-      {score != null ? (
-        <text
-          x={x}
-          y={y + 14}
-          textAnchor={anchor}
-          fill={scoreFill}
-          fontSize={10}
-          fontWeight={isPeak ? 800 : 500}
-        >
-          {score}
-        </text>
-      ) : null}
+      <text
+        x={x}
+        y={y + 14}
+        textAnchor={anchor}
+        fill={scoreFill}
+        stroke="none"
+        fontSize={10}
+        fontWeight={isHighlight ? 800 : 500}
+      >
+        {score}
+      </text>
     </g>
   );
 }
 
-function createEgogramRadarPeakLayer(data: EgogramRadarRow[], peakScore: number) {
+function createEgogramRadarPeakLayer(data: EgogramRadarRow[], highlightScores: Set<number>) {
   return function EgogramRadarPeakLayer(props: { cx?: number; cy?: number; outerRadius?: number }) {
     return (
       <EgogramRadarPeakVertexLayer
         data={data}
-        peakScore={peakScore}
+        highlightScores={highlightScores}
         cx={props.cx}
         cy={props.cy}
         outerRadius={props.outerRadius}
@@ -197,19 +220,11 @@ function createEgogramRadarPeakLayer(data: EgogramRadarRow[], peakScore: number)
 
 function EgogramFiveScaleRadarChart({ data }: { data: EgogramRadarRow[] }) {
   const gradientId = useId().replace(/:/g, '');
-  const peakScore = useMemo(() => Math.max(...data.map((d) => d.score), 0), [data]);
-  const peakScales = useMemo(
-    () => new Set(data.filter((d) => isEgogramPeakScore(d.score, peakScore)).map((d) => d.scale)),
-    [data, peakScore],
-  );
-  const scoreByScale = useMemo(
-    () => Object.fromEntries(data.map((d) => [d.scale, d.score])),
-    [data],
-  );
+  const highlightScores = useMemo(() => egogramRadarHighlightScores(data), [data]);
 
   const PeakLayer = useMemo(
-    () => createEgogramRadarPeakLayer(data, peakScore),
-    [data, peakScore],
+    () => createEgogramRadarPeakLayer(data, highlightScores),
+    [data, highlightScores],
   );
 
   /** 최고점은 PeakLayer 고정 분홍만 사용 — dot는 툴팁 hit 영역만 */
@@ -218,14 +233,14 @@ function EgogramFiveScaleRadarChart({ data }: { data: EgogramRadarRow[] }) {
       function EgogramRadarVertexDot(props: { cx?: number; cy?: number; payload?: EgogramRadarRow }) {
         const { cx, cy, payload } = props;
         if (cx == null || cy == null || !payload) return null;
-        if (isEgogramPeakScore(payload.score, peakScore)) {
+        if (highlightScores.has(payload.score)) {
           return <circle cx={cx} cy={cy} r={10} fill="transparent" stroke="none" pointerEvents="all" />;
         }
         return (
           <circle cx={cx} cy={cy} r={4} fill="#eef2ff" stroke="#818cf8" strokeWidth={2} />
         );
       },
-    [peakScore],
+    [highlightScores],
   );
 
   const RadarVertexActiveDot = useMemo(
@@ -233,14 +248,14 @@ function EgogramFiveScaleRadarChart({ data }: { data: EgogramRadarRow[] }) {
       function EgogramRadarVertexActiveDot(props: { cx?: number; cy?: number; payload?: EgogramRadarRow }) {
         const { cx, cy, payload } = props;
         if (cx == null || cy == null || !payload) return null;
-        if (isEgogramPeakScore(payload.score, peakScore)) {
+        if (highlightScores.has(payload.score)) {
           return null;
         }
         return (
           <circle cx={cx} cy={cy} r={6} fill="#ffffff" stroke="#a5b4fc" strokeWidth={2} />
         );
       },
-    [peakScore],
+    [highlightScores],
   );
 
   const FillOpacityMaskDefs = useMemo(
@@ -288,7 +303,15 @@ function EgogramFiveScaleRadarChart({ data }: { data: EgogramRadarRow[] }) {
         <PolarAngleAxis
           dataKey="scale"
           tick={(tickProps) => (
-            <EgogramRadarScaleTick {...tickProps} peakScales={peakScales} scoreByScale={scoreByScale} />
+            <EgogramRadarScaleTick
+              x={tickProps.x}
+              y={tickProps.y}
+              payload={tickProps.payload}
+              index={tickProps.index}
+              textAnchor={tickProps.textAnchor}
+              rows={data}
+              highlightScores={highlightScores}
+            />
           )}
         />
         <Radar
