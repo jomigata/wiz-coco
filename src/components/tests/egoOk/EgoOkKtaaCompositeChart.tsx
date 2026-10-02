@@ -32,14 +32,15 @@ const EGO_NEG_COLOR = '#e8954a';
 const EGO_POS_COLOR = '#9cc9e8';
 const EGO_TOTAL_BOX_STROKE = '#0284c7';
 const OK_LINE_COLOR = '#d32f2f';
-/** KTAA 종합 그래프: 열 반쪽마다 C(하)·B(중)·A(상). 좌=남 하늘 / 우=여 분홍, B는 흰색 (5열 동일) */
+/** KTAA C(하)·B(중)·A(상) — 남/여 동일: 하단 하늘 · 중간 흰 · 상단 분홍 */
 const ZONE_WHITE = '#ffffff';
 const ZONE_SKY = '#d6e8f5';
 const ZONE_PINK = '#f5d6d6';
 
-const GENDER_ZONE_COLORS = {
-  male: { bottom: ZONE_SKY, middle: ZONE_WHITE, top: ZONE_SKY },
-  female: { bottom: ZONE_PINK, middle: ZONE_WHITE, top: ZONE_PINK },
+const CHART_ZONE_COLORS = {
+  bottom: ZONE_SKY,
+  middle: ZONE_WHITE,
+  top: ZONE_PINK,
 } as const;
 
 function isClientGenderProvided(genderInput: string | undefined): boolean {
@@ -124,7 +125,7 @@ function ktaaZoneRects(
   x: number,
   w: number,
   band: KtaaGraphZoneBounds,
-  colors: (typeof GENDER_ZONE_COLORS)[keyof typeof GENDER_ZONE_COLORS],
+  colors: typeof CHART_ZONE_COLORS,
   scale: YScale,
   keyPrefix: string,
 ) {
@@ -158,7 +159,6 @@ function createKtaaPlotBackground(displayGender: EgoOkGender) {
     const { left, top, width, height } = offset;
     const colW = width / COLUMN_ORDER.length;
     const clipId = 'ktaa-plot-clip';
-    const zoneColors = GENDER_ZONE_COLORS[displayGender];
     const zoneBands = KTAA_GRAPH_ZONES[displayGender];
 
     return (
@@ -177,9 +177,9 @@ function createKtaaPlotBackground(displayGender: EgoOkGender) {
                   xCol,
                   colW,
                   zoneBands[code],
-                  zoneColors,
+                  CHART_ZONE_COLORS,
                   scale,
-                  `${code}-${displayGender}`,
+                  `${code}-zones`,
                 )}
               </g>
             );
@@ -328,11 +328,33 @@ function createKtaaOkEgoSumLabels(chartData: ChartRow[]) {
     return (
       <g>
         {chartData.map((row) => {
-          const ok = row.okLineCpNp ?? row.okLineFcAc;
-          if (ok == null || row.egoTotal <= 0) return null;
+          if (row.egoTotal <= 0) return null;
           const colIndex = COLUMN_ORDER.indexOf(row.id);
           if (colIndex < 0) return null;
           const cx = left + colIndex * colW + colW / 2;
+
+          if (row.id === 'A') {
+            const cyBarTop = yScale(row.egoTotal);
+            const egoW = sumLabelBoxWidth(row.egoTotal);
+            const egoRect: SumLabelRect = {
+              x: cx - egoW / 2,
+              y: cyBarTop - SUM_LABEL_GAP - SUM_LABEL_BOX_H,
+              w: egoW,
+              textX: cx,
+            };
+            return (
+              <SumLabelBox
+                key={`sums-${row.id}`}
+                rect={egoRect}
+                value={row.egoTotal}
+                stroke={EGO_TOTAL_BOX_STROKE}
+                fill="#0c4a6e"
+              />
+            );
+          }
+
+          const ok = row.okLineCpNp ?? row.okLineFcAc;
+          if (ok == null) return null;
           const cy = yScale(ok);
           const { ok: okRect, ego: egoRect } = resolveOkEgoSumLabels(
             ok,
@@ -372,47 +394,6 @@ function OkLineDot(props: { cx?: number; cy?: number; payload?: ChartRow }) {
   );
 }
 
-function EgoTotalBoxLabel(props: {
-  x?: number;
-  y?: number;
-  width?: number;
-  value?: number | string;
-  payload?: ChartRow;
-}) {
-  const { x, y, width, value, payload } = props;
-  if (payload?.id !== 'A') return null;
-  if (value == null || value === '' || value === 0 || x == null || y == null) return null;
-  const text = String(value);
-  const cx = x + (width ?? 0) / 2;
-  const boxW = Math.max(26, text.length * 8 + 10);
-  const boxH = 18;
-  const boxY = y - boxH - 3;
-  return (
-    <g>
-      <rect
-        x={cx - boxW / 2}
-        y={boxY}
-        width={boxW}
-        height={boxH}
-        rx={0}
-        fill="#fff"
-        stroke={EGO_TOTAL_BOX_STROKE}
-        strokeWidth={1.5}
-      />
-      <text
-        x={cx}
-        y={boxY + 13}
-        textAnchor="middle"
-        fill="#0c4a6e"
-        fontSize={11}
-        fontWeight={700}
-      >
-        {text}
-      </text>
-    </g>
-  );
-}
-
 function EgoSegmentLabel(props: {
   x?: number;
   y?: number;
@@ -444,7 +425,7 @@ export default function EgoOkKtaaCompositeChart({
   gender: genderInput,
 }: {
   columns: EgoOkCompositeColumn[];
-  /** 내담자 성별 — 배경 구간·색상(남=하늘 / 여=분홍) */
+  /** 내담자 성별 — 배경 구간 높이(C/B/A 컷); 색상은 남/여 동일 */
   gender?: string;
 }) {
   const genderProvided = isClientGenderProvided(genderInput);
@@ -525,7 +506,6 @@ export default function EgoOkKtaaCompositeChart({
             </Bar>
             <Bar dataKey="egoPositive" stackId="ego" fill={EGO_POS_COLOR} barSize={52} radius={[2, 2, 0, 0]}>
               <LabelList dataKey="egoPositive" content={<EgoSegmentLabel />} />
-              <LabelList dataKey="egoTotal" content={<EgoTotalBoxLabel />} />
             </Bar>
             <Line
               type="linear"
@@ -612,7 +592,8 @@ export default function EgoOkKtaaCompositeChart({
             <strong>하늘(위)</strong>은 긍정 문항 합(0~25). 막대 안 숫자는 각 층 점수,{' '}
             <strong>막대 꼭대기 숫자</strong>는 두 층을 더한 <strong>이고그램 척도 총점(0~50)</strong>입니다. CP·NP·FC·AC
             열에서는 이고 합계·오케이 합계를 <strong>같은 열의 오케이 점</strong> 기준 위·아래에 두며, 점수가
-            높은 쪽이 위(동점이면 오케이 위)입니다. A 열은 이고 합계만 막대 꼭대기에 표시합니다.
+            높은 쪽이 위(동점이면 오케이 위)입니다. <strong>A 열</strong>은 이고 합계만 막대 꼭대기 바로 위에
+            표시합니다.
           </li>
           <li>
             <strong>적색 선 = 오케이그램</strong>: U−·U+·I+·I− 척도 각 10문항 합(0~50)을 같은 열에
@@ -621,27 +602,23 @@ export default function EgoOkKtaaCompositeChart({
             이고 합계(0~50)는 사각 테두리 안 숫자로 표시합니다.
           </li>
           <li>
-            <strong>배경색(5열 동일)</strong>: 내담자 성별 기준으로 열 전체에{' '}
+            <strong>배경색(5열·남/여 동일)</strong>:{' '}
             <span
               className="inline-block h-2 w-3 rounded-sm border border-sky-200 align-middle"
-              style={{ background: backgroundGender === 'female' ? ZONE_PINK : ZONE_SKY }}
+              style={{ background: ZONE_SKY }}
             />{' '}
             하단(C)·{' '}
             <span className="inline-block h-2 w-3 rounded-sm border border-gray-200 align-middle bg-white" />{' '}
             중간(B)·{' '}
             <span
-              className="inline-block h-2 w-3 rounded-sm border border-sky-200 align-middle"
-              style={{ background: backgroundGender === 'female' ? ZONE_PINK : ZONE_SKY }}
+              className="inline-block h-2 w-3 rounded-sm border border-red-200 align-middle"
+              style={{ background: ZONE_PINK }}
             />{' '}
-            상단(A) 3단. 구간 <strong>높이</strong>는 해당 성별 3단계 컷(척도마다 다름). 점선(12.5)은
+            상단(A). 구간 <strong>높이</strong>는 내담자(또는 테스트) 성별 3단계 컷(척도마다 다름). 점선(12.5)은
             참고 기준선입니다.
-            {' '}
-            배경 기준:{' '}
-            <strong>{backgroundGender === 'female' ? '여성(분홍)' : '남성(하늘)'}</strong>
             {!genderProvided ? (
-              <span className="text-gray-600"> — 성별 미입력(기본 남성 기준)</span>
+              <span className="text-gray-600"> 테스트 성별: 새로고침 시 남/여 구간 높이 교대.</span>
             ) : null}
-            .
           </li>
         </ol>
         <p className="border-t border-sky-200 pt-2 text-gray-700">
