@@ -1,6 +1,6 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import { useCallback, useLayoutEffect, useState, type ReactNode } from 'react';
 import {
   KTAA_GRAPH_ZONES,
   normalizeEgoOkGender,
@@ -36,42 +36,48 @@ const Y_TICKS = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50];
 
 const COLUMN_ORDER = ['CP', 'NP', 'A', 'FC', 'AC'] as const;
 
-const CHART_MARGIN = { top: 40, right: 16, left: 38, bottom: 4 };
+const Y_AXIS_WIDTH = 32;
+/** 상단: 이고 합계 사각 라벨 여유만 (HTML 타이틀과 플롯 사이 공백 최소화) */
+const CHART_MARGIN = { top: 8, right: 16, left: Y_AXIS_WIDTH, bottom: 0 };
 
-/** 그래프 플롯(5열)과 가로 정렬 — Y축 여백 + plot 폭 */
+type KtaaPlotBox = { left: number; width: number };
+
+/** Recharts offset과 동일한 픽셀 박스로 5열 라벨 정렬 */
 function KtaaPlotLabelColumns({
+  plotBox,
   children,
   className = '',
 }: {
-  children: React.ReactNode;
+  plotBox: KtaaPlotBox | null;
+  children: ReactNode;
   className?: string;
 }) {
+  const fallbackLeft = CHART_MARGIN.left + Y_AXIS_WIDTH;
+  const fallbackWidth = `calc(100% - ${fallbackLeft + CHART_MARGIN.right}px)`;
+  const gridStyle = plotBox
+    ? { marginLeft: plotBox.left, width: plotBox.width }
+    : { marginLeft: fallbackLeft, width: fallbackWidth };
+
   return (
-    <div className={`flex w-full ${className}`}>
-      <div className="shrink-0" style={{ width: CHART_MARGIN.left }} aria-hidden />
-      <div
-        className="grid min-w-0 flex-1 grid-cols-5 gap-0"
-        style={{ marginRight: CHART_MARGIN.right }}
-      >
+    <div className={`w-full ${className}`}>
+      <div className="grid grid-cols-5 gap-0" style={gridStyle}>
         {children}
       </div>
     </div>
   );
 }
 
-function KtaaPlotLegendLine() {
-  return (
-    <div className="flex w-full pb-0 pt-0">
-      <div className="shrink-0" style={{ width: CHART_MARGIN.left }} aria-hidden />
-      <p
-        className="min-w-0 flex-1 text-center text-[10px] leading-tight text-gray-500 sm:text-xs"
-        style={{ marginRight: CHART_MARGIN.right }}
-      >
-        배경: 각 열 <span className="text-sky-700">← 남(청)</span> ·{' '}
-        <span className="text-rose-600">여(붉은) →</span>
-      </p>
-    </div>
-  );
+function KtaaPlotLayoutReporter(props: {
+  offset?: { left: number; top: number; width: number; height: number };
+  onPlotBox?: (box: KtaaPlotBox) => void;
+}) {
+  const { offset, onPlotBox } = props;
+  useLayoutEffect(() => {
+    if (offset?.width && onPlotBox) {
+      onPlotBox({ left: offset.left, width: offset.width });
+    }
+  }, [offset?.left, offset?.width, onPlotBox]);
+  return null;
 }
 
 const PLOT_FRAME_STROKE = '#64748b';
@@ -311,6 +317,12 @@ export default function EgoOkKtaaCompositeChart({
   gender?: string;
 }) {
   const subjectGender: EgoOkGender = normalizeEgoOkGender(genderInput);
+  const [plotBox, setPlotBox] = useState<KtaaPlotBox | null>(null);
+  const handlePlotBox = useCallback((box: KtaaPlotBox) => {
+    setPlotBox((prev) =>
+      prev && prev.left === box.left && prev.width === box.width ? prev : box,
+    );
+  }, []);
   const data: ChartRow[] = columns.map((col) => ({
     ...col,
     xLabel: col.codeLabel,
@@ -326,12 +338,12 @@ export default function EgoOkKtaaCompositeChart({
         </p>
       </div>
 
-      <KtaaPlotLabelColumns className="pt-1">
+      <KtaaPlotLabelColumns plotBox={plotBox} className="leading-none">
         {columns.map((col, index) => (
           <div
             key={col.id}
             className={`flex items-center justify-center px-0.5 text-center text-[10px] font-medium leading-tight text-gray-700 sm:text-xs ${
-              index < columns.length - 1 ? 'border-r-2 border-slate-400/60' : ''
+              index < columns.length - 1 ? 'border-r-2 border-slate-500/80' : ''
             }`}
           >
             {col.topLabel}
@@ -339,9 +351,7 @@ export default function EgoOkKtaaCompositeChart({
         ))}
       </KtaaPlotLabelColumns>
 
-      <KtaaPlotLegendLine />
-
-      <div className="relative w-full pt-0" style={{ height: CHART_PLOT_HEIGHT_PX }}>
+      <div className="relative w-full leading-none" style={{ height: CHART_PLOT_HEIGHT_PX }}>
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={data} margin={CHART_MARGIN} style={{ background: 'transparent' }}>
             <Customized component={KtaaPlotBackground} />
@@ -358,7 +368,7 @@ export default function EgoOkKtaaCompositeChart({
               ticks={Y_TICKS}
               tick={{ fill: '#64748b', fontSize: 10 }}
               axisLine={{ stroke: '#94a3b8' }}
-              width={32}
+              width={Y_AXIS_WIDTH}
             />
             <XAxis
               dataKey="xLabel"
@@ -394,16 +404,21 @@ export default function EgoOkKtaaCompositeChart({
               isAnimationActive={false}
             />
             <Customized component={KtaaPlotFrameBorder} />
+            <Customized
+              component={(props: { offset?: { left: number; top: number; width: number; height: number } }) => (
+                <KtaaPlotLayoutReporter offset={props.offset} onPlotBox={handlePlotBox} />
+              )}
+            />
           </ComposedChart>
         </ResponsiveContainer>
       </div>
 
-      <KtaaPlotLabelColumns className="-mt-0.5 border-t border-gray-200 pt-0.5">
+      <KtaaPlotLabelColumns plotBox={plotBox} className="leading-none">
         {columns.map((col, index) => (
           <div
             key={`${col.id}-bottom`}
             className={`flex items-center justify-center px-0.5 text-center text-[10px] text-gray-600 sm:text-xs ${
-              index < columns.length - 1 ? 'border-r-2 border-slate-400/60' : ''
+              index < columns.length - 1 ? 'border-r-2 border-slate-500/80' : ''
             }`}
           >
             {col.bottomLabel}
@@ -411,14 +426,14 @@ export default function EgoOkKtaaCompositeChart({
         ))}
       </KtaaPlotLabelColumns>
 
-      <KtaaPlotLabelColumns className="pb-2 pt-0.5">
+      <KtaaPlotLabelColumns plotBox={plotBox} className="pb-2 leading-none">
         {columns.map((col, index) => {
           const isA = col.id === 'A';
           return (
             <div
               key={`${col.id}-code`}
               className={`flex items-center justify-center ${
-                index < columns.length - 1 ? 'border-r-2 border-slate-400/60' : ''
+                index < columns.length - 1 ? 'border-r-2 border-slate-500/80' : ''
               }`}
             >
               <span
