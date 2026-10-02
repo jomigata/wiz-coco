@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import {
   KTAA_GRAPH_ZONES,
   normalizeEgoOkGender,
@@ -35,7 +36,43 @@ const Y_TICKS = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50];
 
 const COLUMN_ORDER = ['CP', 'NP', 'A', 'FC', 'AC'] as const;
 
-const CHART_MARGIN = { top: 40, right: 16, left: 38, bottom: 12 };
+const CHART_MARGIN = { top: 40, right: 16, left: 38, bottom: 4 };
+
+/** 그래프 플롯(5열)과 가로 정렬 — Y축 여백 + plot 폭 */
+function KtaaPlotLabelColumns({
+  children,
+  className = '',
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={`flex w-full ${className}`}>
+      <div className="shrink-0" style={{ width: CHART_MARGIN.left }} aria-hidden />
+      <div
+        className="grid min-w-0 flex-1 grid-cols-5 gap-0"
+        style={{ marginRight: CHART_MARGIN.right }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function KtaaPlotLegendLine() {
+  return (
+    <div className="flex w-full pb-0 pt-0">
+      <div className="shrink-0" style={{ width: CHART_MARGIN.left }} aria-hidden />
+      <p
+        className="min-w-0 flex-1 text-center text-[10px] leading-tight text-gray-500 sm:text-xs"
+        style={{ marginRight: CHART_MARGIN.right }}
+      >
+        배경: 각 열 <span className="text-sky-700">← 남(청)</span> ·{' '}
+        <span className="text-rose-600">여(붉은) →</span>
+      </p>
+    </div>
+  );
+}
 
 const PLOT_FRAME_STROKE = '#64748b';
 
@@ -289,23 +326,22 @@ export default function EgoOkKtaaCompositeChart({
         </p>
       </div>
 
-      <div className="grid grid-cols-5 gap-0 border-b border-gray-200 px-2 pt-3 text-center text-[10px] leading-tight text-gray-700 sm:text-xs">
+      <KtaaPlotLabelColumns className="pt-1">
         {columns.map((col, index) => (
           <div
             key={col.id}
-            className={`px-1 font-medium ${index < columns.length - 1 ? 'border-r-2 border-slate-400/60' : ''}`}
+            className={`flex items-center justify-center px-0.5 text-center text-[10px] font-medium leading-tight text-gray-700 sm:text-xs ${
+              index < columns.length - 1 ? 'border-r-2 border-slate-400/60' : ''
+            }`}
           >
             {col.topLabel}
           </div>
         ))}
-      </div>
+      </KtaaPlotLabelColumns>
 
-      <p className="px-3 pb-1 text-center text-[10px] text-gray-500 sm:text-xs">
-        배경: 각 열 <span className="text-sky-700">← 남(청)</span> ·{' '}
-        <span className="text-rose-600">여(붉은) →</span>
-      </p>
+      <KtaaPlotLegendLine />
 
-      <div className="relative w-full px-1 pt-1" style={{ height: CHART_PLOT_HEIGHT_PX }}>
+      <div className="relative w-full pt-0" style={{ height: CHART_PLOT_HEIGHT_PX }}>
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={data} margin={CHART_MARGIN} style={{ background: 'transparent' }}>
             <Customized component={KtaaPlotBackground} />
@@ -357,31 +393,37 @@ export default function EgoOkKtaaCompositeChart({
               connectNulls={false}
               isAnimationActive={false}
             />
+            <Customized component={KtaaPlotFrameBorder} />
           </ComposedChart>
         </ResponsiveContainer>
       </div>
 
-      <div className="grid grid-cols-5 gap-0 border-t border-gray-200 px-2 py-2 text-center text-[10px] text-gray-600 sm:text-xs">
+      <KtaaPlotLabelColumns className="-mt-0.5 border-t border-gray-200 pt-0.5">
         {columns.map((col, index) => (
           <div
             key={`${col.id}-bottom`}
-            className={index < columns.length - 1 ? 'border-r-2 border-slate-400/60' : ''}
+            className={`flex items-center justify-center px-0.5 text-center text-[10px] text-gray-600 sm:text-xs ${
+              index < columns.length - 1 ? 'border-r-2 border-slate-400/60' : ''
+            }`}
           >
             {col.bottomLabel}
           </div>
         ))}
-      </div>
+      </KtaaPlotLabelColumns>
 
-      <div className="grid grid-cols-5 gap-1 px-2 pb-3">
-        {columns.map((col) => {
+      <KtaaPlotLabelColumns className="pb-2 pt-0.5">
+        {columns.map((col, index) => {
           const isA = col.id === 'A';
           return (
-            <div key={`${col.id}-code`} className="flex justify-center">
+            <div
+              key={`${col.id}-code`}
+              className={`flex items-center justify-center ${
+                index < columns.length - 1 ? 'border-r-2 border-slate-400/60' : ''
+              }`}
+            >
               <span
                 className={`rounded border px-2 py-0.5 text-xs font-bold ${
-                  isA
-                    ? 'border-sky-500 text-sky-700'
-                    : 'border-red-400 text-red-600'
+                  isA ? 'border-sky-500 text-sky-700' : 'border-red-400 text-red-600'
                 }`}
               >
                 {col.codeLabel}
@@ -392,7 +434,7 @@ export default function EgoOkKtaaCompositeChart({
             </div>
           );
         })}
-      </div>
+      </KtaaPlotLabelColumns>
 
       <div className="mx-3 mb-4 space-y-3 rounded border border-sky-300 bg-sky-50/80 px-4 py-3 text-[11px] leading-relaxed text-gray-800 sm:text-xs">
         <p className="font-bold text-sky-900">점수가 그래프에 표시되는 방식</p>
