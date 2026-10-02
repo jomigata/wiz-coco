@@ -256,25 +256,58 @@ function sumLabelBelowDot(cx: number, cy: number, boxW: number): SumLabelRect {
   };
 }
 
-/** 점수 큰 쪽 위 · 작은 쪽 아래. 동점이면 오케이 위 · 이고 아래 */
+function sumLabelAboveBar(cx: number, cyBarTop: number, boxW: number): SumLabelRect {
+  return {
+    x: cx - boxW / 2,
+    y: cyBarTop - SUM_LABEL_GAP - SUM_LABEL_BOX_H,
+    w: boxW,
+    textX: cx,
+  };
+}
+
+function sumLabelRectsOverlapY(a: SumLabelRect, b: SumLabelRect): boolean {
+  const aTop = a.y;
+  const aBottom = a.y + SUM_LABEL_BOX_H;
+  const bTop = b.y;
+  const bBottom = b.y + SUM_LABEL_BOX_H;
+  return aTop < bBottom && bTop < aBottom;
+}
+
+/** 겹치지 않으면 이고=막대 위 · 오케이=점 근처(점수 큰 쪽 위). 겹치면 둘 다 오케이 점 기준 */
 function resolveOkEgoSumLabels(
   ok: number,
   ego: number,
   cx: number,
-  cy: number,
+  cyOk: number,
+  cyBarTop: number,
 ): { ok: SumLabelRect; ego: SumLabelRect } {
   const okW = sumLabelBoxWidth(ok);
   const egoW = sumLabelBoxWidth(ego);
+  const egoAboveBar = sumLabelAboveBar(cx, cyBarTop, egoW);
   const okOnTop = ok >= ego;
+  const okPreferred = okOnTop
+    ? sumLabelAboveDot(cx, cyOk, okW)
+    : sumLabelBelowDot(cx, cyOk, okW);
+  const okAlternate = okOnTop
+    ? sumLabelBelowDot(cx, cyOk, okW)
+    : sumLabelAboveDot(cx, cyOk, okW);
+
+  if (!sumLabelRectsOverlapY(egoAboveBar, okPreferred)) {
+    return { ok: okPreferred, ego: egoAboveBar };
+  }
+  if (!sumLabelRectsOverlapY(egoAboveBar, okAlternate)) {
+    return { ok: okAlternate, ego: egoAboveBar };
+  }
+
   if (okOnTop) {
     return {
-      ok: sumLabelAboveDot(cx, cy, okW),
-      ego: sumLabelBelowDot(cx, cy, egoW),
+      ok: sumLabelAboveDot(cx, cyOk, okW),
+      ego: sumLabelBelowDot(cx, cyOk, egoW),
     };
   }
   return {
-    ok: sumLabelBelowDot(cx, cy, okW),
-    ego: sumLabelAboveDot(cx, cy, egoW),
+    ok: sumLabelBelowDot(cx, cyOk, okW),
+    ego: sumLabelAboveDot(cx, cyOk, egoW),
   };
 }
 
@@ -336,12 +369,7 @@ function createKtaaOkEgoSumLabels(chartData: ChartRow[]) {
           if (row.id === 'A') {
             const cyBarTop = yScale(row.egoTotal);
             const egoW = sumLabelBoxWidth(row.egoTotal);
-            const egoRect: SumLabelRect = {
-              x: cx - egoW / 2,
-              y: cyBarTop - SUM_LABEL_GAP - SUM_LABEL_BOX_H,
-              w: egoW,
-              textX: cx,
-            };
+            const egoRect = sumLabelAboveBar(cx, cyBarTop, egoW);
             return (
               <SumLabelBox
                 key={`sums-${row.id}`}
@@ -355,12 +383,14 @@ function createKtaaOkEgoSumLabels(chartData: ChartRow[]) {
 
           const ok = row.okLineCpNp ?? row.okLineFcAc;
           if (ok == null) return null;
-          const cy = yScale(ok);
+          const cyOk = yScale(ok);
+          const cyBarTop = yScale(row.egoTotal);
           const { ok: okRect, ego: egoRect } = resolveOkEgoSumLabels(
             ok,
             row.egoTotal,
             cx,
-            cy,
+            cyOk,
+            cyBarTop,
           );
           return (
             <g key={`sums-${row.id}`}>
@@ -590,10 +620,9 @@ export default function EgoOkKtaaCompositeChart({
             <strong>주황(아래)</strong>은 부정 문항 합(0~25),{' '}
             <span className="inline-block h-2 w-3 rounded-sm align-middle" style={{ background: EGO_POS_COLOR }} />{' '}
             <strong>하늘(위)</strong>은 긍정 문항 합(0~25). 막대 안 숫자는 각 층 점수,{' '}
-            <strong>막대 꼭대기 숫자</strong>는 두 층을 더한 <strong>이고그램 척도 총점(0~50)</strong>입니다. CP·NP·FC·AC
-            열에서는 이고 합계·오케이 합계를 <strong>같은 열의 오케이 점</strong> 기준 위·아래에 두며, 점수가
-            높은 쪽이 위(동점이면 오케이 위)입니다. <strong>A 열</strong>은 이고 합계만 막대 꼭대기 바로 위에
-            표시합니다.
+            <strong>막대 꼭대기 숫자</strong>는 두 층을 더한 <strong>이고그램 척도 총점(0~50)</strong>입니다.             CP·NP·FC·AC 열에서는 <strong>겹치지 않을 때</strong> 이고 합계는 막대 꼭대기 바로 위, 오케이 합계는
+            오케이 점 근처(점수 큰 쪽 위)에 둡니다. <strong>겹치면</strong> 둘 다 오케이 점 기준 위·아래(점수 큰 쪽
+            위, 동점이면 오케이 위)로 배치합니다. <strong>A 열</strong>은 이고 합계만 막대 위에 표시합니다.
           </li>
           <li>
             <strong>적색 선 = 오케이그램</strong>: U−·U+·I+·I− 척도 각 10문항 합(0~50)을 같은 열에
