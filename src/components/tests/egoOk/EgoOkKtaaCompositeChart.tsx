@@ -273,6 +273,39 @@ function sumLabelRectsOverlapY(a: SumLabelRect, b: SumLabelRect): boolean {
   return aTop < bBottom && bTop < aBottom;
 }
 
+/** 이고 합계 박스 vs 오케이 합계 박스 · 점 · 라인(점 Y) */
+function egoSumOverlapsOkObstacles(
+  ego: SumLabelRect,
+  cyOk: number,
+  okRect: SumLabelRect,
+): boolean {
+  if (sumLabelRectsOverlapY(ego, okRect)) return true;
+  const pad = SUM_LABEL_GAP;
+  const blockTop = cyOk - OK_DOT_R - pad;
+  const blockBottom = cyOk + OK_DOT_R + pad;
+  const egoTop = ego.y;
+  const egoBottom = ego.y + SUM_LABEL_BOX_H;
+  return egoTop < blockBottom && blockTop < egoBottom;
+}
+
+const EGO_SUM_NUDGE_MAX_PX = 140;
+
+/** 겹치면 이고 합계만 위·아래로 이동(오케이 합계·점·선 위치는 유지) */
+function nudgeEgoSumVertically(
+  ego: SumLabelRect,
+  cyOk: number,
+  okRect: SumLabelRect,
+): SumLabelRect {
+  if (!egoSumOverlapsOkObstacles(ego, cyOk, okRect)) return ego;
+  for (let d = 1; d <= EGO_SUM_NUDGE_MAX_PX; d++) {
+    const up: SumLabelRect = { ...ego, y: ego.y - d };
+    if (!egoSumOverlapsOkObstacles(up, cyOk, okRect)) return up;
+    const down: SumLabelRect = { ...ego, y: ego.y + d };
+    if (!egoSumOverlapsOkObstacles(down, cyOk, okRect)) return down;
+  }
+  return ego;
+}
+
 /** 겹치지 않으면 이고=막대 위 · 오케이=점 근처(점수 큰 쪽 위). 겹치면 둘 다 오케이 점 기준 */
 function resolveOkEgoSumLabels(
   ok: number,
@@ -385,13 +418,14 @@ function createKtaaOkEgoSumLabels(chartData: ChartRow[]) {
           if (ok == null) return null;
           const cyOk = yScale(ok);
           const cyBarTop = yScale(row.egoTotal);
-          const { ok: okRect, ego: egoRect } = resolveOkEgoSumLabels(
+          const { ok: okRect, ego: egoRectInitial } = resolveOkEgoSumLabels(
             ok,
             row.egoTotal,
             cx,
             cyOk,
             cyBarTop,
           );
+          const egoRect = nudgeEgoSumVertically(egoRectInitial, cyOk, okRect);
           return (
             <g key={`sums-${row.id}`}>
               <SumLabelBox
@@ -621,8 +655,9 @@ export default function EgoOkKtaaCompositeChart({
             <span className="inline-block h-2 w-3 rounded-sm align-middle" style={{ background: EGO_POS_COLOR }} />{' '}
             <strong>하늘(위)</strong>은 긍정 문항 합(0~25). 막대 안 숫자는 각 층 점수,{' '}
             <strong>막대 꼭대기 숫자</strong>는 두 층을 더한 <strong>이고그램 척도 총점(0~50)</strong>입니다.             CP·NP·FC·AC 열에서는 <strong>겹치지 않을 때</strong> 이고 합계는 막대 꼭대기 바로 위, 오케이 합계는
-            오케이 점 근처(점수 큰 쪽 위)에 둡니다. <strong>겹치면</strong> 둘 다 오케이 점 기준 위·아래(점수 큰 쪽
-            위, 동점이면 오케이 위)로 배치합니다. <strong>A 열</strong>은 이고 합계만 막대 위에 표시합니다.
+            오케이 점 근처(점수 큰 쪽 위)에 둡니다. 배치 후에도 이고 합계가 오케이 <strong>선·점·합계</strong>와
+            겹치면 <strong>이고 합계만</strong> 위·아래로 조금씩 옮겨 겹침을 피합니다(오케이 쪽 위치는 유지).{' '}
+            <strong>A 열</strong>은 이고 합계만 막대 위에 표시합니다.
           </li>
           <li>
             <strong>적색 선 = 오케이그램</strong>: U−·U+·I+·I− 척도 각 10문항 합(0~50)을 같은 열에
