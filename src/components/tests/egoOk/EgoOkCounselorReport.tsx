@@ -80,7 +80,6 @@ type EgogramRadarRow = {
 };
 
 const EGOGRAM_RADAR_SKY = '#7dd3fc';
-const EGOGRAM_RADAR_PINK = '#f9a8d4';
 
 function egogramRadarTooltipLine(row: EgogramRadarRow): string {
   const name = row.label.replace(/\s*\([A-Za-z+]+\)\s*$/, '').replace(/\s+/g, '');
@@ -90,9 +89,9 @@ function egogramRadarTooltipLine(row: EgogramRadarRow): string {
 
 function EgogramFiveScaleRadarChart({ data }: { data: EgogramRadarRow[] }) {
   const gradientId = useId().replace(/:/g, '');
-  const FillGradientDefs = useMemo(
+  const FillOpacityMaskDefs = useMemo(
     () =>
-      function EgogramRadarFillGradientDefs() {
+      function EgogramRadarFillOpacityMaskDefs() {
         return (
           <defs>
             <radialGradient
@@ -104,10 +103,9 @@ function EgogramFiveScaleRadarChart({ data }: { data: EgogramRadarRow[] }) {
               fx="0.5"
               fy="0.5"
             >
-              <stop offset="0%" stopColor={EGOGRAM_RADAR_SKY} />
-              <stop offset="38%" stopColor={EGOGRAM_RADAR_SKY} />
-              <stop offset="72%" stopColor="#f0abfc" />
-              <stop offset="100%" stopColor={EGOGRAM_RADAR_PINK} />
+              <stop offset="0%" stopColor={EGOGRAM_RADAR_SKY} stopOpacity={0} />
+              <stop offset="45%" stopColor={EGOGRAM_RADAR_SKY} stopOpacity={0.12} />
+              <stop offset="100%" stopColor={EGOGRAM_RADAR_SKY} stopOpacity={0.52} />
             </radialGradient>
           </defs>
         );
@@ -118,7 +116,7 @@ function EgogramFiveScaleRadarChart({ data }: { data: EgogramRadarRow[] }) {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <RadarChart data={data} outerRadius="78%" cx="50%" cy="52%">
-        <Customized component={FillGradientDefs} />
+        <Customized component={FillOpacityMaskDefs} />
         <PolarGrid
           gridType="polygon"
           radialLines
