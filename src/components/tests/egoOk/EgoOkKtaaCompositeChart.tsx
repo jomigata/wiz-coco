@@ -17,6 +17,7 @@ import {
   ResponsiveContainer,
   ReferenceLine,
   LabelList,
+  Customized,
 } from 'recharts';
 
 const EGO_NEG_COLOR = '#e8954a';
@@ -34,73 +35,130 @@ const Y_TICKS = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50];
 
 const COLUMN_ORDER = ['CP', 'NP', 'A', 'FC', 'AC'] as const;
 
-/** 플롯 영역(inset) — ComposedChart margin과 맞춤 */
-const PLOT_INSET = { top: '7%', right: '3%', bottom: '4%', left: '7%' };
+const CHART_MARGIN = { top: 40, right: 16, left: 38, bottom: 12 };
 
-function KtaaZoneStack({ band, tint }: { band: KtaaGraphZoneBounds; tint: 'male' | 'female' }) {
-  const redH = (band.redTop / 50) * 100;
-  const whiteH = ((band.whiteTop - band.redTop) / 50) * 100;
-  const blueH = ((50 - band.whiteTop) / 50) * 100;
-  const colors = GENDER_ZONE_COLORS[tint];
+const PLOT_FRAME_STROKE = '#64748b';
+
+type YScale = ((v: number) => number) & { bandwidth?: () => number };
+
+function ktaaZoneRects(
+  x: number,
+  w: number,
+  band: KtaaGraphZoneBounds,
+  colors: (typeof GENDER_ZONE_COLORS)[keyof typeof GENDER_ZONE_COLORS],
+  scale: YScale,
+  keyPrefix: string,
+) {
+  const yBand = (from: number, to: number, fill: string, key: string) => {
+    const y1 = scale(from);
+    const y2 = scale(to);
+    const y = Math.min(y1, y2);
+    const h = Math.abs(y2 - y1);
+    return <rect key={key} x={x} y={y} width={w} height={h} fill={fill} />;
+  };
+  return [
+    yBand(0, band.redTop, colors.bottom, `${keyPrefix}-c`),
+    yBand(band.redTop, band.whiteTop, colors.middle, `${keyPrefix}-b`),
+    yBand(band.whiteTop, 50, colors.top, `${keyPrefix}-a`),
+  ];
+}
+
+/** 플롯 사각형 안에만 배경·열 구분선 (Recharts offset과 1:1) */
+function KtaaPlotBackground(props: {
+  offset?: { left: number; top: number; width: number; height: number };
+  yAxisMap?: Record<string, { scale: YScale }>;
+}) {
+  const { offset, yAxisMap } = props;
+  if (!offset?.width || !yAxisMap) return null;
+  const scale = Object.values(yAxisMap)[0]?.scale;
+  if (!scale) return null;
+
+  const { left, top, width, height } = offset;
+  const colW = width / COLUMN_ORDER.length;
+  const halfW = colW / 2;
+  const clipId = 'ktaa-plot-clip';
+
   return (
-    <>
-      <div
-        className="absolute inset-x-0 bottom-0"
-        style={{ height: `${redH}%`, backgroundColor: colors.bottom }}
-      />
-      <div
-        className="absolute inset-x-0"
-        style={{ bottom: `${redH}%`, height: `${whiteH}%`, backgroundColor: colors.middle }}
-      />
-      <div
-        className="absolute inset-x-0 top-0"
-        style={{ height: `${blueH}%`, backgroundColor: colors.top }}
-      />
-    </>
+    <g>
+      <defs>
+        <clipPath id={clipId}>
+          <rect x={left} y={top} width={width} height={height} />
+        </clipPath>
+      </defs>
+      <g clipPath={`url(#${clipId})`}>
+        {COLUMN_ORDER.map((code, i) => {
+          const xCol = left + i * colW;
+          return (
+            <g key={code}>
+              {ktaaZoneRects(
+                xCol,
+                halfW,
+                KTAA_GRAPH_ZONES.male[code],
+                GENDER_ZONE_COLORS.male,
+                scale,
+                `${code}-m`,
+              )}
+              {ktaaZoneRects(
+                xCol + halfW,
+                halfW,
+                KTAA_GRAPH_ZONES.female[code],
+                GENDER_ZONE_COLORS.female,
+                scale,
+                `${code}-f`,
+              )}
+              <line
+                x1={xCol + halfW}
+                y1={top}
+                x2={xCol + halfW}
+                y2={top + height}
+                stroke={PLOT_FRAME_STROKE}
+                strokeWidth={1}
+                strokeOpacity={0.45}
+              />
+            </g>
+          );
+        })}
+        {[1, 2, 3, 4].map((k) => (
+          <line
+            key={`col-${k}`}
+            x1={left + k * colW}
+            y1={top}
+            x2={left + k * colW}
+            y2={top + height}
+            stroke={PLOT_FRAME_STROKE}
+            strokeWidth={2}
+          />
+        ))}
+      </g>
+    </g>
   );
 }
 
-/** 열마다 좌(남)·우(여) 배경 구간 높이 — KTAA 종합 그래프 샘플과 동일 */
-function KtaaColumnBackgrounds() {
+function KtaaPlotFrameBorder(props: {
+  offset?: { left: number; top: number; width: number; height: number };
+}) {
+  const { offset } = props;
+  if (!offset?.width) return null;
+  const { left, top, width, height } = offset;
   return (
-    <div
-      className="pointer-events-none absolute z-0 flex"
-      style={{ top: PLOT_INSET.top, right: PLOT_INSET.right, bottom: PLOT_INSET.bottom, left: PLOT_INSET.left }}
-    >
-      {COLUMN_ORDER.map((code) => (
-        <div key={code} className="relative flex h-full min-w-0 flex-1">
-          <div className="relative h-full w-1/2 border-r border-slate-400/70">
-            <KtaaZoneStack band={KTAA_GRAPH_ZONES.male[code]} tint="male" />
-          </div>
-          <div className="relative h-full w-1/2">
-            <KtaaZoneStack band={KTAA_GRAPH_ZONES.female[code]} tint="female" />
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-/** 5개 척도 열 구분선 (배경·차트 위) */
-function KtaaColumnDividers() {
-  return (
-    <div
-      className="pointer-events-none absolute z-[2] flex"
-      style={{ top: PLOT_INSET.top, right: PLOT_INSET.right, bottom: PLOT_INSET.bottom, left: PLOT_INSET.left }}
-    >
-      {COLUMN_ORDER.map((code, index) => (
-        <div
-          key={`div-${code}`}
-          className={`h-full min-w-0 flex-1 ${index < COLUMN_ORDER.length - 1 ? 'border-r-2 border-slate-500/75' : ''}`}
-        />
-      ))}
-    </div>
+    <rect
+      x={left}
+      y={top}
+      width={width}
+      height={height}
+      fill="none"
+      stroke={PLOT_FRAME_STROKE}
+      strokeWidth={2}
+    />
   );
 }
 
 type ChartRow = EgoOkCompositeColumn & {
   xLabel: string;
-  okLinePlot: number | null;
+  /** CP·NP 구간만 (A 미연결) */
+  okLineCpNp: number | null;
+  /** FC·AC 구간만 */
+  okLineFcAc: number | null;
 };
 
 const OK_LABEL_ABOVE_MIN_CY = 36;
@@ -112,8 +170,13 @@ function OkLineDot(props: {
   value?: number | null;
 }) {
   const { cx, cy, payload } = props;
-  if (cx == null || cy == null || payload?.okLinePlot == null) return null;
-  const v = payload.okLinePlot;
+  const v =
+    payload?.okLineCpNp != null
+      ? payload.okLineCpNp
+      : payload?.okLineFcAc != null
+        ? payload.okLineFcAc
+        : null;
+  if (cx == null || cy == null || v == null) return null;
   const labelAbove = cy >= OK_LABEL_ABOVE_MIN_CY;
   const rectY = labelAbove ? cy - 28 : cy + 10;
   const textY = labelAbove ? cy - 15 : cy + 23;
@@ -125,13 +188,52 @@ function OkLineDot(props: {
         y={rectY}
         width={28}
         height={18}
-        rx={2}
+        rx={0}
         fill="#fff"
         stroke={OK_LINE_COLOR}
         strokeWidth={1}
       />
       <text x={cx} y={textY} textAnchor="middle" fill={OK_LINE_COLOR} fontSize={11} fontWeight={700}>
         {v}
+      </text>
+    </g>
+  );
+}
+
+function EgoTotalBoxLabel(props: {
+  x?: number;
+  y?: number;
+  width?: number;
+  value?: number | string;
+}) {
+  const { x, y, width, value } = props;
+  if (value == null || value === '' || value === 0 || x == null || y == null) return null;
+  const text = String(value);
+  const cx = x + (width ?? 0) / 2;
+  const boxW = Math.max(26, text.length * 8 + 10);
+  const boxH = 18;
+  const boxY = y - boxH - 3;
+  return (
+    <g>
+      <rect
+        x={cx - boxW / 2}
+        y={boxY}
+        width={boxW}
+        height={boxH}
+        rx={0}
+        fill="#fff"
+        stroke="#475569"
+        strokeWidth={1}
+      />
+      <text
+        x={cx}
+        y={boxY + 13}
+        textAnchor="middle"
+        fill="#334155"
+        fontSize={11}
+        fontWeight={700}
+      >
+        {text}
       </text>
     </g>
   );
@@ -175,7 +277,8 @@ export default function EgoOkKtaaCompositeChart({
   const data: ChartRow[] = columns.map((col) => ({
     ...col,
     xLabel: col.codeLabel,
-    okLinePlot: col.okLine,
+    okLineCpNp: col.id === 'CP' || col.id === 'NP' ? col.okLine : null,
+    okLineFcAc: col.id === 'FC' || col.id === 'AC' ? col.okLine : null,
   }));
 
   return (
@@ -202,17 +305,10 @@ export default function EgoOkKtaaCompositeChart({
         <span className="text-rose-600">여(붉은) →</span>
       </p>
 
-      <div
-        className="relative w-full overflow-hidden px-1 pt-1"
-        style={{ height: CHART_PLOT_HEIGHT_PX }}
-      >
-        <KtaaColumnBackgrounds />
-        <ResponsiveContainer width="100%" height="100%" className="relative z-[1]">
-          <ComposedChart
-            data={data}
-            margin={{ top: 40, right: 16, left: 38, bottom: 12 }}
-            style={{ background: 'transparent' }}
-          >
+      <div className="relative w-full px-1 pt-1" style={{ height: CHART_PLOT_HEIGHT_PX }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <ComposedChart data={data} margin={CHART_MARGIN} style={{ background: 'transparent' }}>
+            <Customized component={KtaaPlotBackground} />
             <ReferenceLine
               y={12.5}
               stroke="#e57373"
@@ -231,7 +327,7 @@ export default function EgoOkKtaaCompositeChart({
             <XAxis
               dataKey="xLabel"
               tick={{ fill: 'transparent', fontSize: 1 }}
-              axisLine={{ stroke: '#94a3b8' }}
+              axisLine={false}
               tickLine={false}
             />
             <Bar dataKey="egoNegative" stackId="ego" fill={EGO_NEG_COLOR} barSize={52} radius={[0, 0, 0, 0]}>
@@ -239,31 +335,40 @@ export default function EgoOkKtaaCompositeChart({
             </Bar>
             <Bar dataKey="egoPositive" stackId="ego" fill={EGO_POS_COLOR} barSize={52} radius={[2, 2, 0, 0]}>
               <LabelList dataKey="egoPositive" content={<EgoSegmentLabel />} />
-              <LabelList
-                dataKey="egoTotal"
-                position="top"
-                formatter={(v: number) => (v > 0 ? String(v) : '')}
-                className="fill-gray-700 text-[11px] font-bold"
-              />
+              <LabelList dataKey="egoTotal" content={<EgoTotalBoxLabel />} />
             </Bar>
             <Line
               type="linear"
-              dataKey="okLinePlot"
+              dataKey="okLineCpNp"
               stroke={OK_LINE_COLOR}
               strokeWidth={3}
               dot={<OkLineDot />}
               activeDot={false}
-              connectNulls
+              connectNulls={false}
+              isAnimationActive={false}
+            />
+            <Line
+              type="linear"
+              dataKey="okLineFcAc"
+              stroke={OK_LINE_COLOR}
+              strokeWidth={3}
+              dot={<OkLineDot />}
+              activeDot={false}
+              connectNulls={false}
               isAnimationActive={false}
             />
           </ComposedChart>
         </ResponsiveContainer>
-        <KtaaColumnDividers />
       </div>
 
-      <div className="grid grid-cols-5 gap-0 border-t border-gray-100 px-2 py-2 text-center text-[10px] text-gray-600 sm:text-xs">
-        {columns.map((col) => (
-          <div key={`${col.id}-bottom`}>{col.bottomLabel}</div>
+      <div className="grid grid-cols-5 gap-0 border-t border-gray-200 px-2 py-2 text-center text-[10px] text-gray-600 sm:text-xs">
+        {columns.map((col, index) => (
+          <div
+            key={`${col.id}-bottom`}
+            className={index < columns.length - 1 ? 'border-r-2 border-slate-400/60' : ''}
+          >
+            {col.bottomLabel}
+          </div>
         ))}
       </div>
 
@@ -307,8 +412,9 @@ export default function EgoOkKtaaCompositeChart({
           </li>
           <li>
             <strong>적색 선 = 오케이그램</strong>: U−·U+·I+·I− 척도 각 10문항 합(0~50)을 같은 열에
-            표시합니다. <strong>CP→U−, NP→U+, FC→I+, AC→I−</strong>. 성인(A) 열에는 오케이 선이 없습니다.
-            선 위 숫자가 해당 오케이 척도 원점수입니다.
+            표시합니다. <strong>CP→U−, NP→U+, FC→I+, AC→I−</strong>. 선은 <strong>CP–NP</strong>와{' '}
+            <strong>FC–AC</strong>만 이어지고 <strong>A 열과는 연결하지 않습니다</strong>. 막대 꼭대기
+            이고 합계(0~50)는 사각 테두리 안 숫자로 표시합니다.
           </li>
           <li>
             <strong>배경색(열·성별마다 다름)</strong>: KTAA 종합 그래프와 같이 각 열을{' '}
