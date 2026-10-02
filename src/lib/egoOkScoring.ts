@@ -1,4 +1,5 @@
 import { EGO_OK_QUESTIONS } from '@/data/egoOkQuestions';
+import { buildPattern243Plus, type Pattern243Plus } from '@/lib/egogram243Plus';
 import patternSource from '../../docs/internal-materials/ego-ok/patterns-243-reports.json';
 
 export type EgoOkGender = 'male' | 'female';
@@ -58,6 +59,8 @@ export type EgoOkOkScore = {
 export type EgoOkReport = {
   itemBankId: string;
   patternCode: string;
+  /** 243Plus 9단계 — CP~AC 각 척도 + 그룹(CP+NP, A, FC+AC) */
+  pattern243Plus: Pattern243Plus;
   pattern243: {
     basicPattern: string;
     sections: Record<string, string>;
@@ -84,6 +87,8 @@ export type EgoOkReport = {
   plus243: {
     cpNpSum: number;
     cpNpLevel: string;
+    aSum: number;
+    aLevel: string;
     fcAcSum: number;
     fcAcLevel: string;
   };
@@ -339,19 +344,6 @@ function classifyLifePosition(uAxis: number, iAxis: number): { kind: LifePositio
   return { kind: '자타평평형', summary: '타인·자기 축 모두 −1~+1 범위의 평형에 가깝습니다.' };
 }
 
-function plus243Label(sum: number): string {
-  if (sum >= 46) return 'A³';
-  if (sum >= 41) return 'A²';
-  if (sum >= 37) return 'A¹';
-  if (sum >= 33) return 'B³';
-  if (sum >= 28) return 'B²';
-  if (sum >= 24) return 'B¹';
-  if (sum >= 19) return 'C³';
-  if (sum >= 15) return 'C²';
-  if (sum >= 10) return 'C¹';
-  return '—';
-}
-
 export function computeEgoOkReport(
   answers: Record<string, number>,
   genderInput: string | undefined,
@@ -444,6 +436,8 @@ export function computeEgoOkReport(
 
   const cpNpSum = cp + np;
   const fcAcSum = fc + ac;
+  const aRaw = egogram.find((s) => s.id === 'A')!.raw;
+  const pattern243Plus = buildPattern243Plus(egogram);
 
   const compositeChart: EgoOkCompositeColumn[] = (['CP', 'NP', 'A', 'FC', 'AC'] as EgoScaleId[]).map(
     (id) => {
@@ -468,6 +462,7 @@ export function computeEgoOkReport(
   return {
     itemBankId: 'ego-ok-90',
     patternCode,
+    pattern243Plus,
     pattern243: {
       basicPattern: hit?.basicPattern ?? '',
       sections: hit?.sections ?? {},
@@ -493,9 +488,11 @@ export function computeEgoOkReport(
     nonContinuityPenalty: penalty,
     plus243: {
       cpNpSum,
-      cpNpLevel: plus243Label(cpNpSum),
+      cpNpLevel: pattern243Plus.groups.cpNp.tier.label,
+      aSum: aRaw,
+      aLevel: pattern243Plus.groups.a.tier.label,
       fcAcSum,
-      fcAcLevel: plus243Label(fcAcSum),
+      fcAcLevel: pattern243Plus.groups.fcAc.tier.label,
     },
     answeredCount: orderedAnswers.filter((v) => v > 0).length,
     compositeChart,

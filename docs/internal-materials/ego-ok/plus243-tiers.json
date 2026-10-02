@@ -1,0 +1,22 @@
+{
+  "id": "ego-243plus-nine-tiers",
+  "source": "docs/internal-materials/ego-ok/README.md",
+  "note": "243Plus 9단계. 개별 척도 합(10~50) 및 그룹 합(CP+NP, A, FC+AC)에 동일 구간 적용(레거시 plus243Label과 동일).",
+  "tiers": [
+    { "stage": 9, "letter": "A", "degree": 3, "min": 46, "max": 50 },
+    { "stage": 8, "letter": "A", "degree": 2, "min": 41, "max": 45 },
+    { "stage": 7, "letter": "A", "degree": 1, "min": 37, "max": 40 },
+    { "stage": 6, "letter": "B", "degree": 3, "min": 33, "max": 36 },
+    { "stage": 5, "letter": "B", "degree": 2, "min": 28, "max": 32 },
+    { "stage": 4, "letter": "B", "degree": 1, "min": 24, "max": 27 },
+    { "stage": 3, "letter": "C", "degree": 3, "min": 19, "max": 23 },
+    { "stage": 2, "letter": "C", "degree": 2, "min": 15, "max": 18 },
+    { "stage": 1, "letter": "C", "degree": 1, "min": 10, "max": 14 }
+  ],
+  "commentBands": {
+    "deficit": [1, 2],
+    "safe": [3, 4, 5],
+    "excess": [6, 7, 8, 9]
+  },
+  "patternPlusOrder": ["CP", "NP", "A", "FC", "AC"]
+}

@@ -14,6 +14,7 @@ import {
   buildPeakEgogramEnergyInsight,
   formatEgogramEnergyHeadline,
 } from '@/lib/egogramEnergyStageComments';
+import { EGO_SCALE_PATTERN_ORDER, type Pattern243Plus, type Plus243Tier } from '@/lib/egogram243Plus';
 import { OK_LABELS, OK_SCALE_HINTS } from '@/lib/egoOkScoring';
 import { egoOkGenderToLabel } from '@/lib/egoOkTestGender';
 import type { ClientInfo } from '@/components/tests/MbtiProClientInfo';
@@ -90,14 +91,35 @@ function pickExtremeEgogramScale(scales: EgoOkScaleScore[], mode: 'max' | 'min')
   });
 }
 
+function Plus243TierGlyph({ tier, className }: { tier: Plus243Tier; className?: string }) {
+  return (
+    <span className={className}>
+      {tier.letter}
+      <sup className="ml-px align-super text-[0.55em] font-bold leading-none text-fuchsia-300">{tier.degree}</sup>
+    </span>
+  );
+}
+
+function Pattern243PlusCode({ plus, className }: { plus: Pattern243Plus; className?: string }) {
+  return (
+    <span className={`inline-flex items-baseline font-mono tracking-wide ${className ?? ''}`}>
+      {EGO_SCALE_PATTERN_ORDER.map((id) => (
+        <Plus243TierGlyph key={id} tier={plus.byScale[id]} className="text-indigo-100" />
+      ))}
+    </span>
+  );
+}
+
 function EgogramRadarSummarySubtitle({
   peakScale,
   patternCode,
+  pattern243Plus,
   basicPattern,
   missing,
 }: {
   peakScale: EgoOkScaleScore;
   patternCode: string;
+  pattern243Plus: Pattern243Plus;
   basicPattern: string;
   missing: boolean;
 }) {
@@ -106,16 +128,18 @@ function EgogramRadarSummarySubtitle({
       <p className="font-medium text-indigo-100">
         최고 이고그램 에너지 : {formatEgogramEnergyHeadline(peakScale)}
       </p>
-      <p className="text-slate-400">
-        243 패턴{' '}
-        <span className="font-mono font-semibold tracking-wide text-indigo-200">{patternCode}</span>
-        {basicPattern ? (
-          <>
-            {' '}
-            · <span className="text-slate-300">{basicPattern}</span>
-          </>
-        ) : null}
-        {missing ? <span className="text-amber-200/80"> · 기준 보고서 문장 없음</span> : null}
+      <p className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-slate-400">
+        <span>
+          243 패턴{' '}
+          <span className="font-mono font-semibold tracking-wide text-indigo-200">{patternCode}</span>
+        </span>
+        <span className="text-slate-500">·</span>
+        <span className="inline-flex flex-wrap items-baseline gap-1">
+          <span>243+ 패턴</span>
+          <Pattern243PlusCode plus={pattern243Plus} />
+        </span>
+        {basicPattern ? <span className="text-slate-300">· {basicPattern}</span> : null}
+        {missing ? <span className="text-amber-200/80">· 기준 보고서 문장 없음</span> : null}
       </p>
     </div>
   );
@@ -140,7 +164,8 @@ function EgogramEnergyInsightPanel({
   return (
     <div className="mt-5 space-y-4 border-t border-white/10 pt-5">
       <p className="text-xs text-slate-500">
-        코멘트 기준: 척도 합계 10~50점을 7등분(1~2 부족 · 3~5 안전성 · 6~7 과함), 단계별 강도 적용
+        코멘트 기준: 243+ 9단계(docs/ego-ok · 10~50) — 1~2 부족 · 3~5 안전성 · 6~9 과함, 단계별 강도
+        적용
       </p>
       <article className="rounded-xl bg-fuchsia-500/10 p-4 ring-1 ring-fuchsia-400/20">
         <h3 className="text-sm font-semibold text-fuchsia-100">
@@ -671,9 +696,12 @@ export default function EgoOkCounselorReport({
               </dd>
             </div>
             <div className="rounded-xl bg-white/[0.04] px-4 py-3 ring-1 ring-white/10">
-              <dt className="text-xs text-slate-500">243 패턴 코드</dt>
+              <dt className="text-xs text-slate-500">243 / 243+ 패턴</dt>
               <dd className="mt-1 font-mono text-lg font-bold tracking-widest text-indigo-200">
                 {report.patternCode}
+              </dd>
+              <dd className="mt-1.5 text-base">
+                <Pattern243PlusCode plus={report.pattern243Plus} />
               </dd>
             </div>
             <div className="rounded-xl bg-white/[0.04] px-4 py-3 ring-1 ring-white/10">
@@ -707,6 +735,7 @@ export default function EgoOkCounselorReport({
             <EgogramRadarSummarySubtitle
               peakScale={peakEgogram}
               patternCode={report.patternCode}
+              pattern243Plus={report.pattern243Plus}
               basicPattern={report.pattern243.basicPattern}
               missing={report.pattern243.missing}
             />
@@ -784,17 +813,37 @@ export default function EgoOkCounselorReport({
         </SectionCard>
       </div>
 
-      <SectionCard title="243Plus 요약" subtitle="CP+NP · FC+AC 합산 (243 보조 지표)">
-        <div className="grid gap-4 sm:grid-cols-2">
+      <SectionCard
+        title="243Plus 요약"
+        subtitle="CP+NP · A · FC+AC — 243+ 9단계 (docs/internal-materials/ego-ok/README.md)"
+      >
+        <div className="grid gap-4 sm:grid-cols-3">
           <div className="rounded-xl bg-white/[0.04] p-5 ring-1 ring-white/10">
             <p className="text-xs uppercase tracking-wide text-slate-500">CP + NP</p>
             <p className="mt-2 text-3xl font-bold text-white">{report.plus243.cpNpSum}</p>
+            <p className="mt-2 font-mono text-lg text-fuchsia-200">
+              <Plus243TierGlyph tier={report.pattern243Plus.groups.cpNp.tier} />
+            </p>
+          </div>
+          <div className="rounded-xl bg-white/[0.04] p-5 ring-1 ring-white/10">
+            <p className="text-xs uppercase tracking-wide text-slate-500">A (성인)</p>
+            <p className="mt-2 text-3xl font-bold text-white">{report.plus243.aSum}</p>
+            <p className="mt-2 font-mono text-lg text-fuchsia-200">
+              <Plus243TierGlyph tier={report.pattern243Plus.groups.a.tier} />
+            </p>
           </div>
           <div className="rounded-xl bg-white/[0.04] p-5 ring-1 ring-white/10">
             <p className="text-xs uppercase tracking-wide text-slate-500">FC + AC</p>
             <p className="mt-2 text-3xl font-bold text-white">{report.plus243.fcAcSum}</p>
+            <p className="mt-2 font-mono text-lg text-fuchsia-200">
+              <Plus243TierGlyph tier={report.pattern243Plus.groups.fcAc.tier} />
+            </p>
           </div>
         </div>
+        <p className="mt-4 text-sm text-slate-400">
+          243+ 5척도 패턴{' '}
+          <Pattern243PlusCode plus={report.pattern243Plus} className="ml-1 align-middle" />
+        </p>
       </SectionCard>
 
       <SectionCard
