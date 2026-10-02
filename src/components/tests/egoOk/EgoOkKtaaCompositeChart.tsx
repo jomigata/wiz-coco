@@ -23,6 +23,7 @@ import {
 
 const EGO_NEG_COLOR = '#e8954a';
 const EGO_POS_COLOR = '#9cc9e8';
+const EGO_TOTAL_BOX_STROKE = '#0284c7';
 const OK_LINE_COLOR = '#d32f2f';
 /** KTAA: 좌=남(청), 우=여(붉은) — C/B/A 구간 모두 성별 톤 (협회 안내서) */
 const GENDER_ZONE_COLORS = {
