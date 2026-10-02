@@ -25,11 +25,14 @@ const EGO_NEG_COLOR = '#e8954a';
 const EGO_POS_COLOR = '#9cc9e8';
 const EGO_TOTAL_BOX_STROKE = '#0284c7';
 const OK_LINE_COLOR = '#d32f2f';
-/** KTAA: 좌=남(청), 우=여(붉은) — C/B/A 구간 모두 성별 톤 (협회 안내서) */
-/** C/B/A 구간 — 좌(남·청) / 우(여·붉은) 톤이 상·중·하 모두 이어지도록 (중간도 순백 제외) */
-const GENDER_ZONE_COLORS = {
-  male: { bottom: '#bdd8e8', middle: '#d4e8f2', top: '#d6e8f5' },
-  female: { bottom: '#f5d6d6', middle: '#f2dede', top: '#ecd6d6' },
+/**
+ * KTAA 3단계 배경 — A(상·하늘) / B(중·흰) / C(하·분홍).
+ * 5열·좌(남)·우(여) 모두 동일 색 (구간 높이만 KTAA_GRAPH_ZONES).
+ */
+const KTAA_TIER_FILL = {
+  top: { male: '#d6e8f5', female: '#d6e8f5' },
+  middle: { male: '#ffffff', female: '#ffffff' },
+  bottom: { male: '#f5d6d6', female: '#f5d6d6' },
 } as const;
 
 const CHART_PLOT_HEIGHT_PX = Math.round(680 * (2 / 3) * 1.2);
@@ -90,68 +93,26 @@ function KtaaPlotLabelColumns({
 
 function KtaaPlotLayoutReporter(props: {
   offset?: { left: number; top: number; width: number; height: number };
-  xAxisMap?: Record<string, { scale: XBandScale }>;
   onPlotBox?: (box: KtaaPlotBox) => void;
 }) {
-  const { offset, xAxisMap, onPlotBox } = props;
+  const { offset, onPlotBox } = props;
   useLayoutEffect(() => {
-    if (!offset?.width || !onPlotBox) return;
-    const columns = getKtaaColumnLayouts(offset, xAxisMap);
-    if (columns.length === 0) return;
-    const first = columns[0];
-    const last = columns[columns.length - 1];
-    onPlotBox({ left: first.x, width: last.x + last.width - first.x });
-  }, [offset, xAxisMap, onPlotBox]);
+    if (offset?.width && onPlotBox) {
+      onPlotBox({ left: offset.left, width: offset.width });
+    }
+  }, [offset?.left, offset?.width, onPlotBox]);
   return null;
 }
 
 const PLOT_FRAME_STROKE = '#64748b';
 
 type YScale = ((v: number) => number) & { bandwidth?: () => number };
-type XBandScale = ((v: string) => number) & { bandwidth?: () => number };
-
-type KtaaColumnLayout = { code: (typeof COLUMN_ORDER)[number]; x: number; width: number };
-
-function getKtaaColumnLayouts(
-  offset: { left: number; top: number; width: number; height: number },
-  xAxisMap?: Record<string, { scale: XBandScale }>,
-): KtaaColumnLayout[] {
-  const xScale = Object.values(xAxisMap ?? {})[0]?.scale;
-  if (!xScale) {
-    const colW = offset.width / COLUMN_ORDER.length;
-    return COLUMN_ORDER.map((code, i) => ({
-      code,
-      x: offset.left + i * colW,
-      width: colW,
-    }));
-  }
-
-  const bandW = xScale.bandwidth?.();
-  const firstX = xScale(COLUMN_ORDER[0]);
-  if (typeof bandW === 'number' && bandW > 0 && typeof firstX === 'number' && !Number.isNaN(firstX)) {
-    return COLUMN_ORDER.map((code) => ({
-      code,
-      x: offset.left + xScale(code),
-      width: bandW,
-    }));
-  }
-
-  const centers = COLUMN_ORDER.map((code) => offset.left + xScale(code));
-  return COLUMN_ORDER.map((code, i) => {
-    const leftEdge = i === 0 ? offset.left : (centers[i - 1] + centers[i]) / 2;
-    const rightEdge =
-      i === COLUMN_ORDER.length - 1
-        ? offset.left + offset.width
-        : (centers[i] + centers[i + 1]) / 2;
-    return { code, x: leftEdge, width: rightEdge - leftEdge };
-  });
-}
 
 function ktaaZoneRects(
   x: number,
   w: number,
   band: KtaaGraphZoneBounds,
-  colors: (typeof GENDER_ZONE_COLORS)[keyof typeof GENDER_ZONE_COLORS],
+  tint: keyof typeof KTAA_TIER_FILL.top,
   scale: YScale,
   keyPrefix: string,
 ) {
@@ -159,29 +120,29 @@ function ktaaZoneRects(
     const y1 = scale(from);
     const y2 = scale(to);
     const y = Math.min(y1, y2);
-    const h = Math.abs(y2 - y1);
+    const h = Math.abs(y2 - y1) + 0.75;
     return <rect key={key} x={x} y={y} width={w} height={h} fill={fill} />;
   };
   return [
-    yBand(0, band.redTop, colors.bottom, `${keyPrefix}-c`),
-    yBand(band.redTop, band.whiteTop, colors.middle, `${keyPrefix}-b`),
-    yBand(band.whiteTop, 50, colors.top, `${keyPrefix}-a`),
+    yBand(0, band.redTop, KTAA_TIER_FILL.bottom[tint], `${keyPrefix}-c`),
+    yBand(band.redTop, band.whiteTop, KTAA_TIER_FILL.middle[tint], `${keyPrefix}-b`),
+    yBand(band.whiteTop, 50, KTAA_TIER_FILL.top[tint], `${keyPrefix}-a`),
   ];
 }
 
-/** 플롯 사각형 안 배경·열 구분선 — X축 band 위치와 막대 열 정렬 */
+/** 플롯 사각형 안에만 배경·열 구분선 (Recharts offset과 1:1) */
 function KtaaPlotBackground(props: {
   offset?: { left: number; top: number; width: number; height: number };
-  xAxisMap?: Record<string, { scale: XBandScale }>;
   yAxisMap?: Record<string, { scale: YScale }>;
 }) {
-  const { offset, xAxisMap, yAxisMap } = props;
+  const { offset, yAxisMap } = props;
   if (!offset?.width || !yAxisMap) return null;
-  const yScale = Object.values(yAxisMap)[0]?.scale;
-  if (!yScale) return null;
+  const scale = Object.values(yAxisMap)[0]?.scale;
+  if (!scale) return null;
 
   const { left, top, width, height } = offset;
-  const columns = getKtaaColumnLayouts(offset, xAxisMap);
+  const colW = width / COLUMN_ORDER.length;
+  const halfW = colW / 2;
   const clipId = 'ktaa-plot-clip';
 
   return (
@@ -192,24 +153,24 @@ function KtaaPlotBackground(props: {
         </clipPath>
       </defs>
       <g clipPath={`url(#${clipId})`}>
-        {columns.map(({ code, x: xCol, width: colW }) => {
-          const halfW = colW / 2;
+        {COLUMN_ORDER.map((code, i) => {
+          const xCol = left + i * colW;
           return (
             <g key={code}>
               {ktaaZoneRects(
                 xCol,
                 halfW,
                 KTAA_GRAPH_ZONES.male[code],
-                GENDER_ZONE_COLORS.male,
-                yScale,
+                'male',
+                scale,
                 `${code}-m`,
               )}
               {ktaaZoneRects(
                 xCol + halfW,
                 halfW,
                 KTAA_GRAPH_ZONES.female[code],
-                GENDER_ZONE_COLORS.female,
-                yScale,
+                'female',
+                scale,
                 `${code}-f`,
               )}
               <line
@@ -224,12 +185,12 @@ function KtaaPlotBackground(props: {
             </g>
           );
         })}
-        {columns.slice(0, -1).map(({ code, x, width: colW }) => (
+        {[1, 2, 3, 4].map((k) => (
           <line
-            key={`col-div-${code}`}
-            x1={x + colW}
+            key={`col-${k}`}
+            x1={left + k * colW}
             y1={top}
-            x2={x + colW}
+            x2={left + k * colW}
             y2={top + height}
             stroke={PLOT_FRAME_STROKE}
             strokeWidth={2}
@@ -416,13 +377,7 @@ export default function EgoOkKtaaCompositeChart({
 
       <div className="relative w-full leading-none" style={{ height: CHART_PLOT_HEIGHT_PX }}>
         <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart
-            data={data}
-            margin={CHART_MARGIN}
-            barCategoryGap={0}
-            barGap={0}
-            style={{ background: 'transparent' }}
-          >
+          <ComposedChart data={data} margin={CHART_MARGIN} style={{ background: 'transparent' }}>
             <Customized component={KtaaPlotBackground} />
             <ReferenceLine
               y={12.5}
@@ -443,7 +398,6 @@ export default function EgoOkKtaaCompositeChart({
             />
             <XAxis
               dataKey="xLabel"
-              scale="band"
               hide
               height={0}
               padding={{ left: 0, right: 0 }}
@@ -477,15 +431,8 @@ export default function EgoOkKtaaCompositeChart({
             />
             <Customized component={KtaaPlotFrameBorder} />
             <Customized
-              component={(props: {
-                offset?: { left: number; top: number; width: number; height: number };
-                xAxisMap?: Record<string, { scale: XBandScale }>;
-              }) => (
-                <KtaaPlotLayoutReporter
-                  offset={props.offset}
-                  xAxisMap={props.xAxisMap}
-                  onPlotBox={handlePlotBox}
-                />
+              component={(props: { offset?: { left: number; top: number; width: number; height: number } }) => (
+                <KtaaPlotLayoutReporter offset={props.offset} onPlotBox={handlePlotBox} />
               )}
             />
           </ComposedChart>
@@ -553,19 +500,18 @@ export default function EgoOkKtaaCompositeChart({
             이고 합계(0~50)는 사각 테두리 안 숫자로 표시합니다.
           </li>
           <li>
-            <strong>배경색(열·성별마다 다름)</strong>: KTAA 종합 그래프와 같이 각 열을{' '}
-            <strong>왼쪽=남성(청)</strong>, <strong>오른쪽=여성(붉은)</strong> 기준으로 나누고, 하단 C · 중간 B ·
-            상단 A 구간 높이가 척도·성별마다 다릅니다(3단계 컷 bMin/aMin과 동일).{' '}
+            <strong>배경색 3단계</strong>: 상단 A{' '}
             <span
               className="inline-block h-2 w-3 rounded-sm border border-sky-200 align-middle"
-              style={{ background: GENDER_ZONE_COLORS.male.bottom }}
+              style={{ background: KTAA_TIER_FILL.top.male }}
             />{' '}
-            남 하단 ·{' '}
+            하늘 · 중간 B 흰색 · 하단 C{' '}
             <span
               className="inline-block h-2 w-3 rounded-sm border border-red-200 align-middle"
-              style={{ background: GENDER_ZONE_COLORS.female.bottom }}
+              style={{ background: KTAA_TIER_FILL.bottom.male }}
             />{' '}
-            여 하단 · 상단도 각각 청/붉은 톤. 점선(12.5)은 참고 기준선입니다.
+            분홍. 5열·좌(남)·우(여) 색은 동일하고, 구간 높이만 척도·성별(3단계 컷)마다 다릅니다. 점선(12.5)은
+            참고 기준선입니다.
             {genderInput ? (
               <>
                 {' '}
