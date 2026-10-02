@@ -80,6 +80,7 @@ type EgogramRadarRow = {
 };
 
 const EGOGRAM_RADAR_SKY = '#7dd3fc';
+const EGOGRAM_RADAR_PINK = '#f9a8d4';
 
 function egogramRadarTooltipLine(row: EgogramRadarRow): string {
   const name = row.label.replace(/\s*\([A-Za-z+]+\)\s*$/, '').replace(/\s+/g, '');
@@ -89,6 +90,44 @@ function egogramRadarTooltipLine(row: EgogramRadarRow): string {
 
 function EgogramFiveScaleRadarChart({ data }: { data: EgogramRadarRow[] }) {
   const gradientId = useId().replace(/:/g, '');
+  const peakScore = useMemo(() => Math.max(...data.map((d) => d.score), 0), [data]);
+
+  const RadarVertexDot = useMemo(
+    () =>
+      function EgogramRadarVertexDot(props: { cx?: number; cy?: number; payload?: EgogramRadarRow }) {
+        const { cx, cy, payload } = props;
+        if (cx == null || cy == null || !payload) return null;
+        const isPeak = peakScore > 0 && payload.score === peakScore;
+        if (isPeak) {
+          return (
+            <circle cx={cx} cy={cy} r={6} fill={EGOGRAM_RADAR_PINK} stroke="#ffffff" strokeWidth={2} />
+          );
+        }
+        return (
+          <circle cx={cx} cy={cy} r={4} fill="#eef2ff" stroke="#818cf8" strokeWidth={2} />
+        );
+      },
+    [peakScore],
+  );
+
+  const RadarVertexActiveDot = useMemo(
+    () =>
+      function EgogramRadarVertexActiveDot(props: { cx?: number; cy?: number; payload?: EgogramRadarRow }) {
+        const { cx, cy, payload } = props;
+        if (cx == null || cy == null || !payload) return null;
+        const isPeak = peakScore > 0 && payload.score === peakScore;
+        if (isPeak) {
+          return (
+            <circle cx={cx} cy={cy} r={7} fill={EGOGRAM_RADAR_PINK} stroke="#ffffff" strokeWidth={2.5} />
+          );
+        }
+        return (
+          <circle cx={cx} cy={cy} r={6} fill="#ffffff" stroke="#a5b4fc" strokeWidth={2} />
+        );
+      },
+    [peakScore],
+  );
+
   const FillOpacityMaskDefs = useMemo(
     () =>
       function EgogramRadarFillOpacityMaskDefs() {
@@ -143,8 +182,8 @@ function EgogramFiveScaleRadarChart({ data }: { data: EgogramRadarRow[] }) {
           fillOpacity={1}
           strokeWidth={2.5}
           isAnimationActive={false}
-          dot={{ r: 4, fill: '#eef2ff', stroke: '#818cf8', strokeWidth: 2 }}
-          activeDot={{ r: 6, fill: '#ffffff', stroke: '#a5b4fc', strokeWidth: 2 }}
+          dot={<RadarVertexDot />}
+          activeDot={<RadarVertexActiveDot />}
         />
         <Customized component={EgogramRadarCenterMark} />
         <Tooltip content={<EgogramRadarTooltip />} />
