@@ -346,8 +346,12 @@ export function computeEgoOkReport(
 
   const egogram: EgoOkScaleScore[] = (['CP', 'NP', 'A', 'FC', 'AC'] as EgoScaleId[]).map((id) => {
     const raw = roundScaleTotal(egoSums[id]);
-    const negativeRaw = roundScaleTotal(egoNeg[id]);
-    const positiveRaw = Math.max(0, raw - negativeRaw);
+    const positiveRaw = roundScaleTotal(egoPos[id]);
+    let negativeRaw = roundScaleTotal(egoNeg[id]);
+    if (positiveRaw + negativeRaw !== raw) {
+      negativeRaw = raw - positiveRaw;
+    }
+    negativeRaw = Math.max(0, negativeRaw);
     const fiveLevel = toFiveLevel(raw, gender, id);
     return {
       id,
