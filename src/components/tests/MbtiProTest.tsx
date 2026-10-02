@@ -3,7 +3,6 @@
 import { useState, useEffect, useLayoutEffect, useMemo } from 'react';
 import { questions } from '@/data/mbtiProQuestions';
 import { EGO_OK_QUESTIONS, type EgoOkScaleKind } from '@/data/egoOkQuestions';
-import { getEgoOkAnswerOptions } from '@/lib/egoOkAnswerScale';
 import { buildEgoOkJoinResponses } from '@/lib/egoOkJoinResponses';
 import {
   createLocalPsychTestClientInfo,
@@ -696,15 +695,6 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
   const answerBtnClass = (shape: string, py: string, glowExtra = '', fromColor = answerGlowSky) =>
     `group relative ${py} px-4 flex-1 ${shape} ${v.answerBtn} after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[15px] after:bg-gradient-to-t ${fromColor} after:to-transparent ${shape.includes('rounded-xl') ? 'after:rounded-b-xl' : 'after:rounded-b-[20px]'} after:pointer-events-none ${isMouseMoved ? `${v.answerBtnHover} ${glowExtra}` : ''}`;
 
-  const currentEgoOptions =
-    isEgoOkFlow && selectedQuestions.length > 0
-      ? getEgoOkAnswerOptions(
-          isEgoOkQuestion(selectedQuestions[currentQuestion])
-            ? selectedQuestions[currentQuestion].scaleKind
-            : 'egogram',
-        )
-      : null;
-
   // 선택된 문항이 아직 로드되지 않았으면 로딩 표시
   if (selectedQuestions.length === 0) {
     return (
@@ -804,53 +794,6 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
               <div className="flex flex-col gap-5">
                 <div className="relative flex justify-between items-end gap-3 px-4">
                   <div className={v.scaleArc}></div>
-                  {currentEgoOptions
-                    ? currentEgoOptions.map((opt) => {
-                        const shape = opt.pyClass === 'py-12' ? 'rounded-xl' : 'rounded-[20px]';
-                        const glow = opt.value <= 2 ? answerGlowPink : answerGlowSky;
-                        const labelLines = opt.label.split('\n');
-                        return (
-                          <button
-                            key={opt.value}
-                            type="button"
-                            onClick={() => handleAnswer(opt.value)}
-                            className={answerBtnClass(shape, opt.pyClass, '', glow)}
-                          >
-                            {answers[currentQuestion] === opt.value && (
-                              <div
-                                className={`absolute top-2 right-2 w-4 h-4 rounded-full ${v.checkDot} flex items-center justify-center`}
-                              >
-                                <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                                </svg>
-                              </div>
-                            )}
-                            <div className="flex flex-col items-center justify-center w-full space-y-3">
-                              <div
-                                className={`${opt.circleClass} rounded-full ${v.answerCircle} flex items-center justify-center transform group-hover:scale-110 transition-all duration-300`}
-                              >
-                                <span className="text-white text-lg font-bold">{opt.letter}</span>
-                              </div>
-                              <span
-                                className={`text-sm font-bold ${v.answerLabel} transform transition-all duration-500 ${isMouseMoved ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}
-                              >
-                                {labelLines.length > 1 ? (
-                                  <>
-                                    {labelLines[0]}
-                                    <br />
-                                    {labelLines[1]}
-                                  </>
-                                ) : (
-                                  labelLines[0]
-                                )}
-                              </span>
-                            </div>
-                          </button>
-                        );
-                      })
-                    : null}
-                  {!currentEgoOptions ? (
-                  <>
                   <button
                     onClick={() => handleAnswer(6)}
                     className={answerBtnClass('rounded-xl', 'py-12')}
@@ -964,8 +907,6 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
                       <span className={`text-sm font-bold ${v.answerLabel} transform transition-all duration-500 ${isMouseMoved ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}>매우<br/>아니다</span>
                     </div>
                   </button>
-                  </>
-                  ) : null}
                 </div>
                 
                 {/* G(모르겠다) 옵션 제거 */}
