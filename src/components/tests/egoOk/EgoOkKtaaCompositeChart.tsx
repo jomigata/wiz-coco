@@ -229,179 +229,146 @@ type ChartRow = EgoOkCompositeColumn & {
 };
 
 const OK_DOT_R = 7;
-const OK_LABEL_BOX_H = 18;
-const OK_LABEL_GAP = 4;
-const EGO_TOTAL_LABEL_GAP = 3;
-const PX_PER_SCORE =
-  (CHART_PLOT_HEIGHT_PX - CHART_MARGIN.top - CHART_MARGIN.bottom) / 50;
+const SUM_LABEL_BOX_H = 18;
+const SUM_LABEL_GAP = 4;
 
-function boxesOverlap(
-  a: { x: number; y: number; w: number; h: number },
-  b: { x: number; y: number; w: number; h: number },
-  pad = 2,
-): boolean {
-  return !(
-    a.x + a.w + pad < b.x ||
-    b.x + b.w + pad < a.x ||
-    a.y + a.h + pad < b.y ||
-    b.y + b.h + pad < a.y
-  );
+function sumLabelBoxWidth(value: number): number {
+  return Math.max(26, String(value).length * 8 + 10);
 }
 
-function okLabelBoxForDot(
-  cx: number,
-  cy: number,
-  boxW: number,
-  side: 'left' | 'right' | 'above' | 'below',
-): { x: number; y: number; textX: number; textAnchor: 'middle' | 'start' | 'end' } {
-  switch (side) {
-    case 'right':
-      return {
-        x: cx + OK_DOT_R + OK_LABEL_GAP,
-        y: cy - OK_LABEL_BOX_H / 2,
-        textX: cx + OK_DOT_R + OK_LABEL_GAP + boxW / 2,
-        textAnchor: 'middle',
-      };
-    case 'left':
-      return {
-        x: cx - OK_DOT_R - OK_LABEL_GAP - boxW,
-        y: cy - OK_LABEL_BOX_H / 2,
-        textX: cx - OK_DOT_R - OK_LABEL_GAP - boxW / 2,
-        textAnchor: 'middle',
-      };
-    case 'above':
-      return {
-        x: cx - boxW / 2,
-        y: cy - OK_DOT_R - OK_LABEL_GAP - OK_LABEL_BOX_H,
-        textX: cx,
-        textAnchor: 'middle',
-      };
-    case 'below':
-      return {
-        x: cx - boxW / 2,
-        y: cy + OK_DOT_R + OK_LABEL_GAP,
-        textX: cx,
-        textAnchor: 'middle',
-      };
-  }
-}
+type SumLabelRect = { x: number; y: number; w: number; textX: number };
 
-function estimateEgoTotalLabelBox(
-  cx: number,
-  cyOk: number,
-  okValue: number,
-  egoTotal: number,
-): { x: number; y: number; w: number; h: number } | null {
-  if (egoTotal <= 0) return null;
-  const egoBoxW = Math.max(26, String(egoTotal).length * 8 + 10);
-  const cyBarTop = cyOk + (okValue - egoTotal) * PX_PER_SCORE;
-  const y = cyBarTop - OK_LABEL_BOX_H - EGO_TOTAL_LABEL_GAP;
-  return { x: cx - egoBoxW / 2, y, w: egoBoxW, h: OK_LABEL_BOX_H };
-}
-
-function okLabelCandidates(
-  cx: number,
-  cy: number,
-  boxW: number,
-  columnId: ChartRow['id'] | undefined,
-): ReturnType<typeof okLabelBoxForDot>[] {
-  const preferRight = columnId === 'CP' || columnId === 'NP';
-  const sides: Array<'left' | 'right' | 'above' | 'below'> = [
-    'above',
-    ...(preferRight ? (['right', 'left'] as const) : (['left', 'right'] as const)),
-    'below',
-  ];
-  const layouts: ReturnType<typeof okLabelBoxForDot>[] = [];
-  for (const side of sides) {
-    layouts.push(okLabelBoxForDot(cx, cy, boxW, side));
-    if (side === 'above') {
-      const base = layouts[layouts.length - 1];
-      layouts.push({ ...base, x: base.x + 14, textX: base.textX + 14 });
-      layouts.push({ ...base, x: base.x - 14, textX: base.textX - 14 });
-      layouts.push({
-        ...base,
-        y: base.y - OK_LABEL_BOX_H * 0.45,
-      });
-    }
-  }
-  return layouts;
-}
-
-function pickOkLabelPlacement(
-  cx: number,
-  cy: number,
-  boxW: number,
-  columnId: ChartRow['id'] | undefined,
-  egoTotal: number,
-  okValue: number,
-): ReturnType<typeof okLabelBoxForDot> {
-  const dotBox = {
-    x: cx - OK_DOT_R,
-    y: cy - OK_DOT_R,
-    w: OK_DOT_R * 2,
-    h: OK_DOT_R * 2,
+function sumLabelAboveDot(cx: number, cy: number, boxW: number): SumLabelRect {
+  return {
+    x: cx - boxW / 2,
+    y: cy - OK_DOT_R - SUM_LABEL_GAP - SUM_LABEL_BOX_H,
+    w: boxW,
+    textX: cx,
   };
-  const egoBox = estimateEgoTotalLabelBox(cx, cy, okValue, egoTotal);
-  const preferRight = columnId === 'CP' || columnId === 'NP';
-
-  for (const layout of okLabelCandidates(cx, cy, boxW, columnId)) {
-    const labelBox = { x: layout.x, y: layout.y, w: boxW, h: OK_LABEL_BOX_H };
-    if (boxesOverlap(labelBox, dotBox)) continue;
-    if (egoBox && boxesOverlap(labelBox, egoBox, 3)) continue;
-    return layout;
-  }
-  return okLabelBoxForDot(cx, cy, boxW, preferRight ? 'right' : 'left');
 }
 
-function OkLineDot(props: {
-  cx?: number;
-  cy?: number;
-  payload?: ChartRow;
-  value?: number | null;
+function sumLabelBelowDot(cx: number, cy: number, boxW: number): SumLabelRect {
+  return {
+    x: cx - boxW / 2,
+    y: cy + OK_DOT_R + SUM_LABEL_GAP,
+    w: boxW,
+    textX: cx,
+  };
+}
+
+/** 점수 큰 쪽 위 · 작은 쪽 아래. 동점이면 오케이 위 · 이고 아래 */
+function resolveOkEgoSumLabels(
+  ok: number,
+  ego: number,
+  cx: number,
+  cy: number,
+): { ok: SumLabelRect; ego: SumLabelRect } {
+  const okW = sumLabelBoxWidth(ok);
+  const egoW = sumLabelBoxWidth(ego);
+  const okOnTop = ok >= ego;
+  if (okOnTop) {
+    return {
+      ok: sumLabelAboveDot(cx, cy, okW),
+      ego: sumLabelBelowDot(cx, cy, egoW),
+    };
+  }
+  return {
+    ok: sumLabelBelowDot(cx, cy, okW),
+    ego: sumLabelAboveDot(cx, cy, egoW),
+  };
+}
+
+function SumLabelBox({
+  rect,
+  value,
+  stroke,
+  fill,
+}: {
+  rect: SumLabelRect;
+  value: number;
+  stroke: string;
+  fill: string;
 }) {
-  const { cx, cy, payload } = props;
-  const v =
-    payload?.okLineCpNp != null
-      ? payload.okLineCpNp
-      : payload?.okLineFcAc != null
-        ? payload.okLineFcAc
-        : null;
-  if (cx == null || cy == null || v == null) return null;
-  const text = String(v);
-  const boxW = Math.max(28, text.length * 8 + 10);
-  const layout = pickOkLabelPlacement(
-    cx,
-    cy,
-    boxW,
-    payload?.id,
-    payload?.egoTotal ?? 0,
-    v,
-  );
-  const textY = layout.y + 13;
   return (
     <g>
-      <circle cx={cx} cy={cy} r={OK_DOT_R} fill={OK_LINE_COLOR} stroke="#fff" strokeWidth={2} />
       <rect
-        x={layout.x}
-        y={layout.y}
-        width={boxW}
-        height={OK_LABEL_BOX_H}
+        x={rect.x}
+        y={rect.y}
+        width={rect.w}
+        height={SUM_LABEL_BOX_H}
         rx={0}
         fill="#fff"
-        stroke={OK_LINE_COLOR}
-        strokeWidth={1}
+        stroke={stroke}
+        strokeWidth={stroke === OK_LINE_COLOR ? 1 : 1.5}
       />
       <text
-        x={layout.textX}
-        y={textY}
-        textAnchor={layout.textAnchor}
-        fill={OK_LINE_COLOR}
+        x={rect.textX}
+        y={rect.y + 13}
+        textAnchor="middle"
+        fill={fill}
         fontSize={11}
         fontWeight={700}
       >
-        {text}
+        {value}
       </text>
     </g>
+  );
+}
+
+function createKtaaOkEgoSumLabels(chartData: ChartRow[]) {
+  return function KtaaOkEgoSumLabels(props: PlotBackgroundProps) {
+    const { offset, yAxisMap } = props;
+    if (!offset?.width || !yAxisMap) return null;
+    const yScale = Object.values(yAxisMap)[0]?.scale;
+    if (!yScale) return null;
+
+    const { left, width } = offset;
+    const colW = width / COLUMN_ORDER.length;
+
+    return (
+      <g>
+        {chartData.map((row) => {
+          const ok = row.okLineCpNp ?? row.okLineFcAc;
+          if (ok == null || row.egoTotal <= 0) return null;
+          const colIndex = COLUMN_ORDER.indexOf(row.id);
+          if (colIndex < 0) return null;
+          const cx = left + colIndex * colW + colW / 2;
+          const cy = yScale(ok);
+          const { ok: okRect, ego: egoRect } = resolveOkEgoSumLabels(
+            ok,
+            row.egoTotal,
+            cx,
+            cy,
+          );
+          return (
+            <g key={`sums-${row.id}`}>
+              <SumLabelBox
+                rect={okRect}
+                value={ok}
+                stroke={OK_LINE_COLOR}
+                fill={OK_LINE_COLOR}
+              />
+              <SumLabelBox
+                rect={egoRect}
+                value={row.egoTotal}
+                stroke={EGO_TOTAL_BOX_STROKE}
+                fill="#0c4a6e"
+              />
+            </g>
+          );
+        })}
+      </g>
+    );
+  };
+}
+
+function OkLineDot(props: { cx?: number; cy?: number; payload?: ChartRow }) {
+  const { cx, cy, payload } = props;
+  const hasOk =
+    payload?.okLineCpNp != null || payload?.okLineFcAc != null;
+  if (cx == null || cy == null || !hasOk) return null;
+  return (
+    <circle cx={cx} cy={cy} r={OK_DOT_R} fill={OK_LINE_COLOR} stroke="#fff" strokeWidth={2} />
   );
 }
 
@@ -410,8 +377,10 @@ function EgoTotalBoxLabel(props: {
   y?: number;
   width?: number;
   value?: number | string;
+  payload?: ChartRow;
 }) {
-  const { x, y, width, value } = props;
+  const { x, y, width, value, payload } = props;
+  if (payload?.id !== 'A') return null;
   if (value == null || value === '' || value === 0 || x == null || y == null) return null;
   const text = String(value);
   const cx = x + (width ?? 0) / 2;
@@ -488,12 +457,6 @@ export default function EgoOkKtaaCompositeChart({
     [backgroundGender],
   );
 
-  const [plotBox, setPlotBox] = useState<KtaaPlotBox | null>(null);
-  const handlePlotBox = useCallback((box: KtaaPlotBox) => {
-    setPlotBox((prev) =>
-      prev && prev.left === box.left && prev.width === box.width ? prev : box,
-    );
-  }, []);
   const data: ChartRow[] = columns.map((col) => ({
     ...col,
     xLabel: col.codeLabel,
@@ -501,6 +464,14 @@ export default function EgoOkKtaaCompositeChart({
     okLineFcAc: col.id === 'FC' || col.id === 'AC' ? col.okLine : null,
   }));
 
+  const OkEgoSumLabelsLayer = useMemo(() => createKtaaOkEgoSumLabels(data), [data]);
+
+  const [plotBox, setPlotBox] = useState<KtaaPlotBox | null>(null);
+  const handlePlotBox = useCallback((box: KtaaPlotBox) => {
+    setPlotBox((prev) =>
+      prev && prev.left === box.left && prev.width === box.width ? prev : box,
+    );
+  }, []);
   return (
     <div className="overflow-hidden rounded-xl border border-sky-200 bg-white text-gray-900 shadow-inner">
       <div className="border-b border-sky-100 bg-gradient-to-r from-sky-50 to-white px-4 py-3">
@@ -577,6 +548,7 @@ export default function EgoOkKtaaCompositeChart({
               isAnimationActive={false}
             />
             <Customized component={KtaaPlotFrameBorder} />
+            <Customized component={OkEgoSumLabelsLayer} />
             <Customized
               component={(props: { offset?: { left: number; top: number; width: number; height: number } }) => (
                 <KtaaPlotLayoutReporter offset={props.offset} onPlotBox={handlePlotBox} />
@@ -638,7 +610,9 @@ export default function EgoOkKtaaCompositeChart({
             <strong>주황(아래)</strong>은 부정 문항 합(0~25),{' '}
             <span className="inline-block h-2 w-3 rounded-sm align-middle" style={{ background: EGO_POS_COLOR }} />{' '}
             <strong>하늘(위)</strong>은 긍정 문항 합(0~25). 막대 안 숫자는 각 층 점수,{' '}
-            <strong>막대 꼭대기 숫자</strong>는 두 층을 더한 <strong>이고그램 척도 총점(0~50)</strong>입니다.
+            <strong>막대 꼭대기 숫자</strong>는 두 층을 더한 <strong>이고그램 척도 총점(0~50)</strong>입니다. CP·NP·FC·AC
+            열에서는 이고 합계·오케이 합계를 <strong>같은 열의 오케이 점</strong> 기준 위·아래에 두며, 점수가
+            높은 쪽이 위(동점이면 오케이 위)입니다. A 열은 이고 합계만 막대 꼭대기에 표시합니다.
           </li>
           <li>
             <strong>적색 선 = 오케이그램</strong>: U−·U+·I+·I− 척도 각 10문항 합(0~50)을 같은 열에
