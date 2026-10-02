@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useLayoutEffect, useState, type ReactNode } from 'react';
+import { useCallback, useLayoutEffect, useState, type CSSProperties, type ReactNode } from 'react';
 import {
   KTAA_GRAPH_ZONES,
   normalizeEgoOkGender,
@@ -37,12 +37,19 @@ const Y_TICKS = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50];
 const COLUMN_ORDER = ['CP', 'NP', 'A', 'FC', 'AC'] as const;
 
 const Y_AXIS_WIDTH = 32;
-/** 상단: 이고 합계 사각 라벨 여유만 (HTML 타이틀과 플롯 사이 공백 최소화) */
-const CHART_MARGIN = { top: 8, right: 16, left: Y_AXIS_WIDTH, bottom: 0 };
+/** 플롯 상·하 대칭 (이고 합계 라벨·척도명 간격) */
+const CHART_EDGE_MARGIN = 8;
+const CHART_MARGIN = {
+  top: CHART_EDGE_MARGIN,
+  right: 16,
+  left: Y_AXIS_WIDTH,
+  bottom: CHART_EDGE_MARGIN,
+};
 
-/** 상·하 척도명 — 그래프와 동일 간격 (Tailwind spacing) */
-const PLOT_EDGE_LABEL_GAP = 'pb-1.5';
-const PLOT_BOTTOM_LABEL_GAP = 'pt-1.5';
+/** 상·하 척도명 ↔ 플롯 테두리 HTML 간격 (동일 px) */
+const TRAIT_LABEL_PLOT_GAP_PX = 6;
+const TRAIT_LABEL_PLOT_GAP_TOP = { paddingBottom: TRAIT_LABEL_PLOT_GAP_PX };
+const TRAIT_LABEL_PLOT_GAP_BOTTOM = { paddingTop: TRAIT_LABEL_PLOT_GAP_PX };
 const BOTTOM_TRAIT_TO_CODE_GAP = 'pt-2.5';
 
 const COLUMN_TRAIT_TITLE_CLASS =
@@ -57,10 +64,12 @@ function KtaaPlotLabelColumns({
   plotBox,
   children,
   className = '',
+  style,
 }: {
   plotBox: KtaaPlotBox | null;
   children: ReactNode;
   className?: string;
+  style?: CSSProperties;
 }) {
   const fallbackLeft = CHART_MARGIN.left + Y_AXIS_WIDTH;
   const fallbackWidth = `calc(100% - ${fallbackLeft + CHART_MARGIN.right}px)`;
@@ -69,7 +78,7 @@ function KtaaPlotLabelColumns({
     : { marginLeft: fallbackLeft, width: fallbackWidth };
 
   return (
-    <div className={`w-full ${className}`}>
+    <div className={`w-full ${className}`} style={style}>
       <div className="grid grid-cols-5 gap-0" style={gridStyle}>
         {children}
       </div>
@@ -348,7 +357,7 @@ export default function EgoOkKtaaCompositeChart({
         </p>
       </div>
 
-      <KtaaPlotLabelColumns plotBox={plotBox} className={PLOT_EDGE_LABEL_GAP}>
+      <KtaaPlotLabelColumns plotBox={plotBox} style={TRAIT_LABEL_PLOT_GAP_TOP}>
         {columns.map((col, index) => (
           <div
             key={col.id}
@@ -382,9 +391,9 @@ export default function EgoOkKtaaCompositeChart({
             />
             <XAxis
               dataKey="xLabel"
-              tick={{ fill: 'transparent', fontSize: 1 }}
-              axisLine={false}
-              tickLine={false}
+              hide
+              height={0}
+              padding={{ left: 0, right: 0 }}
             />
             <Bar dataKey="egoNegative" stackId="ego" fill={EGO_NEG_COLOR} barSize={52} radius={[0, 0, 0, 0]}>
               <LabelList dataKey="egoNegative" content={<EgoSegmentLabel />} />
@@ -423,7 +432,7 @@ export default function EgoOkKtaaCompositeChart({
         </ResponsiveContainer>
       </div>
 
-      <KtaaPlotLabelColumns plotBox={plotBox} className={PLOT_BOTTOM_LABEL_GAP}>
+      <KtaaPlotLabelColumns plotBox={plotBox} style={TRAIT_LABEL_PLOT_GAP_BOTTOM}>
         {columns.map((col, index) => (
           <div
             key={`${col.id}-bottom`}
