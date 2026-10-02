@@ -1,3 +1,5 @@
+import { EGO_OK_QUESTION_COUNT } from '@/data/egoOkQuestions';
+
 export type MbtiProCodePrefix = 'PROFESSIONAL' | 'EGO_PROFESSIONAL';
 
 export type MbtiProTestFlowConfig = {
@@ -41,7 +43,7 @@ export const EGO_OK_PRO_TEST_FLOW: MbtiProTestFlowConfig = {
   displayName: 'TA 이고-오케이그램 검사',
   progressTestType: 'EGO_OK_PRO',
   firebaseTestTypeLabel: 'TA 이고-오케이그램 검사',
-  totalQuestions: 24,
+  totalQuestions: EGO_OK_QUESTION_COUNT,
   codePrefix: 'EGO_PROFESSIONAL',
   uiTheme: 'portal',
   skipCodeStep: true,

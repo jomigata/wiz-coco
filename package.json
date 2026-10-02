@@ -68,7 +68,8 @@
     "solapi:kakao:list": "node scripts/link-solapi-kakao-channel.js list",
     "solapi:templates:list": "node scripts/list-solapi-templates.js",
     "migrate:strip-code-hyphens": "python backend/scripts/migrate_strip_code_hyphens.py",
-    "migrate:strip-code-hyphens:dry": "python backend/scripts/migrate_strip_code_hyphens.py --dry-run"
+    "migrate:strip-code-hyphens:dry": "python backend/scripts/migrate_strip_code_hyphens.py --dry-run",
+    "sync:ego-ok-questions": "node scripts/sync-ego-ok-questions.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-ses": "^3.804.0",
