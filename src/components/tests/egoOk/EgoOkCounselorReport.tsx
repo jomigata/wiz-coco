@@ -134,7 +134,7 @@ export default function EgoOkCounselorReport({
             적색 선=오케이그램(U−/U+/I+/I−, A열 제외). 아래 안내에서 점수 계산을 정리했습니다.
           </p>
         </header>
-        <EgoOkKtaaCompositeChart columns={report.compositeChart} />
+        <EgoOkKtaaCompositeChart columns={report.compositeChart} gender={clientInfo?.gender} />
       </section>
 
       <div className="grid gap-6 lg:grid-cols-2">

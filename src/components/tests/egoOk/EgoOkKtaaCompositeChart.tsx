@@ -1,6 +1,12 @@
 'use client';
 
-import type { EgoOkCompositeColumn } from '@/lib/egoOkScoring';
+import {
+  KTAA_GRAPH_ZONES,
+  normalizeEgoOkGender,
+  type EgoOkCompositeColumn,
+  type EgoOkGender,
+  type KtaaGraphZoneBounds,
+} from '@/lib/egoOkScoring';
 import {
   ComposedChart,
   Bar,
@@ -21,19 +27,7 @@ const ZONE_RED = '#f5d6d6';
 const ZONE_WHITE = '#ffffff';
 const ZONE_BLUE = '#d6e8f5';
 
-/** 첨부 KTAA 샘플과 동일한 열별 구간 경계 */
-const KTAA_COLUMN_BANDS: Record<
-  string,
-  { redTop: number; whiteTop: number }
-> = {
-  CP: { redTop: 15, whiteTop: 35 },
-  NP: { redTop: 28, whiteTop: 43 },
-  A: { redTop: 21, whiteTop: 42.5 },
-  FC: { redTop: 17.5, whiteTop: 35 },
-  AC: { redTop: 17, whiteTop: 34 },
-};
-
-const CHART_PLOT_HEIGHT_PX = Math.round(680 * (2 / 3));
+const CHART_PLOT_HEIGHT_PX = Math.round(680 * (2 / 3) * 1.2);
 
 const Y_TICKS = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50];
 
@@ -42,37 +36,44 @@ const COLUMN_ORDER = ['CP', 'NP', 'A', 'FC', 'AC'] as const;
 /** 플롯 영역(inset) — ComposedChart margin과 맞춤 */
 const PLOT_INSET = { top: '7%', right: '3%', bottom: '4%', left: '7%' };
 
+function KtaaZoneStack({ band, tint }: { band: KtaaGraphZoneBounds; tint: 'male' | 'female' }) {
+  const redH = (band.redTop / 50) * 100;
+  const whiteH = ((band.whiteTop - band.redTop) / 50) * 100;
+  const blueH = ((50 - band.whiteTop) / 50) * 100;
+  const red = tint === 'male' ? '#e8d4d4' : ZONE_RED;
+  const blue = tint === 'male' ? ZONE_BLUE : '#ecd6d6';
+  return (
+    <>
+      <div className="absolute inset-x-0 bottom-0" style={{ height: `${redH}%`, backgroundColor: red }} />
+      <div
+        className="absolute inset-x-0"
+        style={{ bottom: `${redH}%`, height: `${whiteH}%`, backgroundColor: ZONE_WHITE }}
+      />
+      <div className="absolute inset-x-0 top-0" style={{ height: `${blueH}%`, backgroundColor: blue }} />
+    </>
+  );
+}
+
+/** 열마다 좌(남)·우(여) 배경 구간 높이 — KTAA 종합 그래프 샘플과 동일 */
 function KtaaColumnBackgrounds() {
   return (
     <div
       className="pointer-events-none absolute z-0 flex"
       style={{ top: PLOT_INSET.top, right: PLOT_INSET.right, bottom: PLOT_INSET.bottom, left: PLOT_INSET.left }}
     >
-      {COLUMN_ORDER.map((code) => {
-        const band = KTAA_COLUMN_BANDS[code];
-        const redH = (band.redTop / 50) * 100;
-        const whiteH = ((band.whiteTop - band.redTop) / 50) * 100;
-        const blueH = ((50 - band.whiteTop) / 50) * 100;
-        return (
-          <div
-            key={code}
-            className="relative h-full min-w-0 flex-1 border-r border-slate-300/40 last:border-r-0"
-          >
-            <div
-              className="absolute inset-x-0 bottom-0"
-              style={{ height: `${redH}%`, backgroundColor: ZONE_RED }}
-            />
-            <div
-              className="absolute inset-x-0"
-              style={{ bottom: `${redH}%`, height: `${whiteH}%`, backgroundColor: ZONE_WHITE }}
-            />
-            <div
-              className="absolute inset-x-0 top-0"
-              style={{ height: `${blueH}%`, backgroundColor: ZONE_BLUE }}
-            />
+      {COLUMN_ORDER.map((code) => (
+        <div
+          key={code}
+          className="relative flex h-full min-w-0 flex-1 border-r border-slate-300/40 last:border-r-0"
+        >
+          <div className="relative h-full w-1/2 border-r border-slate-300/30">
+            <KtaaZoneStack band={KTAA_GRAPH_ZONES.male[code]} tint="male" />
           </div>
-        );
-      })}
+          <div className="relative h-full w-1/2">
+            <KtaaZoneStack band={KTAA_GRAPH_ZONES.female[code]} tint="female" />
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -137,7 +138,15 @@ function EgoSegmentLabel(props: {
   );
 }
 
-export default function EgoOkKtaaCompositeChart({ columns }: { columns: EgoOkCompositeColumn[] }) {
+export default function EgoOkKtaaCompositeChart({
+  columns,
+  gender: genderInput,
+}: {
+  columns: EgoOkCompositeColumn[];
+  /** 내담자 성별 — 범례 표시용 (배경은 좌=남·우=여 항상 표시) */
+  gender?: string;
+}) {
+  const subjectGender: EgoOkGender = normalizeEgoOkGender(genderInput);
   const data: ChartRow[] = columns.map((col) => ({
     ...col,
     xLabel: col.codeLabel,
@@ -159,6 +168,11 @@ export default function EgoOkKtaaCompositeChart({ columns }: { columns: EgoOkCom
           </div>
         ))}
       </div>
+
+      <p className="px-3 pb-1 text-center text-[10px] text-gray-500 sm:text-xs">
+        배경: 각 열 <span className="text-sky-700">← 남(청)</span> ·{' '}
+        <span className="text-rose-600">여(붉은) →</span>
+      </p>
 
       <div className="relative w-full px-1 pt-1" style={{ height: CHART_PLOT_HEIGHT_PX }}>
         <KtaaColumnBackgrounds />
@@ -265,14 +279,21 @@ export default function EgoOkKtaaCompositeChart({ columns }: { columns: EgoOkCom
             선 위 숫자가 해당 오케이 척도 원점수입니다.
           </li>
           <li>
-            <strong>배경색(열 마다 다름)</strong>: KTAA 종합 그래프와 같이 CP·NP·A·FC·AC마다{' '}
+            <strong>배경색(열·성별마다 다름)</strong>: KTAA 종합 그래프와 같이 각 열을{' '}
+            <strong>왼쪽=남성(청)</strong>, <strong>오른쪽=여성(붉은)</strong> 기준으로 나누고, 하단 C · 중간 B ·
+            상단 A 구간 높이가 척도·성별마다 다릅니다(3단계 컷 bMin/aMin과 동일).{' '}
             <span className="inline-block h-2 w-3 rounded-sm border border-red-200 align-middle" style={{ background: ZONE_RED }} />{' '}
-            하단 연분홍 ·{' '}
+            하단 ·{' '}
             <span className="inline-block h-2 w-3 rounded-sm border border-gray-200 align-middle bg-white" />{' '}
-            중간 흰색 ·{' '}
+            중간 ·{' '}
             <span className="inline-block h-2 w-3 rounded-sm border border-sky-200 align-middle" style={{ background: ZONE_BLUE }} />{' '}
-            상단 연하늘 구간 높이가 서로 다릅니다(예: CP 0~15/15~35/35~50, NP 0~28/28~43/43~50 등).
-            점선(12.5)은 참고 기준선입니다. 5단계·243패턴 해석은 리포트 하단을 함께 보세요.
+            상단. 점선(12.5)은 참고 기준선입니다.
+            {genderInput ? (
+              <>
+                {' '}
+                내담자 기준: <strong>{subjectGender === 'female' ? '여성(열 오른쪽)' : '남성(열 왼쪽)'}</strong>.
+              </>
+            ) : null}
           </li>
         </ol>
         <p className="border-t border-sky-200 pt-2 text-gray-700">

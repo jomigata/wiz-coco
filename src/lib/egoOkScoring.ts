@@ -148,6 +148,26 @@ const THREE_LEVEL_CUTS: Record<EgoOkGender, Record<EgoScaleId, { aMin: number; b
   },
 };
 
+/** KTAA 종합 그래프 배경(C/B/A). redTop=bMin, whiteTop=aMin. 좌=남·우=여 (협회 안내서). */
+export type KtaaGraphZoneBounds = { redTop: number; whiteTop: number };
+
+function ktaaGraphZonesFromThreeLevel(
+  cuts: Record<EgoScaleId, { aMin: number; bMin: number; cMin: number }>,
+): Record<EgoScaleId, KtaaGraphZoneBounds> {
+  return (['CP', 'NP', 'A', 'FC', 'AC'] as const).reduce(
+    (acc, id) => {
+      acc[id] = { redTop: cuts[id].bMin, whiteTop: cuts[id].aMin };
+      return acc;
+    },
+    {} as Record<EgoScaleId, KtaaGraphZoneBounds>,
+  );
+}
+
+export const KTAA_GRAPH_ZONES: Record<EgoOkGender, Record<EgoScaleId, KtaaGraphZoneBounds>> = {
+  male: ktaaGraphZonesFromThreeLevel(THREE_LEVEL_CUTS.male),
+  female: ktaaGraphZonesFromThreeLevel(THREE_LEVEL_CUTS.female),
+};
+
 const NEGATIVE_PERCENT_BANDS: Record<FiveLevel, { min: number; max: number }> = {
   A: { min: 76, max: 100 },
   B: { min: 51, max: 75 },
