@@ -88,91 +88,61 @@ function egogramRadarTooltipLine(row: EgogramRadarRow): string {
   return line.length > 24 ? `${line.slice(0, 22)}…` : line;
 }
 
-function egogramRadarWedgePath(
+function egogramRadarScorePolygonPath(
   cx: number,
   cy: number,
-  r: number,
-  startDeg: number,
-  endDeg: number,
-): string {
+  outerRadius: number,
+  rows: EgogramRadarRow[],
+): string | null {
+  if (rows.length < 3) return null;
+  const n = rows.length;
+  const step = 360 / n;
   const toRad = (deg: number) => (deg * Math.PI) / 180;
-  const x1 = cx + r * Math.cos(toRad(startDeg));
-  const y1 = cy - r * Math.sin(toRad(startDeg));
-  const x2 = cx + r * Math.cos(toRad(endDeg));
-  const y2 = cy - r * Math.sin(toRad(endDeg));
-  const large = Math.abs(endDeg - startDeg) > 180 ? 1 : 0;
-  return `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} Z`;
+  const verts = rows.map((row, i) => {
+    const mid = 90 - step * i;
+    const r = outerRadius * (row.score / row.fullMark);
+    return {
+      x: cx + r * Math.cos(toRad(mid)),
+      y: cy - r * Math.sin(toRad(mid)),
+    };
+  });
+  const [first, ...rest] = verts;
+  return `M ${first.x} ${first.y} ${rest.map((p) => `L ${p.x} ${p.y}`).join(' ')} Z`;
 }
 
 function createEgogramRadarBackground(rows: EgogramRadarRow[]) {
-  const baseGradId = 'egogram-radar-base-radial';
+  const gradId = 'egogram-radar-score-polygon-fill';
   return function EgogramRadarBackground(props: { cx?: number; cy?: number; outerRadius?: number }) {
     const cx = props.cx ?? 0;
     const cy = props.cy ?? 0;
     const outerRadius = props.outerRadius ?? 0;
     if (outerRadius <= 0 || rows.length === 0) return null;
 
-    const n = rows.length;
-    const step = 360 / n;
-    const half = step / 2;
+    const polygonPath = egogramRadarScorePolygonPath(cx, cy, outerRadius, rows);
+    if (!polygonPath) return null;
+
+    const maxVertexR = Math.max(
+      ...rows.map((row) => outerRadius * (row.score / row.fullMark)),
+      1,
+    );
 
     return (
       <g>
         <defs>
           <radialGradient
-            id={baseGradId}
+            id={gradId}
             gradientUnits="userSpaceOnUse"
             cx={cx}
             cy={cy}
-            r={outerRadius}
+            r={maxVertexR}
           >
-            <stop offset="0%" stopColor={EGOGRAM_RADAR_SKY} stopOpacity={0.1} />
-            <stop offset="35%" stopColor={EGOGRAM_RADAR_SKY} stopOpacity={0.06} />
-            <stop offset="72%" stopColor={EGOGRAM_RADAR_PINK} stopOpacity={0.18} />
-            <stop offset="100%" stopColor={EGOGRAM_RADAR_PINK} stopOpacity={0.42} />
+            <stop offset="0%" stopColor={EGOGRAM_RADAR_SKY} stopOpacity={0.14} />
+            <stop offset="40%" stopColor={EGOGRAM_RADAR_SKY} stopOpacity={0.07} />
+            <stop offset="78%" stopColor={EGOGRAM_RADAR_PINK} stopOpacity={0.28} />
+            <stop offset="100%" stopColor={EGOGRAM_RADAR_PINK} stopOpacity={0.48} />
           </radialGradient>
-          {rows.map((row, i) => {
-            const wedgeId = `egogram-radar-wedge-${row.scale}`;
-            const mid = 90 - step * i;
-            const rad = (mid * Math.PI) / 180;
-            const gx = cx + outerRadius * 0.55 * Math.cos(rad);
-            const gy = cy - outerRadius * 0.55 * Math.sin(rad);
-            const usage = row.score / row.fullMark;
-            const dom = egogramDominance(row.positive, row.negative);
-            const emphasis = dom === 'even' ? 0.55 : 1;
-            const outerAlpha = 0.08 + 0.42 * usage * emphasis;
-            return (
-              <radialGradient
-                key={wedgeId}
-                id={wedgeId}
-                gradientUnits="userSpaceOnUse"
-                cx={cx}
-                cy={cy}
-                r={outerRadius}
-                fx={gx}
-                fy={gy}
-              >
-                <stop offset="0%" stopColor={EGOGRAM_RADAR_SKY} stopOpacity={0} />
-                <stop offset="45%" stopColor={EGOGRAM_RADAR_SKY} stopOpacity={0.04} />
-                <stop offset="100%" stopColor={EGOGRAM_RADAR_PINK} stopOpacity={outerAlpha} />
-              </radialGradient>
-            );
-          })}
         </defs>
-        <circle cx={cx} cy={cy} r={outerRadius} fill={`url(#${baseGradId})`} />
-        {rows.map((row, i) => {
-          const mid = 90 - step * i;
-          const start = mid - half;
-          const end = mid + half;
-          return (
-            <path
-              key={`wedge-${row.scale}`}
-              d={egogramRadarWedgePath(cx, cy, outerRadius, start, end)}
-              fill={`url(#egogram-radar-wedge-${row.scale})`}
-              stroke="none"
-            />
-          );
-        })}
+        <path d={polygonPath} fill={`url(#${gradId})`} stroke="none" />
         <circle cx={cx} cy={cy} r={3.5} fill="#e0f2fe" stroke="#64748b" strokeOpacity={0.55} strokeWidth={1} />
         <text x={cx} y={cy + 16} textAnchor="middle" fill="#64748b" fontSize={9} fontWeight={600}>
           0
@@ -405,7 +375,7 @@ export default function EgoOkCounselorReport({
                   dataKey="score"
                   stroke="#c7d2fe"
                   fill="#6366f1"
-                  fillOpacity={0.42}
+                  fillOpacity={0}
                   strokeWidth={2.5}
                   dot={{ r: 4, fill: '#eef2ff', stroke: '#818cf8', strokeWidth: 2 }}
                   activeDot={{ r: 6, fill: '#ffffff', stroke: '#a5b4fc', strokeWidth: 2 }}
