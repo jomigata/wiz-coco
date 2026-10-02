@@ -290,23 +290,45 @@ function egoSumOverlapsOkObstacles(
 
 const EGO_SUM_NUDGE_MAX_PX = 140;
 
+function egoSumMinYWhenScoresEqual(okRect: SumLabelRect): number {
+  return okRect.y + SUM_LABEL_BOX_H + SUM_LABEL_GAP;
+}
+
+function egoSumPlacementValid(
+  ego: SumLabelRect,
+  cyOk: number,
+  okRect: SumLabelRect,
+  scoresEqual: boolean,
+): boolean {
+  if (scoresEqual && ego.y < egoSumMinYWhenScoresEqual(okRect)) return false;
+  return !egoSumOverlapsOkObstacles(ego, cyOk, okRect);
+}
+
 /** 겹치면 이고 합계만 위·아래로 이동(오케이 합계·점·선 위치는 유지) */
 function nudgeEgoSumVertically(
   ego: SumLabelRect,
   cyOk: number,
   okRect: SumLabelRect,
+  scoresEqual: boolean,
 ): SumLabelRect {
-  if (!egoSumOverlapsOkObstacles(ego, cyOk, okRect)) return ego;
+  if (egoSumPlacementValid(ego, cyOk, okRect, scoresEqual)) return ego;
   for (let d = 1; d <= EGO_SUM_NUDGE_MAX_PX; d++) {
     const up: SumLabelRect = { ...ego, y: ego.y - d };
-    if (!egoSumOverlapsOkObstacles(up, cyOk, okRect)) return up;
+    if (egoSumPlacementValid(up, cyOk, okRect, scoresEqual)) return up;
     const down: SumLabelRect = { ...ego, y: ego.y + d };
-    if (!egoSumOverlapsOkObstacles(down, cyOk, okRect)) return down;
+    if (egoSumPlacementValid(down, cyOk, okRect, scoresEqual)) return down;
+  }
+  if (scoresEqual) {
+    const pinned: SumLabelRect = {
+      ...ego,
+      y: egoSumMinYWhenScoresEqual(okRect),
+    };
+    if (egoSumPlacementValid(pinned, cyOk, okRect, scoresEqual)) return pinned;
   }
   return ego;
 }
 
-/** 겹치지 않으면 이고=막대 위 · 오케이=점 근처(점수 큰 쪽 위). 겹치면 둘 다 오케이 점 기준 */
+/** 겹치지 않으면 이고=막대 위 · 오케이=점 근처(점수 큰 쪽 위). 동점이면 오케이 합계가 항상 위 */
 function resolveOkEgoSumLabels(
   ok: number,
   ego: number,
@@ -316,8 +338,26 @@ function resolveOkEgoSumLabels(
 ): { ok: SumLabelRect; ego: SumLabelRect } {
   const okW = sumLabelBoxWidth(ok);
   const egoW = sumLabelBoxWidth(ego);
+  const scoresEqual = ok === ego;
+
+  if (scoresEqual) {
+    const okRect = sumLabelAboveDot(cx, cyOk, okW);
+    const egoAboveBar = sumLabelAboveBar(cx, cyBarTop, egoW);
+    const minEgoY = egoSumMinYWhenScoresEqual(okRect);
+    if (egoAboveBar.y >= minEgoY && !sumLabelRectsOverlapY(egoAboveBar, okRect)) {
+      return { ok: okRect, ego: egoAboveBar };
+    }
+    const egoBelowOk: SumLabelRect = {
+      x: cx - egoW / 2,
+      y: minEgoY,
+      w: egoW,
+      textX: cx,
+    };
+    return { ok: okRect, ego: egoBelowOk };
+  }
+
   const egoAboveBar = sumLabelAboveBar(cx, cyBarTop, egoW);
-  const okOnTop = ok >= ego;
+  const okOnTop = ok > ego;
   const okPreferred = okOnTop
     ? sumLabelAboveDot(cx, cyOk, okW)
     : sumLabelBelowDot(cx, cyOk, okW);
@@ -332,7 +372,7 @@ function resolveOkEgoSumLabels(
     return { ok: okAlternate, ego: egoAboveBar };
   }
 
-  if (okOnTop) {
+  if (ok > ego) {
     return {
       ok: sumLabelAboveDot(cx, cyOk, okW),
       ego: sumLabelBelowDot(cx, cyOk, egoW),
@@ -425,7 +465,13 @@ function createKtaaOkEgoSumLabels(chartData: ChartRow[]) {
             cyOk,
             cyBarTop,
           );
-          const egoRect = nudgeEgoSumVertically(egoRectInitial, cyOk, okRect);
+          const scoresEqual = ok === row.egoTotal;
+          const egoRect = nudgeEgoSumVertically(
+            egoRectInitial,
+            cyOk,
+            okRect,
+            scoresEqual,
+          );
           return (
             <g key={`sums-${row.id}`}>
               <SumLabelBox
@@ -655,8 +701,9 @@ export default function EgoOkKtaaCompositeChart({
             <span className="inline-block h-2 w-3 rounded-sm align-middle" style={{ background: EGO_POS_COLOR }} />{' '}
             <strong>하늘(위)</strong>은 긍정 문항 합(0~25). 막대 안 숫자는 각 층 점수,{' '}
             <strong>막대 꼭대기 숫자</strong>는 두 층을 더한 <strong>이고그램 척도 총점(0~50)</strong>입니다.             CP·NP·FC·AC 열에서는 <strong>겹치지 않을 때</strong> 이고 합계는 막대 꼭대기 바로 위, 오케이 합계는
-            오케이 점 근처(점수 큰 쪽 위)에 둡니다. 배치 후에도 이고 합계가 오케이 <strong>선·점·합계</strong>와
-            겹치면 <strong>이고 합계만</strong> 위·아래로 조금씩 옮겨 겹침을 피합니다(오케이 쪽 위치는 유지).{' '}
+            오케이 점 근처(점수 큰 쪽 위)에 둡니다. <strong>점수가 같으면</strong> 오케이 합계가 이고 합계보다
+            항상 위입니다. 배치 후에도 이고 합계가 오케이 <strong>선·점·합계</strong>와 겹치면{' '}
+            <strong>이고 합계만</strong> 위·아래로 옮깁니다(동점일 때는 오케이 아래쪽만 허용).{' '}
             <strong>A 열</strong>은 이고 합계만 막대 위에 표시합니다.
           </li>
           <li>
