@@ -1,6 +1,13 @@
 'use client';
 
-import { useCallback, useLayoutEffect, useState, type CSSProperties, type ReactNode } from 'react';
+import {
+  useCallback,
+  useLayoutEffect,
+  useMemo,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from 'react';
 import {
   KTAA_GRAPH_ZONES,
   normalizeEgoOkGender,
@@ -34,6 +41,11 @@ const GENDER_ZONE_COLORS = {
   male: { bottom: ZONE_SKY, middle: ZONE_WHITE, top: ZONE_SKY },
   female: { bottom: ZONE_PINK, middle: ZONE_WHITE, top: ZONE_PINK },
 } as const;
+
+function isClientGenderProvided(genderInput: string | undefined): boolean {
+  const g = (genderInput ?? '').trim();
+  return g.length > 0 && g !== '—' && g !== '-';
+}
 
 const CHART_PLOT_HEIGHT_PX = Math.round(680 * (2 / 3) * 1.2);
 
@@ -130,61 +142,48 @@ function ktaaZoneRects(
   ];
 }
 
-/** 플롯 사각형 안에만 배경·열 구분선 (Recharts offset과 1:1) */
-function KtaaPlotBackground(props: {
+type PlotBackgroundProps = {
   offset?: { left: number; top: number; width: number; height: number };
   yAxisMap?: Record<string, { scale: YScale }>;
-}) {
-  const { offset, yAxisMap } = props;
-  if (!offset?.width || !yAxisMap) return null;
-  const scale = Object.values(yAxisMap)[0]?.scale;
-  if (!scale) return null;
+};
 
-  const { left, top, width, height } = offset;
-  const colW = width / COLUMN_ORDER.length;
-  const halfW = colW / 2;
-  const clipId = 'ktaa-plot-clip';
+/** 내담자 성별 기준: 열 전체 동일 색·동일 C/B/A 구간 높이(남 또는 여 컷) */
+function createKtaaPlotBackground(displayGender: EgoOkGender) {
+  return function KtaaPlotBackground(props: PlotBackgroundProps) {
+    const { offset, yAxisMap } = props;
+    if (!offset?.width || !yAxisMap) return null;
+    const scale = Object.values(yAxisMap)[0]?.scale;
+    if (!scale) return null;
 
-  return (
-    <g>
-      <defs>
-        <clipPath id={clipId}>
-          <rect x={left} y={top} width={width} height={height} />
-        </clipPath>
-      </defs>
-      <g clipPath={`url(#${clipId})`}>
-        {COLUMN_ORDER.map((code, i) => {
-          const xCol = left + i * colW;
-          return (
-            <g key={code}>
-              {ktaaZoneRects(
-                xCol,
-                halfW,
-                KTAA_GRAPH_ZONES.male[code],
-                GENDER_ZONE_COLORS.male,
-                scale,
-                `${code}-m`,
-              )}
-              {ktaaZoneRects(
-                xCol + halfW,
-                halfW,
-                KTAA_GRAPH_ZONES.female[code],
-                GENDER_ZONE_COLORS.female,
-                scale,
-                `${code}-f`,
-              )}
-              <line
-                x1={xCol + halfW}
-                y1={top}
-                x2={xCol + halfW}
-                y2={top + height}
-                stroke={PLOT_FRAME_STROKE}
-                strokeWidth={1}
-                strokeOpacity={0.45}
-              />
-            </g>
-          );
-        })}
+    const { left, top, width, height } = offset;
+    const colW = width / COLUMN_ORDER.length;
+    const clipId = 'ktaa-plot-clip';
+    const zoneColors = GENDER_ZONE_COLORS[displayGender];
+    const zoneBands = KTAA_GRAPH_ZONES[displayGender];
+
+    return (
+      <g>
+        <defs>
+          <clipPath id={clipId}>
+            <rect x={left} y={top} width={width} height={height} />
+          </clipPath>
+        </defs>
+        <g clipPath={`url(#${clipId})`}>
+          {COLUMN_ORDER.map((code, i) => {
+            const xCol = left + i * colW;
+            return (
+              <g key={code}>
+                {ktaaZoneRects(
+                  xCol,
+                  colW,
+                  zoneBands[code],
+                  zoneColors,
+                  scale,
+                  `${code}-${displayGender}`,
+                )}
+              </g>
+            );
+          })}
         {[1, 2, 3, 4].map((k) => (
           <line
             key={`col-${k}`}
@@ -196,9 +195,10 @@ function KtaaPlotBackground(props: {
             strokeWidth={2}
           />
         ))}
+        </g>
       </g>
-    </g>
-  );
+    );
+  };
 }
 
 function KtaaPlotFrameBorder(props: {
@@ -337,10 +337,22 @@ export default function EgoOkKtaaCompositeChart({
   gender: genderInput,
 }: {
   columns: EgoOkCompositeColumn[];
-  /** 내담자 성별 — 범례 표시용 (배경은 좌=남·우=여 항상 표시) */
+  /** 내담자 성별 — 배경 구간·색상(남=하늘 / 여=분홍) */
   gender?: string;
 }) {
-  const subjectGender: EgoOkGender = normalizeEgoOkGender(genderInput);
+  const genderProvided = isClientGenderProvided(genderInput);
+  const [randomBackgroundGender] = useState<EgoOkGender>(() =>
+    Math.random() < 0.5 ? 'male' : 'female',
+  );
+  const backgroundGender: EgoOkGender = genderProvided
+    ? normalizeEgoOkGender(genderInput)
+    : randomBackgroundGender;
+
+  const PlotBackgroundLayer = useMemo(
+    () => createKtaaPlotBackground(backgroundGender),
+    [backgroundGender],
+  );
+
   const [plotBox, setPlotBox] = useState<KtaaPlotBox | null>(null);
   const handlePlotBox = useCallback((box: KtaaPlotBox) => {
     setPlotBox((prev) =>
@@ -378,7 +390,7 @@ export default function EgoOkKtaaCompositeChart({
       <div className="relative w-full leading-none" style={{ height: CHART_PLOT_HEIGHT_PX }}>
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={data} margin={CHART_MARGIN} style={{ background: 'transparent' }}>
-            <Customized component={KtaaPlotBackground} />
+            <Customized component={PlotBackgroundLayer} />
             <ReferenceLine
               y={12.5}
               stroke="#e57373"
@@ -500,21 +512,27 @@ export default function EgoOkKtaaCompositeChart({
             이고 합계(0~50)는 사각 테두리 안 숫자로 표시합니다.
           </li>
           <li>
-            <strong>배경색(5열 공통 형태)</strong>: 각 열을 <strong>왼쪽=남(하늘)</strong>,{' '}
-            <strong>오른쪽=여(분홍)</strong>으로 나누고, 반쪽마다{' '}
-            <span className="inline-block h-2 w-3 rounded-sm border border-sky-200 align-middle" style={{ background: ZONE_SKY }} />{' '}
+            <strong>배경색(5열 동일)</strong>: 내담자 성별 기준으로 열 전체에{' '}
+            <span
+              className="inline-block h-2 w-3 rounded-sm border border-sky-200 align-middle"
+              style={{ background: backgroundGender === 'female' ? ZONE_PINK : ZONE_SKY }}
+            />{' '}
             하단(C)·{' '}
             <span className="inline-block h-2 w-3 rounded-sm border border-gray-200 align-middle bg-white" />{' '}
             중간(B)·{' '}
-            <span className="inline-block h-2 w-3 rounded-sm border border-sky-200 align-middle" style={{ background: ZONE_SKY }} />{' '}
-            상단(A) 3단(여성은 분홍). 구간 <strong>높이</strong>만 척도·성별마다 다릅니다(3단계 컷). 점선(12.5)은
+            <span
+              className="inline-block h-2 w-3 rounded-sm border border-sky-200 align-middle"
+              style={{ background: backgroundGender === 'female' ? ZONE_PINK : ZONE_SKY }}
+            />{' '}
+            상단(A) 3단. 구간 <strong>높이</strong>는 해당 성별 3단계 컷(척도마다 다름). 점선(12.5)은
             참고 기준선입니다.
-            {genderInput ? (
-              <>
-                {' '}
-                내담자 기준: <strong>{subjectGender === 'female' ? '여성(열 오른쪽)' : '남성(열 왼쪽)'}</strong>.
-              </>
+            {' '}
+            배경 기준:{' '}
+            <strong>{backgroundGender === 'female' ? '여성(분홍)' : '남성(하늘)'}</strong>
+            {!genderProvided ? (
+              <span className="text-gray-600"> — 성별 미입력, 테스트용 무작위 적용</span>
             ) : null}
+            .
           </li>
         </ol>
         <p className="border-t border-sky-200 pt-2 text-gray-700">
