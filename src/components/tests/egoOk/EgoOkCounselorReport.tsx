@@ -325,9 +325,11 @@ function EgogramRadarScaleTick({
   const titleFill = isHighlight ? peakPink : '#94a3b8';
   const scoreFill = isHighlight ? peakPink : '#64748b';
   const anchor = textAnchor as 'middle' | 'start' | 'end' | 'inherit' | undefined;
-  /** 12시(A) 축: 글자 baseline 위쪽이 SVG 상단에 잘리지 않도록 아래로 내림 */
-  const topAxisNudge = scale === 'A' ? 10 : 0;
-  const labelY = y + topAxisNudge;
+  /** 12시 A축 — SVG 상단 clip 방지(그래프 크기는 RadarChart margin·outerRadius로 유지) */
+  const isTopAxis = scale === 'A';
+  const labelY = isTopAxis ? y + 6 : y;
+  const scoreY = isTopAxis ? y + 20 : y + 14;
+  const titleBaseline = isTopAxis ? 'hanging' : 'alphabetic';
 
   return (
     <g style={{ pointerEvents: 'none' }}>
@@ -335,7 +337,7 @@ function EgogramRadarScaleTick({
         x={x}
         y={labelY}
         textAnchor={anchor}
-        dominantBaseline="middle"
+        dominantBaseline={titleBaseline}
         fill={titleFill}
         stroke="none"
         fontSize={12}
@@ -345,9 +347,9 @@ function EgogramRadarScaleTick({
       </text>
       <text
         x={x}
-        y={labelY + 14}
+        y={scoreY}
         textAnchor={anchor}
-        dominantBaseline="middle"
+        dominantBaseline={isTopAxis ? 'hanging' : 'alphabetic'}
         fill={scoreFill}
         stroke="none"
         fontSize={10}
@@ -466,10 +468,10 @@ function EgogramFiveScaleRadarChart({ data }: { data: EgogramRadarRow[] }) {
     >
       <RadarChart
         data={okRadarData}
-        outerRadius="88%"
+        outerRadius="94%"
         cx="50%"
-        cy="52%"
-        margin={{ top: 28, right: 8, bottom: 12, left: 8 }}
+        cy="50%"
+        margin={{ top: 10, right: 6, bottom: 2, left: 6 }}
       >
         <Customized component={FillOpacityMaskDefs} />
         <PolarGrid
@@ -767,8 +769,8 @@ export default function EgoOkCounselorReport({
             />
           }
         >
-          <div className="min-h-[22rem] w-full px-0.5 py-1">
-            <div className="h-[22rem] w-full overflow-visible pt-1">
+          <div className="min-h-[22rem] w-full overflow-visible px-0.5 py-1">
+            <div className="h-[22rem] w-full overflow-visible">
               <EgogramFiveScaleRadarChart data={radarData} />
             </div>
           </div>
