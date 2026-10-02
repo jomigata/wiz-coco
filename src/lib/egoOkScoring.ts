@@ -23,9 +23,26 @@ export type EgoOkScaleScore = {
   label: string;
   raw: number;
   max: number;
+  /** 부정 문항 합 (막대 하단·주황) */
+  negativeRaw: number;
+  /** 긍정 문항 합 (막대 상단·하늘) */
+  positiveRaw: number;
   fiveLevel: FiveLevel;
   threeLevel: ThreeLevel;
   negativePercent: number;
+};
+
+/** KTAA 종합 그래프 1열 (막대=이고, 선=오케이) */
+export type EgoOkCompositeColumn = {
+  id: EgoScaleId;
+  topLabel: string;
+  bottomLabel: string;
+  codeLabel: string;
+  okTag: string | null;
+  egoNegative: number;
+  egoPositive: number;
+  egoTotal: number;
+  okLine: number | null;
 };
 
 export type EgoOkOkScore = {
@@ -68,6 +85,18 @@ export type EgoOkReport = {
     fcAcLevel: string;
   };
   answeredCount: number;
+  compositeChart: EgoOkCompositeColumn[];
+};
+
+const COMPOSITE_COLUMN_META: Record<
+  EgoScaleId,
+  { topLabel: string; bottomLabel: string; codeLabel: string; okTag: string | null; okKey: OkScaleId | null }
+> = {
+  CP: { topLabel: '비판적 · 지배적', bottomLabel: '느슨함', codeLabel: 'CP', okTag: 'U−', okKey: 'U-' },
+  NP: { topLabel: '과보호 · 헌신적', bottomLabel: '방임적', codeLabel: 'NP', okTag: 'U+', okKey: 'U+' },
+  A: { topLabel: '기계적 · 현실적', bottomLabel: '즉흥적', codeLabel: 'A', okTag: null, okKey: null },
+  FC: { topLabel: '개구쟁이 · 개방적', bottomLabel: '폐쇄적', codeLabel: 'FC', okTag: 'I+', okKey: 'I+' },
+  AC: { topLabel: '자기비하 · 의존적', bottomLabel: '독단적', codeLabel: 'AC', okTag: 'I−', okKey: 'I-' },
 };
 
 const EGO_LABELS: Record<EgoScaleId, string> = {
@@ -254,6 +283,8 @@ export function computeEgoOkReport(
 ): EgoOkReport {
   const gender = normalizeEgoOkGender(genderInput);
   const egoSums: Record<EgoScaleId, number> = { CP: 0, NP: 0, A: 0, FC: 0, AC: 0 };
+  const egoNeg: Record<EgoScaleId, number> = { CP: 0, NP: 0, A: 0, FC: 0, AC: 0 };
+  const egoPos: Record<EgoScaleId, number> = { CP: 0, NP: 0, A: 0, FC: 0, AC: 0 };
   const okSums: Record<OkScaleId, number> = { 'U+': 0, 'U-': 0, 'I+': 0, 'I-': 0 };
   const orderedAnswers: number[] = [];
 
@@ -269,6 +300,8 @@ export function computeEgoOkReport(
     if (!key) return;
     if (key === 'CP' || key === 'NP' || key === 'A' || key === 'FC' || key === 'AC') {
       egoSums[key] += pts;
+      if (q.scaleType.endsWith('_negative')) egoNeg[key] += pts;
+      else if (q.scaleType.endsWith('_positive')) egoPos[key] += pts;
     } else {
       okSums[key] += pts;
     }
@@ -282,6 +315,8 @@ export function computeEgoOkReport(
       label: EGO_LABELS[id],
       raw,
       max: 50,
+      negativeRaw: egoNeg[id],
+      positiveRaw: egoPos[id],
       fiveLevel,
       threeLevel: sumInRange(raw, THREE_LEVEL_CUTS[gender][id]),
       negativePercent: negativePercentForLevel(fiveLevel),
@@ -319,6 +354,25 @@ export function computeEgoOkReport(
   const cpNpSum = cp + np;
   const fcAcSum = fc + ac;
 
+  const compositeChart: EgoOkCompositeColumn[] = (['CP', 'NP', 'A', 'FC', 'AC'] as EgoScaleId[]).map(
+    (id) => {
+      const meta = COMPOSITE_COLUMN_META[id];
+      const ego = egogram.find((s) => s.id === id)!;
+      const okLine = meta.okKey != null ? okSums[meta.okKey] : null;
+      return {
+        id,
+        topLabel: meta.topLabel,
+        bottomLabel: meta.bottomLabel,
+        codeLabel: meta.codeLabel,
+        okTag: meta.okTag,
+        egoNegative: ego.negativeRaw,
+        egoPositive: ego.positiveRaw,
+        egoTotal: ego.raw,
+        okLine,
+      };
+    },
+  );
+
   return {
     itemBankId: 'ego-ok-90',
     patternCode,
@@ -352,5 +406,6 @@ export function computeEgoOkReport(
       fcAcLevel: plus243Label(fcAcSum),
     },
     answeredCount: orderedAnswers.filter((v) => v > 0).length,
+    compositeChart,
   };
 }

@@ -15,6 +15,7 @@ import {
   Tooltip,
   Cell,
 } from 'recharts';
+import EgoOkKtaaCompositeChart from '@/components/tests/egoOk/EgoOkKtaaCompositeChart';
 
 const LEVEL_STYLE: Record<string, string> = {
   A: 'bg-emerald-500/20 text-emerald-200 ring-emerald-400/40',
@@ -124,6 +125,16 @@ export default function EgoOkCounselorReport({
           ) : null}
         </div>
       </div>
+
+      <section className="rounded-2xl border border-white/10 bg-slate-900/40 p-4 shadow-xl sm:p-6">
+        <header className="mb-4">
+          <h2 className="text-lg font-semibold text-white">이고-오케이그램 (Ego-Ok) 진단 결과 그래프</h2>
+          <p className="mt-1 text-sm text-slate-400">
+            KTAA 종합 결과 형식 — 막대(주황·하늘)=이고그램 긍·부정 합, 적색 선=오케이그램(U−, U+, I+, I−)
+          </p>
+        </header>
+        <EgoOkKtaaCompositeChart columns={report.compositeChart} />
+      </section>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <SectionCard title="이고그램 5척도" subtitle="원점수 50 만점 · 5단계(A~E) · 243 구간(A/B/C)">
