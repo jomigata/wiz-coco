@@ -69,7 +69,9 @@
     "solapi:templates:list": "node scripts/list-solapi-templates.js",
     "migrate:strip-code-hyphens": "python backend/scripts/migrate_strip_code_hyphens.py",
     "migrate:strip-code-hyphens:dry": "python backend/scripts/migrate_strip_code_hyphens.py --dry-run",
-    "sync:ego-ok-questions": "node scripts/sync-ego-ok-questions.mjs"
+    "sync:ego-ok-questions": "node scripts/sync-ego-ok-questions.mjs",
+    "sync:ego-ok-pattern-reports": "node scripts/sync-ego-ok-pattern-reports.mjs",
+    "sync:ego-ok": "npm run sync:ego-ok-questions"
   },
   "dependencies": {
     "@aws-sdk/client-ses": "^3.804.0",

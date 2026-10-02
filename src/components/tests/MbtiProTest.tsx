@@ -8,6 +8,7 @@ import {
   createLocalPsychTestClientInfo,
   isLocalPsychTestDirectActive,
 } from '@/lib/localPsychTestDirectStart';
+import { saveEgoOkReportDraft } from '@/lib/egoOkReportSession';
 import Link from 'next/link';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -417,6 +418,14 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
     setIsLoading(true); // 로딩 시작
     
     try {
+      if (localDirect && isEgoOkFlow) {
+        clearTestProgress(testId);
+        saveEgoOkReportDraft({ answers, clientInfo });
+        router.push('/tests/ego-ok-pro/result?localDirect=1');
+        setIsLoading(false);
+        return;
+      }
+
       if (localDirect) {
         clearTestProgress(testId);
         window.alert('로컬 테스트 모드: 검사가 완료되었습니다. (결과는 저장하지 않습니다)');
