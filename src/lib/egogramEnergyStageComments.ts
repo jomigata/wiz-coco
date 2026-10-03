@@ -2,7 +2,6 @@ import type { EgoOkCompositeColumn, EgoOkScaleScore, EgoScaleId } from '@/lib/eg
 import {
   formatPlus243StageLabel,
   plus243StageBand,
-  plus243StageBandLabel,
   rawScoreToPlus243Tier,
   type Plus243Stage,
   type Plus243StageBand,
@@ -28,26 +27,6 @@ export const EGO_ENERGY_DISPLAY_NAMES: Record<EgoScaleId, string> = {
   FC: '자유로운 아이',
   AC: '순응하는 아이',
 };
-
-type Dominance = 'positive' | 'negative' | 'even';
-
-function egogramDominance(positive: number, negative: number): Dominance {
-  if (positive > negative) return 'positive';
-  if (negative > positive) return 'negative';
-  return 'even';
-}
-
-function dominantTrait(col: EgoOkCompositeColumn, dom: Dominance): string {
-  if (dom === 'negative') return col.bottomLabel;
-  if (dom === 'positive') return col.topLabel;
-  return `${col.topLabel} · ${col.bottomLabel}`;
-}
-
-function poleLabel(dom: Dominance): string {
-  if (dom === 'negative') return '부정(하단) 소계';
-  if (dom === 'positive') return '긍정(상단) 소계';
-  return '긍정·부정 소계';
-}
 
 const SCALE_ROLE: Record<
   EgoScaleId,
@@ -92,56 +71,56 @@ const STAGE_DETAIL: Record<
   1: {
     strength: '에너지가 매우 낮아 부담·압박이 적고, 관계에서 가벼운 편일 수 있습니다.',
     caution: '필요한 순간에도 자아가 잘 올라오지 않아 회피·공백으로 읽힐 수 있습니다.',
-    peakLead: '다섯 척도 중 상대 최고이나, 243+ 1단계(부족)로 절대적으로는 매우 낮은 편입니다.',
-    lowLead: '243+ 1단계(부족)로, 이 자아를 거의 쓰지 않는 경향이 뚜렷합니다.',
+    peakLead: '다섯 척도 중 상대 최고이나, 243+ 1단계로 절대적으로는 매우 낮은 편입니다.',
+    lowLead: '243+ 1단계로, 이 자아를 거의 쓰지 않는 경향이 뚜렷합니다.',
   },
   2: {
     strength: '과한 사용 부담은 적으나, 상황에 맞춰 키우기 위한 여지가 남아 있습니다.',
     caution: '기능이 약해 중요한 장면에서 준비·표현이 늦어질 수 있습니다.',
-    peakLead: '상대적으로는 최고점이나 2단계(부족)에 해당합니다.',
-    lowLead: '2단계(부족)로, 일상에서 이 자아를 뚜렷하게 쓰지 않는 편입니다.',
+    peakLead: '상대적으로는 최고점이나 243+ 2단계에 해당합니다.',
+    lowLead: '243+ 2단계로, 일상에서 이 자아를 뚜렷하게 쓰지 않는 편입니다.',
   },
   3: {
     strength: '부족 구간이지만 최저 수준은 아니어서, 의식적 연습으로 회복 가능성이 있습니다.',
-    caution: '3단계(부족 상단)이므로 4단계(보통)로 올리지 않으면 습관적으로 비활성화될 수 있습니다.',
-    peakLead: '다섯 척도 중 최고이나 3단계(부족)에 머물러 있습니다.',
-    lowLead: '3단계(부족)로, 다른 척도 대비 가장 낮게 나타납니다.',
+    caution: '243+ 3단계이므로 4단계로 올리지 않으면 습관적으로 비활성화될 수 있습니다.',
+    peakLead: '다섯 척도 중 최고이나 243+ 3단계에 머물러 있습니다.',
+    lowLead: '243+ 3단계로, 다른 척도 대비 가장 낮게 나타납니다.',
   },
   4: {
-    strength: '보통 구간 하단으로, 과하지 않게 기능을 쓰기 시작하기 좋습니다.',
-    caution: '4단계(보통)이므로 급격한 확대·축소보다는 리듬을 유지하는 것이 좋습니다.',
-    peakLead: '4단계(보통)로, 에너지가 균형에 가깝게 쓰입니다.',
-    lowLead: '상대 최저이나 4단계(보통)라 절대적으로 극단적 부족은 아닐 수 있습니다.',
+    strength: '과하지 않게 기능을 쓰기 시작하기 좋은 수준입니다.',
+    caution: '243+ 4단계이므로 급격한 확대·축소보다는 리듬을 유지하는 것이 좋습니다.',
+    peakLead: '243+ 4단계로, 에너지가 균형에 가깝게 쓰입니다.',
+    lowLead: '상대 최저이나 243+ 4단계라 절대적으로 극단적 부족은 아닐 수 있습니다.',
   },
   5: {
-    strength: '보통 구간 중심으로, 일상·업무에서 안정적으로 활용하기 쉽습니다.',
-    caution: '5단계(보통)에서 6단계(보통 상단)로 넘어갈 때 과함 전조를 점검하세요.',
-    peakLead: '5단계(보통)로, 가장 많이 쓰는 에너지가 무리 없이 작동합니다.',
-    lowLead: '상대적으로는 낮지만 5단계(보통)로 기능 자체는 유지되고 있습니다.',
+    strength: '일상·업무에서 안정적으로 활용하기 쉬운 수준입니다.',
+    caution: '243+ 5단계에서 6단계로 넘어갈 때 과함 전조를 점검하세요.',
+    peakLead: '243+ 5단계로, 가장 많이 쓰는 에너지가 무리 없이 작동합니다.',
+    lowLead: '상대적으로는 낮지만 243+ 5단계로 기능 자체는 유지되고 있습니다.',
   },
   6: {
-    strength: '보통 구간 상단으로, 역할 수행·관계 기여에 힘이 실립니다.',
-    caution: '6단계(보통 상단)이므로 7단계(과함)로 치솟지 않도록 강도를 조절하세요.',
-    peakLead: '6단계(보통 상단)로, 다섯 척도 중 두드러지게 높게 나타납니다.',
-    lowLead: '상대 최저이나 6단계(보통 상단)로 절대적으로는 충분한 편입니다.',
+    strength: '역할 수행·관계 기여에 힘이 실리는 수준입니다.',
+    caution: '243+ 6단계이므로 7단계로 치솟지 않도록 강도를 조절하세요.',
+    peakLead: '243+ 6단계로, 다섯 척도 중 두드러지게 높게 나타납니다.',
+    lowLead: '상대 최저이나 243+ 6단계로 절대적으로는 충분한 편입니다.',
   },
   7: {
-    strength: '과함 구간 하단으로, 상황 주도·추진력이 분명히 드러날 수 있습니다.',
-    caution: '7단계(과함)이므로 과잉·고집·소진 신호를 함께 봐야 합니다.',
-    peakLead: '7단계(과함)로, 이 자아 사용이 강하게 나타납니다.',
-    lowLead: '상대적으로는 낮지만 7단계(과함)라 절대 에너지는 높은 편입니다.',
+    strength: '상황 주도·추진력이 분명히 드러날 수 있습니다.',
+    caution: '243+ 7단계이므로 과잉·고집·소진 신호를 함께 봐야 합니다.',
+    peakLead: '243+ 7단계로, 이 자아 사용이 강하게 나타납니다.',
+    lowLead: '상대적으로는 낮지만 243+ 7단계라 절대 에너지는 높은 편입니다.',
   },
   8: {
-    strength: '과함 구간에서 리더십·영향력이 크게 작용할 수 있습니다.',
-    caution: '8단계(과함)로 주변에 부담·저항을 줄 수 있어 강도 조절이 필요합니다.',
-    peakLead: '8단계(과함)로, 에너지가 매우 강하게 쓰입니다.',
-    lowLead: '8단계(과함)이나 타 척도와의 분배·균형 이슈로 읽는 것이 타당합니다.',
+    strength: '리더십·영향력이 크게 작용할 수 있습니다.',
+    caution: '243+ 8단계로 주변에 부담·저항을 줄 수 있어 강도 조절이 필요합니다.',
+    peakLead: '243+ 8단계로, 에너지가 매우 강하게 쓰입니다.',
+    lowLead: '243+ 8단계이나 타 척도와의 분배·균형 이슈로 읽는 것이 타당합니다.',
   },
   9: {
-    strength: '과함 최상단으로, 위기·변화 상황에서 강한 추진·통제가 가능합니다.',
-    caution: '9단계(과함)는 번아웃·관계 마찰 위험이 커서 의식적 완화·위임이 필요합니다.',
-    peakLead: '9단계(과함)로, 이 자아가 압도적으로 높게 나타납니다.',
-    lowLead: '9단계(과함)로, 상대적으로만 낮고 절대적으로는 매우 높은 편입니다.',
+    strength: '위기·변화 상황에서 강한 추진·통제가 가능합니다.',
+    caution: '243+ 9단계는 번아웃·관계 마찰 위험이 커서 의식적 완화·위임이 필요합니다.',
+    peakLead: '243+ 9단계로, 이 자아가 압도적으로 높게 나타납니다.',
+    lowLead: '243+ 9단계로, 상대적으로만 낮고 절대적으로는 매우 높은 편입니다.',
   },
 };
 
@@ -163,10 +142,10 @@ function roleCaution(id: EgoScaleId, band: Plus243StageBand, stage: Plus243Stage
   const ctx =
     context === 'peak' ? '다섯 척도 중 최고점 기준으로 ' : '다섯 척도 중 최저점 기준으로 ';
   if (band === 'deficit') {
-    return `${ctx}${detail} ${role.balanceTip}으로 4단계(보통) 쪽 회복을 검토하세요.`;
+    return `${ctx}${detail} ${role.balanceTip}으로 4단계 쪽 회복을 검토하세요.`;
   }
   if (band === 'normal') {
-    return `${ctx}${detail} ${role.balanceTip}을 유지하면 3단계(부족)·7단계(과함)로의 이탈을 줄일 수 있습니다.`;
+    return `${ctx}${detail} ${role.balanceTip}을 유지하면 3단계·7단계로의 이탈을 줄일 수 있습니다.`;
   }
   return `${ctx}${detail} ${role.balanceTip}으로 강도를 낮추세요.`;
 }
@@ -184,38 +163,35 @@ function wrapInsight(tier: Plus243Tier, comment: string, strengths: string[], ca
   };
 }
 
-/** 최고 사용에너지 — 243+ 플러스 9단계 */
+/** 최고 사용에너지 — 243+ 플러스 9단계 (이고그램 긍정·부정 합계 raw 기준) */
 export function buildPeakEgogramEnergyInsight(
   scale: EgoOkScaleScore,
-  col: EgoOkCompositeColumn,
+  _col: EgoOkCompositeColumn,
 ): EgogramEnergyInsight {
   const tier = rawScoreToPlus243Tier(scale.raw);
   const stage = tier.stage;
   const band = plus243StageBand(stage);
-  const bandKo = plus243StageBandLabel(band);
-  const dom = egogramDominance(scale.positiveRaw, scale.negativeRaw);
-  const trait = dominantTrait(col, dom);
+  const role = SCALE_ROLE[scale.id];
   const name = EGO_ENERGY_DISPLAY_NAMES[scale.id];
   const lead = STAGE_DETAIL[stage].peakLead;
 
-  const comment = `${name} · 243+ 플러스 ${stage}단계(${bandKo}) · ${lead} ${poleLabel(dom)} 기준 「${trait}」 양상이 두드러집니다.`;
+  const comment = `${name} · 243+ 플러스 ${stage}단계 · ${lead} 이고그램(긍정·부정 합계) 기준으로 ${role.benefit} 양상이 두드러집니다.`;
 
   return wrapInsight(tier, comment, [roleStrength(scale.id, band, stage)], [roleCaution(scale.id, band, stage, 'peak')]);
 }
 
-/** 부족한 사용에너지 — 243+ 플러스 9단계 */
+/** 부족한 사용에너지 — 243+ 플러스 9단계 (이고그램 긍정·부정 합계 raw 기준) */
 export function buildLowEgogramEnergyInsight(
   scale: EgoOkScaleScore,
-  col: EgoOkCompositeColumn,
+  _col: EgoOkCompositeColumn,
 ): EgogramEnergyInsight {
   const tier = rawScoreToPlus243Tier(scale.raw);
   const stage = tier.stage;
   const band = plus243StageBand(stage);
-  const bandKo = plus243StageBandLabel(band);
   const name = EGO_ENERGY_DISPLAY_NAMES[scale.id];
   const lead = STAGE_DETAIL[stage].lowLead;
 
-  const comment = `${name} · 243+ 플러스 ${stage}단계(${bandKo}) · ${lead} (많이 쓰는 쪽: ${col.topLabel} · 상대적으로 약한 쪽: ${col.bottomLabel})`;
+  const comment = `${name} · 243+ 플러스 ${stage}단계 · ${lead} (이고그램 긍정·부정 합계 기준)`;
 
   return wrapInsight(tier, comment, [roleStrength(scale.id, band, stage)], [roleCaution(scale.id, band, stage, 'low')]);
 }

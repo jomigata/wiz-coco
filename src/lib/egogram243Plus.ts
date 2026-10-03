@@ -141,6 +141,5 @@ export function plus243StageBandLabel(band: Plus243StageBand): string {
 }
 
 export function formatPlus243StageLabel(tier: Plus243Tier): string {
-  const band = plus243StageBand(tier.stage);
-  return `243+ 플러스 ${tier.stage}단계 · ${plus243StageBandLabel(band)}`;
+  return `243+ 플러스 ${tier.stage}단계`;
 }
