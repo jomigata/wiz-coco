@@ -141,22 +141,26 @@ function Pattern243AndPlusCode({
   patternCode,
   plus,
   className,
+  block,
 }: {
   patternCode: string;
   plus: Pattern243Plus;
   className?: string;
+  /** 카드 등 — 값 열을 넓혀 BBBBB / B⁴B⁵… 세로 중심 맞춤 */
+  block?: boolean;
 }) {
   return (
-    <span className={`inline-flex flex-wrap items-baseline gap-x-3 gap-y-2 ${className ?? ''}`}>
-      <span className="inline-flex flex-col gap-0.5 sm:inline-flex sm:flex-row sm:items-baseline sm:gap-x-2">
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-indigo-300/90">243 패턴</span>
+    <span
+      className={`grid grid-cols-[minmax(4.5rem,auto)_1fr] items-center gap-x-2 gap-y-2 ${block ? 'w-full' : 'inline-grid min-w-[11rem]'} ${className ?? ''}`}
+    >
+      <span className="text-[10px] font-semibold uppercase tracking-wider text-indigo-300/90">243 패턴</span>
+      <span className="flex justify-center">
         <span className="rounded-lg bg-indigo-500/15 px-2.5 py-0.5 font-mono text-lg font-extrabold tracking-[0.22em] text-indigo-50 ring-1 ring-indigo-400/25">
           {patternCode}
         </span>
       </span>
-      <span className="hidden h-4 w-px shrink-0 self-center bg-white/15 sm:inline-block" aria-hidden />
-      <span className="inline-flex flex-col gap-0.5 sm:inline-flex sm:flex-row sm:items-baseline sm:gap-x-2">
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">243+ 플러스</span>
+      <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">243+ 플러스</span>
+      <span className="flex justify-center">
         <Pattern243PlusCode plus={plus} />
       </span>
     </span>
@@ -731,7 +735,11 @@ export default function EgoOkCounselorReport({
             <div className="rounded-xl bg-white/[0.04] px-4 py-3 ring-1 ring-white/10">
               <dt className="sr-only">243 패턴 · 243+ 플러스</dt>
               <dd className="text-base">
-                <Pattern243AndPlusCode patternCode={report.patternCode} plus={report.pattern243Plus} />
+                <Pattern243AndPlusCode
+                  block
+                  patternCode={report.patternCode}
+                  plus={report.pattern243Plus}
+                />
               </dd>
             </div>
             <div className="rounded-xl bg-white/[0.04] px-4 py-3 ring-1 ring-white/10">
