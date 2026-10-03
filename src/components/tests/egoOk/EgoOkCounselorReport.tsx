@@ -137,13 +137,32 @@ function Pattern243PlusCode({ plus, className }: { plus: Pattern243Plus; classNa
   );
 }
 
+function Pattern243AndPlusCode({
+  patternCode,
+  plus,
+  className,
+}: {
+  patternCode: string;
+  plus: Pattern243Plus;
+  className?: string;
+}) {
+  return (
+    <span className={`inline-flex flex-wrap items-baseline gap-x-2 gap-y-1 ${className ?? ''}`}>
+      <span className="font-mono text-base font-bold tracking-widest text-indigo-200">{patternCode}</span>
+      <Pattern243PlusCode plus={plus} />
+    </span>
+  );
+}
+
 function EgogramRadarSummarySubtitle({
   peakScale,
+  patternCode,
   pattern243Plus,
   basicPattern,
   missing,
 }: {
   peakScale: EgoOkScaleScore;
+  patternCode: string;
   pattern243Plus: Pattern243Plus;
   basicPattern: string;
   missing: boolean;
@@ -154,9 +173,9 @@ function EgogramRadarSummarySubtitle({
         최고 이고그램 에너지 : {formatEgogramEnergyHeadline(peakScale)}
       </p>
       <p className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-slate-400">
-        <span className="inline-flex flex-wrap items-baseline gap-1">
-          <span>243+ 플러스</span>
-          <Pattern243PlusCode plus={pattern243Plus} />
+        <span className="inline-flex flex-wrap items-baseline gap-2">
+          <span>243 패턴 · 243+ 플러스</span>
+          <Pattern243AndPlusCode patternCode={patternCode} plus={pattern243Plus} />
         </span>
         {basicPattern ? <span className="text-slate-300">· {basicPattern}</span> : null}
         {missing ? <span className="text-amber-200/80">· 기준 보고서 문장 없음</span> : null}
@@ -704,9 +723,9 @@ export default function EgoOkCounselorReport({
               </dd>
             </div>
             <div className="rounded-xl bg-white/[0.04] px-4 py-3 ring-1 ring-white/10">
-              <dt className="text-xs text-slate-500">243+ 플러스</dt>
+              <dt className="text-xs text-slate-500">243 패턴 · 243+ 플러스</dt>
               <dd className="mt-1.5 text-base">
-                <Pattern243PlusCode plus={report.pattern243Plus} />
+                <Pattern243AndPlusCode patternCode={report.patternCode} plus={report.pattern243Plus} />
               </dd>
             </div>
             <div className="rounded-xl bg-white/[0.04] px-4 py-3 ring-1 ring-white/10">
@@ -739,6 +758,7 @@ export default function EgoOkCounselorReport({
           subtitle={
             <EgogramRadarSummarySubtitle
               peakScale={peakEgogram}
+              patternCode={report.patternCode}
               pattern243Plus={report.pattern243Plus}
               basicPattern={report.pattern243.basicPattern}
               missing={report.pattern243.missing}
@@ -844,8 +864,12 @@ export default function EgoOkCounselorReport({
           </div>
         </div>
         <p className="mt-4 text-sm text-slate-400">
-          243+ 플러스 (5척도){' '}
-          <Pattern243PlusCode plus={report.pattern243Plus} className="ml-1 align-middle" />
+          243 패턴 · 243+ 플러스{' '}
+          <Pattern243AndPlusCode
+            patternCode={report.patternCode}
+            plus={report.pattern243Plus}
+            className="ml-1 align-middle"
+          />
         </p>
       </SectionCard>
 
