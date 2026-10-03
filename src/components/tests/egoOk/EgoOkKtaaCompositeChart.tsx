@@ -353,7 +353,7 @@ function egoSumOverlapsOkObstacles(
   return egoTop < blockBottom && blockTop < egoBottom;
 }
 
-const EGO_SUM_NUDGE_MAX_PX = 140;
+const EGO_SUM_NUDGE_MAX_PX = 220;
 
 function egoSumMinYWhenScoresEqual(okRect: SumLabelRect): number {
   return okRect.y + SUM_LABEL_BOX_H + SUM_LABEL_GAP;
@@ -394,7 +394,9 @@ function nudgeEgoSumVertically(
 }
 
 const SEG_LABEL_TEXT_H = 14;
-const SEG_LABEL_NUDGE_MAX_PX = 80;
+/** 합계 박스·점과의 여유 (층 숫자를 더 멀리 밀기) */
+const SEG_LABEL_OBSTACLE_RECT_INFLATE_Y = 8;
+const SEG_LABEL_OBSTACLE_DOT_EXTRA_R = 10;
 
 type SegmentLabelObstacle =
   | { kind: 'rect'; rect: SumLabelRect }
@@ -427,8 +429,7 @@ function segmentLabelOverlapsObstacles(
   const box = segmentLabelBounds(centerY, cx, value);
   for (const o of obstacles) {
     if (o.kind === 'dot') {
-      const pad = SUM_LABEL_GAP;
-      const r = o.r + pad;
+      const r = o.r + SEG_LABEL_OBSTACLE_DOT_EXTRA_R;
       const closestX = Math.max(box.left, Math.min(o.cx, box.right));
       const closestY = Math.max(box.top, Math.min(o.cy, box.bottom));
       const dx = o.cx - closestX;
@@ -440,8 +441,8 @@ function segmentLabelOverlapsObstacles(
         boundsOverlap(box, {
           left: r.x,
           right: r.x + r.w,
-          top: r.y,
-          bottom: r.y + SUM_LABEL_BOX_H,
+          top: r.y - SEG_LABEL_OBSTACLE_RECT_INFLATE_Y,
+          bottom: r.y + SUM_LABEL_BOX_H + SEG_LABEL_OBSTACLE_RECT_INFLATE_Y,
         })
       ) {
         return true;
@@ -451,24 +452,39 @@ function segmentLabelOverlapsObstacles(
   return false;
 }
 
-function nudgeSegmentLabelCenterY(
+function findSegmentLabelY(
   preferredY: number,
-  minY: number,
-  maxY: number,
+  searchMinY: number,
+  searchMaxY: number,
   cx: number,
   value: number,
   obstacles: SegmentLabelObstacle[],
 ): number {
-  const clamp = (y: number) => Math.min(maxY, Math.max(minY, y));
-  const pref = clamp(preferredY);
+  const lo = Math.min(searchMinY, searchMaxY);
+  const hi = Math.max(searchMinY, searchMaxY);
+  if (lo >= hi) return preferredY;
+
+  const pref = Math.min(hi, Math.max(lo, preferredY));
   if (!segmentLabelOverlapsObstacles(pref, cx, value, obstacles)) return pref;
-  for (let d = 1; d <= SEG_LABEL_NUDGE_MAX_PX; d++) {
-    const up = clamp(pref - d);
-    if (!segmentLabelOverlapsObstacles(up, cx, value, obstacles)) return up;
-    const down = clamp(pref + d);
-    if (!segmentLabelOverlapsObstacles(down, cx, value, obstacles)) return down;
+
+  for (let d = 1; d <= hi - lo; d++) {
+    const up = pref - d;
+    if (up >= lo && !segmentLabelOverlapsObstacles(up, cx, value, obstacles)) return up;
+    const down = pref + d;
+    if (down <= hi && !segmentLabelOverlapsObstacles(down, cx, value, obstacles)) return down;
   }
-  return pref;
+
+  let bestY = pref;
+  let bestDist = Number.POSITIVE_INFINITY;
+  for (let y = Math.ceil(lo); y <= Math.floor(hi); y++) {
+    if (segmentLabelOverlapsObstacles(y, cx, value, obstacles)) continue;
+    const dist = Math.abs(y - pref);
+    if (dist < bestDist) {
+      bestDist = dist;
+      bestY = y;
+    }
+  }
+  return bestY;
 }
 
 function computeColumnSumLayout(
@@ -713,13 +729,16 @@ function createKtaaEgoSegmentLabels(chartData: ChartRow[]) {
             });
           }
 
+          const barTop = Math.min(yTotal, yNeg, y0);
+          const barBottom = Math.max(yTotal, yNeg, y0);
+          const searchMinY = barTop + SEG_LABEL_TEXT_H / 2 + 4;
+          const searchMaxY = barBottom - SEG_LABEL_TEXT_H / 2 - 4;
+
           return segments.map((seg) => {
             const preferred = (seg.segTop + seg.segBottom) / 2 + 4;
-            const minY = Math.min(seg.segTop, seg.segBottom) + SEG_LABEL_TEXT_H / 2 + 2;
-            const maxY = Math.max(seg.segTop, seg.segBottom) - SEG_LABEL_TEXT_H / 2 - 2;
             const labelY =
               obstacles.length > 0
-                ? nudgeSegmentLabelCenterY(preferred, minY, maxY, cx, seg.value, obstacles)
+                ? findSegmentLabelY(preferred, searchMinY, searchMaxY, cx, seg.value, obstacles)
                 : preferred;
 
             return (
