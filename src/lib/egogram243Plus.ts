@@ -127,7 +127,11 @@ export function buildPattern243Plus(egogram: EgoOkScaleScore[]): Pattern243Plus 
 
 export type Plus243StageBand = 'deficit' | 'normal' | 'excess';
 
-/** 보고서 설명 기준: 1~3 부족 · 4~6 보통 · 7~9 과함 */
+/**
+ * 보고서 설명 기준 (계단 이동 가정)
+ * - 1~3: 에너지 사용 부족 · 4~6: 권장 · 7~9: 에너지 사용 과다
+ * - 이탈 언급은 현재 단계의 ±1 계단만 (egogramEnergyStageComments)
+ */
 export function plus243StageBand(stage: Plus243Stage): Plus243StageBand {
   if (stage <= 3) return 'deficit';
   if (stage <= 6) return 'normal';

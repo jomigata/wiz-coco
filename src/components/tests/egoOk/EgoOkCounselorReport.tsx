@@ -211,7 +211,7 @@ function EgogramEnergyInsightPanel({
   return (
     <div className="mt-5 space-y-4 border-t border-white/10 pt-5">
       <p className="text-xs text-slate-500">
-        코멘트 기준: 243+ 플러스 9단계 — 1~3 부족 · 4~6 보통 · 7~9 과함 (단계별 세부 설명)
+        코멘트 기준: 243+ 9단계(계단) — 1~3 에너지 부족 · 4~6 권장 · 7~9 과다 · 이탈 설명은 인접(±1) 계단만
       </p>
       <article className="rounded-xl bg-fuchsia-500/10 p-4 ring-1 ring-fuchsia-400/20">
         <h3 className="text-sm font-semibold text-fuchsia-100">
