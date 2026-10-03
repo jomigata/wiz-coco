@@ -24,7 +24,6 @@ import {
   CartesianGrid,
   ResponsiveContainer,
   ReferenceLine,
-  LabelList,
   Customized,
 } from 'recharts';
 
@@ -394,6 +393,128 @@ function nudgeEgoSumVertically(
   return ego;
 }
 
+const SEG_LABEL_TEXT_H = 14;
+const SEG_LABEL_NUDGE_MAX_PX = 80;
+
+type SegmentLabelObstacle =
+  | { kind: 'rect'; rect: SumLabelRect }
+  | { kind: 'dot'; cx: number; cy: number; r: number };
+
+function segmentLabelBounds(centerY: number, cx: number, value: number) {
+  const halfW = Math.max(9, String(value).length * 4.5);
+  const halfH = SEG_LABEL_TEXT_H / 2;
+  return {
+    left: cx - halfW,
+    right: cx + halfW,
+    top: centerY - halfH,
+    bottom: centerY + halfH,
+  };
+}
+
+function boundsOverlap(
+  a: { left: number; right: number; top: number; bottom: number },
+  b: { left: number; right: number; top: number; bottom: number },
+): boolean {
+  return a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+}
+
+function segmentLabelOverlapsObstacles(
+  centerY: number,
+  cx: number,
+  value: number,
+  obstacles: SegmentLabelObstacle[],
+): boolean {
+  const box = segmentLabelBounds(centerY, cx, value);
+  for (const o of obstacles) {
+    if (o.kind === 'dot') {
+      const pad = SUM_LABEL_GAP;
+      const r = o.r + pad;
+      const closestX = Math.max(box.left, Math.min(o.cx, box.right));
+      const closestY = Math.max(box.top, Math.min(o.cy, box.bottom));
+      const dx = o.cx - closestX;
+      const dy = o.cy - closestY;
+      if (dx * dx + dy * dy < r * r) return true;
+    } else {
+      const r = o.rect;
+      if (
+        boundsOverlap(box, {
+          left: r.x,
+          right: r.x + r.w,
+          top: r.y,
+          bottom: r.y + SUM_LABEL_BOX_H,
+        })
+      ) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+function nudgeSegmentLabelCenterY(
+  preferredY: number,
+  minY: number,
+  maxY: number,
+  cx: number,
+  value: number,
+  obstacles: SegmentLabelObstacle[],
+): number {
+  const clamp = (y: number) => Math.min(maxY, Math.max(minY, y));
+  const pref = clamp(preferredY);
+  if (!segmentLabelOverlapsObstacles(pref, cx, value, obstacles)) return pref;
+  for (let d = 1; d <= SEG_LABEL_NUDGE_MAX_PX; d++) {
+    const up = clamp(pref - d);
+    if (!segmentLabelOverlapsObstacles(up, cx, value, obstacles)) return up;
+    const down = clamp(pref + d);
+    if (!segmentLabelOverlapsObstacles(down, cx, value, obstacles)) return down;
+  }
+  return pref;
+}
+
+function computeColumnSumLayout(
+  row: ChartRow,
+  cx: number,
+  yScale: YScale,
+): { cyOk: number | null; okRect: SumLabelRect | null; egoRect: SumLabelRect } | null {
+  if (row.egoTotal <= 0) return null;
+  const cyBarTop = yScale(row.egoTotal);
+  const egoW = sumLabelBoxWidth(row.egoTotal);
+
+  if (row.id === 'A') {
+    return {
+      cyOk: null,
+      okRect: null,
+      egoRect: sumLabelAboveBar(cx, cyBarTop, egoW),
+    };
+  }
+
+  const ok = row.okLineCpNp ?? row.okLineFcAc;
+  if (ok == null) return null;
+  const cyOk = yScale(ok);
+  const { ok: okRect, ego: egoRectInitial } = resolveOkEgoSumLabels(
+    ok,
+    row.egoTotal,
+    cx,
+    cyOk,
+    cyBarTop,
+  );
+  const scoresEqual = ok === row.egoTotal;
+  const egoRect = nudgeEgoSumVertically(egoRectInitial, cyOk, okRect, scoresEqual);
+  return { cyOk, okRect, egoRect };
+}
+
+function segmentObstaclesFromLayout(
+  cx: number,
+  layout: { cyOk: number | null; okRect: SumLabelRect | null; egoRect: SumLabelRect },
+): SegmentLabelObstacle[] {
+  const obstacles: SegmentLabelObstacle[] = [{ kind: 'rect', rect: layout.egoRect }];
+  if (layout.okRect) obstacles.push({ kind: 'rect', rect: layout.okRect });
+  if (layout.cyOk != null) {
+    obstacles.push({ kind: 'dot', cx, cy: layout.cyOk, r: OK_DOT_R });
+  }
+  return obstacles;
+}
+
 /** 겹치지 않으면 이고=막대 위 · 오케이=점 근처(점수 큰 쪽 위). 동점이면 오케이 합계가 항상 위 */
 function resolveOkEgoSumLabels(
   ok: number,
@@ -500,19 +621,17 @@ function createKtaaOkEgoSumLabels(chartData: ChartRow[]) {
     return (
       <g>
         {chartData.map((row) => {
-          if (row.egoTotal <= 0) return null;
           const colIndex = COLUMN_ORDER.indexOf(row.id);
           if (colIndex < 0) return null;
           const cx = left + colIndex * colW + colW / 2;
+          const layout = computeColumnSumLayout(row, cx, yScale);
+          if (!layout) return null;
 
           if (row.id === 'A') {
-            const cyBarTop = yScale(row.egoTotal);
-            const egoW = sumLabelBoxWidth(row.egoTotal);
-            const egoRect = sumLabelAboveBar(cx, cyBarTop, egoW);
             return (
               <SumLabelBox
                 key={`sums-${row.id}`}
-                rect={egoRect}
+                rect={layout.egoRect}
                 value={row.egoTotal}
                 stroke={EGO_TOTAL_BOX_STROKE}
                 fill="#0c4a6e"
@@ -521,33 +640,17 @@ function createKtaaOkEgoSumLabels(chartData: ChartRow[]) {
           }
 
           const ok = row.okLineCpNp ?? row.okLineFcAc;
-          if (ok == null) return null;
-          const cyOk = yScale(ok);
-          const cyBarTop = yScale(row.egoTotal);
-          const { ok: okRect, ego: egoRectInitial } = resolveOkEgoSumLabels(
-            ok,
-            row.egoTotal,
-            cx,
-            cyOk,
-            cyBarTop,
-          );
-          const scoresEqual = ok === row.egoTotal;
-          const egoRect = nudgeEgoSumVertically(
-            egoRectInitial,
-            cyOk,
-            okRect,
-            scoresEqual,
-          );
+          if (ok == null || layout.okRect == null) return null;
           return (
             <g key={`sums-${row.id}`}>
               <SumLabelBox
-                rect={okRect}
+                rect={layout.okRect}
                 value={ok}
                 stroke={OK_LINE_COLOR}
                 fill={OK_LINE_COLOR}
               />
               <SumLabelBox
-                rect={egoRect}
+                rect={layout.egoRect}
                 value={row.egoTotal}
                 stroke={EGO_TOTAL_BOX_STROKE}
                 fill="#0c4a6e"
@@ -570,30 +673,76 @@ function OkLineDot(props: { cx?: number; cy?: number; payload?: ChartRow }) {
   );
 }
 
-function EgoSegmentLabel(props: {
-  x?: number;
-  y?: number;
-  width?: number;
-  height?: number;
-  value?: number;
-}) {
-  const { x, y, width, height, value } = props;
-  if (value == null || value === 0 || x == null || y == null || !height || height < 12) return null;
-  return (
-    <text
-      x={x + (width ?? 0) / 2}
-      y={y + height / 2 + 4}
-      textAnchor="middle"
-      fill="#fff"
-      fontSize={11}
-      fontWeight={600}
-      stroke="#00000033"
-      strokeWidth={0.4}
-      paintOrder="stroke"
-    >
-      {value}
-    </text>
-  );
+function createKtaaEgoSegmentLabels(chartData: ChartRow[]) {
+  return function KtaaEgoSegmentLabels(props: PlotBackgroundProps) {
+    const { offset, yAxisMap } = props;
+    if (!offset?.width || !yAxisMap) return null;
+    const yScale = Object.values(yAxisMap)[0]?.scale;
+    if (!yScale) return null;
+
+    const { left, width } = offset;
+    const colW = width / COLUMN_ORDER.length;
+
+    return (
+      <g>
+        {chartData.map((row) => {
+          const colIndex = COLUMN_ORDER.indexOf(row.id);
+          if (colIndex < 0) return null;
+          const cx = left + colIndex * colW + colW / 2;
+          const layout = computeColumnSumLayout(row, cx, yScale);
+          const obstacles = layout ? segmentObstaclesFromLayout(cx, layout) : [];
+
+          const y0 = yScale(0);
+          const yNeg = yScale(row.egoNegative);
+          const yTotal = yScale(row.egoTotal);
+          const segments: { key: string; value: number; segTop: number; segBottom: number }[] = [];
+          if (row.egoNegative > 0 && y0 - yNeg >= 12) {
+            segments.push({
+              key: 'neg',
+              value: row.egoNegative,
+              segTop: yNeg,
+              segBottom: y0,
+            });
+          }
+          if (row.egoPositive > 0 && yNeg - yTotal >= 12) {
+            segments.push({
+              key: 'pos',
+              value: row.egoPositive,
+              segTop: yTotal,
+              segBottom: yNeg,
+            });
+          }
+
+          return segments.map((seg) => {
+            const preferred = (seg.segTop + seg.segBottom) / 2 + 4;
+            const minY = Math.min(seg.segTop, seg.segBottom) + SEG_LABEL_TEXT_H / 2 + 2;
+            const maxY = Math.max(seg.segTop, seg.segBottom) - SEG_LABEL_TEXT_H / 2 - 2;
+            const labelY =
+              obstacles.length > 0
+                ? nudgeSegmentLabelCenterY(preferred, minY, maxY, cx, seg.value, obstacles)
+                : preferred;
+
+            return (
+              <text
+                key={`${row.id}-${seg.key}`}
+                x={cx}
+                y={labelY}
+                textAnchor="middle"
+                fill="#fff"
+                fontSize={11}
+                fontWeight={600}
+                stroke="#00000033"
+                strokeWidth={0.4}
+                paintOrder="stroke"
+              >
+                {seg.value}
+              </text>
+            );
+          });
+        })}
+      </g>
+    );
+  };
 }
 
 export default function EgoOkKtaaCompositeChart({
@@ -622,6 +771,7 @@ export default function EgoOkKtaaCompositeChart({
   }));
 
   const OkEgoSumLabelsLayer = useMemo(() => createKtaaOkEgoSumLabels(data), [data]);
+  const EgoSegmentLabelsLayer = useMemo(() => createKtaaEgoSegmentLabels(data), [data]);
 
   const [hoveredId, setHoveredId] = useState<(typeof COLUMN_ORDER)[number] | null>(null);
   const ColumnHoverLayer = useMemo(
@@ -702,12 +852,8 @@ export default function EgoOkKtaaCompositeChart({
               height={0}
               padding={{ left: 0, right: 0 }}
             />
-            <Bar dataKey="egoNegative" stackId="ego" fill={EGO_NEG_COLOR} barSize={52} radius={[0, 0, 0, 0]}>
-              <LabelList dataKey="egoNegative" content={<EgoSegmentLabel />} />
-            </Bar>
-            <Bar dataKey="egoPositive" stackId="ego" fill={EGO_POS_COLOR} barSize={52} radius={[2, 2, 0, 0]}>
-              <LabelList dataKey="egoPositive" content={<EgoSegmentLabel />} />
-            </Bar>
+            <Bar dataKey="egoNegative" stackId="ego" fill={EGO_NEG_COLOR} barSize={52} radius={[0, 0, 0, 0]} />
+            <Bar dataKey="egoPositive" stackId="ego" fill={EGO_POS_COLOR} barSize={52} radius={[2, 2, 0, 0]} />
             <Line
               type="linear"
               dataKey="okLineCpNp"
@@ -730,6 +876,7 @@ export default function EgoOkKtaaCompositeChart({
             />
             <Customized component={KtaaPlotFrameBorder} />
             <Customized component={OkEgoSumLabelsLayer} />
+            <Customized component={EgoSegmentLabelsLayer} />
             <Customized
               component={(props: { offset?: { left: number; top: number; width: number; height: number } }) => (
                 <KtaaPlotLayoutReporter offset={props.offset} onPlotBox={handlePlotBox} />
@@ -819,8 +966,10 @@ export default function EgoOkKtaaCompositeChart({
             <strong>하늘(위)</strong>은 긍정 문항 합(0~25). 막대 안 숫자는 각 층 점수,{' '}
             <strong>막대 꼭대기 숫자</strong>는 두 층을 더한 <strong>이고그램 척도 총점(0~50)</strong>입니다.             CP·NP·FC·AC 열에서는 <strong>겹치지 않을 때</strong> 이고 합계는 막대 꼭대기 바로 위, 오케이 합계는
             오케이 점 근처(점수 큰 쪽 위)에 둡니다. <strong>점수가 같으면</strong> 오케이 합계가 이고 합계보다
-            항상 위입니다. 배치 후에도 이고 합계가 오케이 <strong>선·점·합계</strong>와 겹치면{' '}
-            <strong>이고 합계만</strong> 위·아래로 옮깁니다(동점일 때는 오케이 아래쪽만 허용).{' '}
+            항상 위입니다.             배치 후에도 이고 합계가 오케이 <strong>선·점·합계</strong>와 겹치면{' '}
+            <strong>이고 합계만</strong> 위·아래로 옮깁니다(동점일 때는 오케이 아래쪽만 허용). 막대 안{' '}
+            <strong>긍정·부정 층 점수</strong>가 오케이 점·합계·이고 합계에 가리면{' '}
+            <strong>층 숫자만</strong> 해당 막대 구간 안에서 위·아래로 옮깁니다.{' '}
             <strong>A 열</strong>은 이고 합계만 막대 위에 표시합니다.
           </li>
           <li>
