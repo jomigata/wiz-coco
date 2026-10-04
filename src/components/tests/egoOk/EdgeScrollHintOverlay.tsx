@@ -11,24 +11,32 @@ const NUDGE_CLASS: Record<Side, string> = {
   bottom: 'counselor-scroll-hint-nudge-down',
 };
 
+/** 위·아래·좌·우 각각 스크롤 방향을 가리키는 chevron (회전 없음 — nudge 애니메이션과 transform 충돌 방지) */
+const CHEVRON_PATH: Record<Side, string> = {
+  top: 'M7 15 L12 9 L17 15',
+  bottom: 'M7 9 L12 15 L17 9',
+  left: 'M15 7 L9 12 L15 17',
+  right: 'M9 7 L15 12 L9 17',
+};
+
 function ScrollChevron({ side, active }: { side: Side; active: boolean }) {
-  const rotate =
-    side === 'left' ? '' : side === 'right' ? 'rotate-180' : side === 'top' ? '-rotate-90' : 'rotate-90';
   return (
-    <svg
-      className={`h-5 w-5 drop-shadow-md transition-[transform,color] duration-150 ${NUDGE_CLASS[side]} ${
-        active ? 'scale-110 text-white' : 'text-white/80 opacity-90'
-      } ${rotate}`}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
+    <span
+      className={`inline-flex ${NUDGE_CLASS[side]} ${active ? 'scale-110' : 'scale-100'} transition-transform duration-150`}
     >
-      <path d="M14.5 6.5 9 12l5.5 5.5" />
-    </svg>
+      <svg
+        className={`h-5 w-5 drop-shadow-md ${active ? 'text-white' : 'text-white/80 opacity-90'}`}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden
+      >
+        <path d={CHEVRON_PATH[side]} />
+      </svg>
+    </span>
   );
 }
 
