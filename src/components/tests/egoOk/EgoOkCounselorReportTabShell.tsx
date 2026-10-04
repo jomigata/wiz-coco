@@ -19,8 +19,6 @@ type Props = {
 };
 
 const TAB_BAR_FALLBACK_BOTTOM_PX = 64 + 36 + 52;
-/** Tailwind spacing 2 (= 0.5rem) */
-const TAB_PANEL_MARGIN_PX = 8;
 
 export default function EgoOkCounselorReportTabShell({
   tabs,
@@ -43,13 +41,11 @@ export default function EgoOkCounselorReportTabShell({
     };
     measure();
     window.addEventListener('resize', measure);
-    window.addEventListener('scroll', measure, { passive: true });
     const nav = navRef.current;
     const ro = nav && typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : null;
     if (nav && ro) ro.observe(nav);
     return () => {
       window.removeEventListener('resize', measure);
-      window.removeEventListener('scroll', measure);
       ro?.disconnect();
     };
   }, [tabs.length]);
@@ -75,6 +71,8 @@ export default function EgoOkCounselorReportTabShell({
   }, [previewId, activeId]);
 
   if (!tabs.length) return null;
+
+  const panelHeight = `calc(100dvh - ${navBottomPx}px - 0.5rem)`;
 
   return (
     <div className="w-full">
@@ -115,23 +113,22 @@ export default function EgoOkCounselorReportTabShell({
         </div>
       </nav>
 
-      <div onMouseEnter={lockPreviewToActive}>
+      {/* 탭 바로 아래 고정 — 문서 흐름 marginTop 이중 여백(A) 제거 */}
+      <div
+        className="fixed inset-x-2 bottom-2 z-40 overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-slate-900/50 via-[#0a0f1a] to-indigo-950/25 shadow-inner"
+        style={{ top: navBottomPx, height: panelHeight }}
+        onMouseEnter={lockPreviewToActive}
+      >
         <div
-          className="relative mx-2 mb-2 overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-slate-900/50 via-[#0a0f1a] to-indigo-950/25 shadow-inner"
-          style={{
-            marginTop: navBottomPx + TAB_PANEL_MARGIN_PX,
-            minHeight: `calc(100dvh - ${navBottomPx + TAB_PANEL_MARGIN_PX * 2}px)`,
-          }}
+          ref={scrollRef}
+          key={displayId}
+          className="h-full overflow-auto overscroll-contain p-2 [scrollbar-width:thin]"
         >
-          <div
-            ref={scrollRef}
-            key={displayId}
-            className="absolute inset-0 overflow-auto overscroll-contain p-2 [scrollbar-width:thin]"
-          >
-            <div className="flex min-h-min flex-col gap-2">{activePanel}</div>
-          </div>
+          <div className="flex min-h-min flex-col gap-2">{activePanel}</div>
         </div>
       </div>
+
+      <div className="pointer-events-none invisible" style={{ height: panelHeight }} aria-hidden />
     </div>
   );
 }
