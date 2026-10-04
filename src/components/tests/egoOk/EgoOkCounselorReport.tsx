@@ -87,11 +87,11 @@ function SectionCard({
     <section
       className={
         compact
-          ? 'space-y-4'
+          ? 'space-y-2 rounded-xl border border-white/10 bg-slate-900/40 p-2'
           : 'rounded-2xl border border-white/10 bg-gradient-to-br from-slate-900/90 via-slate-950/95 to-indigo-950/80 p-6 shadow-xl shadow-black/30'
       }
     >
-      <header className={compact ? 'border-b border-white/10 pb-3' : 'mb-5 border-b border-white/10 pb-4'}>
+      <header className={compact ? 'border-b border-white/10 pb-2' : 'mb-5 border-b border-white/10 pb-4'}>
         <h2 className="text-base font-semibold tracking-tight text-white sm:text-lg">{title}</h2>
         {subtitle ? <div className="mt-1 text-xs text-slate-400 sm:text-sm">{subtitle}</div> : null}
       </header>
@@ -112,7 +112,7 @@ function InterpretationArticles({
   variant?: 'default' | 'pattern-cross';
 }) {
   return (
-    <div className="grid gap-3 xl:grid-cols-2">
+    <div className="grid gap-2 xl:grid-cols-2">
       {sectionOrder.map((key) => {
         const text = sections[key];
         const label = sectionLabels[key] || `섹션 ${key}`;
@@ -812,8 +812,8 @@ export default function EgoOkCounselorReport({
         short: '표지',
         description: '검사 표지 · 내담자 · 243 · 요약',
         panel: (
-          <div className="space-y-5">
-            <div className="relative overflow-hidden rounded-2xl border border-indigo-400/25 bg-gradient-to-br from-indigo-950/80 via-slate-950 to-[#070b14] p-5 sm:p-6">
+          <div className="flex flex-col gap-2">
+            <div className="relative overflow-hidden rounded-xl border border-indigo-400/25 bg-gradient-to-br from-indigo-950/80 via-slate-950 to-[#070b14] p-2">
               <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_50%_-20%,rgba(99,102,241,0.22),transparent)]" />
               <div className="relative">
                 <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-indigo-300/80">Counselor report</p>
@@ -829,7 +829,7 @@ export default function EgoOkCounselorReport({
                 로컬 테스트 모드 — 저장·발송되지 않습니다. 성별 변경 시 243 구간·그래프 배경이 갱신됩니다.
               </p>
             ) : null}
-            <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+            <dl className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
               <div className="rounded-xl bg-white/[0.04] px-4 py-3 ring-1 ring-white/10">
                 <dt className="text-xs text-slate-500">내담자</dt>
                 <dd className="mt-1 font-medium text-white">{clientInfo?.name?.trim() || '—'}</dd>
@@ -881,7 +881,7 @@ export default function EgoOkCounselorReport({
                 <dd className="mt-1 font-semibold text-indigo-100">{report.lifePosition.kind}</dd>
               </div>
             </dl>
-            <dl className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <dl className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
               <div className="rounded-xl bg-white/[0.04] px-4 py-3 ring-1 ring-white/10">
                 <dt className="text-xs text-slate-500">최고 이고 척도</dt>
                 <dd className="mt-1 font-semibold text-white">
@@ -917,7 +917,7 @@ export default function EgoOkCounselorReport({
         label: '타당도',
         short: '타당도',
         panel: report.validity ? (
-          <EgoOkValiditySection validity={report.validity} />
+          <EgoOkValiditySection validity={report.validity} embedded />
         ) : (
           <p className="text-sm text-slate-400">타당도 프로파일 없음</p>
         ),

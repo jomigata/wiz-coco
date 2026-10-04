@@ -18,7 +18,9 @@ type Props = {
   fixedTopClass?: string;
 };
 
-const TAB_BAR_FALLBACK_TOP_PX = 64 + 36 + 52;
+const TAB_BAR_FALLBACK_BOTTOM_PX = 64 + 36 + 52;
+/** Tailwind spacing 2 (= 0.5rem) */
+const TAB_PANEL_MARGIN_PX = 8;
 
 export default function EgoOkCounselorReportTabShell({
   tabs,
@@ -30,18 +32,26 @@ export default function EgoOkCounselorReportTabShell({
   const [previewId, setPreviewId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const navRef = useRef<HTMLElement>(null);
-  const [contentTop, setContentTop] = useState(TAB_BAR_FALLBACK_TOP_PX);
+  const [navBottomPx, setNavBottomPx] = useState(TAB_BAR_FALLBACK_BOTTOM_PX);
 
   useMouseEdgeAutoScroll(scrollRef, true, navRef);
 
   useLayoutEffect(() => {
     const measure = () => {
       const nav = navRef.current;
-      if (nav) setContentTop(nav.getBoundingClientRect().bottom);
+      if (nav) setNavBottomPx(nav.getBoundingClientRect().bottom);
     };
     measure();
     window.addEventListener('resize', measure);
-    return () => window.removeEventListener('resize', measure);
+    window.addEventListener('scroll', measure, { passive: true });
+    const nav = navRef.current;
+    const ro = nav && typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : null;
+    if (nav && ro) ro.observe(nav);
+    return () => {
+      window.removeEventListener('resize', measure);
+      window.removeEventListener('scroll', measure);
+      ro?.disconnect();
+    };
   }, [tabs.length]);
 
   const displayId = previewId ?? activeId;
@@ -105,17 +115,20 @@ export default function EgoOkCounselorReportTabShell({
         </div>
       </nav>
 
-      <div style={{ paddingTop: contentTop }} onMouseEnter={lockPreviewToActive}>
+      <div onMouseEnter={lockPreviewToActive}>
         <div
-          className="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-slate-900/50 via-[#0a0f1a] to-indigo-950/25 shadow-inner"
-          style={{ minHeight: `calc(100dvh - ${contentTop}px)` }}
+          className="relative mx-2 mb-2 overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-slate-900/50 via-[#0a0f1a] to-indigo-950/25 shadow-inner"
+          style={{
+            marginTop: navBottomPx + TAB_PANEL_MARGIN_PX,
+            minHeight: `calc(100dvh - ${navBottomPx + TAB_PANEL_MARGIN_PX * 2}px)`,
+          }}
         >
           <div
             ref={scrollRef}
             key={displayId}
-            className="absolute inset-0 overflow-auto overscroll-contain px-3 pb-3 pt-0 sm:px-5 sm:pb-5 lg:px-6 lg:pb-6 [scrollbar-width:thin]"
+            className="absolute inset-0 overflow-auto overscroll-contain p-2 [scrollbar-width:thin]"
           >
-            {activePanel}
+            <div className="flex min-h-min flex-col gap-2">{activePanel}</div>
           </div>
         </div>
       </div>

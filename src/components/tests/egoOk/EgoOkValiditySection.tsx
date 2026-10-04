@@ -26,15 +26,34 @@ function statusClass(status: ValidityScaleStatus): string {
   return 'text-rose-300';
 }
 
-export default function EgoOkValiditySection({ validity }: { validity: EgoOkValidityProfile }) {
+export default function EgoOkValiditySection({
+  validity,
+  embedded,
+}: {
+  validity: EgoOkValidityProfile;
+  /** 탭 패널 안: 바깥 테두리와 m-2 간격에 맞춘 컴팩트 스타일 */
+  embedded?: boolean;
+}) {
   return (
-    <section className="rounded-2xl border border-white/10 bg-slate-900/50 p-5 shadow-xl sm:p-6">
-      <header className="border-b border-white/10 pb-4">
+    <section
+      className={
+        embedded
+          ? 'rounded-xl border border-white/10 bg-slate-900/50 p-2 shadow-none'
+          : 'rounded-2xl border border-white/10 bg-slate-900/50 p-5 shadow-xl sm:p-6'
+      }
+    >
+      <header className={embedded ? 'border-b border-white/10 pb-2' : 'border-b border-white/10 pb-4'}>
         <h2 className="text-lg font-semibold text-white">검사 타당도 및 반응 태도 분석</h2>
         <p className="mt-1 text-xs text-slate-500">Test Validity Profile · 타당도 문항 15·30·47·63·77·90번 분산</p>
       </header>
 
-      <div className="mt-4 rounded-xl bg-black/25 p-4 ring-1 ring-white/10">
+      <div
+        className={
+          embedded
+            ? 'mt-2 rounded-xl bg-black/25 p-2 ring-1 ring-white/10'
+            : 'mt-4 rounded-xl bg-black/25 p-4 ring-1 ring-white/10'
+        }
+      >
         <p className="text-sm font-semibold text-slate-200">
           [ 종합 판정 ]{' '}
           <span className={trafficColor(validity.overall)}>
@@ -47,7 +66,7 @@ export default function EgoOkValiditySection({ validity }: { validity: EgoOkVali
         </p>
       </div>
 
-      <div className="mt-6 overflow-x-auto">
+      <div className={`${embedded ? 'mt-2' : 'mt-6'} overflow-x-auto`}>
         <table className="w-full min-w-[32rem] border-collapse text-left text-xs text-slate-300">
           <thead>
             <tr className="border-b border-white/10 text-[10px] uppercase tracking-wide text-slate-500">
