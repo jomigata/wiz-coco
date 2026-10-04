@@ -54,6 +54,10 @@ import EgoOkCounselorReportTabShell, {
   type CounselorReportTab,
 } from '@/components/tests/egoOk/EgoOkCounselorReportTabShell';
 import EgoOkEgogramPolarityPanel from '@/components/tests/egoOk/EgoOkEgogramPolarityPanel';
+import {
+  EGO_OK_REPORT_INNER_FRAME,
+  EGO_OK_REPORT_INNER_HEADER_DIVIDER,
+} from '@/components/tests/egoOk/egoOkReportChrome';
 
 const THREE_LEVEL_STYLE: Record<string, string> = {
   A: 'bg-emerald-500/20 text-emerald-200 ring-emerald-400/40',
@@ -87,11 +91,13 @@ function SectionCard({
     <section
       className={
         compact
-          ? 'space-y-2 rounded-xl border border-white/10 bg-slate-900/40 p-2'
-          : 'rounded-2xl border border-white/10 bg-gradient-to-br from-slate-900/90 via-slate-950/95 to-indigo-950/80 p-6 shadow-xl shadow-black/30'
+          ? `space-y-2 p-2 ${EGO_OK_REPORT_INNER_FRAME}`
+          : 'rounded-2xl border-2 border-white bg-gradient-to-br from-slate-900/90 via-slate-950/95 to-indigo-950/80 p-6 shadow-xl shadow-black/30'
       }
     >
-      <header className={compact ? 'border-b border-white/10 pb-2' : 'mb-5 border-b border-white/10 pb-4'}>
+      <header
+        className={compact ? `${EGO_OK_REPORT_INNER_HEADER_DIVIDER} pb-2` : 'mb-5 border-b border-white pb-4'}
+      >
         <h2 className="text-base font-semibold tracking-tight text-white sm:text-lg">{title}</h2>
         {subtitle ? <div className="mt-1 text-xs text-slate-400 sm:text-sm">{subtitle}</div> : null}
       </header>
@@ -119,8 +125,8 @@ function InterpretationArticles({
         if (!text) return null;
         const articleClass =
           variant === 'pattern-cross'
-            ? 'rounded-xl border border-indigo-500/20 bg-indigo-950/25 p-4'
-            : 'rounded-xl border border-white/5 bg-black/20 p-4';
+            ? 'rounded-lg border border-white bg-indigo-950/40 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]'
+            : `${EGO_OK_REPORT_INNER_FRAME} p-3`;
         return (
           <article key={key} className={articleClass}>
             <h3 className="flex items-center gap-2 text-sm font-semibold text-white">
@@ -813,7 +819,7 @@ export default function EgoOkCounselorReport({
         description: '검사 표지 · 내담자 · 243 · 요약',
         panel: (
           <div className="flex flex-col gap-2">
-            <div className="relative overflow-hidden rounded-xl border border-indigo-400/25 bg-gradient-to-br from-indigo-950/80 via-slate-950 to-[#070b14] p-2">
+            <div className={`relative overflow-hidden p-3 ${EGO_OK_REPORT_INNER_FRAME} bg-gradient-to-br from-indigo-950/90 via-slate-950 to-[#070b14]`}>
               <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_50%_-20%,rgba(99,102,241,0.22),transparent)]" />
               <div className="relative">
                 <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-indigo-300/80">Counselor report</p>
@@ -830,11 +836,11 @@ export default function EgoOkCounselorReport({
               </p>
             ) : null}
             <dl className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-              <div className="rounded-xl bg-white/[0.04] px-4 py-3 ring-1 ring-white/10">
+              <div className={`${EGO_OK_REPORT_INNER_FRAME} px-3 py-2.5`}>
                 <dt className="text-xs text-slate-500">내담자</dt>
                 <dd className="mt-1 font-medium text-white">{clientInfo?.name?.trim() || '—'}</dd>
               </div>
-              <div className="rounded-xl bg-white/[0.04] px-4 py-3 ring-1 ring-white/10">
+              <div className={`${EGO_OK_REPORT_INNER_FRAME} px-3 py-2.5`}>
                 <dt className="text-xs text-slate-500">성별 · 출생</dt>
                 <dd className="mt-1 font-medium text-white">
                   {localTestMode && onTestGenderChange && testGender ? (
@@ -866,41 +872,41 @@ export default function EgoOkCounselorReport({
                   )}
                 </dd>
               </div>
-              <div className="rounded-xl bg-white/[0.04] px-4 py-3 ring-1 ring-white/10">
+              <div className={`${EGO_OK_REPORT_INNER_FRAME} px-3 py-2.5`}>
                 <dt className="sr-only">243 패턴 · 243+</dt>
                 <dd>
                   <Pattern243AndPlusCode block patternCode={report.patternCode} plus={report.pattern243Plus} />
                 </dd>
               </div>
-              <div className="rounded-xl bg-white/[0.04] px-4 py-3 ring-1 ring-white/10">
+              <div className={`${EGO_OK_REPORT_INNER_FRAME} px-3 py-2.5`}>
                 <dt className="text-xs text-slate-500">타당도</dt>
                 <dd className="mt-1 text-sm font-semibold text-white">{report.validity?.overallTitle ?? '—'}</dd>
               </div>
-              <div className="rounded-xl bg-white/[0.04] px-4 py-3 ring-1 ring-white/10">
+              <div className={`${EGO_OK_REPORT_INNER_FRAME} px-3 py-2.5`}>
                 <dt className="text-xs text-slate-500">인생태도(명칭)</dt>
                 <dd className="mt-1 font-semibold text-indigo-100">{report.lifePosition.kind}</dd>
               </div>
             </dl>
             <dl className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-              <div className="rounded-xl bg-white/[0.04] px-4 py-3 ring-1 ring-white/10">
+              <div className={`${EGO_OK_REPORT_INNER_FRAME} px-3 py-2.5`}>
                 <dt className="text-xs text-slate-500">최고 이고 척도</dt>
                 <dd className="mt-1 font-semibold text-white">
                   {peakEgogram.id} · {peakEgogram.raw}점
                 </dd>
                 <dd className="mt-1 text-xs text-slate-400">{peakEgogram.label}</dd>
               </div>
-              <div className="rounded-xl bg-white/[0.04] px-4 py-3 ring-1 ring-white/10">
+              <div className={`${EGO_OK_REPORT_INNER_FRAME} px-3 py-2.5`}>
                 <dt className="text-xs text-slate-500">최저 이고 척도</dt>
                 <dd className="mt-1 font-semibold text-white">
                   {lowEgogram.id} · {lowEgogram.raw}점
                 </dd>
                 <dd className="mt-1 text-xs text-slate-400">{lowEgogram.label}</dd>
               </div>
-              <div className="rounded-xl bg-white/[0.04] px-4 py-3 ring-1 ring-white/10">
+              <div className={`${EGO_OK_REPORT_INNER_FRAME} px-3 py-2.5`}>
                 <dt className="text-xs text-slate-500">형태명</dt>
                 <dd className="mt-1 font-semibold text-white">{formLabel && formLabel !== '—' ? formLabel : '—'}</dd>
               </div>
-              <div className="rounded-xl bg-white/[0.04] px-4 py-3 ring-1 ring-white/10">
+              <div className={`${EGO_OK_REPORT_INNER_FRAME} px-3 py-2.5`}>
                 <dt className="text-xs text-slate-500">243패턴 문장</dt>
                 <dd className="mt-1 text-xs text-slate-400">
                   {report.pattern243.missing
@@ -1010,7 +1016,7 @@ export default function EgoOkCounselorReport({
             }
           >
             <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
-              <div className="rounded-xl border border-white/5 bg-slate-900/40 p-3">
+              <div className={`${EGO_OK_REPORT_INNER_FRAME} p-3`}>
                 <OkGramLifePositionBars rows={okBarData} />
               </div>
               <div className="space-y-3 text-sm leading-relaxed text-slate-300">

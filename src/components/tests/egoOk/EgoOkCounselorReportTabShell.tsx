@@ -1,6 +1,11 @@
 'use client';
 
 import { useCallback, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import {
+  EGO_OK_REPORT_PANEL_OUTER,
+  EGO_OK_REPORT_PANEL_SCROLL,
+  EGO_OK_REPORT_TAB_BAR,
+} from '@/components/tests/egoOk/egoOkReportChrome';
 import { useMouseEdgeAutoScroll } from '@/lib/useMouseEdgeAutoScroll';
 
 export type CounselorReportTab = {
@@ -78,10 +83,10 @@ export default function EgoOkCounselorReportTabShell({
     <div className="w-full">
       <nav
         ref={navRef}
-        className={`fixed inset-x-0 ${fixedTopClass} z-50 border-b border-white/10 bg-[#070b14]/95 shadow-[0_8px_32px_rgba(0,0,0,0.5)] backdrop-blur-xl`}
+        className={`fixed inset-x-0 ${fixedTopClass} z-50 ${EGO_OK_REPORT_TAB_BAR}`}
         aria-label="검사 결과 섹션"
       >
-        <div className="mx-auto flex w-full max-w-[min(100%,112rem)] items-stretch gap-0.5 overflow-x-auto px-2 py-1.5 sm:gap-1 sm:px-4 [scrollbar-width:thin]">
+        <div className="mx-auto flex w-full max-w-[min(100%,112rem)] items-stretch gap-1 overflow-x-auto px-2 py-2 sm:gap-1.5 sm:px-4 [scrollbar-width:thin]">
           {tabs.map((tab) => {
             const isActive = tab.id === activeId;
             const isPreview = previewId === tab.id && previewId !== activeId;
@@ -93,33 +98,46 @@ export default function EgoOkCounselorReportTabShell({
                 onMouseEnter={() => onTabEnter(tab.id)}
                 aria-current={isActive ? 'true' : undefined}
                 title={tab.description ?? tab.label}
-                className={`group relative shrink-0 rounded-lg px-2.5 py-2 text-left transition sm:min-w-[6.5rem] sm:flex-1 sm:px-3 ${
+                className={`group relative shrink-0 rounded-lg px-3 py-2.5 text-left transition-all duration-200 sm:min-w-[7rem] sm:flex-1 sm:px-3.5 ${
                   isActive
-                    ? 'bg-gradient-to-b from-indigo-500/30 to-indigo-600/10 text-white ring-1 ring-indigo-400/45'
+                    ? 'border-2 border-white bg-white/15 text-white shadow-[0_0_20px_rgba(255,255,255,0.12)]'
                     : isPreview
-                      ? 'bg-white/[0.08] text-indigo-100 ring-1 ring-white/20'
-                      : 'text-slate-400 hover:bg-white/[0.05] hover:text-slate-200'
+                      ? 'border-2 border-white/80 bg-white/10 text-white'
+                      : 'border border-white/35 bg-black/25 text-slate-200 hover:border-white/60 hover:bg-white/5 hover:text-white'
                 }`}
               >
-                <span className="block text-[10px] font-bold uppercase tracking-wide text-indigo-300/90 sm:text-[11px]">
+                <span
+                  className={`block text-[10px] font-bold uppercase tracking-wider sm:text-[11px] ${
+                    isActive ? 'text-white' : 'text-slate-300 group-hover:text-white'
+                  }`}
+                >
                   {tab.short ?? tab.label}
                 </span>
-                <span className="mt-0.5 hidden truncate text-xs font-semibold leading-tight sm:block sm:text-sm">
+                <span
+                  className={`mt-0.5 hidden truncate text-xs font-semibold leading-tight sm:block sm:text-sm ${
+                    isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-100'
+                  }`}
+                >
                   {tab.label}
                 </span>
+                {isActive ? (
+                  <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-white" />
+                ) : null}
               </button>
             );
           })}
         </div>
       </nav>
 
-      {/* 탭 바로 아래 고정 — 문서 흐름 marginTop 이중 여백(A) 제거 */}
       <div
-        className="fixed inset-x-2 bottom-2 z-40 overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-slate-900/50 via-[#0a0f1a] to-indigo-950/25 shadow-inner"
+        className={`fixed inset-x-2 bottom-2 z-40 ${EGO_OK_REPORT_PANEL_OUTER}`}
         style={{ top: navBottomPx, height: panelHeight }}
         onMouseEnter={lockPreviewToActive}
       >
-        <div ref={scrollRef} className="h-full overflow-auto overscroll-contain p-2 [scrollbar-width:thin]">
+        <div
+          ref={scrollRef}
+          className={`h-full overflow-auto overscroll-contain p-2 [scrollbar-width:thin] ${EGO_OK_REPORT_PANEL_SCROLL}`}
+        >
           <div key={displayId} className="flex min-h-min flex-col gap-2">
             {activePanel}
           </div>

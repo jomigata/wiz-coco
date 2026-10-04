@@ -99,8 +99,8 @@ function EgoOkResultContent() {
   }
 
   return (
-    <div className="min-h-screen bg-[#070b14] px-1 pb-0 pt-0 sm:px-3 lg:px-4">
-      <div className="fixed inset-x-0 top-16 z-[55] border-b border-white/5 bg-[#070b14]/95 backdrop-blur-sm">
+    <div className="min-h-screen bg-[#070b14] bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(99,102,241,0.12),transparent)] px-1 pb-0 pt-0 sm:px-3 lg:px-4">
+      <div className="fixed inset-x-0 top-16 z-[55] border-b border-white/80 bg-[#070b14]/95 shadow-[0_4px_16px_rgba(0,0,0,0.4)] backdrop-blur-md">
         <div className="mx-auto flex w-full max-w-[min(100%,112rem)] items-center justify-between gap-2 px-2 py-0 leading-none sm:px-4">
           <Link
             href="/tests"

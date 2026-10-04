@@ -1,5 +1,9 @@
 'use client';
 
+import {
+  EGO_OK_REPORT_INNER_FRAME,
+  EGO_OK_REPORT_INNER_HEADER_DIVIDER,
+} from '@/components/tests/egoOk/egoOkReportChrome';
 import type { EgoOkValidityProfile, ValidityScaleStatus, ValidityTraffic } from '@/lib/egoOkValidity';
 
 function trafficDot(overall: ValidityTraffic): string {
@@ -38,11 +42,11 @@ export default function EgoOkValiditySection({
     <section
       className={
         embedded
-          ? 'rounded-xl border border-white/10 bg-slate-900/50 p-2 shadow-none'
-          : 'rounded-2xl border border-white/10 bg-slate-900/50 p-5 shadow-xl sm:p-6'
+          ? `${EGO_OK_REPORT_INNER_FRAME} p-2 shadow-none`
+          : 'rounded-2xl border-2 border-white bg-slate-900/50 p-5 shadow-xl sm:p-6'
       }
     >
-      <header className={embedded ? 'border-b border-white/10 pb-2' : 'border-b border-white/10 pb-4'}>
+      <header className={embedded ? `${EGO_OK_REPORT_INNER_HEADER_DIVIDER} pb-2` : 'border-b border-white pb-4'}>
         <h2 className="text-lg font-semibold text-white">검사 타당도 및 반응 태도 분석</h2>
         <p className="mt-1 text-xs text-slate-500">Test Validity Profile · 타당도 문항 15·30·47·63·77·90번 분산</p>
       </header>
@@ -50,8 +54,8 @@ export default function EgoOkValiditySection({
       <div
         className={
           embedded
-            ? 'mt-2 rounded-xl bg-black/25 p-2 ring-1 ring-white/10'
-            : 'mt-4 rounded-xl bg-black/25 p-4 ring-1 ring-white/10'
+            ? `mt-2 rounded-lg border border-white bg-black/30 p-2`
+            : 'mt-4 rounded-lg border border-white bg-black/25 p-4'
         }
       >
         <p className="text-sm font-semibold text-slate-200">

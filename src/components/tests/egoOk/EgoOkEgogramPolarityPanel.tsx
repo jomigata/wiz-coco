@@ -5,6 +5,7 @@ import {
   negativeBandTone,
   type EgogramPolarityRow,
 } from '@/lib/egoOkEgogramPolarity';
+import { EGO_OK_REPORT_INNER_FRAME } from '@/components/tests/egoOk/egoOkReportChrome';
 import type { EgoOkScaleScore } from '@/lib/egoOkScoring';
 
 function PolarityBar({ row }: { row: EgogramPolarityRow }) {
@@ -43,7 +44,7 @@ export default function EgoOkEgogramPolarityPanel({ egogram }: { egogram: EgoOkS
         구간별 주의·대책 강도가 높아집니다.
       </p>
       <div className="grid gap-4 lg:grid-cols-2">
-        <div className="rounded-xl border border-white/10 bg-black/20 p-4">
+        <div className={`${EGO_OK_REPORT_INNER_FRAME} p-3`}>
           <h3 className="text-sm font-semibold text-white">긍정 / 부정 비율</h3>
           <div className="mt-3 space-y-3">
             {rows.map((row) => (
@@ -59,7 +60,7 @@ export default function EgoOkEgogramPolarityPanel({ egogram }: { egogram: EgoOkS
             </span>
           </div>
         </div>
-        <div className="overflow-x-auto rounded-xl border border-white/10 bg-black/20">
+        <div className={`overflow-x-auto ${EGO_OK_REPORT_INNER_FRAME}`}>
           <table className="w-full min-w-[20rem] text-left text-xs text-slate-300">
             <thead>
               <tr className="border-b border-white/10 text-[10px] uppercase tracking-wide text-slate-500">
