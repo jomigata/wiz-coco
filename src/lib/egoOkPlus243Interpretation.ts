@@ -1,4 +1,4 @@
-import type { EgoOkGender, EgoOkScaleScore } from '@/lib/egoOkScoring';
+import type { EgoOkScaleScore } from '@/lib/egoOkScoring';
 import { normalizeEgoOkGender } from '@/lib/egoOkScoring';
 import {
   plus243StageBand,
@@ -18,19 +18,7 @@ const SECTION_LABELS: Record<string, string> = {
   '6': '9단계 기준 종합 평가',
 };
 
-function genderTone(gender: EgoOkGender): string {
-  return gender === 'female' ? '여성' : '남성';
-}
-
-function bandKo(stage: Plus243Stage): string {
-  const band = plus243StageBand(stage);
-  if (band === 'deficit') return '에너지 사용이 적은 편(1~3단계)';
-  if (band === 'normal') return '균형·권장(4~6단계)';
-  return '에너지 사용이 많은 편(7~9단계)';
-}
-
-function scaleBlock(s: EgoOkScaleScore, stage: Plus243Stage, gender: EgoOkGender, threeLevel: string): string {
-  const g = genderTone(gender);
+function scaleBlock(s: EgoOkScaleScore, stage: Plus243Stage): string {
   const pros =
     plus243StageBand(stage) === 'excess'
       ? '추진·영향력이 크나 과잉·소진에 주의하세요.'
@@ -44,8 +32,8 @@ function scaleBlock(s: EgoOkScaleScore, stage: Plus243Stage, gender: EgoOkGender
         ? '대책: 4~6단계 권장 구간을 목표로 작은 실천을 쌓으세요.'
         : '대책: 현재 리듬을 유지하며 급격한 확대·축소는 피하세요.';
   return [
-    `${stage}단계-${s.raw}점 · ${s.label} · ${g} 9단계 중 ${stage}단계(${bandKo(stage)})입니다. ${pros}`,
-    `243패턴 구간 ${threeLevel} — ${action}`,
+    `${stage}단계-${s.raw}점 · ${s.label} · 9단계 중 ${stage}단계로 에너지의 사용이 적절한 단계로, 균형/권장단계는 4~6단계입니다. ${pros}`,
+    action,
   ].join('\n');
 }
 
@@ -53,7 +41,7 @@ function pickExtreme(scales: EgoOkScaleScore[], mode: 'max' | 'min'): EgoOkScale
   return scales.reduce((a, b) => (mode === 'max' ? (b.raw > a.raw ? b : a) : b.raw < a.raw ? b : a));
 }
 
-function comprehensive(egogram: EgoOkScaleScore[], gender: EgoOkGender): string {
+function comprehensive(egogram: EgoOkScaleScore[]): string {
   const cp = egogram.find((s) => s.id === 'CP')!;
   const np = egogram.find((s) => s.id === 'NP')!;
   const fc = egogram.find((s) => s.id === 'FC')!;
@@ -64,7 +52,7 @@ function comprehensive(egogram: EgoOkScaleScore[], gender: EgoOkGender): string 
   const fcUpAcDown = fc.raw > ac.raw;
 
   return [
-    `${genderTone(gender)} 기준 5척도를 9단계로 본 종합입니다. 최고 ${high.id}(${high.raw}점), 최저 ${low.id}(${low.raw}점) — 한 성격 안에서 에너지가 ${high.label} 쪽으로 기울고 ${low.label}은(는) 상대적으로 약합니다.`,
+    `9단계 기준 5이고그램 종합입니다. 최고 ${high.id}(${high.raw}점), 최저 ${low.id}(${low.raw}점) — 한 성격 안에서 에너지가 ${high.label} 쪽으로 기울고 ${low.label}은(는) 상대적으로 약합니다.`,
     `CP와 NP는 한쪽이 늘면 다른 쪽이 줄어드는 상대 관계(약 90% 이상)로 보는 것이 타당합니다. 현재 CP ${cp.raw} · NP ${np.raw} — ${cpUpNpDown ? 'CP가 NP보다 높아 비판·기준 쪽이 두드러집니다.' : 'NP가 CP보다 높아 양육·지지 쪽이 두드러집니다.'}`,
     `FC와 AC도 서로 상대적입니다. FC ${fc.raw} · AC ${ac.raw} — ${fcUpAcDown ? 'FC(자유·창의)가 AC(순응)보다 높습니다.' : 'AC(순응·협력)가 FC보다 높습니다.'} 둘 다 동시에 크게 오르거나 내리면 의도적 표현·역할 연기 가능성을 함께 짚습니다.`,
     `해결·균형: ${low.id}(${low.raw})는 ${rawScoreToPlus243Tier(low.raw).stage}단계 — 의식적 보완, ${high.id}(${high.raw})는 ${rawScoreToPlus243Tier(high.raw).stage}단계 — 과함·소진을 조절하세요. A(${egogram.find((s) => s.id === 'A')!.raw}) 성인 자아로 선택지·현실 검토를 중심에 두면 다섯 에너지가 한 과정으로 엮입니다.`,
@@ -77,7 +65,7 @@ export function buildPlus243InterpretationSections(
   genderInput: string | undefined,
   pattern243Snippet?: { sections: Record<string, string>; sectionLabels: Record<string, string> },
 ): { sectionLabels: Record<string, string>; sections: Record<string, string> } {
-  const gender = normalizeEgoOkGender(genderInput);
+  void normalizeEgoOkGender(genderInput);
   const byId = Object.fromEntries(egogram.map((s) => [s.id, s]));
   const sections: Record<string, string> = {};
 
@@ -86,9 +74,9 @@ export function buildPlus243InterpretationSections(
     const s = byId[id];
     if (!s) continue;
     const stage = pattern243Plus.byScale[id].tier.stage;
-    sections[mapScaleToSection[id]] = scaleBlock(s, stage, gender, s.threeLevel);
+    sections[mapScaleToSection[id]] = scaleBlock(s, stage);
   }
-  sections['6'] = comprehensive(egogram, gender);
+  sections['6'] = comprehensive(egogram);
 
   if (pattern243Snippet?.sections['1']) {
     sections['6'] += `\n\n[243패턴 참고]\n${pattern243Snippet.sections['1']?.slice(0, 400) ?? ''}`;

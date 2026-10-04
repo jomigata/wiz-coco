@@ -25,10 +25,11 @@ import {
 import { buildInnerMindPairs, type InnerMindPair } from '@/lib/egoOkInnerMind';
 import { buildPlus243InterpretationSections } from '@/lib/egoOkPlus243Interpretation';
 import {
-  buildOkLifeOverview,
+  buildOkLifeOverviewBlock,
+  OK_BAR_POLE_LABEL,
   okLifeAxes,
-  okScalePoleTag,
 } from '@/lib/egoOkOkLifePosition';
+import { resolveEgogramFormLabel } from '@/lib/egoOkFormPattern';
 import { OK_LABELS } from '@/lib/egoOkScoring';
 import { egoOkGenderToLabel } from '@/lib/egoOkTestGender';
 import type { ClientInfo } from '@/components/tests/MbtiProClientInfo';
@@ -165,13 +166,13 @@ function EgogramRadarSummarySubtitle({
   peakScale,
   patternCode,
   pattern243Plus,
-  basicPattern,
+  formLabel,
   missing,
 }: {
   peakScale: EgoOkScaleScore;
   patternCode: string;
   pattern243Plus: Pattern243Plus;
-  basicPattern: string;
+  formLabel: string;
   missing: boolean;
 }) {
   return (
@@ -186,7 +187,7 @@ function EgogramRadarSummarySubtitle({
         <Pattern243PlusCode plus={pattern243Plus} className="inline-flex align-middle" />
         <span className="text-slate-500"> (243+ 플러스)</span>
       </p>
-      {basicPattern ? <p className="text-slate-300">{basicPattern}</p> : null}
+      {formLabel && formLabel !== '—' ? <p className="text-slate-300">{formLabel}</p> : null}
       {missing ? <p className="text-amber-200/80">기준 보고서 문장 없음</p> : null}
     </div>
   );
@@ -610,33 +611,27 @@ function InnerMindDualBarChart({ pairs }: { pairs: InnerMindPair[] }) {
   return (
     <div className="grid grid-cols-2 gap-5 sm:grid-cols-4">
       {pairs.map((p) => {
-        const egoH = Math.max(12, (p.egoScore / 50) * plotH);
-        const okH = Math.max(8, (p.okScore / 50) * plotH);
-        const pinkH = Math.min(okH, egoH);
-        const pinkBottom = Math.max(0, (egoH - pinkH) / 2);
+        const egoH = Math.max(4, (p.egoScore / 50) * plotH);
+        const okH = Math.max(4, (p.okScore / 50) * plotH);
+        const diffLabel = `${p.okMinusEgo >= 0 ? '+' : ''}${p.okMinusEgo}`;
         return (
           <div key={p.egoId} className="flex flex-col items-center">
-            <p className="text-center font-mono text-[11px] text-slate-300">
-              ({p.okShort})−({p.egoShort}) = {p.okMinusEgo >= 0 ? '+' : ''}
-              {p.okMinusEgo}
-            </p>
+            <p className="mb-1 text-center font-mono text-xs font-semibold text-indigo-100">{diffLabel}</p>
             <div
-              className="relative mt-2 flex w-full max-w-[5rem] items-end justify-center rounded-xl border border-white/10 bg-slate-900/50 px-3 pb-2 pt-6"
-              style={{ height: plotH + 32 }}
+              className="relative w-full max-w-[5rem] rounded-xl border border-white/10 bg-slate-900/50 px-3 py-2"
+              style={{ height: plotH + 16 }}
             >
-              <div className="relative w-9 shrink-0" style={{ height: egoH }}>
-                <div className="absolute inset-0 rounded-t-md bg-gradient-to-t from-sky-600 to-sky-400 shadow-inner" />
+              <div className="absolute inset-x-3 bottom-2 top-2">
                 <div
-                  className="absolute left-1/2 w-4 -translate-x-1/2 rounded-t-md bg-gradient-to-t from-pink-600 to-pink-400 shadow-md"
-                  style={{ height: pinkH, bottom: pinkBottom }}
+                  className="absolute bottom-0 left-1/2 w-9 -translate-x-1/2 rounded-t-md bg-gradient-to-t from-sky-600 to-sky-400 shadow-inner"
+                  style={{ height: egoH }}
+                />
+                <div
+                  className="absolute bottom-0 left-1/2 w-4 -translate-x-1/2 rounded-t-md bg-gradient-to-t from-pink-600 to-pink-400 shadow-md"
+                  style={{ height: okH }}
                 />
               </div>
             </div>
-            <p className="mt-2 text-xs font-semibold">
-              <span className="text-sky-300">{p.egoShort}</span>
-              <span className="text-slate-500"> / </span>
-              <span className="text-pink-300">{p.okShort}</span>
-            </p>
           </div>
         );
       })}
@@ -694,8 +689,15 @@ export default function EgoOkCounselorReport({
   const uPlus = okRawById['U+'] ?? 0;
   const iPlus = okRawById['I+'] ?? 0;
   const iMinus = okRawById['I-'] ?? 0;
-  const { uTa, iTa } = okLifeAxes(uMinus, uPlus, iPlus, iMinus);
-  const okLifeOverview = buildOkLifeOverview(report.lifePosition.kind, uTa, iTa, report.okgram);
+  const peakEgogram = pickExtremeEgogramScale(report.egogram, 'max');
+  const lowEgogram = pickExtremeEgogramScale(report.egogram, 'min');
+  const { uGap, iGap } = okLifeAxes(uMinus, uPlus, iPlus, iMinus);
+  const okLifeOverview = buildOkLifeOverviewBlock(report.lifePosition.kind, uGap, iGap);
+  const formLabel = resolveEgogramFormLabel(
+    report.egogram,
+    peakEgogram,
+    report.pattern243.basicPattern,
+  );
 
   const OK_BAR_U = '#6366f1';
   const OK_BAR_I = '#0d9488';
@@ -704,13 +706,10 @@ export default function EgoOkCounselorReport({
     score: s.raw,
     label: OK_LABELS[s.id],
     fill: s.id.startsWith('U') ? OK_BAR_U : OK_BAR_I,
-    poleTag: okScalePoleTag(s.id, uTa, iTa),
+    poleTag: OK_BAR_POLE_LABEL[s.id],
   }));
 
   const sectionOrder = ['1', '2', '3', '4'] as const;
-
-  const peakEgogram = pickExtremeEgogramScale(report.egogram, 'max');
-  const lowEgogram = pickExtremeEgogramScale(report.egogram, 'min');
   const innerMindPairs = useMemo(
     () => buildInnerMindPairs(report.egogram, report.okgram),
     [report.egogram, report.okgram],
@@ -795,10 +794,8 @@ export default function EgoOkCounselorReport({
               <dd className="mt-1 text-lg font-semibold text-white">{report.nonContinuityPercent}%</dd>
             </div>
           </dl>
-          {report.pattern243.basicPattern ? (
-            <p className="mt-4 text-sm font-medium text-indigo-200/90">
-              형태명: {report.pattern243.basicPattern}
-            </p>
+          {formLabel && formLabel !== '—' ? (
+            <p className="mt-4 text-sm font-medium text-indigo-200/90">형태명: {formLabel}</p>
           ) : null}
         </div>
       </div>
@@ -821,7 +818,7 @@ export default function EgoOkCounselorReport({
               peakScale={peakEgogram}
               patternCode={report.patternCode}
               pattern243Plus={report.pattern243Plus}
-              basicPattern={report.pattern243.basicPattern}
+              formLabel={formLabel}
               missing={report.pattern243.missing}
             />
           }
@@ -883,12 +880,19 @@ export default function EgoOkCounselorReport({
                 </BarChart>
               </ResponsiveContainer>
             </div>
-            <p className="mt-4 text-sm leading-relaxed text-slate-300">{okLifeOverview}</p>
+            <div className="mt-4 space-y-3 text-sm leading-relaxed text-slate-300">
+              <p className="font-semibold text-indigo-100">{okLifeOverview.heading}</p>
+              <ul className="list-inside list-disc space-y-2 text-slate-300">
+                {okLifeOverview.bullets.map((line) => (
+                  <li key={line.slice(0, 24)}>{line}</li>
+                ))}
+              </ul>
+            </div>
           </SectionCard>
 
           <SectionCard
             title="나의 속마음"
-            subtitle="겉(이고) vs 속(오케이) · 차이 3점 이상만 설명 · 하늘=겉 · 분홍=속"
+            subtitle="겉마음(이고) vs 속마음(오케이) 의 차이를 비교분석하여 실제 속마음을 알아봅니다."
           >
             <InnerMindDualBarChart pairs={innerMindPairs} />
             {innerMindNotable.length > 0 ? (
@@ -896,8 +900,7 @@ export default function EgoOkCounselorReport({
                 {innerMindNotable.map((pair) => (
                   <article key={pair.egoId} className="rounded-xl bg-white/[0.03] p-4 ring-1 ring-white/10">
                     <p className="font-mono text-sm text-sky-200">
-                      {pair.egoShort} / {pair.okShort} · ({pair.okShort})−({pair.egoShort}) ={' '}
-                      {pair.okMinusEgo >= 0 ? '+' : ''}
+                      {pair.egoShort} · (속마음) = {pair.okMinusEgo >= 0 ? '+' : ''}
                       {pair.okMinusEgo}
                     </p>
                     <p className="mt-2 text-sm leading-relaxed text-slate-300">{pair.summary}</p>

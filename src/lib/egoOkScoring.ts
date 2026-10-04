@@ -409,9 +409,9 @@ export function computeEgoOkReport(
   const missing = !hit || (bank.missingCodes || []).includes(patternCode);
 
   const { percent, penalty } = computeNonContinuity(orderedAnswers);
-  const uTaOk = uMinus - uPlus;
-  const iTaOk = iPlus - iMinus;
-  const life = classifyOkLifePosition(uTaOk, iTaOk);
+  const uGapOk = uPlus - uMinus;
+  const iGapOk = iPlus - iMinus;
+  const life = classifyOkLifePosition(uGapOk, iGapOk);
 
   const cpNpSum = cp + np;
   const fcAcSum = fc + ac;
