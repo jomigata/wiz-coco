@@ -22,8 +22,11 @@ const PAIRS: { egoId: EgoOkScaleScore['id']; okId: OkScaleId; egoShort: string; 
 
 function pairCopy(egoShort: string, okShort: string, okMinusEgo: number): { summary: string; caution: string } {
   const abs = Math.abs(okMinusEgo);
-  if (abs < 3) {
-    return { summary: '', caution: '' };
+  if (abs <= 2) {
+    return {
+      summary: `겉(${egoShort})이 속(${okShort})와 별 차이가 없습니다.`,
+      caution: '',
+    };
   }
   if (okMinusEgo > 0) {
     return {

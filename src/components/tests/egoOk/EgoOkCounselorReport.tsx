@@ -632,11 +632,16 @@ function InnerMindDualBarChart({ pairs }: { pairs: InnerMindPair[] }) {
                 />
               </div>
             </div>
+            <p className="mt-2 text-sm font-bold tracking-wide text-sky-200">{p.egoShort}</p>
           </div>
         );
       })}
     </div>
   );
+}
+
+function formatInnerMindDiff(okMinusEgo: number): string {
+  return `${okMinusEgo >= 0 ? '+' : ''}${okMinusEgo}`;
 }
 
 export default function EgoOkCounselorReport({
@@ -714,7 +719,6 @@ export default function EgoOkCounselorReport({
     () => buildInnerMindPairs(report.egogram, report.okgram),
     [report.egogram, report.okgram],
   );
-  const innerMindNotable = innerMindPairs.filter((p) => Math.abs(p.okMinusEgo) >= 3);
   const plus243Sections = useMemo(
     () =>
       buildPlus243InterpretationSections(report.pattern243Plus, report.egogram, chartGender, {
@@ -895,22 +899,33 @@ export default function EgoOkCounselorReport({
             subtitle="겉마음(이고) vs 속마음(오케이) 의 차이를 비교분석하여 실제 속마음을 알아봅니다."
           >
             <InnerMindDualBarChart pairs={innerMindPairs} />
-            {innerMindNotable.length > 0 ? (
-              <div className="mt-6 space-y-4">
-                {innerMindNotable.map((pair) => (
+            <div className="mt-6 space-y-4">
+              {innerMindPairs.map((pair) => {
+                const aligned = Math.abs(pair.okMinusEgo) <= 2;
+                return (
                   <article key={pair.egoId} className="rounded-xl bg-white/[0.03] p-4 ring-1 ring-white/10">
-                    <p className="font-mono text-sm text-sky-200">
-                      {pair.egoShort} · (속마음) = {pair.okMinusEgo >= 0 ? '+' : ''}
-                      {pair.okMinusEgo}
-                    </p>
-                    <p className="mt-2 text-sm leading-relaxed text-slate-300">{pair.summary}</p>
-                    <p className="mt-2 text-sm leading-relaxed text-amber-100/90">{pair.caution}</p>
+                    {aligned ? (
+                      <p className="text-sm leading-relaxed text-slate-300">
+                        <span className="font-mono text-sky-200">
+                          {pair.egoShort} · (속마음) = {formatInnerMindDiff(pair.okMinusEgo)}{' '}
+                        </span>
+                        {pair.summary}
+                      </p>
+                    ) : (
+                      <>
+                        <p className="font-mono text-sm text-sky-200">
+                          {pair.egoShort} · (속마음) = {formatInnerMindDiff(pair.okMinusEgo)}
+                        </p>
+                        <p className="mt-2 text-sm leading-relaxed text-slate-300">{pair.summary}</p>
+                        {pair.caution ? (
+                          <p className="mt-2 text-sm leading-relaxed text-amber-100/90">{pair.caution}</p>
+                        ) : null}
+                      </>
+                    )}
                   </article>
-                ))}
-              </div>
-            ) : (
-              <p className="mt-4 text-sm text-slate-400">네 쌍 모두 차이 3 미만 — 겉·속 정렬 양호.</p>
-            )}
+                );
+              })}
+            </div>
           </SectionCard>
         </div>
       </div>
