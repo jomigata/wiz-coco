@@ -1,11 +1,11 @@
 'use client';
 
+import { ReportInsightBlock, type ReportInsightTone } from '@/components/tests/egoOk/egoOkReportInsight';
 import {
   buildEgogramPolarityRows,
-  negativeBandTone,
+  type EgogramNegativeBand,
   type EgogramPolarityRow,
 } from '@/lib/egoOkEgogramPolarity';
-import { EGO_OK_REPORT_INNER_FRAME } from '@/components/tests/egoOk/egoOkReportChrome';
 import type { EgoOkScaleScore } from '@/lib/egoOkScoring';
 
 function PolarityBar({ row }: { row: EgogramPolarityRow }) {
@@ -33,20 +33,28 @@ function PolarityBar({ row }: { row: EgogramPolarityRow }) {
   );
 }
 
+function bandTone(band: EgogramNegativeBand): ReportInsightTone {
+  if (band === 'within40') return 'emerald';
+  if (band === 'over60') return 'fuchsia';
+  if (band === '56-60' || band === '51-55') return 'amber';
+  return 'sky';
+}
+
 export default function EgoOkEgogramPolarityPanel({ egogram }: { egogram: EgoOkScaleScore[] }) {
   const rows = buildEgogramPolarityRows(egogram);
 
   return (
-    <div className="space-y-4">
-      <p className="text-xs leading-relaxed text-slate-400 sm:text-sm">
-        각 이고 척도의 긍정·부정 사용 합계와 비율입니다.{' '}
-        <strong className="font-normal text-slate-300">부정 40% 이하</strong>를 유지하는 것이 바람직하며, 41%부터
-        구간별 주의·대책 강도가 높아집니다.
-      </p>
-      <div className="grid gap-4 lg:grid-cols-2">
-        <div className={`${EGO_OK_REPORT_INNER_FRAME} p-3`}>
-          <h3 className="text-sm font-semibold text-white">긍정 / 부정 비율</h3>
-          <div className="mt-3 space-y-3">
+    <div className="space-y-3">
+      <ReportInsightBlock tone="indigo" compact title="긍정·부정 사용 비율 안내">
+        <p className="text-xs leading-relaxed text-slate-300 sm:text-sm">
+          각 이고 척도의 긍정·부정 사용 합계와 비율입니다.{' '}
+          <strong className="font-normal text-slate-100">부정 40% 이하</strong>를 유지하는 것이 바람직하며, 41%부터
+          구간별 주의·대책 강도가 높아집니다.
+        </p>
+      </ReportInsightBlock>
+      <div className="grid gap-3 lg:grid-cols-2">
+        <ReportInsightBlock tone="sky" title="긍정 / 부정 비율">
+          <div className="space-y-3">
             {rows.map((row) => (
               <PolarityBar key={row.id} row={row} />
             ))}
@@ -59,51 +67,54 @@ export default function EgoOkEgogramPolarityPanel({ egogram }: { egogram: EgoOkS
               <span className="inline-block h-2 w-3 rounded bg-rose-500" /> 부정
             </span>
           </div>
-        </div>
-        <div className={`overflow-x-auto ${EGO_OK_REPORT_INNER_FRAME}`}>
-          <table className="w-full min-w-[20rem] text-left text-xs text-slate-300">
-            <thead>
-              <tr className="border-b border-white/10 text-[10px] uppercase tracking-wide text-slate-500">
-                <th className="px-3 py-2">척도</th>
-                <th className="px-3 py-2 text-right">긍정</th>
-                <th className="px-3 py-2 text-right">부정</th>
-                <th className="px-3 py-2 text-right">부정%</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/5">
-              {rows.map((row) => (
-                <tr key={row.id}>
-                  <td className="px-3 py-2 font-mono font-semibold text-white">{row.id}</td>
-                  <td className="px-3 py-2 text-right tabular-nums">
-                    {row.positiveRaw} ({row.positivePct}%)
-                  </td>
-                  <td className="px-3 py-2 text-right tabular-nums">
-                    {row.negativeRaw} ({row.negativePct}%)
-                  </td>
-                  <td className="px-3 py-2 text-right tabular-nums text-amber-100/90">{row.negativePct}%</td>
+        </ReportInsightBlock>
+        <ReportInsightBlock tone="violet" title="척도별 수치">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[20rem] text-left text-xs text-slate-300">
+              <thead>
+                <tr className="border-b border-white/10 text-[10px] uppercase tracking-wide text-slate-500">
+                  <th className="py-2 pr-2">척도</th>
+                  <th className="py-2 pr-2 text-right">긍정</th>
+                  <th className="py-2 pr-2 text-right">부정</th>
+                  <th className="py-2 text-right">부정%</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {rows.map((row) => (
+                  <tr key={row.id}>
+                    <td className="py-2 font-mono font-semibold text-white">{row.id}</td>
+                    <td className="py-2 text-right tabular-nums">
+                      {row.positiveRaw} ({row.positivePct}%)
+                    </td>
+                    <td className="py-2 text-right tabular-nums">
+                      {row.negativeRaw} ({row.negativePct}%)
+                    </td>
+                    <td className="py-2 text-right tabular-nums text-amber-100/90">{row.negativePct}%</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </ReportInsightBlock>
       </div>
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {rows.map((row) => (
-          <article
+          <ReportInsightBlock
             key={row.id}
-            className={`rounded-xl bg-white/[0.03] p-4 ring-1 ${negativeBandTone(row.band)}`}
-          >
-            <header className="flex flex-wrap items-baseline justify-between gap-2">
-              <h3 className="font-mono text-sm font-bold text-white">
-                {row.id} · {row.label}
-              </h3>
-              <span className={`rounded-md px-2 py-0.5 text-[10px] font-semibold ring-1 ${negativeBandTone(row.band)}`}>
-                {row.bandLabel}
+            tone={bandTone(row.band)}
+            compact
+            title={
+              <span className="flex flex-wrap items-baseline justify-between gap-2">
+                <span>
+                  {row.id} · {row.label}
+                </span>
+                <span className="text-[10px] font-medium opacity-90">{row.bandLabel}</span>
               </span>
-            </header>
-            <div className="mt-3 space-y-2 text-xs leading-relaxed sm:text-sm">
+            }
+          >
+            <div className="space-y-2 text-xs leading-relaxed sm:text-sm">
               <div>
-                <p className="font-semibold text-sky-200/90">긍정 기능 · 장점</p>
+                <p className="font-semibold text-emerald-200/90">긍정 기능 · 장점</p>
                 <ul className="mt-1 list-inside list-disc text-slate-300">
                   {row.strengths.map((line) => (
                     <li key={line.slice(0, 20)}>{line}</li>
@@ -133,7 +144,7 @@ export default function EgoOkEgogramPolarityPanel({ egogram }: { egogram: EgoOkS
                 </>
               )}
             </div>
-          </article>
+          </ReportInsightBlock>
         ))}
       </div>
     </div>

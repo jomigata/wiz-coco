@@ -55,9 +55,10 @@ import EgoOkCounselorReportTabShell, {
 } from '@/components/tests/egoOk/EgoOkCounselorReportTabShell';
 import EgoOkEgogramPolarityPanel from '@/components/tests/egoOk/EgoOkEgogramPolarityPanel';
 import {
-  EGO_OK_REPORT_INNER_FRAME,
-  EGO_OK_REPORT_INNER_HEADER_DIVIDER,
-} from '@/components/tests/egoOk/egoOkReportChrome';
+  COVER_STAT_TONES,
+  ReportInsightBlock,
+  type ReportInsightTone,
+} from '@/components/tests/egoOk/egoOkReportInsight';
 
 const THREE_LEVEL_STYLE: Record<string, string> = {
   A: 'bg-emerald-500/20 text-emerald-200 ring-emerald-400/40',
@@ -90,14 +91,10 @@ function SectionCard({
   return (
     <section
       className={
-        compact
-          ? `space-y-2 p-2 ${EGO_OK_REPORT_INNER_FRAME}`
-          : 'rounded-2xl border-2 border-white bg-gradient-to-br from-slate-900/90 via-slate-950/95 to-indigo-950/80 p-6 shadow-xl shadow-black/30'
+        compact ? 'space-y-3' : 'rounded-2xl border-2 border-white bg-gradient-to-br from-slate-900/90 via-slate-950/95 to-indigo-950/80 p-6 shadow-xl shadow-black/30'
       }
     >
-      <header
-        className={compact ? `${EGO_OK_REPORT_INNER_HEADER_DIVIDER} pb-2` : 'mb-5 border-b border-white pb-4'}
-      >
+      <header className={compact ? 'border-b border-white/10 pb-2' : 'mb-5 border-b border-white pb-4'}>
         <h2 className="text-base font-semibold tracking-tight text-white sm:text-lg">{title}</h2>
         {subtitle ? <div className="mt-1 text-xs text-slate-400 sm:text-sm">{subtitle}</div> : null}
       </header>
@@ -106,11 +103,12 @@ function SectionCard({
   );
 }
 
+const INTERP_TONES: ReportInsightTone[] = ['indigo', 'fuchsia', 'sky', 'violet', 'emerald', 'amber'];
+
 function InterpretationArticles({
   sectionOrder,
   sections,
   sectionLabels,
-  variant = 'default',
 }: {
   sectionOrder: readonly string[];
   sections: Record<string, string>;
@@ -118,27 +116,29 @@ function InterpretationArticles({
   variant?: 'default' | 'pattern-cross';
 }) {
   return (
-    <div className="grid gap-2 xl:grid-cols-2">
-      {sectionOrder.map((key) => {
+    <div className="grid gap-3 xl:grid-cols-2">
+      {sectionOrder.map((key, index) => {
         const text = sections[key];
         const label = sectionLabels[key] || `섹션 ${key}`;
         if (!text) return null;
-        const articleClass =
-          variant === 'pattern-cross'
-            ? 'rounded-lg border border-white bg-indigo-950/40 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]'
-            : `${EGO_OK_REPORT_INNER_FRAME} p-3`;
+        const tone = INTERP_TONES[index % INTERP_TONES.length];
         return (
-          <article key={key} className={articleClass}>
-            <h3 className="flex items-center gap-2 text-sm font-semibold text-white">
-              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-indigo-500/20 text-[10px] text-indigo-200">
-                {key}
+          <ReportInsightBlock
+            key={key}
+            tone={tone}
+            title={
+              <span className="flex items-center gap-2">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/10 text-[10px] font-bold">
+                  {key}
+                </span>
+                {label}
               </span>
-              {label}
-            </h3>
-            <p className="mt-2 max-h-[min(28vh,14rem)] overflow-y-auto whitespace-pre-wrap text-xs leading-relaxed text-slate-300 sm:text-sm [scrollbar-width:thin]">
+            }
+          >
+            <p className="whitespace-pre-wrap text-xs leading-relaxed text-slate-300 sm:text-sm">
               {text}
             </p>
-          </article>
+          </ReportInsightBlock>
         );
       })}
     </div>
@@ -818,34 +818,30 @@ export default function EgoOkCounselorReport({
         short: '표지',
         description: '검사 표지 · 내담자 · 243 · 요약',
         panel: (
-          <div className="flex flex-col gap-2">
-            <div className={`relative overflow-hidden p-3 ${EGO_OK_REPORT_INNER_FRAME} bg-gradient-to-br from-indigo-950/90 via-slate-950 to-[#070b14]`}>
-              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_50%_-20%,rgba(99,102,241,0.22),transparent)]" />
-              <div className="relative">
-                <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-indigo-300/80">Counselor report</p>
-                <h1 className="mt-2 text-2xl font-bold text-white sm:text-3xl">TA 이고-오케이그램 검사 · 전문가 해석</h1>
-                <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-300">
-                  96문항(타당도 6문항 분산) · 243패턴 · KTAA · 이고/오케이 · 243+ 해석. 상단 탭을 클릭하거나 마우스를
-                  올린 뒤 아래 영역으로 이동하면 해당 결과가 고정됩니다.
-                </p>
-              </div>
-            </div>
-            {localTestMode ? (
-              <p className="rounded-lg border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-xs leading-relaxed text-amber-100">
-                로컬 테스트 모드 — 저장·발송되지 않습니다. 성별 변경 시 243 구간·그래프 배경이 갱신됩니다.
+          <div className="flex flex-col gap-3">
+            <ReportInsightBlock tone="indigo" title="TA 이고-오케이그램 검사 · 전문가 해석">
+              <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-indigo-200/80">Counselor report</p>
+              <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-300">
+                96문항(타당도 6문항 분산) · 243패턴 · KTAA · 이고/오케이 · 243+ 해석. 상단 탭을 클릭하거나 마우스를
+                올린 뒤 아래 영역으로 이동하면 해당 결과가 고정됩니다.
               </p>
+            </ReportInsightBlock>
+            {localTestMode ? (
+              <ReportInsightBlock tone="amber" compact title="로컬 테스트 모드">
+                <p className="text-xs leading-relaxed text-amber-50/90">
+                  저장·발송되지 않습니다. 성별 변경 시 243 구간·그래프 배경이 갱신됩니다.
+                </p>
+              </ReportInsightBlock>
             ) : null}
-            <dl className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-              <div className={`${EGO_OK_REPORT_INNER_FRAME} px-3 py-2.5`}>
-                <dt className="text-xs text-slate-500">내담자</dt>
-                <dd className="mt-1 font-medium text-white">{clientInfo?.name?.trim() || '—'}</dd>
-              </div>
-              <div className={`${EGO_OK_REPORT_INNER_FRAME} px-3 py-2.5`}>
-                <dt className="text-xs text-slate-500">성별 · 출생</dt>
-                <dd className="mt-1 font-medium text-white">
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+              <ReportInsightBlock tone={COVER_STAT_TONES[0]} compact title="내담자">
+                <p className="font-medium text-white">{clientInfo?.name?.trim() || '—'}</p>
+              </ReportInsightBlock>
+              <ReportInsightBlock tone={COVER_STAT_TONES[1]} compact title="성별 · 출생">
+                <p className="font-medium text-white">
                   {localTestMode && onTestGenderChange && testGender ? (
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="inline-flex rounded-lg border border-white/15 bg-white/5 p-0.5">
+                    <span className="flex flex-wrap items-center gap-2">
+                      <span className="inline-flex rounded-lg bg-black/20 p-0.5 ring-1 ring-white/10">
                         {(['male', 'female'] as const).map((g) => (
                           <button
                             key={g}
@@ -866,55 +862,46 @@ export default function EgoOkCounselorReport({
                       {clientInfo?.birthYear ? (
                         <span className="text-slate-400">· {clientInfo.birthYear}년</span>
                       ) : null}
-                    </div>
+                    </span>
                   ) : (
                     displayGenderLine
                   )}
-                </dd>
-              </div>
-              <div className={`${EGO_OK_REPORT_INNER_FRAME} px-3 py-2.5`}>
-                <dt className="sr-only">243 패턴 · 243+</dt>
-                <dd>
-                  <Pattern243AndPlusCode block patternCode={report.patternCode} plus={report.pattern243Plus} />
-                </dd>
-              </div>
-              <div className={`${EGO_OK_REPORT_INNER_FRAME} px-3 py-2.5`}>
-                <dt className="text-xs text-slate-500">타당도</dt>
-                <dd className="mt-1 text-sm font-semibold text-white">{report.validity?.overallTitle ?? '—'}</dd>
-              </div>
-              <div className={`${EGO_OK_REPORT_INNER_FRAME} px-3 py-2.5`}>
-                <dt className="text-xs text-slate-500">인생태도(명칭)</dt>
-                <dd className="mt-1 font-semibold text-indigo-100">{report.lifePosition.kind}</dd>
-              </div>
-            </dl>
-            <dl className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-              <div className={`${EGO_OK_REPORT_INNER_FRAME} px-3 py-2.5`}>
-                <dt className="text-xs text-slate-500">최고 이고 척도</dt>
-                <dd className="mt-1 font-semibold text-white">
+                </p>
+              </ReportInsightBlock>
+              <ReportInsightBlock tone={COVER_STAT_TONES[2]} compact title="243 패턴 · 243+">
+                <Pattern243AndPlusCode block patternCode={report.patternCode} plus={report.pattern243Plus} />
+              </ReportInsightBlock>
+              <ReportInsightBlock tone={COVER_STAT_TONES[3]} compact title="타당도">
+                <p className="text-sm font-semibold text-white">{report.validity?.overallTitle ?? '—'}</p>
+              </ReportInsightBlock>
+              <ReportInsightBlock tone={COVER_STAT_TONES[4]} compact title="인생태도(명칭)">
+                <p className="font-semibold text-indigo-100">{report.lifePosition.kind}</p>
+              </ReportInsightBlock>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+              <ReportInsightBlock tone={COVER_STAT_TONES[5]} compact title="최고 이고 척도">
+                <p className="font-semibold text-white">
                   {peakEgogram.id} · {peakEgogram.raw}점
-                </dd>
-                <dd className="mt-1 text-xs text-slate-400">{peakEgogram.label}</dd>
-              </div>
-              <div className={`${EGO_OK_REPORT_INNER_FRAME} px-3 py-2.5`}>
-                <dt className="text-xs text-slate-500">최저 이고 척도</dt>
-                <dd className="mt-1 font-semibold text-white">
+                </p>
+                <p className="mt-1 text-xs text-slate-400">{peakEgogram.label}</p>
+              </ReportInsightBlock>
+              <ReportInsightBlock tone={COVER_STAT_TONES[6]} compact title="최저 이고 척도">
+                <p className="font-semibold text-white">
                   {lowEgogram.id} · {lowEgogram.raw}점
-                </dd>
-                <dd className="mt-1 text-xs text-slate-400">{lowEgogram.label}</dd>
-              </div>
-              <div className={`${EGO_OK_REPORT_INNER_FRAME} px-3 py-2.5`}>
-                <dt className="text-xs text-slate-500">형태명</dt>
-                <dd className="mt-1 font-semibold text-white">{formLabel && formLabel !== '—' ? formLabel : '—'}</dd>
-              </div>
-              <div className={`${EGO_OK_REPORT_INNER_FRAME} px-3 py-2.5`}>
-                <dt className="text-xs text-slate-500">243패턴 문장</dt>
-                <dd className="mt-1 text-xs text-slate-400">
+                </p>
+                <p className="mt-1 text-xs text-slate-400">{lowEgogram.label}</p>
+              </ReportInsightBlock>
+              <ReportInsightBlock tone={COVER_STAT_TONES[7]} compact title="형태명">
+                <p className="font-semibold text-white">{formLabel && formLabel !== '—' ? formLabel : '—'}</p>
+              </ReportInsightBlock>
+              <ReportInsightBlock tone={COVER_STAT_TONES[8]} compact title="243패턴 문장">
+                <p className="text-xs text-slate-300">
                   {report.pattern243.missing
                     ? '기준 문장 없음 — 코드만 참고'
                     : `보고서 ${report.pattern243.reportNo ?? '—'} · 탭「243+」「오케이」참고`}
-                </dd>
-              </div>
-            </dl>
+                </p>
+              </ReportInsightBlock>
+            </div>
           </div>
         ),
       },
@@ -962,7 +949,7 @@ export default function EgoOkCounselorReport({
               </div>
               <div className="space-y-3">
                 <EgogramEnergyInsightPanel highScale={peakEgogram} lowScale={lowEgogram} />
-                <ul className="max-h-[min(32vh,16rem)] space-y-2 overflow-y-auto pr-1 [scrollbar-width:thin]">
+                <ul className="space-y-2">
                   <li className="flex gap-3 px-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
                     <span className="w-8">척도</span>
                     <span className="flex-1">명칭</span>
@@ -1015,18 +1002,17 @@ export default function EgoOkCounselorReport({
               </span>
             }
           >
-            <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
-              <div className={`${EGO_OK_REPORT_INNER_FRAME} p-3`}>
+            <div className="grid gap-3 lg:grid-cols-2 lg:items-start">
+              <ReportInsightBlock tone="sky" title="오케이그램 막대">
                 <OkGramLifePositionBars rows={okBarData} />
-              </div>
-              <div className="space-y-3 text-sm leading-relaxed text-slate-300">
-                <p className="font-semibold text-indigo-100">{okLifeOverview.heading}</p>
-                <ul className="list-inside list-disc space-y-2 text-slate-300">
+              </ReportInsightBlock>
+              <ReportInsightBlock tone="indigo" title={okLifeOverview.heading}>
+                <ul className="list-inside list-disc space-y-2 text-sm leading-relaxed text-slate-300">
                   {okLifeOverview.bullets.map((line) => (
                     <li key={line.slice(0, 24)}>{line}</li>
                   ))}
                 </ul>
-              </div>
+              </ReportInsightBlock>
             </div>
           </SectionCard>
         ),
@@ -1046,15 +1032,17 @@ export default function EgoOkCounselorReport({
               {innerMindPairs.map((pair) => {
                 const aligned = Math.abs(pair.okMinusEgo) <= INNER_MIND_ALIGNED_MAX;
                 return (
-                  <article key={pair.egoId} className="rounded-xl bg-white/[0.03] p-3 ring-1 ring-white/10">
-                    <p className="font-mono text-xs text-sky-200 sm:text-sm">
-                      {pair.egoShort} · (속마음) = {formatInnerMindDiff(pair.okMinusEgo)}
-                    </p>
-                    <p className="mt-1.5 text-xs leading-relaxed text-slate-300 sm:text-sm">{pair.summary}</p>
+                  <ReportInsightBlock
+                    key={pair.egoId}
+                    tone={aligned ? 'sky' : 'amber'}
+                    compact
+                    title={`${pair.egoShort} · (속마음) = ${formatInnerMindDiff(pair.okMinusEgo)}`}
+                  >
+                    <p className="text-xs leading-relaxed text-slate-300 sm:text-sm">{pair.summary}</p>
                     {!aligned && pair.caution ? (
-                      <p className="mt-1.5 text-xs leading-relaxed text-amber-100/90 sm:text-sm">{pair.caution}</p>
+                      <p className="mt-2 text-xs leading-relaxed text-amber-50/90 sm:text-sm">{pair.caution}</p>
                     ) : null}
-                  </article>
+                  </ReportInsightBlock>
                 );
               })}
             </div>
