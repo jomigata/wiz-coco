@@ -43,6 +43,7 @@ export default function EgoOkCounselorReportTabShell({
   const [navBottomPx, setNavBottomPx] = useState(TAB_BAR_FALLBACK_BOTTOM_PX);
 
   useMouseEdgeAutoScroll(scrollRef, true, navRef, { panelOnly: true });
+  useMouseEdgeAutoScroll(tabScrollRef, true, undefined, { panelOnly: true, horizontalOnly: true });
   const panelScrollHints = useScrollEdgeHints(scrollRef, true, navRef);
   const tabScrollHints = useScrollEdgeHints(tabScrollRef, true);
 

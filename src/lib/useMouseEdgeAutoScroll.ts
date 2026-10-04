@@ -136,6 +136,10 @@ function edgeScrollDelta(
 export type MouseEdgeAutoScrollOptions = {
   /** true면 window.scrollBy 생략(고정 탭 패널 전용) */
   panelOnly?: boolean;
+  /** 가로 스크롤만 (탭 메뉴 등) */
+  horizontalOnly?: boolean;
+  /** 세로 스크롤만 */
+  verticalOnly?: boolean;
 };
 
 /** 뷰포트·지정 컨테이너 가장자리에서 마우스 이동 시 자동 스크롤 */
@@ -147,6 +151,8 @@ export function useMouseEdgeAutoScroll(
   options?: MouseEdgeAutoScrollOptions,
 ) {
   const panelOnly = options?.panelOnly ?? false;
+  const horizontalOnly = options?.horizontalOnly ?? false;
+  const verticalOnly = options?.verticalOnly ?? false;
   const runnersRef = useRef<Array<() => void>>([]);
   const rafRef = useRef(0);
 
@@ -187,7 +193,9 @@ export function useMouseEdgeAutoScroll(
             right: rect.right,
             bottom: rect.bottom,
           };
-          const panelDelta = edgeScrollDelta(e.clientX, e.clientY, panelRect);
+          let panelDelta = edgeScrollDelta(e.clientX, e.clientY, panelRect);
+          if (horizontalOnly) panelDelta = { ...panelDelta, dy: 0 };
+          if (verticalOnly) panelDelta = { ...panelDelta, dx: 0 };
           if (panelDelta.dx || panelDelta.dy) {
             const { dx, dy } = panelDelta;
             runners.push(() => {
@@ -239,5 +247,5 @@ export function useMouseEdgeAutoScroll(
       }
       stop();
     };
-  }, [enabled, containerRef, regionTopRef, panelOnly]);
+  }, [enabled, containerRef, regionTopRef, panelOnly, horizontalOnly, verticalOnly]);
 }
