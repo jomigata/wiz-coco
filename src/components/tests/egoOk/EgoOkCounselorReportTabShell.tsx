@@ -9,6 +9,7 @@ import {
   EGO_OK_REPORT_TAB_IDLE,
   EGO_OK_REPORT_TAB_PREVIEW,
 } from '@/components/tests/egoOk/egoOkReportChrome';
+import EdgeScrollHintOverlay from '@/components/tests/egoOk/EdgeScrollHintOverlay';
 import { useMouseEdgeAutoScroll } from '@/lib/useMouseEdgeAutoScroll';
 
 export type CounselorReportTab = {
@@ -37,10 +38,12 @@ export default function EgoOkCounselorReportTabShell({
   const [activeId, setActiveId] = useState(defaultTabId ?? firstId);
   const [previewId, setPreviewId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const tabScrollRef = useRef<HTMLDivElement>(null);
   const navRef = useRef<HTMLElement>(null);
   const [navBottomPx, setNavBottomPx] = useState(TAB_BAR_FALLBACK_BOTTOM_PX);
 
-  useMouseEdgeAutoScroll(scrollRef, true, navRef, { panelOnly: true });
+  const panelScrollHints = useMouseEdgeAutoScroll(scrollRef, true, navRef, { panelOnly: true });
+  const tabScrollHints = useMouseEdgeAutoScroll(tabScrollRef, true, navRef, { panelOnly: true });
 
   useLayoutEffect(() => {
     const measure = () => {
@@ -89,7 +92,12 @@ export default function EgoOkCounselorReportTabShell({
         className={`fixed inset-x-0 ${fixedTopClass} z-50 ${EGO_OK_REPORT_TAB_BAR}`}
         aria-label="검사 결과 섹션"
       >
-        <div className="mx-auto flex w-full max-w-[min(100%,112rem)] items-stretch gap-2 overflow-x-auto px-3 py-2.5 sm:gap-2 sm:px-4 [scrollbar-width:thin]">
+        <div className="relative mx-auto max-w-[min(100%,112rem)]">
+          <EdgeScrollHintOverlay hints={tabScrollHints} axes="horizontal" />
+          <div
+            ref={tabScrollRef}
+            className="flex w-full items-stretch gap-2 overflow-x-auto px-3 py-2.5 sm:gap-2 sm:px-4 [scrollbar-width:thin]"
+          >
           {tabs.map((tab) => {
             const isActive = tab.id === activeId;
             const isPreview = previewId === tab.id && previewId !== activeId;
@@ -125,14 +133,16 @@ export default function EgoOkCounselorReportTabShell({
               </button>
             );
           })}
+          </div>
         </div>
       </nav>
 
       <div
-        className={`fixed inset-x-2 bottom-2 z-40 ${EGO_OK_REPORT_PANEL_OUTER}`}
+        className={`fixed inset-x-2 bottom-2 z-40 ${EGO_OK_REPORT_PANEL_OUTER} relative`}
         style={{ top: navBottomPx, height: panelHeight }}
         onMouseEnter={lockPreviewToActive}
       >
+        <EdgeScrollHintOverlay hints={panelScrollHints} />
         <div
           ref={scrollRef}
           className={`h-full overflow-auto overscroll-contain p-2 [scrollbar-width:thin] ${EGO_OK_REPORT_PANEL_SCROLL}`}
