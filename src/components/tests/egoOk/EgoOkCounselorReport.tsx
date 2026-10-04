@@ -973,7 +973,7 @@ export default function EgoOkCounselorReport({
                 </p>
               </ReportInsightBlock>
             ) : null}
-            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
               <ReportInsightBlock tone={COVER_STAT_TONES[0]} compact title="내담자">
                 <p className="font-medium text-white">{clientInfo?.name?.trim() || '—'}</p>
               </ReportInsightBlock>
@@ -1017,8 +1017,6 @@ export default function EgoOkCounselorReport({
               <ReportInsightBlock tone={COVER_STAT_TONES[4]} compact title="인생태도(명칭)">
                 <p className="font-semibold text-indigo-100">{report.lifePosition.kind}</p>
               </ReportInsightBlock>
-            </div>
-            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
               <ReportInsightBlock tone={COVER_STAT_TONES[5]} compact title="최고 이고 척도">
                 <p className="font-semibold text-white">
                   {peakEgogram.id} · {peakEgogram.raw}점

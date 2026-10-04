@@ -87,10 +87,10 @@ function EdgeHint({
     >
       <span className={`pointer-events-none absolute ${gradient}`} />
       <span
-        className={`relative flex h-8 w-8 items-center justify-center rounded-full border transition-all duration-150 backdrop-blur-md ${
+        className={`relative flex h-9 w-9 items-center justify-center rounded-full border bg-transparent transition-all duration-150 ${
           active
-            ? 'border-white/45 bg-white/[0.08] shadow-[0_0_12px_rgba(255,255,255,0.12)]'
-            : 'border-white/20 bg-black/[0.12] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]'
+            ? 'border-white/60 shadow-[0_0_14px_rgba(255,255,255,0.18)] ring-1 ring-white/10'
+            : 'border-white/30 ring-1 ring-black/25'
         }`}
         title={label}
       >
