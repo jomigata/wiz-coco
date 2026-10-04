@@ -383,9 +383,7 @@ export function computeEgoOkReport(
   const percent =
     validity.overall === 'normal' ? 100 : validity.overall === 'caution' ? 72 : 40;
   const penalty = 100 - percent;
-  const uGapOk = uPlus - uMinus;
-  const iGapOk = iPlus - iMinus;
-  const life = classifyOkLifePosition(uGapOk, iGapOk);
+  const life = classifyOkLifePosition(uAxis, iAxis);
 
   const cpNpSum = cp + np;
   const fcAcSum = fc + ac;

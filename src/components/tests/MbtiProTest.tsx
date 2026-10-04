@@ -796,6 +796,14 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
               />
             </div>
 
+            {isEgoOkFlow && isEgoOkQuestion(selectedQuestions[currentQuestion]) ? (
+              <p className="mb-3 text-center text-xs font-semibold tracking-wide text-sky-300/95">
+                {selectedQuestions[currentQuestion].scaleKind === 'validity'
+                  ? '타당도 확인'
+                  : '이고그램 선택'}
+              </p>
+            ) : null}
+
             <div className="text-center mb-3">
               <div
                 className={`${v.questionCard} relative mb-10 min-h-[112px] overflow-hidden`}

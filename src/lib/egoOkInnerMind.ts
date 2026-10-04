@@ -20,9 +20,13 @@ const PAIRS: { egoId: EgoOkScaleScore['id']; okId: OkScaleId; egoShort: string; 
   { egoId: 'AC', okId: 'I-', egoShort: 'AC', okShort: 'I−' },
 ];
 
+/** 겉·속 동일 수준: |차이| ≤ 4 · 상세 해석: |차이| ≥ 5 */
+export const INNER_MIND_ALIGNED_MAX = 4;
+export const INNER_MIND_NOTABLE_MIN = 5;
+
 function pairCopy(egoShort: string, okShort: string, okMinusEgo: number): { summary: string; caution: string } {
   const abs = Math.abs(okMinusEgo);
-  if (abs <= 2) {
+  if (abs <= INNER_MIND_ALIGNED_MAX) {
     return {
       summary: `겉(${egoShort})이 속(${okShort})보다 ${abs}점 차이로 겉과 속이 동일 수준입니다.`,
       caution: '',

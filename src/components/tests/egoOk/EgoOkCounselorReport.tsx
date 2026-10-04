@@ -22,13 +22,13 @@ import {
   type Plus243ScaleEntry,
   type Plus243Stage,
 } from '@/lib/egogram243Plus';
-import { buildInnerMindPairs, type InnerMindPair } from '@/lib/egoOkInnerMind';
-import { buildPlus243InterpretationSections } from '@/lib/egoOkPlus243Interpretation';
 import {
-  buildOkLifeOverviewBlock,
-  OK_BAR_POLE_LABEL,
-  okLifeAxes,
-} from '@/lib/egoOkOkLifePosition';
+  buildInnerMindPairs,
+  INNER_MIND_ALIGNED_MAX,
+  type InnerMindPair,
+} from '@/lib/egoOkInnerMind';
+import { buildPlus243InterpretationSections } from '@/lib/egoOkPlus243Interpretation';
+import { buildOkLifeOverviewBlock, OK_BAR_POLE_LABEL } from '@/lib/egoOkOkLifePosition';
 import { resolveEgogramFormLabel } from '@/lib/egoOkFormPattern';
 import EgoOkValiditySection from '@/components/tests/egoOk/EgoOkValiditySection';
 import { OK_LABELS } from '@/lib/egoOkScoring';
@@ -691,14 +691,13 @@ export default function EgoOkCounselorReport({
     ];
   });
 
-  const uMinus = okRawById['U-'] ?? 0;
-  const uPlus = okRawById['U+'] ?? 0;
-  const iPlus = okRawById['I+'] ?? 0;
-  const iMinus = okRawById['I-'] ?? 0;
   const peakEgogram = pickExtremeEgogramScale(report.egogram, 'max');
   const lowEgogram = pickExtremeEgogramScale(report.egogram, 'min');
-  const { uGap, iGap } = okLifeAxes(uMinus, uPlus, iPlus, iMinus);
-  const okLifeOverview = buildOkLifeOverviewBlock(report.lifePosition.kind, uGap, iGap);
+  const okLifeOverview = buildOkLifeOverviewBlock(
+    report.lifePosition.kind,
+    report.lifePosition.uAxis,
+    report.lifePosition.iAxis,
+  );
   const formLabel = resolveEgogramFormLabel(
     report.egogram,
     peakEgogram,
@@ -900,12 +899,12 @@ export default function EgoOkCounselorReport({
 
           <SectionCard
             title="나의 속마음"
-            subtitle="겉마음(이고) vs 속마음(오케이) 의 차이를 비교분석하여 실제 속마음을 알아봅니다."
+            subtitle="겉마음(이고) vs 속마음(오케이) · |차이| 4 이하 동일 수준 · 5 이상 상세 해석"
           >
             <InnerMindDualBarChart pairs={innerMindPairs} />
             <div className="mt-6 space-y-4">
               {innerMindPairs.map((pair) => {
-                const aligned = Math.abs(pair.okMinusEgo) <= 2;
+                const aligned = Math.abs(pair.okMinusEgo) <= INNER_MIND_ALIGNED_MAX;
                 return (
                   <article key={pair.egoId} className="rounded-xl bg-white/[0.03] p-4 ring-1 ring-white/10">
                     {aligned ? (

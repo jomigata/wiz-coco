@@ -48,7 +48,7 @@ export const EGO_OK_PRO_TEST_FLOW: MbtiProTestFlowConfig = {
   uiTheme: 'portal',
   skipCodeStep: true,
   testScreenTitle: 'TA 이고-오케이그램 검사',
-  testScreenSubtitle: '각 문항에 가장 가까운 답을 선택해 주세요.',
+  testScreenSubtitle: '이고그램 선택 — 각 문항에 가장 가까운 답을 선택해 주세요.',
   clientInfoScreenTitle: 'TA 이고-오케이그램 검사',
   buildResultUrl: buildMbtiProResultUrl,
 };
