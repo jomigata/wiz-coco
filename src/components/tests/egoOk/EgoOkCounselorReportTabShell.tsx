@@ -4,7 +4,10 @@ import { useCallback, useLayoutEffect, useRef, useState, type ReactNode } from '
 import {
   EGO_OK_REPORT_PANEL_OUTER,
   EGO_OK_REPORT_PANEL_SCROLL,
+  EGO_OK_REPORT_TAB_ACTIVE,
   EGO_OK_REPORT_TAB_BAR,
+  EGO_OK_REPORT_TAB_IDLE,
+  EGO_OK_REPORT_TAB_PREVIEW,
 } from '@/components/tests/egoOk/egoOkReportChrome';
 import { useMouseEdgeAutoScroll } from '@/lib/useMouseEdgeAutoScroll';
 
@@ -86,10 +89,15 @@ export default function EgoOkCounselorReportTabShell({
         className={`fixed inset-x-0 ${fixedTopClass} z-50 ${EGO_OK_REPORT_TAB_BAR}`}
         aria-label="검사 결과 섹션"
       >
-        <div className="mx-auto flex w-full max-w-[min(100%,112rem)] items-stretch gap-1 overflow-x-auto px-2 py-2 sm:gap-1.5 sm:px-4 [scrollbar-width:thin]">
+        <div className="mx-auto flex w-full max-w-[min(100%,112rem)] items-stretch gap-2 overflow-x-auto px-3 py-2.5 sm:gap-2 sm:px-4 [scrollbar-width:thin]">
           {tabs.map((tab) => {
             const isActive = tab.id === activeId;
             const isPreview = previewId === tab.id && previewId !== activeId;
+            const shell = isActive
+              ? EGO_OK_REPORT_TAB_ACTIVE
+              : isPreview
+                ? EGO_OK_REPORT_TAB_PREVIEW
+                : EGO_OK_REPORT_TAB_IDLE;
             return (
               <button
                 key={tab.id}
@@ -98,31 +106,22 @@ export default function EgoOkCounselorReportTabShell({
                 onMouseEnter={() => onTabEnter(tab.id)}
                 aria-current={isActive ? 'true' : undefined}
                 title={tab.description ?? tab.label}
-                className={`group relative shrink-0 rounded-lg px-3 py-2.5 text-left transition-all duration-200 sm:min-w-[7rem] sm:flex-1 sm:px-3.5 ${
-                  isActive
-                    ? 'border-2 border-white bg-white/15 text-white shadow-[0_0_20px_rgba(255,255,255,0.12)]'
-                    : isPreview
-                      ? 'border-2 border-white/80 bg-white/10 text-white'
-                      : 'border border-white/35 bg-black/25 text-slate-200 hover:border-white/60 hover:bg-white/5 hover:text-white'
-                }`}
+                className={`group relative min-h-[3.25rem] shrink-0 rounded-[0.65rem] px-3 py-2 text-left transition-[border-color,background,box-shadow,color] duration-200 ease-out sm:min-w-[7.25rem] sm:flex-1 sm:px-3.5 ${shell}`}
               >
                 <span
-                  className={`block text-[10px] font-bold uppercase tracking-wider sm:text-[11px] ${
-                    isActive ? 'text-white' : 'text-slate-300 group-hover:text-white'
+                  className={`block text-[11px] font-medium leading-none tracking-tight ${
+                    isActive ? 'text-white/90' : isPreview ? 'text-slate-200' : 'text-slate-500 group-hover:text-slate-300'
                   }`}
                 >
                   {tab.short ?? tab.label}
                 </span>
                 <span
-                  className={`mt-0.5 hidden truncate text-xs font-semibold leading-tight sm:block sm:text-sm ${
-                    isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-100'
+                  className={`mt-1 block truncate text-[13px] font-bold leading-snug sm:text-sm ${
+                    isActive ? 'text-white' : isPreview ? 'text-white/95' : 'text-slate-500 group-hover:text-slate-300'
                   }`}
                 >
                   {tab.label}
                 </span>
-                {isActive ? (
-                  <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-white" />
-                ) : null}
               </button>
             );
           })}
