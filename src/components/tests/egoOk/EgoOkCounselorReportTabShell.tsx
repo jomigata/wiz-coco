@@ -32,7 +32,7 @@ export default function EgoOkCounselorReportTabShell({
   const navRef = useRef<HTMLElement>(null);
   const [navBottomPx, setNavBottomPx] = useState(TAB_BAR_FALLBACK_BOTTOM_PX);
 
-  useMouseEdgeAutoScroll(scrollRef, true, navRef);
+  useMouseEdgeAutoScroll(scrollRef, true, navRef, { panelOnly: true });
 
   useLayoutEffect(() => {
     const measure = () => {
@@ -119,12 +119,10 @@ export default function EgoOkCounselorReportTabShell({
         style={{ top: navBottomPx, height: panelHeight }}
         onMouseEnter={lockPreviewToActive}
       >
-        <div
-          ref={scrollRef}
-          key={displayId}
-          className="h-full overflow-auto overscroll-contain p-2 [scrollbar-width:thin]"
-        >
-          <div className="flex min-h-min flex-col gap-2">{activePanel}</div>
+        <div ref={scrollRef} className="h-full overflow-auto overscroll-contain p-2 [scrollbar-width:thin]">
+          <div key={displayId} className="flex min-h-min flex-col gap-2">
+            {activePanel}
+          </div>
         </div>
       </div>
 
