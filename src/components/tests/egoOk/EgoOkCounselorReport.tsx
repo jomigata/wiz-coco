@@ -1090,7 +1090,7 @@ export default function EgoOkCounselorReport({
 
   return (
     <div className="mx-auto w-full max-w-[min(100%,112rem)] pb-4">
-      <EgoOkCounselorReportTabShell tabs={reportTabs} defaultTabId="cover" fixedTopClass="top-16" />
+      <EgoOkCounselorReportTabShell tabs={reportTabs} defaultTabId="cover" fixedTopClass="top-[4.75rem]" />
 
       <p className="mt-3 text-center text-[10px] text-slate-600">
         기준: docs/internal-materials/ego-ok (items-96, norms 2020-04-01, patterns-243-reports) · 타당도 15·30·47·63·77·90

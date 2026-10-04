@@ -99,26 +99,29 @@ function EgoOkResultContent() {
   }
 
   return (
-    <div className="min-h-screen bg-[#070b14] px-1 pb-2 pt-14 sm:px-3 lg:px-4">
-      <div className="mx-auto mb-2 flex w-full max-w-[min(100%,112rem)] flex-wrap items-center justify-between gap-2">
-        <Link
-          href="/tests"
-          className="text-sm text-slate-400 transition hover:text-white"
-        >
-          ← 검사 목록
-        </Link>
-        {localDirect ? (
-          <button
-            type="button"
-            className="text-sm text-slate-500 hover:text-slate-300"
-            onClick={() => {
-              clearEgoOkReportDraft();
-              window.location.href = '/tests/ego-ok-pro?localDirect=1';
-            }}
-          >
-            초안 삭제 후 재검사
-          </button>
-        ) : null}
+    <div className="min-h-screen bg-[#070b14] px-1 pb-0 pt-0 sm:px-3 lg:px-4">
+      <div className="fixed inset-x-0 top-16 z-[55] border-b border-white/5 bg-[#070b14]/95 backdrop-blur-sm">
+        <div className="mx-auto flex w-full max-w-[min(100%,112rem)] items-center justify-between gap-2 px-2 py-0 leading-none sm:px-4">
+          <Link href="/tests" className="m-0 block py-0 text-sm leading-none text-slate-400 transition hover:text-white">
+            ← 검사 목록
+          </Link>
+          {localDirect ? (
+            <button
+              type="button"
+              className="m-0 block py-0 text-sm leading-none text-slate-500 hover:text-slate-300"
+              onClick={() => {
+                clearEgoOkReportDraft();
+                window.location.href = '/tests/ego-ok-pro?localDirect=1';
+              }}
+            >
+              초안 삭제 후 재검사
+            </button>
+          ) : (
+            <span className="py-0 text-sm leading-none text-transparent select-none" aria-hidden>
+              ·
+            </span>
+          )}
+        </div>
       </div>
       <EgoOkCounselorReport
         report={report}

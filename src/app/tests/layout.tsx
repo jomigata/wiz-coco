@@ -220,7 +220,11 @@ export default function TestsLayout({ children }: { children: React.ReactNode })
 
             {/* 콘텐츠 영역 */}
             <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-              <div className="mx-auto w-full max-w-[1800px] px-4 py-6 sm:px-6">
+              <div
+                className={`mx-auto w-full max-w-[1800px] px-4 sm:px-6 ${
+                  pathname?.includes('/ego-ok-pro/result') ? 'py-0' : 'py-6'
+                }`}
+              >
                 {children}
               </div>
             </div>

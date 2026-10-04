@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useRef, useState, type ReactNode } from 'react';
+import { useMouseEdgeAutoScroll } from '@/lib/useMouseEdgeAutoScroll';
 
 export type CounselorReportTab = {
   id: string;
@@ -18,8 +19,8 @@ type Props = {
 };
 
 const TAB_BAR_HEIGHT_PX = 52;
-const EDGE_SIZE_PX = 40;
-const SCROLL_STEP_PX = 14;
+/** top-16(64) + 결과 툴바(≈20) */
+const CONTENT_TOP_OFFSET_PX = 64 + 20 + TAB_BAR_HEIGHT_PX;
 
 export default function EgoOkCounselorReportTabShell({
   tabs,
@@ -30,8 +31,7 @@ export default function EgoOkCounselorReportTabShell({
   const [activeId, setActiveId] = useState(defaultTabId ?? firstId);
   const [previewId, setPreviewId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const edgeScrollRef = useRef({ dx: 0, dy: 0 });
-  const edgeRafRef = useRef(0);
+  useMouseEdgeAutoScroll(scrollRef, true);
 
   const displayId = previewId ?? activeId;
   const activePanel =
@@ -53,57 +53,9 @@ export default function EgoOkCounselorReportTabShell({
     setPreviewId(null);
   }, [previewId, activeId]);
 
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-
-    const stopEdge = () => {
-      edgeScrollRef.current = { dx: 0, dy: 0 };
-      if (edgeRafRef.current) {
-        cancelAnimationFrame(edgeRafRef.current);
-        edgeRafRef.current = 0;
-      }
-    };
-
-    const tick = () => {
-      const node = scrollRef.current;
-      const { dx, dy } = edgeScrollRef.current;
-      if (node && (dx || dy)) {
-        node.scrollLeft += dx;
-        node.scrollTop += dy;
-        edgeRafRef.current = requestAnimationFrame(tick);
-      } else {
-        edgeRafRef.current = 0;
-      }
-    };
-
-    const onMove = (e: MouseEvent) => {
-      const rect = el.getBoundingClientRect();
-      let dx = 0;
-      let dy = 0;
-      if (e.clientX - rect.left < EDGE_SIZE_PX) dx = -SCROLL_STEP_PX;
-      else if (rect.right - e.clientX < EDGE_SIZE_PX) dx = SCROLL_STEP_PX;
-      if (e.clientY - rect.top < EDGE_SIZE_PX) dy = -SCROLL_STEP_PX;
-      else if (rect.bottom - e.clientY < EDGE_SIZE_PX) dy = SCROLL_STEP_PX;
-      edgeScrollRef.current = { dx, dy };
-      if ((dx || dy) && !edgeRafRef.current) {
-        edgeRafRef.current = requestAnimationFrame(tick);
-      }
-      if (!dx && !dy) stopEdge();
-    };
-
-    el.addEventListener('mousemove', onMove);
-    el.addEventListener('mouseleave', stopEdge);
-    return () => {
-      el.removeEventListener('mousemove', onMove);
-      el.removeEventListener('mouseleave', stopEdge);
-      stopEdge();
-    };
-  }, [displayId]);
-
   if (!tabs.length) return null;
 
-  const contentTop = 64 + TAB_BAR_HEIGHT_PX;
+  const contentTop = CONTENT_TOP_OFFSET_PX;
 
   return (
     <div className="w-full">
