@@ -22,7 +22,7 @@ export const EGO_OK_LIKERT_OPTIONS: EgoOkLikertOption[] = [
   {
     letter: 'B',
     value: 4,
-    labelLines: ['그렇다'],
+    labelLines: ['약간', '그렇다'],
     circle: 'md',
     py: 'py-[2.625rem]',
     rounded: 'rounded-[20px]',
@@ -30,7 +30,7 @@ export const EGO_OK_LIKERT_OPTIONS: EgoOkLikertOption[] = [
   {
     letter: 'C',
     value: 3,
-    labelLines: ['모르', '겠다'],
+    labelLines: ['보통이다'],
     circle: 'md',
     py: 'py-5',
     rounded: 'rounded-[20px]',
@@ -38,7 +38,7 @@ export const EGO_OK_LIKERT_OPTIONS: EgoOkLikertOption[] = [
   {
     letter: 'D',
     value: 2,
-    labelLines: ['아니다'],
+    labelLines: ['약간', '아니다'],
     circle: 'md',
     py: 'py-[2.625rem]',
     rounded: 'rounded-[20px]',

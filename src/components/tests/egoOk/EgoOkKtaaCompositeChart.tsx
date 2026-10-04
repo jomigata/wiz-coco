@@ -862,7 +862,7 @@ export default function EgoOkKtaaCompositeChart({
         <p className="font-bold text-sky-900">점수가 그래프에 표시되는 방식</p>
         <ol className="list-decimal space-y-2 pl-4 text-gray-800">
           <li>
-            <strong>응답 → 문항 점수</strong>: 각 문항은 5점 척도(1=매우 아니다 ~ 5=매우 그렇다 · 모르겠다=3)로
+            <strong>응답 → 문항 점수</strong>: 각 문항은 5점 척도(1=매우 아니다 ~ 5=매우 그렇다 · 보통이다=3)로
             답하고, 채점 시 문항 <strong>1~5점</strong>으로 환산합니다(6→5, 5→4, 4→3.25, 3→2.75, 2→2,
             1→1). 척도 10문항 합은 <strong>10~50</strong>이며, 소수 합산 후 <strong>0.5 이상 반올림</strong>합니다.
           </li>
