@@ -83,67 +83,6 @@ type PlotBackgroundProps = {
   yAxisMap?: Record<string, { scale: YScale }>;
 };
 
-type EgogramDominance = 'positive' | 'negative' | 'even';
-
-function columnDominance(col: EgoOkCompositeColumn): EgogramDominance {
-  if (col.egoPositive > col.egoNegative) return 'positive';
-  if (col.egoNegative > col.egoPositive) return 'negative';
-  return 'even';
-}
-
-function createKtaaColumnHoverLayer(
-  hoveredId: (typeof COLUMN_ORDER)[number] | null,
-  columns: EgoOkCompositeColumn[],
-) {
-  return function KtaaColumnHoverLayer(props: PlotBackgroundProps) {
-    const { offset } = props;
-    if (!hoveredId || !offset?.width) return null;
-    const colIndex = COLUMN_ORDER.indexOf(hoveredId);
-    if (colIndex < 0) return null;
-    const col = columns.find((c) => c.id === hoveredId);
-    if (!col) return null;
-    const { left, top, width, height } = offset;
-    const colW = width / COLUMN_ORDER.length;
-    const x = left + colIndex * colW;
-    const dom = columnDominance(col);
-    const gradId = `ktaa-hover-${hoveredId}`;
-    const stops =
-      dom === 'positive'
-        ? (
-            <>
-              <stop offset="0%" stopColor={EGO_POS_COLOR} stopOpacity={0.45} />
-              <stop offset="55%" stopColor="#ffffff" stopOpacity={0.08} />
-              <stop offset="100%" stopColor="#ffffff" stopOpacity={0} />
-            </>
-          )
-        : dom === 'negative'
-          ? (
-              <>
-                <stop offset="0%" stopColor="#ffffff" stopOpacity={0} />
-                <stop offset="45%" stopColor="#ffffff" stopOpacity={0.06} />
-                <stop offset="100%" stopColor={EGO_NEG_COLOR} stopOpacity={0.45} />
-              </>
-            )
-          : (
-              <>
-                <stop offset="0%" stopColor={EGO_POS_COLOR} stopOpacity={0.22} />
-                <stop offset="100%" stopColor={EGO_NEG_COLOR} stopOpacity={0.22} />
-              </>
-            );
-
-    return (
-      <g pointerEvents="none">
-        <defs>
-          <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-            {stops}
-          </linearGradient>
-        </defs>
-        <rect x={x} y={top} width={colW} height={height} fill={`url(#${gradId})`} />
-      </g>
-    );
-  };
-}
-
 /** Recharts offset과 동일한 픽셀 박스로 5열 라벨 정렬 */
 function KtaaPlotLabelColumns({
   plotBox,
@@ -592,11 +531,13 @@ function SumLabelBox({
   value,
   stroke,
   fill,
+  blink,
 }: {
   rect: SumLabelRect;
   value: number;
   stroke: string;
   fill: string;
+  blink?: boolean;
 }) {
   return (
     <g>
@@ -609,7 +550,11 @@ function SumLabelBox({
         fill="#fff"
         stroke={stroke}
         strokeWidth={stroke === OK_LINE_COLOR ? 1 : 1.5}
-      />
+      >
+        {blink ? (
+          <animate attributeName="opacity" values="1;0.25;1" dur="0.65s" repeatCount="indefinite" />
+        ) : null}
+      </rect>
       <text
         x={rect.textX}
         y={rect.y + 13}
@@ -624,7 +569,10 @@ function SumLabelBox({
   );
 }
 
-function createKtaaOkEgoSumLabels(chartData: ChartRow[]) {
+function createKtaaOkEgoSumLabels(
+  chartData: ChartRow[],
+  hoveredId: (typeof COLUMN_ORDER)[number] | null,
+) {
   return function KtaaOkEgoSumLabels(props: PlotBackgroundProps) {
     const { offset, yAxisMap } = props;
     if (!offset?.width || !yAxisMap) return null;
@@ -643,6 +591,7 @@ function createKtaaOkEgoSumLabels(chartData: ChartRow[]) {
           const layout = computeColumnSumLayout(row, cx, yScale);
           if (!layout) return null;
 
+          const blinkEgo = hoveredId === row.id;
           if (row.id === 'A') {
             return (
               <SumLabelBox
@@ -651,6 +600,7 @@ function createKtaaOkEgoSumLabels(chartData: ChartRow[]) {
                 value={row.egoTotal}
                 stroke={EGO_TOTAL_BOX_STROKE}
                 fill="#0c4a6e"
+                blink={blinkEgo}
               />
             );
           }
@@ -670,6 +620,7 @@ function createKtaaOkEgoSumLabels(chartData: ChartRow[]) {
                 value={row.egoTotal}
                 stroke={EGO_TOTAL_BOX_STROKE}
                 fill="#0c4a6e"
+                blink={blinkEgo}
               />
             </g>
           );
@@ -789,14 +740,12 @@ export default function EgoOkKtaaCompositeChart({
     okLineFcAc: col.id === 'FC' || col.id === 'AC' ? col.okLine : null,
   }));
 
-  const OkEgoSumLabelsLayer = useMemo(() => createKtaaOkEgoSumLabels(data), [data]);
-  const EgoSegmentLabelsLayer = useMemo(() => createKtaaEgoSegmentLabels(data), [data]);
-
   const [hoveredId, setHoveredId] = useState<(typeof COLUMN_ORDER)[number] | null>(null);
-  const ColumnHoverLayer = useMemo(
-    () => createKtaaColumnHoverLayer(hoveredId, columns),
-    [hoveredId, columns],
+  const OkEgoSumLabelsLayer = useMemo(
+    () => createKtaaOkEgoSumLabels(data, hoveredId),
+    [data, hoveredId],
   );
+  const EgoSegmentLabelsLayer = useMemo(() => createKtaaEgoSegmentLabels(data), [data]);
 
   const [plotBox, setPlotBox] = useState<KtaaPlotBox | null>(null);
   const handlePlotBox = useCallback((box: KtaaPlotBox) => {
@@ -825,29 +774,20 @@ export default function EgoOkKtaaCompositeChart({
       </div>
 
       <KtaaPlotLabelColumns plotBox={plotBox} style={TRAIT_LABEL_PLOT_GAP_TOP}>
-        {columns.map((col, index) => {
-          const hovered = hoveredId === col.id;
-          const dom = columnDominance(col);
-          const topStrong = hovered && (dom === 'positive' || dom === 'even');
-          return (
-            <div
-              key={col.id}
-              {...bindColumnHover(col.id)}
-              className={`${COLUMN_TRAIT_TITLE_CLASS} ${
-                index < columns.length - 1 ? COLUMN_DIVIDER_CLASS : ''
-              } ${topStrong ? 'font-extrabold text-sky-900' : ''} ${hovered && dom === 'negative' ? 'text-gray-400' : ''}`}
-            >
-              {col.topLabel}
-            </div>
-          );
-        })}
+        {columns.map((col, index) => (
+          <div
+            key={col.id}
+            className={`${COLUMN_TRAIT_TITLE_CLASS} ${index < columns.length - 1 ? COLUMN_DIVIDER_CLASS : ''}`}
+          >
+            {col.topLabel}
+          </div>
+        ))}
       </KtaaPlotLabelColumns>
 
       <div className="relative w-full leading-none" style={{ height: CHART_PLOT_HEIGHT_PX }}>
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={data} margin={CHART_MARGIN} style={{ background: 'transparent' }}>
             <Customized component={PlotBackgroundLayer} />
-            <Customized component={ColumnHoverLayer} />
             <ReferenceLine
               y={12.5}
               stroke="#e57373"
@@ -923,40 +863,28 @@ export default function EgoOkKtaaCompositeChart({
       </div>
 
       <KtaaPlotLabelColumns plotBox={plotBox} style={TRAIT_LABEL_PLOT_GAP_BOTTOM}>
-        {columns.map((col, index) => {
-          const hovered = hoveredId === col.id;
-          const dom = columnDominance(col);
-          const bottomStrong = hovered && (dom === 'negative' || dom === 'even');
-          return (
-            <div
-              key={`${col.id}-bottom`}
-              {...bindColumnHover(col.id)}
-              className={`${COLUMN_TRAIT_TITLE_CLASS} ${
-                index < columns.length - 1 ? COLUMN_DIVIDER_CLASS : ''
-              } ${bottomStrong ? 'font-extrabold text-orange-800' : ''} ${hovered && dom === 'positive' ? 'text-gray-400' : ''}`}
-            >
-              {col.bottomLabel}
-            </div>
-          );
-        })}
+        {columns.map((col, index) => (
+          <div
+            key={`${col.id}-bottom`}
+            className={`${COLUMN_TRAIT_TITLE_CLASS} ${index < columns.length - 1 ? COLUMN_DIVIDER_CLASS : ''}`}
+          >
+            {col.bottomLabel}
+          </div>
+        ))}
       </KtaaPlotLabelColumns>
 
       <KtaaPlotLabelColumns plotBox={plotBox} className={`pb-2 ${BOTTOM_TRAIT_TO_CODE_GAP}`}>
         {columns.map((col, index) => {
           const isA = col.id === 'A';
-          const hovered = hoveredId === col.id;
           return (
             <div
               key={`${col.id}-code`}
-              {...bindColumnHover(col.id)}
               className={`flex items-center justify-center ${
                 index < columns.length - 1 ? COLUMN_DIVIDER_CLASS : ''
               }`}
             >
               <span
-                className={`rounded border px-2 py-0.5 text-xs ${
-                  hovered ? 'font-extrabold scale-105' : 'font-bold'
-                } ${isA ? 'border-sky-500 text-sky-700' : 'border-red-400 text-red-600'}`}
+                className={`rounded border px-2 py-0.5 text-xs font-bold ${isA ? 'border-sky-500 text-sky-700' : 'border-red-400 text-red-600'}`}
               >
                 {col.codeLabel}
                 {col.okTag ? (
@@ -983,35 +911,24 @@ export default function EgoOkKtaaCompositeChart({
             <strong>주황(아래)</strong>은 부정 문항 합(0~25),{' '}
             <span className="inline-block h-2 w-3 rounded-sm align-middle" style={{ background: EGO_POS_COLOR }} />{' '}
             <strong>하늘(위)</strong>은 긍정 문항 합(0~25). 막대 안 숫자는 각 층 점수,{' '}
-            <strong>막대 꼭대기 숫자</strong>는 두 층을 더한 <strong>이고그램 척도 총점(0~50)</strong>입니다.             CP·NP·FC·AC 열에서는 <strong>겹치지 않을 때</strong> 이고 합계는 막대 꼭대기 바로 위, 오케이 합계는
-            오케이 점 근처(점수 큰 쪽 위)에 둡니다. <strong>점수가 같으면</strong> 오케이 합계가 이고 합계보다
-            항상 위입니다.             배치 후에도 이고 합계가 오케이 <strong>선·점·합계</strong>와 겹치면{' '}
-            <strong>이고 합계만</strong> 위·아래로 옮깁니다(동점일 때는 오케이 아래쪽만 허용). 막대 안{' '}
-            <strong>긍정·부정 층 점수</strong>가 오케이 점·합계·이고 합계에 가리면{' '}
-            <strong>층 숫자만</strong> 해당 막대 구간 안에서 위·아래로 옮깁니다.{' '}
-            <strong>A 열</strong>은 이고 합계만 막대 위에 표시합니다.
+            <strong>막대 꼭대기 숫자</strong>는 두 층을 더한 <strong>이고그램 척도 총점(0~50)</strong>입니다.
+            막대에 마우스를 올리면 해당 열의 <strong>이고 합계</strong> 숫자가 깜빡입니다.
           </li>
           <li>
-            <strong>적색 선 = 오케이그램</strong>: U−·U+·I+·I− 척도 각 10문항 합(0~50)을 같은 열에
-            표시합니다. <strong>CP→U−, NP→U+, FC→I+, AC→I−</strong>. 선은 <strong>CP–NP</strong>와{' '}
-            <strong>FC–AC</strong>만 이어지고 <strong>A 열과는 연결하지 않습니다</strong>. 막대 꼭대기
-            이고 합계(0~50)는 사각 테두리 안 숫자로 표시합니다.
-          </li>
-          <li>
-            <strong>배경색(5열·남/여 동일)</strong>:{' '}
+            <strong>배경색:</strong>{' '}
             <span
               className="inline-block h-2 w-3 rounded-sm border border-sky-200 align-middle"
               style={{ background: ZONE_SKY }}
             />{' '}
-            하단(C)·{' '}
+            ·{' '}
             <span className="inline-block h-2 w-3 rounded-sm border border-gray-200 align-middle bg-white" />{' '}
-            중간(B)·{' '}
+            ·{' '}
             <span
               className="inline-block h-2 w-3 rounded-sm border border-red-200 align-middle"
               style={{ background: ZONE_PINK }}
-            />{' '}
-            상단(A). 구간 <strong>높이</strong>는 내담자(또는 테스트) 성별 3단계 컷(척도마다 다름). 점선(12.5)은
-            참고 기준선입니다.
+            />
+            . 배경색은 243패턴을 기준으로 각 에너지 사용을 A (높음), B (보통), C (낮음) 3단계로 구분하였다.
+            빨간점선(12.5)은 부정성의 참고 (중간)기준선입니다.
             {!genderProvided ? (
               <span className="text-gray-600"> 테스트 성별: 새로고침 시 남/여 구간 높이 교대.</span>
             ) : null}

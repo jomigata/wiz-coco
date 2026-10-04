@@ -320,28 +320,20 @@ function computeNonContinuity(answersInOrder: number[]): { percent: number; pena
   return { percent, penalty };
 }
 
+/** NP−CP, FC−AC: 0 미만만 부정, 0 이상은 긍정으로 판정 */
 function classifyLifePosition(uAxis: number, iAxis: number): { kind: LifePositionKind; summary: string } {
-  const uFlat = uAxis >= -1 && uAxis <= 1;
-  const iFlat = iAxis >= -1 && iAxis <= 1;
-  if (uFlat && iAxis > 1) {
-    return { kind: '자기긍정', summary: '타인 축은 중립에 가깝고, 자기 축(FC−AC)이 양수입니다.' };
-  }
-  if (uFlat && iAxis < -1) {
-    return { kind: '자기부정', summary: '타인 축은 중립에 가깝고, 자기 축이 음수입니다.' };
-  }
-  if (uAxis > 1 && iFlat) {
-    return { kind: '타인긍정', summary: '타인 축(NP−CP)이 양수이고, 자기 축은 중립에 가깝습니다.' };
-  }
-  if (uAxis < -1 && iFlat) {
-    return { kind: '타인부정', summary: '타인 축이 음수이고, 자기 축은 중립에 가깝습니다.' };
-  }
-  if (uAxis > 1 && iAxis > 1) {
+  const uPos = uAxis >= 0;
+  const iPos = iAxis >= 0;
+  if (uPos && iPos) {
     return { kind: '자타긍정', summary: '타인·자기 축 모두 긍정 방향입니다.' };
   }
-  if (uAxis < -1 && iAxis < -1) {
+  if (!uPos && !iPos) {
     return { kind: '자타부정', summary: '타인·자기 축 모두 부정 방향입니다.' };
   }
-  return { kind: '자타평평형', summary: '타인·자기 축 모두 −1~+1 범위의 평형에 가깝습니다.' };
+  if (uPos && !iPos) {
+    return { kind: '타인긍정', summary: '타인 축(NP−CP)은 긍정, 자기 축(FC−AC)은 부정입니다.' };
+  }
+  return { kind: '자기긍정', summary: '타인 축(NP−CP)은 부정, 자기 축(FC−AC)은 긍정입니다.' };
 }
 
 export function computeEgoOkReport(
