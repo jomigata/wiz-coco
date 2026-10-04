@@ -53,6 +53,7 @@ import EgoOkKtaaCompositeChart from '@/components/tests/egoOk/EgoOkKtaaComposite
 import EgoOkCounselorReportTabShell, {
   type CounselorReportTab,
 } from '@/components/tests/egoOk/EgoOkCounselorReportTabShell';
+import EgoOkEgogramPolarityPanel from '@/components/tests/egoOk/EgoOkEgogramPolarityPanel';
 
 const THREE_LEVEL_STYLE: Record<string, string> = {
   A: 'bg-emerald-500/20 text-emerald-200 ring-emerald-400/40',
@@ -789,7 +790,6 @@ export default function EgoOkCounselorReport({
     };
   });
 
-  const sectionOrder = ['1', '2', '3', '4'] as const;
   const innerMindPairs = useMemo(
     () => buildInnerMindPairs(report.egogram, report.okgram),
     [report.egogram, report.okgram],
@@ -807,22 +807,81 @@ export default function EgoOkCounselorReport({
   const reportTabs = useMemo((): CounselorReportTab[] => {
     const tabs: CounselorReportTab[] = [
       {
-        id: 'overview',
-        label: '개요 · 요약',
-        short: '개요',
-        description: '내담자 정보 · 243 코드 · 형태명',
+        id: 'cover',
+        label: '표지 · 개요',
+        short: '표지',
+        description: '검사 표지 · 내담자 · 243 · 요약',
         panel: (
-          <div className="space-y-4">
-            <p className="text-sm leading-relaxed text-slate-300">
-              96문항(타당도 6문항 분산) · 243패턴 · 인생태도 · 타당도를 탭별로 나누어 상담 시 빠르게 참고할 수
-              있습니다. 상단 탭에 마우스를 올리거나 클릭하면 해당 블록이 표시됩니다.
-            </p>
-            <dl className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              <div className="rounded-xl bg-white/[0.04] px-4 py-3 ring-1 ring-white/10">
-                <dt className="text-xs text-slate-500">인생태도</dt>
-                <dd className="mt-1 font-semibold text-indigo-100">{report.lifePosition.kind}</dd>
-                <dd className="mt-1 text-xs text-slate-400">{report.lifePosition.summary}</dd>
+          <div className="space-y-5">
+            <div className="relative overflow-hidden rounded-2xl border border-indigo-400/25 bg-gradient-to-br from-indigo-950/80 via-slate-950 to-[#070b14] p-5 sm:p-6">
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_50%_-20%,rgba(99,102,241,0.22),transparent)]" />
+              <div className="relative">
+                <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-indigo-300/80">Counselor report</p>
+                <h1 className="mt-2 text-2xl font-bold text-white sm:text-3xl">TA 이고-오케이그램 검사 · 전문가 해석</h1>
+                <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-300">
+                  96문항(타당도 6문항 분산) · 243패턴 · KTAA · 이고/오케이 · 243+ 해석. 상단 탭을 클릭하거나 마우스를
+                  올린 뒤 아래 영역으로 이동하면 해당 결과가 고정됩니다.
+                </p>
               </div>
+            </div>
+            {localTestMode ? (
+              <p className="rounded-lg border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-xs leading-relaxed text-amber-100">
+                로컬 테스트 모드 — 저장·발송되지 않습니다. 성별 변경 시 243 구간·그래프 배경이 갱신됩니다.
+              </p>
+            ) : null}
+            <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+              <div className="rounded-xl bg-white/[0.04] px-4 py-3 ring-1 ring-white/10">
+                <dt className="text-xs text-slate-500">내담자</dt>
+                <dd className="mt-1 font-medium text-white">{clientInfo?.name?.trim() || '—'}</dd>
+              </div>
+              <div className="rounded-xl bg-white/[0.04] px-4 py-3 ring-1 ring-white/10">
+                <dt className="text-xs text-slate-500">성별 · 출생</dt>
+                <dd className="mt-1 font-medium text-white">
+                  {localTestMode && onTestGenderChange && testGender ? (
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="inline-flex rounded-lg border border-white/15 bg-white/5 p-0.5">
+                        {(['male', 'female'] as const).map((g) => (
+                          <button
+                            key={g}
+                            type="button"
+                            onClick={() => onTestGenderChange(g)}
+                            className={`rounded-md px-2.5 py-1 text-xs font-semibold transition ${
+                              testGender === g
+                                ? g === 'male'
+                                  ? 'bg-sky-600 text-white'
+                                  : 'bg-rose-600 text-white'
+                                : 'text-slate-300 hover:text-white'
+                            }`}
+                          >
+                            {egoOkGenderToLabel(g)}
+                          </button>
+                        ))}
+                      </span>
+                      {clientInfo?.birthYear ? (
+                        <span className="text-slate-400">· {clientInfo.birthYear}년</span>
+                      ) : null}
+                    </div>
+                  ) : (
+                    displayGenderLine
+                  )}
+                </dd>
+              </div>
+              <div className="rounded-xl bg-white/[0.04] px-4 py-3 ring-1 ring-white/10">
+                <dt className="sr-only">243 패턴 · 243+</dt>
+                <dd>
+                  <Pattern243AndPlusCode block patternCode={report.patternCode} plus={report.pattern243Plus} />
+                </dd>
+              </div>
+              <div className="rounded-xl bg-white/[0.04] px-4 py-3 ring-1 ring-white/10">
+                <dt className="text-xs text-slate-500">타당도</dt>
+                <dd className="mt-1 text-sm font-semibold text-white">{report.validity?.overallTitle ?? '—'}</dd>
+              </div>
+              <div className="rounded-xl bg-white/[0.04] px-4 py-3 ring-1 ring-white/10">
+                <dt className="text-xs text-slate-500">인생태도(명칭)</dt>
+                <dd className="mt-1 font-semibold text-indigo-100">{report.lifePosition.kind}</dd>
+              </div>
+            </dl>
+            <dl className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               <div className="rounded-xl bg-white/[0.04] px-4 py-3 ring-1 ring-white/10">
                 <dt className="text-xs text-slate-500">최고 이고 척도</dt>
                 <dd className="mt-1 font-semibold text-white">
@@ -841,18 +900,15 @@ export default function EgoOkCounselorReport({
                 <dt className="text-xs text-slate-500">형태명</dt>
                 <dd className="mt-1 font-semibold text-white">{formLabel && formLabel !== '—' ? formLabel : '—'}</dd>
               </div>
-            </dl>
-            <div className="grid gap-4 lg:grid-cols-2">
-              <OkGramLifePositionBars rows={okBarData} />
-              <div className="rounded-xl border border-white/10 bg-black/20 p-4">
-                <p className="text-sm font-semibold text-indigo-100">{okLifeOverview.heading}</p>
-                <ul className="mt-2 list-inside list-disc space-y-1 text-xs text-slate-300 sm:text-sm">
-                  {okLifeOverview.bullets.map((line) => (
-                    <li key={line.slice(0, 24)}>{line}</li>
-                  ))}
-                </ul>
+              <div className="rounded-xl bg-white/[0.04] px-4 py-3 ring-1 ring-white/10">
+                <dt className="text-xs text-slate-500">243패턴 문장</dt>
+                <dd className="mt-1 text-xs text-slate-400">
+                  {report.pattern243.missing
+                    ? '기준 문장 없음 — 코드만 참고'
+                    : `보고서 ${report.pattern243.reportNo ?? '—'} · 탭「243+」「오케이」참고`}
+                </dd>
               </div>
-            </div>
+            </dl>
           </div>
         ),
       },
@@ -871,21 +927,19 @@ export default function EgoOkCounselorReport({
         label: 'KTAA 종합 그래프',
         short: 'KTAA',
         panel: (
-          <SectionCard compact title="이고-오케이그램 (Ego-Ok) 진단 결과 그래프" subtitle="96문항 성격(90) · KTAA 종합">
-            <div className="max-h-[min(72vh,640px)] overflow-hidden rounded-xl">
-              <EgoOkKtaaCompositeChart columns={report.compositeChart} gender={chartGender} />
-            </div>
-          </SectionCard>
+          <div className="max-h-[min(78vh,680px)] overflow-hidden rounded-xl">
+            <EgoOkKtaaCompositeChart columns={report.compositeChart} gender={chartGender} />
+          </div>
         ),
       },
       {
         id: 'egogram',
-        label: '이고그램 5척도',
+        label: '이고그램',
         short: '이고',
         panel: (
           <SectionCard
             compact
-            title="이고그램 5척도"
+            title="이고그램"
             subtitle={
               <EgogramRadarSummarySubtitle
                 peakScale={peakEgogram}
@@ -927,8 +981,22 @@ export default function EgoOkCounselorReport({
         ),
       },
       {
+        id: 'plus243',
+        label: '243+ Plus 해석',
+        short: '243+',
+        panel: (
+          <SectionCard compact title="243+Plus 종합 해석" subtitle={`9단계 · ${chartGender ?? '성별 미입력'} norms`}>
+            <InterpretationArticles
+              sectionOrder={plus243SectionOrder}
+              sections={plus243Sections.sections}
+              sectionLabels={plus243Sections.sectionLabels}
+            />
+          </SectionCard>
+        ),
+      },
+      {
         id: 'ok-life',
-        label: '오케이 · 인생태도',
+        label: '오케이그램 · 인생태도',
         short: '오케이',
         panel: (
           <SectionCard
@@ -988,163 +1056,41 @@ export default function EgoOkCounselorReport({
         ),
       },
       {
-        id: 'plus243',
-        label: '243+ Plus 해석',
-        short: '243+',
+        id: 'polarity',
+        label: '이고그램-부정성',
+        short: '부정성',
+        description: '긍정·부정 사용 비율 · 구간별 주의·대책',
         panel: (
-          <SectionCard compact title="243+Plus 종합 해석" subtitle={`9단계 · ${chartGender ?? '성별 미입력'} norms`}>
-            <InterpretationArticles
-              sectionOrder={plus243SectionOrder}
-              sections={plus243Sections.sections}
-              sectionLabels={plus243Sections.sectionLabels}
-            />
+          <SectionCard compact title="이고그램-부정성" subtitle="5척도 긍정·부정 합계 · 부정 40% 기준 · 6단계 구간 해석">
+            <EgoOkEgogramPolarityPanel egogram={report.egogram} />
           </SectionCard>
-        ),
-      },
-      {
-        id: 'pattern243',
-        label: '243 패턴 해석',
-        short: '243',
-        panel: (
-          <div className="space-y-6">
-            {!report.pattern243.missing ? (
-              <SectionCard
-                compact
-                title="243+ 플러스 종합 해석 (243패턴 교차)"
-                subtitle={`243패턴 ${report.patternCode} · 9단계 + 패턴 문장`}
-              >
-                <InterpretationArticles
-                  sectionOrder={sectionOrder}
-                  sections={report.pattern243.sections}
-                  sectionLabels={report.pattern243.sectionLabels}
-                  variant="pattern-cross"
-                />
-              </SectionCard>
-            ) : null}
-            <SectionCard
-              compact
-              title="243패턴 종합 해석"
-              subtitle={
-                report.pattern243.missing
-                  ? '해당 코드의 보고서 문장이 기준 자료에 없습니다.'
-                  : `보고서 번호 ${report.pattern243.reportNo ?? '—'} · 코드 ${report.patternCode}`
-              }
-            >
-              {report.pattern243.missing ? (
-                <p className="text-sm leading-relaxed text-slate-400">
-                  척도별 243 구간 조합은 <strong className="text-slate-200">{report.patternCode}</strong>
-                  입니다. KTAA · 인생태도 · 오케이 막대를 함께 참고하세요.
-                </p>
-              ) : (
-                <InterpretationArticles
-                  sectionOrder={sectionOrder}
-                  sections={report.pattern243.sections}
-                  sectionLabels={report.pattern243.sectionLabels}
-                />
-              )}
-            </SectionCard>
-          </div>
         ),
       },
     ];
     return tabs;
   }, [
     chartGender,
+    clientInfo,
+    displayGenderLine,
     formLabel,
     innerMindPairs,
+    localTestMode,
     lowEgogram,
     okBarData,
     okLifeOverview.bullets,
     okLifeOverview.heading,
+    onTestGenderChange,
     peakEgogram,
     plus243Sections.sectionLabels,
     plus243Sections.sections,
     radarData,
     report,
-    sectionOrder,
+    testGender,
   ]);
 
   return (
-    <div className="mx-auto w-full max-w-[min(100%,112rem)] pb-6">
-      <div className="relative overflow-hidden rounded-2xl border border-indigo-400/20 bg-gradient-to-br from-indigo-950 via-slate-950 to-[#070b14] p-4 shadow-2xl sm:p-5 lg:rounded-none lg:border-x-0 lg:border-t-0 lg:shadow-none">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_50%_-20%,rgba(99,102,241,0.25),transparent)]" />
-        <div className="relative">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-indigo-300/80">Counselor report</p>
-              <h1 className="mt-1 text-xl font-bold text-white sm:text-2xl">
-                TA 이고-오케이그램 검사 · 전문가 해석
-              </h1>
-            </div>
-            {formLabel && formLabel !== '—' ? (
-              <p className="text-sm font-medium text-indigo-200/90 lg:text-right">형태명 · {formLabel}</p>
-            ) : null}
-          </div>
-          {localTestMode ? (
-            <p className="mt-3 max-w-2xl rounded-lg border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-xs leading-relaxed text-amber-100">
-              로컬 테스트 모드 — 저장·발송되지 않습니다. 상단 <strong>성별</strong>에서 남/여를 바꾸면
-              243 구간·그래프 배경이 즉시 갱신됩니다. 페이지 새로고침(F5) 시 성별 기준이 남↔여로 교대됩니다.
-            </p>
-          ) : null}
-          <dl className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
-            <div className="rounded-xl bg-white/[0.04] px-4 py-3 ring-1 ring-white/10">
-              <dt className="text-xs text-slate-500">내담자</dt>
-              <dd className="mt-1 font-medium text-white">{clientInfo?.name?.trim() || '—'}</dd>
-            </div>
-            <div className="rounded-xl bg-white/[0.04] px-4 py-3 ring-1 ring-white/10">
-              <dt className="text-xs text-slate-500">성별 · 출생</dt>
-              <dd className="mt-1 font-medium text-white">
-                {localTestMode && onTestGenderChange && testGender ? (
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="inline-flex rounded-lg border border-white/15 bg-white/5 p-0.5">
-                      {(['male', 'female'] as const).map((g) => (
-                        <button
-                          key={g}
-                          type="button"
-                          onClick={() => onTestGenderChange(g)}
-                          className={`rounded-md px-2.5 py-1 text-xs font-semibold transition ${
-                            testGender === g
-                              ? g === 'male'
-                                ? 'bg-sky-600 text-white'
-                                : 'bg-rose-600 text-white'
-                              : 'text-slate-300 hover:text-white'
-                          }`}
-                        >
-                          {egoOkGenderToLabel(g)}
-                        </button>
-                      ))}
-                    </span>
-                    {clientInfo?.birthYear ? (
-                      <span className="text-slate-400">· {clientInfo.birthYear}년</span>
-                    ) : null}
-                  </div>
-                ) : (
-                  displayGenderLine
-                )}
-              </dd>
-            </div>
-            <div className="rounded-xl bg-white/[0.04] px-4 py-3 ring-1 ring-white/10">
-              <dt className="sr-only">243 패턴 · 243+ 플러스</dt>
-              <dd className="text-base">
-                <Pattern243AndPlusCode
-                  block
-                  patternCode={report.patternCode}
-                  plus={report.pattern243Plus}
-                />
-              </dd>
-            </div>
-            <div className="rounded-xl bg-white/[0.04] px-4 py-3 ring-1 ring-white/10">
-              <dt className="text-xs text-slate-500">타당도</dt>
-              <dd className="mt-1 text-sm font-semibold text-white">
-                {report.validity?.overallTitle ?? '—'}
-              </dd>
-            </div>
-          </dl>
-        </div>
-        <div className="relative z-10 -mx-4 mt-4 border-t border-white/10 sm:-mx-5">
-          <EgoOkCounselorReportTabShell tabs={reportTabs} defaultTabId="ktaa" stickyTopClass="top-14" />
-        </div>
-      </div>
+    <div className="mx-auto w-full max-w-[min(100%,112rem)] pb-4">
+      <EgoOkCounselorReportTabShell tabs={reportTabs} defaultTabId="cover" fixedTopClass="top-16" />
 
       <p className="mt-3 text-center text-[10px] text-slate-600">
         기준: docs/internal-materials/ego-ok (items-96, norms 2020-04-01, patterns-243-reports) · 타당도 15·30·47·63·77·90

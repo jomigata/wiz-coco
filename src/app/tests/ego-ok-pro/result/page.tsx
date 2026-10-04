@@ -99,8 +99,8 @@ function EgoOkResultContent() {
   }
 
   return (
-    <div className="min-h-screen bg-[#070b14] px-2 pt-16 pb-4 sm:px-4 lg:px-6">
-      <div className="mx-auto mb-3 flex w-full max-w-[min(100%,112rem)] flex-wrap items-center justify-between gap-3">
+    <div className="min-h-screen bg-[#070b14] px-1 pb-2 pt-14 sm:px-3 lg:px-4">
+      <div className="mx-auto mb-2 flex w-full max-w-[min(100%,112rem)] flex-wrap items-center justify-between gap-2">
         <Link
           href="/tests"
           className="text-sm text-slate-400 transition hover:text-white"
