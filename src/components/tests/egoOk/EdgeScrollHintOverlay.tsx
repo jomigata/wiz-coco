@@ -46,15 +46,24 @@ function EdgeHint({
   side,
   visible,
   active,
+  pinEdges,
 }: {
   side: Side;
   visible: boolean;
   active: boolean;
+  pinEdges?: boolean;
 }) {
   if (!visible) return null;
 
-  const position =
-    side === 'top'
+  const position = pinEdges
+    ? side === 'top'
+      ? 'inset-x-0 top-0 flex justify-center pt-1.5'
+      : side === 'bottom'
+        ? 'inset-x-0 bottom-0 flex justify-center pb-1.5'
+        : side === 'left'
+          ? 'inset-y-0 left-0 flex w-11 items-center justify-center'
+          : 'inset-y-0 right-0 flex w-11 items-center justify-center'
+    : side === 'top'
       ? 'left-1/2 top-2 -translate-x-1/2'
       : side === 'bottom'
         ? 'bottom-2 left-1/2 -translate-x-1/2'
@@ -82,7 +91,7 @@ function EdgeHint({
 
   return (
     <div
-      className={`pointer-events-none absolute z-30 flex items-center justify-center ${position}`}
+      className={`pointer-events-none absolute z-30 ${pinEdges ? '' : 'flex items-center justify-center'} ${position}`}
       aria-hidden={!visible}
     >
       <span className={`pointer-events-none absolute ${gradient}`} />
@@ -104,26 +113,32 @@ function EdgeHint({
 export default function EdgeScrollHintOverlay({
   hints,
   axes = 'both',
+  /** true: 화살표를 보이는 영역의 상·하·좌·우 끝에 고정 (스크롤 콘텐츠와 분리) */
+  pinEdges = false,
 }: {
   hints: EdgeScrollHintState;
   axes?: 'both' | 'horizontal' | 'vertical';
+  pinEdges?: boolean;
 }) {
   const { available, active } = hints;
   const showH = axes === 'both' || axes === 'horizontal';
   const showV = axes === 'both' || axes === 'vertical';
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-20 overflow-hidden rounded-[inherit]" aria-live="polite">
+    <div
+      className="pointer-events-none absolute inset-0 z-30 overflow-hidden rounded-[inherit]"
+      aria-live="polite"
+    >
       {showV ? (
         <>
-          <EdgeHint side="top" visible={available.top} active={active.top} />
-          <EdgeHint side="bottom" visible={available.bottom} active={active.bottom} />
+          <EdgeHint side="top" visible={available.top} active={active.top} pinEdges={pinEdges} />
+          <EdgeHint side="bottom" visible={available.bottom} active={active.bottom} pinEdges={pinEdges} />
         </>
       ) : null}
       {showH ? (
         <>
-          <EdgeHint side="left" visible={available.left} active={active.left} />
-          <EdgeHint side="right" visible={available.right} active={active.right} />
+          <EdgeHint side="left" visible={available.left} active={active.left} pinEdges={pinEdges} />
+          <EdgeHint side="right" visible={available.right} active={active.right} pinEdges={pinEdges} />
         </>
       ) : null}
     </div>

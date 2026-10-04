@@ -94,12 +94,12 @@ export default function EgoOkCounselorReportTabShell({
         className={`fixed inset-x-0 ${fixedTopClass} z-50 ${EGO_OK_REPORT_TAB_BAR}`}
         aria-label="검사 결과 섹션"
       >
-        <div
-          ref={tabScrollRef}
-          className="relative mx-auto flex w-full max-w-[min(100%,112rem)] items-stretch gap-2 overflow-x-auto px-3 py-2.5 sm:gap-2 sm:px-4 [scrollbar-width:thin]"
-        >
-          <EdgeScrollHintOverlay hints={tabScrollHints} axes="horizontal" />
-          {tabs.map((tab) => {
+        <div className="relative mx-auto w-full max-w-[min(100%,112rem)] px-3 py-2.5 sm:px-4">
+          <div
+            ref={tabScrollRef}
+            className="flex items-stretch gap-2 overflow-x-auto sm:gap-2 [scrollbar-width:thin]"
+          >
+            {tabs.map((tab) => {
             const isActive = tab.id === activeId;
             const isPreview = previewId === tab.id && previewId !== activeId;
             const shell = isActive
@@ -134,6 +134,8 @@ export default function EgoOkCounselorReportTabShell({
               </button>
             );
           })}
+          </div>
+          <EdgeScrollHintOverlay hints={tabScrollHints} axes="horizontal" pinEdges />
         </div>
       </nav>
 
@@ -151,7 +153,7 @@ export default function EgoOkCounselorReportTabShell({
               {activePanel}
             </div>
           </div>
-          <EdgeScrollHintOverlay hints={panelScrollHints} />
+          <EdgeScrollHintOverlay hints={panelScrollHints} pinEdges />
         </div>
       </div>
 
