@@ -22,11 +22,8 @@ import {
   type Plus243ScaleEntry,
   type Plus243Stage,
 } from '@/lib/egogram243Plus';
-import {
-  buildInnerMindPairs,
-  INNER_MIND_ALIGNED_MAX,
-  type InnerMindPair,
-} from '@/lib/egoOkInnerMind';
+import InnerMindComparisonChart from '@/components/tests/egoOk/InnerMindComparisonChart';
+import { buildInnerMindPairs, INNER_MIND_ALIGNED_MAX } from '@/lib/egoOkInnerMind';
 import { buildPlus243InterpretationSections } from '@/lib/egoOkPlus243Interpretation';
 import {
   buildOkLifeOverviewBlock,
@@ -685,40 +682,6 @@ function OkGramLifePositionBars({ rows }: { rows: OkBarRowExt[] }) {
   );
 }
 
-function InnerMindDualBarChart({ pairs }: { pairs: InnerMindPair[] }) {
-  const plotH = 176;
-  return (
-    <div className="grid grid-cols-2 gap-5 sm:grid-cols-4">
-      {pairs.map((p) => {
-        const egoH = Math.max(4, (p.egoScore / 50) * plotH);
-        const okH = Math.max(4, (p.okScore / 50) * plotH);
-        const diffLabel = `${p.okMinusEgo >= 0 ? '+' : ''}${p.okMinusEgo}`;
-        return (
-          <div key={p.egoId} className="flex flex-col items-center">
-            <p className="mb-1 text-center font-mono text-xs font-semibold text-indigo-100">{diffLabel}</p>
-            <div
-              className="relative w-full max-w-[5rem] rounded-xl border border-white/10 bg-slate-900/50 px-3 py-2"
-              style={{ height: plotH + 16 }}
-            >
-              <div className="absolute inset-x-3 bottom-2 top-2">
-                <div
-                  className="absolute bottom-0 left-1/2 w-9 -translate-x-1/2 rounded-t-md bg-gradient-to-t from-sky-600 to-sky-400 shadow-inner"
-                  style={{ height: egoH }}
-                />
-                <div
-                  className="absolute bottom-0 left-1/2 w-4 -translate-x-1/2 rounded-t-md bg-gradient-to-t from-pink-600 to-pink-400 shadow-md"
-                  style={{ height: okH }}
-                />
-              </div>
-            </div>
-            <p className="mt-2 text-sm font-bold tracking-wide text-sky-200">{p.egoShort}</p>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
 function formatInnerMindDiff(okMinusEgo: number): string {
   return `${okMinusEgo >= 0 ? '+' : ''}${okMinusEgo}`;
 }
@@ -1027,7 +990,7 @@ export default function EgoOkCounselorReport({
             title="나의 속마음"
             subtitle="겉마음(이고) vs 속마음(오케이) · |차이| 4 이하 동일 · 5 이상 상세"
           >
-            <InnerMindDualBarChart pairs={innerMindPairs} />
+            <InnerMindComparisonChart pairs={innerMindPairs} />
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               {innerMindPairs.map((pair) => {
                 const aligned = Math.abs(pair.okMinusEgo) <= INNER_MIND_ALIGNED_MAX;
