@@ -28,7 +28,11 @@ import {
   type InnerMindPair,
 } from '@/lib/egoOkInnerMind';
 import { buildPlus243InterpretationSections } from '@/lib/egoOkPlus243Interpretation';
-import { buildOkLifeOverviewBlock, OK_BAR_POLE_LABEL } from '@/lib/egoOkOkLifePosition';
+import {
+  buildOkLifeOverviewBlock,
+  OK_BAR_DISPLAY_ORDER,
+  OK_BAR_POLE_LABEL,
+} from '@/lib/egoOkOkLifePosition';
 import { resolveEgogramFormLabel } from '@/lib/egoOkFormPattern';
 import EgoOkValiditySection from '@/components/tests/egoOk/EgoOkValiditySection';
 import { OK_LABELS } from '@/lib/egoOkScoring';
@@ -595,11 +599,19 @@ function OkBarEndLabel(props: {
   width?: number;
   height?: number;
   value?: number;
+  index?: number;
   payload?: OkBarRowExt;
+  rows?: OkBarRowExt[];
 }) {
-  const { x, y, width, height, value, payload } = props;
+  const { x, y, width, height, value, index, payload, rows } = props;
   if (value == null || x == null || y == null || width == null || height == null) return null;
-  const tag = payload?.poleTag ?? '';
+  const row =
+    payload?.name != null
+      ? payload
+      : index != null && rows?.[index]
+        ? rows[index]
+        : undefined;
+  const tag = row?.poleTag ?? (row?.name ? OK_BAR_POLE_LABEL[row.name] : '');
   return (
     <text x={x + width + 8} y={y + height / 2 + 4} fill="#e2e8f0" fontSize={12} fontWeight={600}>
       {value} ({tag})
@@ -706,13 +718,17 @@ export default function EgoOkCounselorReport({
 
   const OK_BAR_U = '#6366f1';
   const OK_BAR_I = '#0d9488';
-  const okBarData: OkBarRowExt[] = report.okgram.map((s) => ({
-    name: s.id,
-    score: s.raw,
-    label: OK_LABELS[s.id],
-    fill: s.id.startsWith('U') ? OK_BAR_U : OK_BAR_I,
-    poleTag: OK_BAR_POLE_LABEL[s.id],
-  }));
+  const okById = Object.fromEntries(report.okgram.map((s) => [s.id, s]));
+  const okBarData: OkBarRowExt[] = OK_BAR_DISPLAY_ORDER.map((id) => {
+    const s = okById[id];
+    return {
+      name: id,
+      score: s?.raw ?? 0,
+      label: OK_LABELS[id],
+      fill: id.startsWith('U') ? OK_BAR_U : OK_BAR_I,
+      poleTag: OK_BAR_POLE_LABEL[id],
+    };
+  });
 
   const sectionOrder = ['1', '2', '3', '4'] as const;
   const innerMindPairs = useMemo(
@@ -875,6 +891,7 @@ export default function EgoOkCounselorReport({
                     type="category"
                     dataKey="name"
                     width={40}
+                    reversed
                     tick={{ fill: '#cbd5e1', fontSize: 12, fontWeight: 600 }}
                     axisLine={false}
                   />
@@ -882,7 +899,7 @@ export default function EgoOkCounselorReport({
                     {okBarData.map((row) => (
                       <Cell key={row.name} fill={row.fill} />
                     ))}
-                    <LabelList dataKey="score" content={<OkBarEndLabel />} />
+                    <LabelList dataKey="score" content={<OkBarEndLabel rows={okBarData} />} />
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>

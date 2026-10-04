@@ -42,10 +42,13 @@ export function classifyOkLifePosition(uGap: number, iGap: number): { kind: Life
   };
 }
 
-/** U+ → U− → I+ → I− 막대 끝 괄호 라벨 (고정 순서) */
+/** 오케이 막대 표시 순서 (위→아래: U−, U+, I+, I−) */
+export const OK_BAR_DISPLAY_ORDER: OkScaleId[] = ['U-', 'U+', 'I+', 'I-'];
+
+/** 막대 끝 괄호 라벨 */
 export const OK_BAR_POLE_LABEL: Record<OkScaleId, string> = {
-  'U+': '타인부정',
-  'U-': '타인긍정',
+  'U-': '타인부정',
+  'U+': '타인긍정',
   'I+': '자기긍정',
   'I-': '자기부정',
 };
