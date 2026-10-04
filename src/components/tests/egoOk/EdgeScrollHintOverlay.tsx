@@ -25,11 +25,13 @@ function ScrollChevron({ side, active }: { side: Side; active: boolean }) {
       className={`inline-flex ${NUDGE_CLASS[side]} ${active ? 'scale-110' : 'scale-100'} transition-transform duration-150`}
     >
       <svg
-        className={`h-5 w-5 drop-shadow-md ${active ? 'text-white' : 'text-white/80 opacity-90'}`}
+        className={`h-5 w-5 text-white drop-shadow-[0_0_8px_rgba(0,0,0,0.85),0_1px_0_rgba(255,255,255,0.35)] ${
+          active ? 'opacity-100' : 'opacity-95'
+        }`}
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
-        strokeWidth="2.5"
+        strokeWidth="3"
         strokeLinecap="round"
         strokeLinejoin="round"
         aria-hidden
@@ -62,12 +64,12 @@ function EdgeHint({
 
   const gradient =
     side === 'top'
-      ? 'inset-x-0 top-0 h-12 bg-gradient-to-b from-black/50 to-transparent'
+      ? 'inset-x-0 top-0 h-14 bg-gradient-to-b from-black/20 via-black/5 to-transparent'
       : side === 'bottom'
-        ? 'inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/50 to-transparent'
+        ? 'inset-x-0 bottom-0 h-14 bg-gradient-to-t from-black/20 via-black/5 to-transparent'
         : side === 'left'
-          ? 'inset-y-0 left-0 w-12 bg-gradient-to-r from-black/45 to-transparent'
-          : 'inset-y-0 right-0 w-12 bg-gradient-to-l from-black/45 to-transparent';
+          ? 'inset-y-0 left-0 w-14 bg-gradient-to-r from-black/18 via-black/5 to-transparent'
+          : 'inset-y-0 right-0 w-14 bg-gradient-to-l from-black/18 via-black/5 to-transparent';
 
   const label =
     side === 'top'
@@ -85,10 +87,10 @@ function EdgeHint({
     >
       <span className={`pointer-events-none absolute ${gradient}`} />
       <span
-        className={`relative flex h-9 w-9 items-center justify-center rounded-full border backdrop-blur-sm transition-all duration-150 ${
+        className={`relative flex h-8 w-8 items-center justify-center rounded-full border transition-all duration-150 backdrop-blur-md ${
           active
-            ? 'border-white/80 bg-white/15 shadow-[0_0_18px_rgba(255,255,255,0.25)]'
-            : 'border-white/30 bg-black/35'
+            ? 'border-white/45 bg-white/[0.08] shadow-[0_0_12px_rgba(255,255,255,0.12)]'
+            : 'border-white/20 bg-black/[0.12] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]'
         }`}
         title={label}
       >
