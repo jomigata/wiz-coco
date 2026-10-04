@@ -20,7 +20,12 @@ function edgeScrollDelta(
 }
 
 /** 뷰포트·지정 컨테이너 가장자리에서 마우스 이동 시 자동 스크롤 */
-export function useMouseEdgeAutoScroll(containerRef: RefObject<HTMLElement | null>, enabled = true) {
+export function useMouseEdgeAutoScroll(
+  containerRef: RefObject<HTMLElement | null>,
+  enabled = true,
+  /** 세로 엣지 스크롤 상한(탭 메뉴 하단 등). 해당 Y 위쪽에서는 상하 자동 스크롤 없음 */
+  regionTopRef?: RefObject<HTMLElement | null>,
+) {
   const runnersRef = useRef<Array<() => void>>([]);
   const rafRef = useRef(0);
 
@@ -44,9 +49,15 @@ export function useMouseEdgeAutoScroll(containerRef: RefObject<HTMLElement | nul
     const onMove = (e: MouseEvent) => {
       const runners: Array<() => void> = [];
 
+      const regionTop = regionTopRef?.current?.getBoundingClientRect().bottom ?? 0;
+      if (e.clientY < regionTop) {
+        stop();
+        return;
+      }
+
       const viewport = {
         left: 0,
-        top: 0,
+        top: regionTop,
         right: window.innerWidth,
         bottom: window.innerHeight,
       };
@@ -59,13 +70,15 @@ export function useMouseEdgeAutoScroll(containerRef: RefObject<HTMLElement | nul
       const el = containerRef.current;
       if (el) {
         const rect = el.getBoundingClientRect();
+        const scrollRegionTop = Math.max(rect.top, regionTop);
         const inside =
           e.clientX >= rect.left &&
           e.clientX <= rect.right &&
-          e.clientY >= rect.top &&
+          e.clientY >= scrollRegionTop &&
           e.clientY <= rect.bottom;
         if (inside) {
-          const panelDelta = edgeScrollDelta(e.clientX, e.clientY, rect);
+          const panelRect = { ...rect, top: scrollRegionTop };
+          const panelDelta = edgeScrollDelta(e.clientX, e.clientY, panelRect);
           if (panelDelta.dx || panelDelta.dy) {
             const { dx, dy } = panelDelta;
             runners.push(() => {
@@ -86,5 +99,5 @@ export function useMouseEdgeAutoScroll(containerRef: RefObject<HTMLElement | nul
       document.removeEventListener('mousemove', onMove);
       stop();
     };
-  }, [enabled, containerRef]);
+  }, [enabled, containerRef, regionTopRef]);
 }

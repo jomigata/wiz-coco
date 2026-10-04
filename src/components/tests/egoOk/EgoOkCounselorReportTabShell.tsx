@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { useMouseEdgeAutoScroll } from '@/lib/useMouseEdgeAutoScroll';
 
 export type CounselorReportTab = {
@@ -18,9 +18,7 @@ type Props = {
   fixedTopClass?: string;
 };
 
-const TAB_BAR_HEIGHT_PX = 52;
-/** top-16(64) + 결과 툴바(≈20) */
-const CONTENT_TOP_OFFSET_PX = 64 + 20 + TAB_BAR_HEIGHT_PX;
+const TAB_BAR_FALLBACK_TOP_PX = 64 + 36 + 52;
 
 export default function EgoOkCounselorReportTabShell({
   tabs,
@@ -31,7 +29,20 @@ export default function EgoOkCounselorReportTabShell({
   const [activeId, setActiveId] = useState(defaultTabId ?? firstId);
   const [previewId, setPreviewId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-  useMouseEdgeAutoScroll(scrollRef, true);
+  const navRef = useRef<HTMLElement>(null);
+  const [contentTop, setContentTop] = useState(TAB_BAR_FALLBACK_TOP_PX);
+
+  useMouseEdgeAutoScroll(scrollRef, true, navRef);
+
+  useLayoutEffect(() => {
+    const measure = () => {
+      const nav = navRef.current;
+      if (nav) setContentTop(nav.getBoundingClientRect().bottom);
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [tabs.length]);
 
   const displayId = previewId ?? activeId;
   const activePanel =
@@ -55,11 +66,10 @@ export default function EgoOkCounselorReportTabShell({
 
   if (!tabs.length) return null;
 
-  const contentTop = CONTENT_TOP_OFFSET_PX;
-
   return (
     <div className="w-full">
       <nav
+        ref={navRef}
         className={`fixed inset-x-0 ${fixedTopClass} z-50 border-b border-white/10 bg-[#070b14]/95 shadow-[0_8px_32px_rgba(0,0,0,0.5)] backdrop-blur-xl`}
         aria-label="검사 결과 섹션"
       >
@@ -96,11 +106,14 @@ export default function EgoOkCounselorReportTabShell({
       </nav>
 
       <div style={{ paddingTop: contentTop }} onMouseEnter={lockPreviewToActive}>
-        <div className="relative min-h-[calc(100dvh-7.5rem)] overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-slate-900/50 via-[#0a0f1a] to-indigo-950/25 shadow-inner">
+        <div
+          className="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-slate-900/50 via-[#0a0f1a] to-indigo-950/25 shadow-inner"
+          style={{ minHeight: `calc(100dvh - ${contentTop}px)` }}
+        >
           <div
             ref={scrollRef}
             key={displayId}
-            className="absolute inset-0 overflow-auto overscroll-contain p-3 sm:p-5 lg:p-6 [scrollbar-width:thin]"
+            className="absolute inset-0 overflow-auto overscroll-contain px-3 pb-3 pt-0 sm:px-5 sm:pb-5 lg:px-6 lg:pb-6 [scrollbar-width:thin]"
           >
             {activePanel}
           </div>
