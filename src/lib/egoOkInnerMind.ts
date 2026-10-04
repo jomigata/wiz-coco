@@ -24,7 +24,7 @@ function pairCopy(egoShort: string, okShort: string, okMinusEgo: number): { summ
   const abs = Math.abs(okMinusEgo);
   if (abs <= 2) {
     return {
-      summary: `겉(${egoShort})이 속(${okShort})와 별 차이가 없습니다.`,
+      summary: `겉(${egoShort})이 속(${okShort})보다 ${abs}점 차이로 겉과 속이 동일 수준입니다.`,
       caution: '',
     };
   }
