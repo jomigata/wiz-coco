@@ -1,6 +1,7 @@
-import { EGO_OK_QUESTIONS } from '@/data/egoOkQuestions';
+import { EGO_OK_ITEM_BANK_ID, EGO_OK_QUESTIONS } from '@/data/egoOkQuestions';
 import { buildPattern243Plus, type Pattern243Plus } from '@/lib/egogram243Plus';
 import { classifyOkLifePosition } from '@/lib/egoOkOkLifePosition';
+import { computeEgoOkValidityProfile, type EgoOkValidityProfile } from '@/lib/egoOkValidity';
 import patternSource from '../../docs/internal-materials/ego-ok/patterns-243-reports.json';
 
 export type EgoOkGender = 'male' | 'female';
@@ -83,8 +84,10 @@ export type EgoOkReport = {
     kind: LifePositionKind;
     summary: string;
   };
+  /** @deprecated 비연속성 — 타당도(validity)로 대체. 구 세션 호환용 */
   nonContinuityPercent: number;
   nonContinuityPenalty: number;
+  validity?: EgoOkValidityProfile;
   plus243: {
     cpNpSum: number;
     cpNpLevel: string;
@@ -292,35 +295,6 @@ function negativePercentForLevel(level: FiveLevel): number {
   return Math.round((band.min + band.max) / 2);
 }
 
-function runPenalty(length: number): number {
-  if (length < 5) return 0;
-  if (length === 5) return 4;
-  if (length === 6) return 6;
-  if (length === 7) return 9;
-  if (length === 8) return 13;
-  if (length === 9) return 20;
-  if (length === 10) return 30;
-  if (length <= 16) return 30 + (length - 10) * 10;
-  return 100;
-}
-
-function computeNonContinuity(answersInOrder: number[]): { percent: number; penalty: number } {
-  if (answersInOrder.length === 0) return { percent: 100, penalty: 0 };
-  let penalty = 0;
-  let run = 1;
-  for (let i = 1; i < answersInOrder.length; i += 1) {
-    if (answersInOrder[i] === answersInOrder[i - 1]) {
-      run += 1;
-    } else {
-      penalty += runPenalty(run);
-      run = 1;
-    }
-  }
-  penalty += runPenalty(run);
-  const percent = Math.max(0, 100 - penalty);
-  return { percent, penalty };
-}
-
 export function computeEgoOkReport(
   answers: Record<string, number>,
   genderInput: string | undefined,
@@ -331,7 +305,7 @@ export function computeEgoOkReport(
       incomplete.length <= 5
         ? incomplete.join(', ')
         : `${incomplete.slice(0, 5).join(', ')} 외 ${incomplete.length - 5}문항`;
-    throw new Error(`90문항 모두 응답해야 합니다. 미응답 또는 잘못된 응답: ${preview}`);
+    throw new Error(`96문항 모두 응답해야 합니다. 미응답 또는 잘못된 응답: ${preview}`);
   }
 
   const gender = normalizeEgoOkGender(genderInput);
@@ -339,11 +313,8 @@ export function computeEgoOkReport(
   const egoNeg: Record<EgoScaleId, number> = { CP: 0, NP: 0, A: 0, FC: 0, AC: 0 };
   const egoPos: Record<EgoScaleId, number> = { CP: 0, NP: 0, A: 0, FC: 0, AC: 0 };
   const okSums: Record<OkScaleId, number> = { 'U+': 0, 'U-': 0, 'I+': 0, 'I-': 0 };
-  const orderedAnswers: number[] = [];
-
   EGO_OK_QUESTIONS.forEach((q, index) => {
     const raw = answers[String(index)] ?? answers[index]!;
-    orderedAnswers.push(raw);
     const pts = likertToItemPoints(raw);
     const key = scaleFromType(q.scaleType);
     if (!key) return;
@@ -408,7 +379,10 @@ export function computeEgoOkReport(
   const hit = bank.items.find((item) => item.code === patternCode);
   const missing = !hit || (bank.missingCodes || []).includes(patternCode);
 
-  const { percent, penalty } = computeNonContinuity(orderedAnswers);
+  const validity = computeEgoOkValidityProfile(answers);
+  const percent =
+    validity.overall === 'normal' ? 100 : validity.overall === 'caution' ? 72 : 40;
+  const penalty = 100 - percent;
   const uGapOk = uPlus - uMinus;
   const iGapOk = iPlus - iMinus;
   const life = classifyOkLifePosition(uGapOk, iGapOk);
@@ -439,7 +413,7 @@ export function computeEgoOkReport(
   );
 
   return {
-    itemBankId: 'ego-ok-90',
+    itemBankId: EGO_OK_ITEM_BANK_ID,
     patternCode,
     pattern243Plus,
     pattern243: {
@@ -465,6 +439,7 @@ export function computeEgoOkReport(
     },
     nonContinuityPercent: percent,
     nonContinuityPenalty: penalty,
+    validity,
     plus243: {
       cpNpSum,
       cpNpLevel: pattern243Plus.groups.cpNp.tier.label,
@@ -473,7 +448,7 @@ export function computeEgoOkReport(
       fcAcSum,
       fcAcLevel: pattern243Plus.groups.fcAc.tier.label,
     },
-    answeredCount: orderedAnswers.filter((v) => v > 0).length,
+    answeredCount: EGO_OK_QUESTIONS.length,
     compositeChart,
   };
 }

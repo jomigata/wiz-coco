@@ -30,6 +30,7 @@ import {
   okLifeAxes,
 } from '@/lib/egoOkOkLifePosition';
 import { resolveEgogramFormLabel } from '@/lib/egoOkFormPattern';
+import EgoOkValiditySection from '@/components/tests/egoOk/EgoOkValiditySection';
 import { OK_LABELS } from '@/lib/egoOkScoring';
 import { egoOkGenderToLabel } from '@/lib/egoOkTestGender';
 import type { ClientInfo } from '@/components/tests/MbtiProClientInfo';
@@ -737,8 +738,7 @@ export default function EgoOkCounselorReport({
           <p className="text-xs font-medium uppercase tracking-[0.2em] text-indigo-300/80">Counselor report</p>
           <h1 className="mt-2 text-3xl font-bold text-white">TA 이고-오케이그램 검사 · 전문가 해석</h1>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-300">
-            2020.04.01 기준 90문항 · 243패턴(척도별 A/B/C) · 인생태도(NP−CP, FC−AC)를 종합한 상담 참고
-            리포트입니다.
+            96문항(타당도 6문항 분산) · 243패턴 · 인생태도 · 타당도 프로파일을 종합한 상담 참고 리포트입니다.
           </p>
           {localTestMode ? (
             <p className="mt-3 max-w-2xl rounded-lg border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-xs leading-relaxed text-amber-100">
@@ -794,8 +794,10 @@ export default function EgoOkCounselorReport({
               </dd>
             </div>
             <div className="rounded-xl bg-white/[0.04] px-4 py-3 ring-1 ring-white/10">
-              <dt className="text-xs text-slate-500">성실도(비연속성)</dt>
-              <dd className="mt-1 text-lg font-semibold text-white">{report.nonContinuityPercent}%</dd>
+              <dt className="text-xs text-slate-500">타당도</dt>
+              <dd className="mt-1 text-sm font-semibold text-white">
+                {report.validity?.overallTitle ?? '—'}
+              </dd>
             </div>
           </dl>
           {formLabel && formLabel !== '—' ? (
@@ -804,11 +806,13 @@ export default function EgoOkCounselorReport({
         </div>
       </div>
 
+      {report.validity ? <EgoOkValiditySection validity={report.validity} /> : null}
+
       <section className="rounded-2xl border border-white/10 bg-slate-900/40 p-4 shadow-xl sm:p-6">
         <header className="mb-4">
           <h2 className="text-lg font-semibold text-white">이고-오케이그램 (Ego-Ok) 진단 결과 그래프</h2>
           <p className="mt-1 text-sm text-slate-400">
-            90문항 채점 결과를 KTAA 종합 그래프 형식으로 표시합니다.
+            96문항 중 성격 문항(90) 채점 결과를 KTAA 종합 그래프 형식으로 표시합니다.
           </p>
         </header>
         <EgoOkKtaaCompositeChart columns={report.compositeChart} gender={chartGender} />
@@ -1011,7 +1015,7 @@ export default function EgoOkCounselorReport({
       </SectionCard>
 
       <p className="text-center text-xs text-slate-600">
-        기준: docs/internal-materials/ego-ok (items-90, norms 2020-04-01, patterns-243-reports) · 페이크·청소년 문항
+        기준: docs/internal-materials/ego-ok (items-96, norms 2020-04-01, patterns-243-reports) · 타당도 15·30·47·63·77·90
         미포함
       </p>
     </div>
