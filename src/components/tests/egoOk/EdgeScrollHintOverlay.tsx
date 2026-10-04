@@ -4,13 +4,20 @@ import type { EdgeScrollHintState } from '@/lib/useMouseEdgeAutoScroll';
 
 type Side = 'top' | 'right' | 'bottom' | 'left';
 
+const NUDGE_CLASS: Record<Side, string> = {
+  left: 'counselor-scroll-hint-nudge-left',
+  right: 'counselor-scroll-hint-nudge-right',
+  top: 'counselor-scroll-hint-nudge-up',
+  bottom: 'counselor-scroll-hint-nudge-down',
+};
+
 function ScrollChevron({ side, active }: { side: Side; active: boolean }) {
   const rotate =
     side === 'left' ? '' : side === 'right' ? 'rotate-180' : side === 'top' ? '-rotate-90' : 'rotate-90';
   return (
     <svg
-      className={`h-5 w-5 drop-shadow-md transition-transform duration-150 ${
-        active ? 'scale-110 text-white' : 'text-white/75'
+      className={`h-5 w-5 drop-shadow-md transition-[transform,color] duration-150 ${NUDGE_CLASS[side]} ${
+        active ? 'scale-110 text-white' : 'text-white/80 opacity-90'
       } ${rotate}`}
       viewBox="0 0 24 24"
       fill="none"

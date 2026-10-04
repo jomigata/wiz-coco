@@ -413,6 +413,34 @@ body.dropdown-open {
   animation: counselor-scroll-hint-nudge-right 1.4s ease-in-out infinite;
 }
 
+@keyframes counselor-scroll-hint-nudge-up {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes counselor-scroll-hint-nudge-down {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(5px);
+  }
+}
+
+.counselor-scroll-hint-nudge-up {
+  animation: counselor-scroll-hint-nudge-up 1.4s ease-in-out infinite;
+}
+
+.counselor-scroll-hint-nudge-down {
+  animation: counselor-scroll-hint-nudge-down 1.4s ease-in-out infinite;
+}
+
 /* 목록 가로 스크롤 좌·우 버튼 — titleAccent list 상단선(border-t-yellow-400)과 동일 */
 .counselor-list-scroll-edge-btn {
   position: relative;

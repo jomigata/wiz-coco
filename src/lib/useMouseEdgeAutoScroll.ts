@@ -2,50 +2,121 @@
 
 import { useEffect, useRef, useState, type RefObject } from 'react';
 
-export const EDGE_SIZE_PX = 48;
+const EDGE_SIZE_PX = 48;
 const SCROLL_STEP_PX = 14;
 
+export type EdgeScrollHintSide = 'top' | 'right' | 'bottom' | 'left';
+
 export type EdgeScrollHintState = {
-  available: { top: boolean; right: boolean; bottom: boolean; left: boolean };
-  active: { top: boolean; right: boolean; bottom: boolean; left: boolean };
+  available: Record<EdgeScrollHintSide, boolean>;
+  active: Record<EdgeScrollHintSide, boolean>;
 };
 
-export const EMPTY_EDGE_SCROLL_HINTS: EdgeScrollHintState = {
+const EMPTY_EDGE_SCROLL_HINTS: EdgeScrollHintState = {
   available: { top: false, right: false, bottom: false, left: false },
   active: { top: false, right: false, bottom: false, left: false },
 };
 
-function readScrollAvailability(el: HTMLElement) {
-  const maxX = Math.max(0, el.scrollWidth - el.clientWidth);
-  const maxY = Math.max(0, el.scrollHeight - el.clientHeight);
+function scrollEdgeAvailability(el: HTMLElement, tolerancePx = 3): Record<EdgeScrollHintSide, boolean> {
   return {
-    left: el.scrollLeft > 2,
-    right: el.scrollLeft < maxX - 2,
-    top: el.scrollTop > 2,
-    bottom: el.scrollTop < maxY - 2,
+    top: el.scrollTop > tolerancePx,
+    bottom: el.scrollTop + el.clientHeight < el.scrollHeight - tolerancePx,
+    left: el.scrollLeft > tolerancePx,
+    right: el.scrollLeft + el.clientWidth < el.scrollWidth - tolerancePx,
   };
 }
 
-function deltaToActive(dx: number, dy: number) {
-  return {
-    left: dx < 0,
-    right: dx > 0,
-    top: dy < 0,
-    bottom: dy > 0,
-  };
-}
+/** 스크롤 가능 방향 + 마우스가 가장자리에 있을 때 활성 방향 (화살표 힌트용) */
+export function useScrollEdgeHints(
+  containerRef: RefObject<HTMLElement | null>,
+  enabled = true,
+  /** 세로 엣지 상한(탭 바 하단). 패널 전용일 때 전달 */
+  regionTopRef?: RefObject<HTMLElement | null>,
+) {
+  const [hints, setHints] = useState<EdgeScrollHintState>(EMPTY_EDGE_SCROLL_HINTS);
 
-function hintsEqual(a: EdgeScrollHintState, b: EdgeScrollHintState): boolean {
-  return (
-    a.available.top === b.available.top &&
-    a.available.right === b.available.right &&
-    a.available.bottom === b.available.bottom &&
-    a.available.left === b.available.left &&
-    a.active.top === b.active.top &&
-    a.active.right === b.active.right &&
-    a.active.bottom === b.active.bottom &&
-    a.active.left === b.active.left
-  );
+  useEffect(() => {
+    if (!enabled) {
+      setHints(EMPTY_EDGE_SCROLL_HINTS);
+      return;
+    }
+
+    const el = containerRef.current;
+    if (!el) return;
+
+    const refreshAvailable = () => {
+      const available = scrollEdgeAvailability(el);
+      setHints((prev) => ({
+        available,
+        active: {
+          top: prev.active.top && available.top,
+          bottom: prev.active.bottom && available.bottom,
+          left: prev.active.left && available.left,
+          right: prev.active.right && available.right,
+        },
+      }));
+    };
+
+    const onMove = (e: MouseEvent) => {
+      const rect = el.getBoundingClientRect();
+      const inside =
+        e.clientX >= rect.left &&
+        e.clientX <= rect.right &&
+        e.clientY >= rect.top &&
+        e.clientY <= rect.bottom;
+      if (!inside) {
+        setHints((prev) => ({ ...prev, active: EMPTY_EDGE_SCROLL_HINTS.active }));
+        return;
+      }
+
+      const regionTop = regionTopRef?.current?.getBoundingClientRect().bottom ?? rect.top;
+      const scrollRegionTop = Math.max(rect.top, regionTop);
+      const panelRect = {
+        left: rect.left,
+        top: scrollRegionTop,
+        right: rect.right,
+        bottom: rect.bottom,
+      };
+      const { dx, dy } = edgeScrollDelta(e.clientX, e.clientY, panelRect);
+      const available = scrollEdgeAvailability(el);
+
+      setHints({
+        available,
+        active: {
+          top: dy < 0 && available.top,
+          bottom: dy > 0 && available.bottom,
+          left: dx < 0 && available.left,
+          right: dx > 0 && available.right,
+        },
+      });
+    };
+
+    const onLeave = () => {
+      setHints((prev) => ({ ...prev, active: EMPTY_EDGE_SCROLL_HINTS.active }));
+    };
+
+    refreshAvailable();
+    el.addEventListener('scroll', refreshAvailable, { passive: true });
+    el.addEventListener('mousemove', onMove, { passive: true });
+    el.addEventListener('mouseleave', onLeave);
+    window.addEventListener('resize', refreshAvailable);
+
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(refreshAvailable) : null;
+    ro?.observe(el);
+    Array.from(el.children).forEach((child) => {
+      if (child instanceof HTMLElement) ro?.observe(child);
+    });
+
+    return () => {
+      el.removeEventListener('scroll', refreshAvailable);
+      el.removeEventListener('mousemove', onMove);
+      el.removeEventListener('mouseleave', onLeave);
+      window.removeEventListener('resize', refreshAvailable);
+      ro?.disconnect();
+    };
+  }, [enabled, containerRef, regionTopRef]);
+
+  return hints;
 }
 
 function edgeScrollDelta(
@@ -67,19 +138,17 @@ export type MouseEdgeAutoScrollOptions = {
   panelOnly?: boolean;
 };
 
-/** 뷰포트·지정 컨테이너 가장자리에서 마우스 이동 시 자동 스크롤 + 방향 힌트 */
+/** 뷰포트·지정 컨테이너 가장자리에서 마우스 이동 시 자동 스크롤 */
 export function useMouseEdgeAutoScroll(
   containerRef: RefObject<HTMLElement | null>,
   enabled = true,
   /** 세로 엣지 스크롤 상한(탭 메뉴 하단). 패널 상단 엣지는 max(패널top, regionTop) */
   regionTopRef?: RefObject<HTMLElement | null>,
   options?: MouseEdgeAutoScrollOptions,
-): EdgeScrollHintState {
+) {
   const panelOnly = options?.panelOnly ?? false;
   const runnersRef = useRef<Array<() => void>>([]);
   const rafRef = useRef(0);
-  const [hints, setHints] = useState<EdgeScrollHintState>(EMPTY_EDGE_SCROLL_HINTS);
-  const hintsRef = useRef(hints);
 
   useEffect(() => {
     if (!enabled) return;
@@ -92,19 +161,6 @@ export function useMouseEdgeAutoScroll(
       }
     };
 
-    const publishHints = (next: EdgeScrollHintState) => {
-      if (hintsEqual(hintsRef.current, next)) return;
-      hintsRef.current = next;
-      setHints(next);
-    };
-
-    const refreshAvailability = () => {
-      const el = containerRef.current;
-      if (!el) return;
-      const available = readScrollAvailability(el);
-      publishHints({ available, active: hintsRef.current.active });
-    };
-
     const tick = () => {
       for (const run of runnersRef.current) run();
       if (runnersRef.current.length) rafRef.current = requestAnimationFrame(tick);
@@ -115,12 +171,8 @@ export function useMouseEdgeAutoScroll(
       const runners: Array<() => void> = [];
       const regionTop = regionTopRef?.current?.getBoundingClientRect().bottom ?? 0;
 
-      let nextActive = { top: false, right: false, bottom: false, left: false };
-      let nextAvailable = hintsRef.current.available;
-
       const el = containerRef.current;
       if (el) {
-        nextAvailable = readScrollAvailability(el);
         const rect = el.getBoundingClientRect();
         const inside =
           e.clientX >= rect.left &&
@@ -142,12 +194,9 @@ export function useMouseEdgeAutoScroll(
               el.scrollLeft += dx;
               el.scrollTop += dy;
             });
-            nextActive = deltaToActive(panelDelta.dx, panelDelta.dy);
           }
         }
       }
-
-      publishHints({ available: nextAvailable, active: nextActive });
 
       if (!panelOnly && e.clientY >= regionTop) {
         const viewport = {
@@ -173,39 +222,22 @@ export function useMouseEdgeAutoScroll(
     const el = containerRef.current;
     const onLocalMove = (e: MouseEvent) => applyEdgeScroll(e);
     const onLocalLeave = () => {
-      if (panelOnly) {
-        stop();
-        publishHints({ available: hintsRef.current.available, active: EMPTY_EDGE_SCROLL_HINTS.active });
-      }
+      if (panelOnly) stop();
     };
 
     document.addEventListener('mousemove', onDocMove, { passive: true });
     if (el) {
       el.addEventListener('mousemove', onLocalMove, { passive: true });
       el.addEventListener('mouseleave', onLocalLeave);
-      el.addEventListener('scroll', refreshAvailability, { passive: true });
-      refreshAvailability();
-      const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(refreshAvailability) : null;
-      ro?.observe(el);
-      const mo = typeof MutationObserver !== 'undefined' ? new MutationObserver(refreshAvailability) : null;
-      mo?.observe(el, { childList: true, subtree: true });
-
-      return () => {
-        document.removeEventListener('mousemove', onDocMove);
-        el.removeEventListener('mousemove', onLocalMove);
-        el.removeEventListener('mouseleave', onLocalLeave);
-        el.removeEventListener('scroll', refreshAvailability);
-        ro?.disconnect();
-        mo?.disconnect();
-        stop();
-      };
     }
 
     return () => {
       document.removeEventListener('mousemove', onDocMove);
+      if (el) {
+        el.removeEventListener('mousemove', onLocalMove);
+        el.removeEventListener('mouseleave', onLocalLeave);
+      }
       stop();
     };
   }, [enabled, containerRef, regionTopRef, panelOnly]);
-
-  return hints;
 }

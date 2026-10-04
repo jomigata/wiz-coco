@@ -10,7 +10,7 @@ import {
   EGO_OK_REPORT_TAB_PREVIEW,
 } from '@/components/tests/egoOk/egoOkReportChrome';
 import EdgeScrollHintOverlay from '@/components/tests/egoOk/EdgeScrollHintOverlay';
-import { useMouseEdgeAutoScroll } from '@/lib/useMouseEdgeAutoScroll';
+import { useMouseEdgeAutoScroll, useScrollEdgeHints } from '@/lib/useMouseEdgeAutoScroll';
 
 export type CounselorReportTab = {
   id: string;
@@ -42,8 +42,9 @@ export default function EgoOkCounselorReportTabShell({
   const navRef = useRef<HTMLElement>(null);
   const [navBottomPx, setNavBottomPx] = useState(TAB_BAR_FALLBACK_BOTTOM_PX);
 
-  const panelScrollHints = useMouseEdgeAutoScroll(scrollRef, true, navRef, { panelOnly: true });
-  const tabScrollHints = useMouseEdgeAutoScroll(tabScrollRef, true, navRef, { panelOnly: true });
+  useMouseEdgeAutoScroll(scrollRef, true, navRef, { panelOnly: true });
+  const panelScrollHints = useScrollEdgeHints(scrollRef, true, navRef);
+  const tabScrollHints = useScrollEdgeHints(tabScrollRef, true);
 
   useLayoutEffect(() => {
     const measure = () => {
@@ -92,12 +93,11 @@ export default function EgoOkCounselorReportTabShell({
         className={`fixed inset-x-0 ${fixedTopClass} z-50 ${EGO_OK_REPORT_TAB_BAR}`}
         aria-label="검사 결과 섹션"
       >
-        <div className="relative mx-auto max-w-[min(100%,112rem)]">
+        <div
+          ref={tabScrollRef}
+          className="relative mx-auto flex w-full max-w-[min(100%,112rem)] items-stretch gap-2 overflow-x-auto px-3 py-2.5 sm:gap-2 sm:px-4 [scrollbar-width:thin]"
+        >
           <EdgeScrollHintOverlay hints={tabScrollHints} axes="horizontal" />
-          <div
-            ref={tabScrollRef}
-            className="flex w-full items-stretch gap-2 overflow-x-auto px-3 py-2.5 sm:gap-2 sm:px-4 [scrollbar-width:thin]"
-          >
           {tabs.map((tab) => {
             const isActive = tab.id === activeId;
             const isPreview = previewId === tab.id && previewId !== activeId;
@@ -133,23 +133,24 @@ export default function EgoOkCounselorReportTabShell({
               </button>
             );
           })}
-          </div>
         </div>
       </nav>
 
       <div
-        className={`fixed inset-x-2 bottom-2 z-40 ${EGO_OK_REPORT_PANEL_OUTER} relative`}
+        className={`fixed inset-x-2 bottom-2 z-40 ${EGO_OK_REPORT_PANEL_OUTER}`}
         style={{ top: navBottomPx, height: panelHeight }}
         onMouseEnter={lockPreviewToActive}
       >
-        <EdgeScrollHintOverlay hints={panelScrollHints} />
-        <div
-          ref={scrollRef}
-          className={`h-full overflow-auto overscroll-contain p-2 [scrollbar-width:thin] ${EGO_OK_REPORT_PANEL_SCROLL}`}
-        >
-          <div key={displayId} className="flex min-h-min flex-col gap-2">
-            {activePanel}
+        <div className="relative h-full min-h-0">
+          <div
+            ref={scrollRef}
+            className={`h-full overflow-auto overscroll-contain p-2 [scrollbar-width:thin] ${EGO_OK_REPORT_PANEL_SCROLL}`}
+          >
+            <div key={displayId} className="flex min-h-min flex-col gap-2">
+              {activePanel}
+            </div>
           </div>
+          <EdgeScrollHintOverlay hints={panelScrollHints} />
         </div>
       </div>
 
