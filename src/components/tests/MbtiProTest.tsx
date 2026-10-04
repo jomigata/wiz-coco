@@ -9,6 +9,7 @@ import {
   isLocalPsychTestDirectActive,
 } from '@/lib/localPsychTestDirectStart';
 import { saveEgoOkReportDraft } from '@/lib/egoOkReportSession';
+import { EGO_OK_LIKERT_OPTIONS } from '@/lib/egoOkLikert';
 import { findEgoOkIncompleteQuestionNumbers } from '@/lib/egoOkScoring';
 import Link from 'next/link';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
@@ -796,18 +797,10 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
               />
             </div>
 
-            {isEgoOkFlow && isEgoOkQuestion(selectedQuestions[currentQuestion]) ? (
-              <p className="mb-3 text-center text-xs font-semibold tracking-wide text-sky-300/95">
-                {selectedQuestions[currentQuestion].scaleKind === 'validity'
-                  ? '타당도 확인'
-                  : '이고그램 선택'}
-              </p>
-            ) : null}
-
             <div className="text-center mb-3">
               <div
-                className={`${v.questionCard} relative mb-10 min-h-[112px] overflow-hidden`}
-                style={{ height: QUESTION_FRAME_HEIGHT }}
+                className={`${v.questionCard} relative mb-10 min-h-[112px] overflow-hidden ${isEgoOkFlow ? 'min-h-[128px]' : ''}`}
+                style={{ height: isEgoOkFlow ? Math.max(QUESTION_FRAME_HEIGHT, 128) : QUESTION_FRAME_HEIGHT }}
               >
                 <AnimatePresence initial={false} mode="sync" custom={direction}>
                   <motion.h2
@@ -817,7 +810,11 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
                     initial="enter"
                     animate="center"
                     exit="exit"
-                    className={`absolute inset-x-0 top-0 flex min-h-[112px] items-center justify-center px-3 text-center text-xl leading-relaxed will-change-[transform,opacity,filter] ${uiTheme === 'portal' ? 'text-white font-semibold tracking-tight' : 'text-slate-50 font-semibold'}`}
+                    className={`absolute inset-x-0 top-0 flex min-h-[112px] items-center justify-center px-4 text-center will-change-[transform,opacity,filter] ${
+                      isEgoOkFlow
+                        ? 'text-lg sm:text-xl font-semibold leading-[1.85] tracking-[0.06em] [word-spacing:0.14em] whitespace-pre-line text-slate-50'
+                        : `text-xl leading-relaxed ${uiTheme === 'portal' ? 'text-white font-semibold tracking-tight' : 'text-slate-50 font-semibold'}`
+                    }`}
                   >
                     {selectedQuestions[currentQuestion].text}
                   </motion.h2>
@@ -825,8 +822,57 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
               </div>
               
               <div className="flex flex-col gap-5">
-                <div className="relative flex justify-between items-end gap-3 px-4">
+                <div className="relative flex justify-between items-end gap-2 px-2 sm:gap-3 sm:px-4">
                   <div className={v.scaleArc}></div>
+                  {isEgoOkFlow ? (
+                    <>
+                      {EGO_OK_LIKERT_OPTIONS.map((opt) => {
+                        const circleClass =
+                          opt.circle === 'lg'
+                            ? 'w-14 h-14 text-lg'
+                            : opt.circle === 'md'
+                              ? 'w-12 h-12 text-lg'
+                              : 'w-10 h-10 text-base';
+                        const glow = opt.glowPink ? answerGlowPink : answerGlowSky;
+                        return (
+                          <button
+                            key={opt.letter}
+                            type="button"
+                            onClick={() => handleAnswer(opt.value)}
+                            className={answerBtnClass(opt.rounded, opt.py, '', glow)}
+                          >
+                            {answers[currentQuestion] === opt.value && (
+                              <div
+                                className={`absolute top-2 right-2 w-4 h-4 rounded-full ${v.checkDot} flex items-center justify-center`}
+                              >
+                                <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                                </svg>
+                              </div>
+                            )}
+                            <div className="flex flex-col items-center justify-center w-full space-y-3">
+                              <div
+                                className={`${circleClass} rounded-full ${v.answerCircle} flex items-center justify-center transform group-hover:scale-110 transition-all duration-300`}
+                              >
+                                <span className="text-white font-bold">{opt.letter}</span>
+                              </div>
+                              <span
+                                className={`text-sm font-bold ${v.answerLabel} transform transition-all duration-500 ${isMouseMoved ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}
+                              >
+                                {opt.labelLines.map((line, i) => (
+                                  <span key={line}>
+                                    {i > 0 ? <br /> : null}
+                                    {line}
+                                  </span>
+                                ))}
+                              </span>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </>
+                  ) : (
+                    <>
                   <button
                     onClick={() => handleAnswer(6)}
                     className={answerBtnClass('rounded-xl', 'py-12')}
@@ -940,9 +986,9 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
                       <span className={`text-sm font-bold ${v.answerLabel} transform transition-all duration-500 ${isMouseMoved ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}>매우<br/>아니다</span>
                     </div>
                   </button>
+                    </>
+                  )}
                 </div>
-                
-                {/* G(모르겠다) 옵션 제거 */}
               </div>
 
               <div className="text-center mt-2">

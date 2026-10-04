@@ -214,21 +214,13 @@ function scaleFromType(scaleType: string): EgoScaleId | OkScaleId | null {
   return null;
 }
 
-/** 6점 척도(1~6) → 문항 1~5점 (협회 KTAA 환산) */
-const ITEM_POINTS_BY_LIKERT: Record<number, number> = {
-  1: 1,
-  2: 2,
-  3: 2.75,
-  4: 3.25,
-  5: 4,
-  6: 5,
-};
-
+/** 5점 척도(1~5) → 문항 1~5점 (10문항 합 50점 만점). 구 6점(1~6) 저장분은 환산 */
 export function likertToItemPoints(rawAnswer: number): number {
   const v = Math.round(rawAnswer);
-  if (v <= 1) return ITEM_POINTS_BY_LIKERT[1];
-  if (v >= 6) return ITEM_POINTS_BY_LIKERT[6];
-  return ITEM_POINTS_BY_LIKERT[v] ?? 1;
+  if (v >= 6) return 5;
+  if (v <= 0) return 1;
+  if (v >= 1 && v <= 5) return v;
+  return 1;
 }
 
 /** 척도 합계: 소수 합산 후 0.5 이상 반올림(정수) */
@@ -237,7 +229,9 @@ export function roundScaleTotal(sum: number): number {
 }
 
 export function isEgoOkLikertAnswer(value: unknown): value is number {
-  return typeof value === 'number' && Number.isFinite(value) && value >= 1 && value <= 6;
+  if (typeof value !== 'number' || !Number.isFinite(value)) return false;
+  if (value >= 1 && value <= 5) return true;
+  return value === 6;
 }
 
 /** 미응답·범위 밖 문항 번호(1-based). 없으면 빈 배열 */

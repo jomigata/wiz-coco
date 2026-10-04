@@ -53,7 +53,7 @@ function worst(a: ValidityScaleStatus, b: ValidityScaleStatus): ValidityScaleSta
   return statusRank(a) >= statusRank(b) ? a : b;
 }
 
-/** 대립 문항쌍: 둘 다 4점 이상(6점 척도)이면 1불일치 */
+/** 대립 문항쌍: 둘 다 4점 이상(5점 척도 · 그렇다 이상)이면 1불일치 */
 const VRIN_PAIRS: [number, number][] = [
   [3, 39],
   [5, 65],
