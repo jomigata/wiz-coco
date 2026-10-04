@@ -45,13 +45,7 @@ import {
   PolarAngleAxis,
   PolarRadiusAxis,
   ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  LabelList,
   Tooltip,
-  Cell,
   Customized,
   type TooltipProps,
 } from 'recharts';
@@ -593,29 +587,43 @@ type OkBarRow = {
 
 type OkBarRowExt = OkBarRow & { fill: string; poleTag: string };
 
-function OkBarEndLabel(props: {
-  x?: number;
-  y?: number;
-  width?: number;
-  height?: number;
-  value?: number;
-  index?: number;
-  payload?: OkBarRowExt;
-  rows?: OkBarRowExt[];
-}) {
-  const { x, y, width, height, value, index, payload, rows } = props;
-  if (value == null || x == null || y == null || width == null || height == null) return null;
-  const row =
-    payload?.name != null
-      ? payload
-      : index != null && rows?.[index]
-        ? rows[index]
-        : undefined;
-  const tag = row?.poleTag ?? (row?.name ? OK_BAR_POLE_LABEL[row.name] : '');
+const OK_BAR_CHART_MAX = 55;
+
+/** Recharts category 축 순서가 환경마다 달라, 위→아래 U−…I− 는 DOM 순서로 고정 */
+function OkGramLifePositionBars({ rows }: { rows: OkBarRowExt[] }) {
+  const byId = Object.fromEntries(rows.map((r) => [r.name, r]));
   return (
-    <text x={x + width + 8} y={y + height / 2 + 4} fill="#e2e8f0" fontSize={12} fontWeight={600}>
-      {value} ({tag})
-    </text>
+    <div className="flex h-full flex-col justify-center gap-3 py-1 pl-1 pr-1">
+      {OK_BAR_DISPLAY_ORDER.map((id) => {
+        const row = byId[id];
+        if (!row) return null;
+        const widthPct = Math.min(100, Math.max(0, (row.score / OK_BAR_CHART_MAX) * 100));
+        return (
+          <div key={id} className="grid grid-cols-[2.5rem_minmax(0,1fr)_auto] items-center gap-2">
+            <span className="font-mono text-xs font-semibold text-slate-300">{id}</span>
+            <div className="relative h-[22px] overflow-hidden rounded-r-lg bg-slate-800/60">
+              <div
+                className="absolute inset-y-0 left-0 rounded-r-lg"
+                style={{ width: `${widthPct}%`, backgroundColor: row.fill }}
+              />
+            </div>
+            <span className="whitespace-nowrap text-xs font-semibold text-slate-200">
+              {row.score} ({row.poleTag})
+            </span>
+          </div>
+        );
+      })}
+      <div className="grid grid-cols-[2.5rem_minmax(0,1fr)_auto] gap-2 pt-0.5">
+        <span aria-hidden />
+        <div className="flex justify-between px-0.5 text-[10px] tabular-nums text-slate-500">
+          <span>0</span>
+          <span>15</span>
+          <span>30</span>
+          <span>55</span>
+        </div>
+        <span aria-hidden />
+      </div>
+    </div>
   );
 }
 
@@ -719,8 +727,7 @@ export default function EgoOkCounselorReport({
   const OK_BAR_U = '#6366f1';
   const OK_BAR_I = '#0d9488';
   const okById = Object.fromEntries(report.okgram.map((s) => [s.id, s]));
-  /** Recharts vertical: 배열 첫 행=차트 하단 → 위→아래 U−…I− 는 역순으로 feed */
-  const okBarData: OkBarRowExt[] = [...OK_BAR_DISPLAY_ORDER].reverse().map((id) => {
+  const okBarData: OkBarRowExt[] = OK_BAR_DISPLAY_ORDER.map((id) => {
     const s = okById[id];
     return {
       name: id,
@@ -884,25 +891,8 @@ export default function EgoOkCounselorReport({
               </span>
             }
           >
-            <div className="h-56 w-full rounded-xl border border-white/5 bg-slate-900/40 p-2">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={okBarData} layout="vertical" margin={{ left: 8, right: 96 }}>
-                  <XAxis type="number" domain={[0, 55]} tick={{ fill: '#64748b', fontSize: 10 }} axisLine={false} />
-                  <YAxis
-                    type="category"
-                    dataKey="name"
-                    width={40}
-                    tick={{ fill: '#cbd5e1', fontSize: 12, fontWeight: 600 }}
-                    axisLine={false}
-                  />
-                  <Bar dataKey="score" radius={[0, 8, 8, 0]} barSize={22}>
-                    {okBarData.map((row) => (
-                      <Cell key={row.name} fill={row.fill} />
-                    ))}
-                    <LabelList dataKey="score" content={<OkBarEndLabel rows={okBarData} />} />
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+            <div className="h-56 w-full rounded-xl border border-white/5 bg-slate-900/40 p-3">
+              <OkGramLifePositionBars rows={okBarData} />
             </div>
             <div className="mt-4 space-y-3 text-sm leading-relaxed text-slate-300">
               <p className="font-semibold text-indigo-100">{okLifeOverview.heading}</p>
