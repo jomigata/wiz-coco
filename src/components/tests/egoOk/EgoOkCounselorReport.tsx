@@ -7,6 +7,7 @@ import type {
   EgoOkReport,
   EgoOkScaleScore,
   EgoScaleId,
+  LifePositionKind,
   OkScaleId,
 } from '@/lib/egoOkScoring';
 import {
@@ -22,8 +23,11 @@ import {
   type Plus243ScaleEntry,
   type Plus243Stage,
 } from '@/lib/egogram243Plus';
-import InnerMindComparisonChart from '@/components/tests/egoOk/InnerMindComparisonChart';
-import { buildInnerMindPairs, INNER_MIND_ALIGNED_MAX } from '@/lib/egoOkInnerMind';
+import {
+  buildInnerMindPairs,
+  INNER_MIND_ALIGNED_MAX,
+  type InnerMindPair,
+} from '@/lib/egoOkInnerMind';
 import { buildPlus243InterpretationSections } from '@/lib/egoOkPlus243Interpretation';
 import {
   buildOkLifeOverviewBlock,
@@ -642,48 +646,221 @@ type OkBarRow = {
 
 type OkBarRowExt = OkBarRow & { fill: string; poleTag: string };
 
-const OK_BAR_CHART_MAX = 55;
+const OK_SCORE_AXIS_MAX = 55;
 
-/** Recharts category 축 순서가 환경마다 달라, 위→아래 U−…I− 는 DOM 순서로 고정 */
-function OkGramLifePositionBars({ rows }: { rows: OkBarRowExt[] }) {
+function okScoreToPct(score: number): number {
+  return Math.min(100, Math.max(0, (score / OK_SCORE_AXIS_MAX) * 100));
+}
+
+/** 오케이 4척도 — 중앙 기준 양극 막대 + 인생태도 사분면 (U/I 축) */
+function OkGramLifePositionChart({
+  rows,
+  kind,
+  uAxis,
+  iAxis,
+}: {
+  rows: OkBarRowExt[];
+  kind: EgoOkReport['lifePosition']['kind'];
+  uAxis: number;
+  iAxis: number;
+}) {
   const byId = Object.fromEntries(rows.map((r) => [r.name, r]));
+  const uMinus = byId['U-']?.score ?? 0;
+  const uPlus = byId['U+']?.score ?? 0;
+  const iPlus = byId['I+']?.score ?? 0;
+  const iMinus = byId['I-']?.score ?? 0;
+
+  const uPos = uAxis >= 0;
+  const iPos = iAxis >= 0;
+  const shellTone =
+    uPos && iPos
+      ? 'ring-emerald-400/50 bg-emerald-500/15'
+      : !uPos && !iPos
+        ? 'ring-rose-400/50 bg-rose-500/15'
+        : uPos && !iPos
+          ? 'ring-indigo-400/50 bg-indigo-500/15'
+          : 'ring-teal-400/50 bg-teal-500/15';
+
   return (
-    <div className="flex h-full flex-col justify-center gap-3 py-1 pl-1 pr-1">
-      {OK_BAR_DISPLAY_ORDER.map((id) => {
-        const row = byId[id];
-        if (!row) return null;
-        const widthPct = Math.min(100, Math.max(0, (row.score / OK_BAR_CHART_MAX) * 100));
-        return (
-          <div key={id} className="grid grid-cols-[2.5rem_minmax(0,1fr)_auto] items-center gap-2">
-            <span className="font-mono text-xs font-semibold text-slate-300">{id}</span>
-            <div className="relative h-[22px] overflow-hidden rounded-r-lg bg-slate-800/60">
-              <div
-                className="absolute inset-y-0 left-0 rounded-r-lg"
-                style={{ width: `${widthPct}%`, backgroundColor: row.fill }}
-              />
+    <div className="space-y-4">
+      <div className={`rounded-xl p-3 ring-1 ${shellTone}`}>
+        <p className="text-center text-[10px] font-semibold uppercase tracking-wider text-slate-400">인생태도</p>
+        <p className="mt-1 text-center text-base font-bold text-white">{kind}</p>
+        <div className="mt-3 grid grid-cols-2 gap-1.5 text-[10px]">
+          {(
+            [
+              { q: '타인긍 · 자기부', on: uPos && !iPos },
+              { q: '타인긍 · 자기긍', on: uPos && iPos },
+              { q: '타인부 · 자기부', on: !uPos && !iPos },
+              { q: '타인부 · 자기긍', on: !uPos && iPos },
+            ] as const
+          ).map((cell) => (
+            <div
+              key={cell.q}
+              className={`rounded-lg px-2 py-2 text-center leading-tight ${
+                cell.on ? 'bg-white/15 font-semibold text-white ring-1 ring-white/25' : 'bg-black/20 text-slate-500'
+              }`}
+            >
+              {cell.q}
             </div>
-            <span className="whitespace-nowrap text-xs font-semibold text-slate-200">
-              {row.score} ({row.poleTag})
-            </span>
-          </div>
-        );
-      })}
-      <div className="grid grid-cols-[2.5rem_minmax(0,1fr)_auto] gap-2 pt-0.5">
-        <span aria-hidden />
-        <div className="flex justify-between px-0.5 text-[10px] tabular-nums text-slate-500">
-          <span>0</span>
-          <span>15</span>
-          <span>30</span>
-          <span>55</span>
+          ))}
         </div>
-        <span aria-hidden />
+        <p className="mt-2 text-center text-[11px] tabular-nums text-slate-400">
+          이고 축 차이 · 타인(NP−CP) {uAxis >= 0 ? '+' : ''}
+          {uAxis} · 자기(FC−AC) {iAxis >= 0 ? '+' : ''}
+          {iAxis}
+        </p>
+      </div>
+
+      <OkDivergingAxisRow
+        title="타인(U) 축"
+        leftLabel="U− 타인부정"
+        rightLabel="U+ 타인긍정"
+        leftScore={uMinus}
+        rightScore={uPlus}
+        leftFill="#818cf8"
+        rightFill="#6366f1"
+        net={uAxis}
+      />
+      <OkDivergingAxisRow
+        title="자기(I) 축"
+        leftLabel="I− 자기부정"
+        rightLabel="I+ 자기긍정"
+        leftScore={iMinus}
+        rightScore={iPlus}
+        leftFill="#f43f5e"
+        rightFill="#14b8a6"
+        net={iAxis}
+      />
+    </div>
+  );
+}
+
+function OkDivergingAxisRow({
+  title,
+  leftLabel,
+  rightLabel,
+  leftScore,
+  rightScore,
+  leftFill,
+  rightFill,
+  net,
+}: {
+  title: string;
+  leftLabel: string;
+  rightLabel: string;
+  leftScore: number;
+  rightScore: number;
+  leftFill: string;
+  rightFill: string;
+  net: number;
+}) {
+  const leftPct = okScoreToPct(leftScore);
+  const rightPct = okScoreToPct(rightScore);
+  const netLabel = net >= 0 ? `→ ${rightLabel.split(' ')[1] ?? '긍정'}` : `→ ${leftLabel.split(' ')[1] ?? '부정'}`;
+
+  return (
+    <div className="rounded-xl bg-slate-950/40 p-3 ring-1 ring-white/10">
+      <div className="flex items-baseline justify-between gap-2">
+        <p className="text-xs font-semibold text-slate-200">{title}</p>
+        <p className="text-[10px] text-slate-500">
+          {leftScore} vs {rightScore}
+          <span className="ml-1 text-indigo-200/90">{netLabel}</span>
+        </p>
+      </div>
+      <div className="mt-2 grid grid-cols-[1fr_auto_1fr] items-end gap-1">
+        <div className="flex flex-col items-end gap-1">
+          <span className="font-mono text-[10px] tabular-nums text-slate-400">{leftScore}</span>
+          <div className="flex h-8 w-full items-center justify-end">
+            <div
+              className="h-3 rounded-l-full opacity-90"
+              style={{ width: `${leftPct}%`, minWidth: leftScore > 0 ? '4px' : 0, backgroundColor: leftFill }}
+            />
+          </div>
+          <span className="text-[9px] text-slate-500">{leftLabel}</span>
+        </div>
+        <div className="mx-0.5 h-10 w-px shrink-0 bg-gradient-to-b from-transparent via-white/35 to-transparent" aria-hidden />
+        <div className="flex flex-col items-start gap-1">
+          <span className="font-mono text-[10px] tabular-nums text-slate-400">{rightScore}</span>
+          <div className="flex h-8 w-full items-center justify-start">
+            <div
+              className="h-3 rounded-r-full opacity-90"
+              style={{ width: `${rightPct}%`, minWidth: rightScore > 0 ? '4px' : 0, backgroundColor: rightFill }}
+            />
+          </div>
+          <span className="text-[9px] text-slate-500">{rightLabel}</span>
+        </div>
       </div>
     </div>
   );
 }
 
+const INNER_MIND_PLOT_MAX = 50;
+
 function formatInnerMindDiff(okMinusEgo: number): string {
   return `${okMinusEgo >= 0 ? '+' : ''}${okMinusEgo}`;
+}
+
+function InnerMindDualBarChart({ pairs }: { pairs: InnerMindPair[] }) {
+  const plotH = 160;
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center justify-center gap-4 text-[11px] text-slate-400">
+        <span className="inline-flex items-center gap-1.5">
+          <span className="h-3 w-3 rounded-sm bg-gradient-to-t from-sky-700 to-sky-400" />
+          겉마음 (이고)
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <span className="h-3 w-3 rounded-sm bg-gradient-to-t from-fuchsia-700 to-fuchsia-400" />
+          속마음 (오케이)
+        </span>
+      </div>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {pairs.map((p) => {
+          const egoH = Math.max(6, (p.egoScore / INNER_MIND_PLOT_MAX) * plotH);
+          const okH = Math.max(6, (p.okScore / INNER_MIND_PLOT_MAX) * plotH);
+          const aligned = Math.abs(p.okMinusEgo) <= INNER_MIND_ALIGNED_MAX;
+          const diffLabel = formatInnerMindDiff(p.okMinusEgo);
+          return (
+            <article
+              key={p.egoId}
+              className={`rounded-xl p-3 ring-1 ${
+                aligned ? 'bg-sky-500/10 ring-sky-400/20' : 'bg-amber-500/10 ring-amber-400/25'
+              }`}
+            >
+              <p className="text-center font-mono text-xs font-bold text-white">{diffLabel}</p>
+              <p className="mt-0.5 text-center text-[10px] text-slate-500">속 − 겉</p>
+              <div
+                className="relative mt-2 flex items-end justify-center gap-3 border-b border-white/15 pb-1"
+                style={{ height: plotH + 8 }}
+              >
+                <div className="flex w-[2.35rem] flex-col items-center">
+                  <span className="mb-1 font-mono text-[10px] tabular-nums text-sky-200">{p.egoScore}</span>
+                  <div
+                    className="w-full rounded-t-md bg-gradient-to-t from-sky-700/90 to-sky-400 shadow-[0_0_12px_rgba(56,189,248,0.25)]"
+                    style={{ height: egoH }}
+                    title={`겉 ${p.egoShort}`}
+                  />
+                  <span className="mt-1.5 text-[10px] font-semibold text-sky-200/90">{p.egoShort}</span>
+                  <span className="text-[9px] text-slate-500">겉</span>
+                </div>
+                <div className="flex w-[2.35rem] flex-col items-center">
+                  <span className="mb-1 font-mono text-[10px] tabular-nums text-fuchsia-200">{p.okScore}</span>
+                  <div
+                    className="w-full rounded-t-md bg-gradient-to-t from-fuchsia-800/90 to-fuchsia-400 shadow-[0_0_12px_rgba(232,121,249,0.2)]"
+                    style={{ height: okH }}
+                    title={`속 ${p.okShort}`}
+                  />
+                  <span className="mt-1.5 text-[10px] font-semibold text-fuchsia-200/90">{p.okShort}</span>
+                  <span className="text-[9px] text-slate-500">속</span>
+                </div>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 export default function EgoOkCounselorReport({
@@ -907,8 +1084,10 @@ export default function EgoOkCounselorReport({
             }
           >
             <div className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] xl:items-start">
-              <div className="h-[min(42vh,22rem)] w-full min-h-[16rem]">
-                <EgogramFiveScaleRadarChart data={radarData} peakScaleId={peakEgogram.id} />
+              <div className="w-full xl:sticky xl:top-1/2 xl:z-10 xl:-translate-y-1/2 xl:self-start">
+                <div className="h-[min(42vh,22rem)] w-full min-h-[16rem]">
+                  <EgogramFiveScaleRadarChart data={radarData} peakScaleId={peakEgogram.id} />
+                </div>
               </div>
               <div className="space-y-3">
                 <EgogramEnergyInsightPanel highScale={peakEgogram} lowScale={lowEgogram} />
@@ -966,8 +1145,13 @@ export default function EgoOkCounselorReport({
             }
           >
             <div className="grid gap-3 lg:grid-cols-2 lg:items-start">
-              <ReportInsightBlock tone="sky" title="오케이그램 막대">
-                <OkGramLifePositionBars rows={okBarData} />
+              <ReportInsightBlock tone="sky" title="오케이그램 · 인생태도 축">
+                <OkGramLifePositionChart
+                  rows={okBarData}
+                  kind={report.lifePosition.kind}
+                  uAxis={report.lifePosition.uAxis}
+                  iAxis={report.lifePosition.iAxis}
+                />
               </ReportInsightBlock>
               <ReportInsightBlock tone="indigo" title={okLifeOverview.heading}>
                 <ul className="list-inside list-disc space-y-2 text-sm leading-relaxed text-slate-300">
@@ -990,7 +1174,7 @@ export default function EgoOkCounselorReport({
             title="나의 속마음"
             subtitle="겉마음(이고) vs 속마음(오케이) · |차이| 4 이하 동일 · 5 이상 상세"
           >
-            <InnerMindComparisonChart pairs={innerMindPairs} />
+            <InnerMindDualBarChart pairs={innerMindPairs} />
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               {innerMindPairs.map((pair) => {
                 const aligned = Math.abs(pair.okMinusEgo) <= INNER_MIND_ALIGNED_MAX;
