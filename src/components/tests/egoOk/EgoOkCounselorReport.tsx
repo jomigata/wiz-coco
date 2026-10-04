@@ -905,12 +905,12 @@ export default function EgoOkCounselorReport({
                 return (
                   <article key={pair.egoId} className="rounded-xl bg-white/[0.03] p-4 ring-1 ring-white/10">
                     {aligned ? (
-                      <p className="text-sm leading-relaxed text-slate-300">
-                        <span className="font-mono text-sky-200">
-                          {pair.egoShort} · (속마음) = {formatInnerMindDiff(pair.okMinusEgo)}{' '}
-                        </span>
-                        {pair.summary}
-                      </p>
+                      <>
+                        <p className="font-mono text-sm text-sky-200">
+                          {pair.egoShort} · (속마음) = {formatInnerMindDiff(pair.okMinusEgo)}
+                        </p>
+                        <p className="mt-2 text-sm leading-relaxed text-slate-300">{pair.summary}</p>
+                      </>
                     ) : (
                       <>
                         <p className="font-mono text-sm text-sky-200">
