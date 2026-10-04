@@ -22,8 +22,13 @@ import {
   type Plus243ScaleEntry,
   type Plus243Stage,
 } from '@/lib/egogram243Plus';
-import { buildInnerMindPairs } from '@/lib/egoOkInnerMind';
+import { buildInnerMindPairs, type InnerMindPair } from '@/lib/egoOkInnerMind';
 import { buildPlus243InterpretationSections } from '@/lib/egoOkPlus243Interpretation';
+import {
+  buildOkLifeOverview,
+  okLifeAxes,
+  okScalePoleTag,
+} from '@/lib/egoOkOkLifePosition';
 import { OK_LABELS } from '@/lib/egoOkScoring';
 import { egoOkGenderToLabel } from '@/lib/egoOkTestGender';
 import type { ClientInfo } from '@/components/tests/MbtiProClientInfo';
@@ -39,8 +44,10 @@ import {
   XAxis,
   YAxis,
   LabelList,
+  Tooltip,
   Cell,
   Customized,
+  type TooltipProps,
 } from 'recharts';
 import EgoOkKtaaCompositeChart from '@/components/tests/egoOk/EgoOkKtaaCompositeChart';
 
@@ -156,11 +163,13 @@ function Pattern243AndPlusCode({
 
 function EgogramRadarSummarySubtitle({
   peakScale,
+  patternCode,
   pattern243Plus,
   basicPattern,
   missing,
 }: {
   peakScale: EgoOkScaleScore;
+  patternCode: string;
   pattern243Plus: Pattern243Plus;
   basicPattern: string;
   missing: boolean;
@@ -170,13 +179,15 @@ function EgogramRadarSummarySubtitle({
       <p className="font-medium text-indigo-100">
         최고 사용 에너지 : {formatEgogramEnergyHeadline(peakScale)}
       </p>
-      <p className="flex flex-wrap items-baseline gap-x-2 gap-y-2 text-slate-400">
-        {basicPattern ? <span className="text-slate-300">{basicPattern}</span> : null}
-        {basicPattern ? <span className="text-slate-500">·</span> : null}
-        <Pattern243PlusCode plus={pattern243Plus} />
-        <span className="text-slate-500">(243+ 플러스)</span>
-        {missing ? <span className="text-amber-200/80">· 기준 보고서 문장 없음</span> : null}
+      <p className="text-slate-400">
+        243패턴 :{' '}
+        <span className="font-mono font-bold tracking-widest text-indigo-100">{patternCode}</span>
+        {' · '}
+        <Pattern243PlusCode plus={pattern243Plus} className="inline-flex align-middle" />
+        <span className="text-slate-500"> (243+ 플러스)</span>
       </p>
+      {basicPattern ? <p className="text-slate-300">{basicPattern}</p> : null}
+      {missing ? <p className="text-amber-200/80">기준 보고서 문장 없음</p> : null}
     </div>
   );
 }
@@ -378,34 +389,17 @@ function createEgogramOkRadarVertexDot(peakScaleId: EgoScaleId) {
   };
 }
 
-function EgogramRadarPeakSpoke({
-  cx,
-  cy,
-  outerRadius,
-  peakScaleId,
-}: {
-  cx?: number;
-  cy?: number;
-  outerRadius?: number;
-  peakScaleId: EgoScaleId;
-}) {
-  if (cx == null || cy == null || outerRadius == null) return null;
-  const peakIndex = EGOGRAM_RADAR_AXIS_ORDER.indexOf(peakScaleId);
-  if (peakIndex < 0) return null;
-  const angle = -Math.PI / 2 + peakIndex * ((2 * Math.PI) / EGOGRAM_RADAR_AXIS_ORDER.length);
-  const x2 = cx + outerRadius * Math.cos(angle);
-  const y2 = cy + outerRadius * Math.sin(angle);
+function egogramRadarTooltipLine(row: EgogramRadarRow): string {
+  return `${row.scale} · ${row.label} · 합계 ${row.score}`;
+}
+
+function EgogramRadarTooltip({ active, payload }: TooltipProps<number, string>) {
+  if (!active || !payload?.length) return null;
+  const row = payload[0].payload as EgogramRadarRow;
   return (
-    <line
-      x1={cx}
-      y1={cy}
-      x2={x2}
-      y2={y2}
-      stroke="#ffffff"
-      strokeWidth={2}
-      strokeOpacity={0.85}
-      pointerEvents="none"
-    />
+    <div className="rounded-md border border-white/10 bg-slate-950/90 px-2.5 py-1.5 text-xs shadow-md">
+      <p className="font-semibold text-slate-100">{egogramRadarTooltipLine(row)}</p>
+    </div>
   );
 }
 
@@ -443,6 +437,17 @@ function EgogramFiveScaleRadarChart({
         return (
           <circle cx={cx} cy={cy} r={4} fill="#eef2ff" stroke="#818cf8" strokeWidth={2} />
         );
+      },
+    [resolvedPeakId],
+  );
+
+  const RadarVertexActiveDot = useMemo(
+    () =>
+      function EgogramRadarVertexActiveDot(props: { cx?: number; cy?: number; payload?: EgogramRadarRow }) {
+        const { cx, cy, payload } = props;
+        if (cx == null || cy == null || !payload) return null;
+        if (payload.scale === resolvedPeakId) return null;
+        return <circle cx={cx} cy={cy} r={6} fill="#ffffff" stroke="#a5b4fc" strokeWidth={2} />;
       },
     [resolvedPeakId],
   );
@@ -487,7 +492,7 @@ function EgogramFiveScaleRadarChart({
         <Customized component={FillOpacityMaskDefs} />
         <PolarGrid
           gridType="polygon"
-          radialLines
+          radialLines={false}
           stroke="#64748b"
           strokeOpacity={0.28}
           strokeWidth={1}
@@ -506,28 +511,6 @@ function EgogramFiveScaleRadarChart({
               peakScaleId={resolvedPeakId}
             />
           )}
-        />
-        <Customized
-          component={(props: {
-            cx?: number;
-            cy?: number;
-            outerRadius?: number;
-            offset?: { left: number; top: number; width: number; height: number };
-          }) => {
-            const cx = props.cx ?? (props.offset ? props.offset.left + props.offset.width / 2 : undefined);
-            const cy = props.cy ?? (props.offset ? props.offset.top + props.offset.height / 2 : undefined);
-            const outerRadius =
-              props.outerRadius ??
-              (props.offset ? (Math.min(props.offset.width, props.offset.height) / 2) * 0.94 : undefined);
-            return (
-              <EgogramRadarPeakSpoke
-                cx={cx}
-                cy={cy}
-                outerRadius={outerRadius}
-                peakScaleId={resolvedPeakId}
-              />
-            );
-          }}
         />
         <Radar
           name="오케이"
@@ -548,9 +531,10 @@ function EgogramFiveScaleRadarChart({
           strokeWidth={2.5}
           isAnimationActive={false}
           dot={<RadarVertexDot />}
-          activeDot={false}
+          activeDot={<RadarVertexActiveDot />}
         />
         <Customized component={EgogramRadarCenterMark} />
+        <Tooltip content={<EgogramRadarTooltip />} />
       </RadarChart>
     </ResponsiveContainer>
   );
@@ -601,13 +585,62 @@ type OkBarRow = {
   label: string;
 };
 
-function OkBarEndLabel(props: { x?: number; y?: number; width?: number; height?: number; value?: number }) {
-  const { x, y, width, height, value } = props;
+type OkBarRowExt = OkBarRow & { fill: string; poleTag: string };
+
+function OkBarEndLabel(props: {
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  value?: number;
+  payload?: OkBarRowExt;
+}) {
+  const { x, y, width, height, value, payload } = props;
   if (value == null || x == null || y == null || width == null || height == null) return null;
+  const tag = payload?.poleTag ?? '';
   return (
-    <text x={x + width + 6} y={y + height / 2 + 4} fill="#e2e8f0" fontSize={12} fontWeight={600}>
-      {value}
+    <text x={x + width + 8} y={y + height / 2 + 4} fill="#e2e8f0" fontSize={12} fontWeight={600}>
+      {value} ({tag})
     </text>
+  );
+}
+
+function InnerMindDualBarChart({ pairs }: { pairs: InnerMindPair[] }) {
+  const plotH = 176;
+  return (
+    <div className="grid grid-cols-2 gap-5 sm:grid-cols-4">
+      {pairs.map((p) => {
+        const egoH = Math.max(12, (p.egoScore / 50) * plotH);
+        const okH = Math.max(8, (p.okScore / 50) * plotH);
+        const pinkH = Math.min(okH, egoH);
+        const pinkBottom = Math.max(0, (egoH - pinkH) / 2);
+        return (
+          <div key={p.egoId} className="flex flex-col items-center">
+            <p className="text-center font-mono text-[11px] text-slate-300">
+              ({p.okShort})−({p.egoShort}) = {p.okMinusEgo >= 0 ? '+' : ''}
+              {p.okMinusEgo}
+            </p>
+            <div
+              className="relative mt-2 flex w-full max-w-[5rem] items-end justify-center rounded-xl border border-white/10 bg-slate-900/50 px-3 pb-2 pt-6"
+              style={{ height: plotH + 32 }}
+            >
+              <div className="relative w-9 shrink-0" style={{ height: egoH }}>
+                <div className="absolute inset-0 rounded-t-md bg-gradient-to-t from-sky-600 to-sky-400 shadow-inner" />
+                <div
+                  className="absolute left-1/2 w-4 -translate-x-1/2 rounded-t-md bg-gradient-to-t from-pink-600 to-pink-400 shadow-md"
+                  style={{ height: pinkH, bottom: pinkBottom }}
+                />
+              </div>
+            </div>
+            <p className="mt-2 text-xs font-semibold">
+              <span className="text-sky-300">{p.egoShort}</span>
+              <span className="text-slate-500"> / </span>
+              <span className="text-pink-300">{p.okShort}</span>
+            </p>
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
@@ -657,14 +690,24 @@ export default function EgoOkCounselorReport({
     ];
   });
 
-  const okBarData: OkBarRow[] = report.okgram.map((s) => ({
+  const uMinus = okRawById['U-'] ?? 0;
+  const uPlus = okRawById['U+'] ?? 0;
+  const iPlus = okRawById['I+'] ?? 0;
+  const iMinus = okRawById['I-'] ?? 0;
+  const { uTa, iTa } = okLifeAxes(uMinus, uPlus, iPlus, iMinus);
+  const okLifeOverview = buildOkLifeOverview(report.lifePosition.kind, uTa, iTa, report.okgram);
+
+  const OK_BAR_U = '#6366f1';
+  const OK_BAR_I = '#0d9488';
+  const okBarData: OkBarRowExt[] = report.okgram.map((s) => ({
     name: s.id,
     score: s.raw,
     label: OK_LABELS[s.id],
+    fill: s.id.startsWith('U') ? OK_BAR_U : OK_BAR_I,
+    poleTag: okScalePoleTag(s.id, uTa, iTa),
   }));
 
   const sectionOrder = ['1', '2', '3', '4'] as const;
-  const barColors = ['#38bdf8', '#818cf8', '#34d399', '#f472b6'];
 
   const peakEgogram = pickExtremeEgogramScale(report.egogram, 'max');
   const lowEgogram = pickExtremeEgogramScale(report.egogram, 'min');
@@ -672,11 +715,16 @@ export default function EgoOkCounselorReport({
     () => buildInnerMindPairs(report.egogram, report.okgram),
     [report.egogram, report.okgram],
   );
+  const innerMindNotable = innerMindPairs.filter((p) => Math.abs(p.okMinusEgo) >= 3);
   const plus243Sections = useMemo(
-    () => buildPlus243InterpretationSections(report.pattern243Plus, report.egogram, chartGender),
-    [report.pattern243Plus, report.egogram, chartGender],
+    () =>
+      buildPlus243InterpretationSections(report.pattern243Plus, report.egogram, chartGender, {
+        sections: report.pattern243.sections,
+        sectionLabels: report.pattern243.sectionLabels,
+      }),
+    [report.pattern243Plus, report.egogram, chartGender, report.pattern243.sections, report.pattern243.sectionLabels],
   );
-  const plus243SectionOrder = ['1', '2', '3', '4'] as const;
+  const plus243SectionOrder = ['1', '2', '3', '4', '5', '6'] as const;
 
   return (
     <div className="mx-auto max-w-5xl space-y-8 pb-16">
@@ -759,19 +807,19 @@ export default function EgoOkCounselorReport({
         <header className="mb-4">
           <h2 className="text-lg font-semibold text-white">이고-오케이그램 (Ego-Ok) 진단 결과 그래프</h2>
           <p className="mt-1 text-sm text-slate-400">
-            90문항 채점 결과를 KTAA 종합 그래프 형식으로 표시합니다. 열에 마우스를 올리면 많이 사용하는
-            자아 상태 쪽으로 배경 그라데이션이 표시됩니다.
+            90문항 채점 결과를 KTAA 종합 그래프 형식으로 표시합니다.
           </p>
         </header>
         <EgoOkKtaaCompositeChart columns={report.compositeChart} gender={chartGender} />
       </section>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
         <SectionCard
           title="이고그램 5척도"
           subtitle={
             <EgogramRadarSummarySubtitle
               peakScale={peakEgogram}
+              patternCode={report.patternCode}
               pattern243Plus={report.pattern243Plus}
               basicPattern={report.pattern243.basicPattern}
               missing={report.pattern243.missing}
@@ -790,7 +838,7 @@ export default function EgoOkCounselorReport({
               <span className="flex-1">명칭</span>
               <span className="w-8 text-right">합계</span>
               <span className="w-10 text-center">243</span>
-              <span className="w-8 text-center">단계</span>
+              <span className="w-8 text-center">9단계</span>
             </li>
             {report.egogram.map((s) => (
               <EgogramScaleRow
@@ -805,67 +853,63 @@ export default function EgoOkCounselorReport({
           </ul>
         </SectionCard>
 
-        <SectionCard
-          title="오케이그램 · 인생태도"
-          subtitle={
-            <span>
-              인생태도: <strong className="text-indigo-200">{report.lifePosition.kind}</strong> —{' '}
-              {report.lifePosition.summary}
-            </span>
-          }
-        >
-          <div className="h-52 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={okBarData} layout="vertical" margin={{ left: 8, right: 28 }}>
-                <XAxis type="number" domain={[0, 55]} tick={{ fill: '#94a3b8', fontSize: 11 }} />
-                <YAxis type="category" dataKey="name" width={36} tick={{ fill: '#e2e8f0', fontSize: 12 }} />
-                <Bar dataKey="score" radius={[0, 6, 6, 0]}>
-                  {okBarData.map((_, i) => (
-                    <Cell key={okBarData[i].name} fill={barColors[i % barColors.length]} />
-                  ))}
-                  <LabelList dataKey="score" content={<OkBarEndLabel />} />
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </SectionCard>
+        <div className="flex flex-col gap-6">
+          <SectionCard
+            title="오케이그램 · 인생태도"
+            subtitle={
+              <span>
+                인생태도: <strong className="text-indigo-200">{report.lifePosition.kind}</strong> —{' '}
+                {report.lifePosition.summary}
+              </span>
+            }
+          >
+            <div className="h-56 w-full rounded-xl border border-white/5 bg-slate-900/40 p-2">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={okBarData} layout="vertical" margin={{ left: 8, right: 96 }}>
+                  <XAxis type="number" domain={[0, 55]} tick={{ fill: '#64748b', fontSize: 10 }} axisLine={false} />
+                  <YAxis
+                    type="category"
+                    dataKey="name"
+                    width={40}
+                    tick={{ fill: '#cbd5e1', fontSize: 12, fontWeight: 600 }}
+                    axisLine={false}
+                  />
+                  <Bar dataKey="score" radius={[0, 8, 8, 0]} barSize={22}>
+                    {okBarData.map((row) => (
+                      <Cell key={row.name} fill={row.fill} />
+                    ))}
+                    <LabelList dataKey="score" content={<OkBarEndLabel />} />
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <p className="mt-4 text-sm leading-relaxed text-slate-300">{okLifeOverview}</p>
+          </SectionCard>
 
-        <SectionCard title="나의 속마음" subtitle="겉마음(이고그램)과 속마음(오케이그램) 합계 차이 · |차이| 2 이하 정렬 · 3~5 주의 · 6+ 스트레스·스탬프">
-          <div className="mb-5 h-56 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={innerMindPairs.map((p) => ({
-                  pair: p.egoLabel.split('(')[0]?.trim() ?? p.egoLabel,
-                  ego: p.egoScore,
-                  ok: p.okScore,
-                }))}
-                margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
-              >
-                <XAxis dataKey="pair" tick={{ fill: '#94a3b8', fontSize: 11 }} />
-                <YAxis domain={[0, 50]} tick={{ fill: '#64748b', fontSize: 10 }} width={28} />
-                <Bar dataKey="ego" name="겉(이고)" fill="#38bdf8" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="ok" name="속(오케이)" fill="#f472b6" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="space-y-4">
-            {innerMindPairs.map((pair) => (
-              <article key={pair.egoLabel} className="rounded-xl bg-white/[0.03] p-4 ring-1 ring-white/10">
-                <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <p className="text-sm font-semibold text-white">
-                    {pair.egoLabel} ↔ {pair.okLabel}
-                  </p>
-                  <p className="font-mono text-sm text-sky-200">
-                    겉 {pair.egoScore} · 속 {pair.okScore} · 차 {pair.diff > 0 ? '+' : ''}
-                    {pair.diff}
-                  </p>
-                </div>
-                <p className="mt-2 text-sm leading-relaxed text-slate-300">{pair.summary}</p>
-                <p className="mt-2 text-sm leading-relaxed text-amber-100/90">{pair.caution}</p>
-              </article>
-            ))}
-          </div>
-        </SectionCard>
+          <SectionCard
+            title="나의 속마음"
+            subtitle="겉(이고) vs 속(오케이) · 차이 3점 이상만 설명 · 하늘=겉 · 분홍=속"
+          >
+            <InnerMindDualBarChart pairs={innerMindPairs} />
+            {innerMindNotable.length > 0 ? (
+              <div className="mt-6 space-y-4">
+                {innerMindNotable.map((pair) => (
+                  <article key={pair.egoId} className="rounded-xl bg-white/[0.03] p-4 ring-1 ring-white/10">
+                    <p className="font-mono text-sm text-sky-200">
+                      {pair.egoShort} / {pair.okShort} · ({pair.okShort})−({pair.egoShort}) ={' '}
+                      {pair.okMinusEgo >= 0 ? '+' : ''}
+                      {pair.okMinusEgo}
+                    </p>
+                    <p className="mt-2 text-sm leading-relaxed text-slate-300">{pair.summary}</p>
+                    <p className="mt-2 text-sm leading-relaxed text-amber-100/90">{pair.caution}</p>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-4 text-sm text-slate-400">네 쌍 모두 차이 3 미만 — 겉·속 정렬 양호.</p>
+            )}
+          </SectionCard>
+        </div>
       </div>
 
       <SectionCard
@@ -891,6 +935,27 @@ export default function EgoOkCounselorReport({
           })}
         </div>
       </SectionCard>
+
+      {!report.pattern243.missing ? (
+        <SectionCard
+          title="243+ 플러스 종합 해석 (243패턴 교차)"
+          subtitle={`243패턴 ${report.patternCode} · 9단계 + 패턴 문장`}
+        >
+          <div className="space-y-6">
+            {sectionOrder.map((key) => {
+              const text = report.pattern243.sections[key];
+              const label = report.pattern243.sectionLabels[key] || `섹션 ${key}`;
+              if (!text) return null;
+              return (
+                <article key={`plus-x-${key}`} className="rounded-xl border border-indigo-500/20 bg-indigo-950/20 p-5">
+                  <h3 className="text-sm font-semibold text-indigo-100">{label} (243패턴 참고)</h3>
+                  <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-slate-300">{text}</p>
+                </article>
+              );
+            })}
+          </div>
+        </SectionCard>
+      ) : null}
 
       <SectionCard
         title="243패턴 종합 해석"

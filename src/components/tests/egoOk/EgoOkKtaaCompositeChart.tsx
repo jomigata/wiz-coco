@@ -531,13 +531,11 @@ function SumLabelBox({
   value,
   stroke,
   fill,
-  blink,
 }: {
   rect: SumLabelRect;
   value: number;
   stroke: string;
   fill: string;
-  blink?: boolean;
 }) {
   return (
     <g>
@@ -550,11 +548,7 @@ function SumLabelBox({
         fill="#fff"
         stroke={stroke}
         strokeWidth={stroke === OK_LINE_COLOR ? 1 : 1.5}
-      >
-        {blink ? (
-          <animate attributeName="opacity" values="1;0.25;1" dur="0.65s" repeatCount="indefinite" />
-        ) : null}
-      </rect>
+      />
       <text
         x={rect.textX}
         y={rect.y + 13}
@@ -569,10 +563,7 @@ function SumLabelBox({
   );
 }
 
-function createKtaaOkEgoSumLabels(
-  chartData: ChartRow[],
-  hoveredId: (typeof COLUMN_ORDER)[number] | null,
-) {
+function createKtaaOkEgoSumLabels(chartData: ChartRow[]) {
   return function KtaaOkEgoSumLabels(props: PlotBackgroundProps) {
     const { offset, yAxisMap } = props;
     if (!offset?.width || !yAxisMap) return null;
@@ -591,7 +582,6 @@ function createKtaaOkEgoSumLabels(
           const layout = computeColumnSumLayout(row, cx, yScale);
           if (!layout) return null;
 
-          const blinkEgo = hoveredId === row.id;
           if (row.id === 'A') {
             return (
               <SumLabelBox
@@ -600,7 +590,6 @@ function createKtaaOkEgoSumLabels(
                 value={row.egoTotal}
                 stroke={EGO_TOTAL_BOX_STROKE}
                 fill="#0c4a6e"
-                blink={blinkEgo}
               />
             );
           }
@@ -620,7 +609,6 @@ function createKtaaOkEgoSumLabels(
                 value={row.egoTotal}
                 stroke={EGO_TOTAL_BOX_STROKE}
                 fill="#0c4a6e"
-                blink={blinkEgo}
               />
             </g>
           );
@@ -740,11 +728,7 @@ export default function EgoOkKtaaCompositeChart({
     okLineFcAc: col.id === 'FC' || col.id === 'AC' ? col.okLine : null,
   }));
 
-  const [hoveredId, setHoveredId] = useState<(typeof COLUMN_ORDER)[number] | null>(null);
-  const OkEgoSumLabelsLayer = useMemo(
-    () => createKtaaOkEgoSumLabels(data, hoveredId),
-    [data, hoveredId],
-  );
+  const OkEgoSumLabelsLayer = useMemo(() => createKtaaOkEgoSumLabels(data), [data]);
   const EgoSegmentLabelsLayer = useMemo(() => createKtaaEgoSegmentLabels(data), [data]);
 
   const [plotBox, setPlotBox] = useState<KtaaPlotBox | null>(null);
@@ -759,11 +743,6 @@ export default function EgoOkKtaaCompositeChart({
         : box,
     );
   }, []);
-
-  const bindColumnHover = (id: (typeof COLUMN_ORDER)[number]) => ({
-    onMouseEnter: () => setHoveredId(id),
-    onMouseLeave: () => setHoveredId((prev) => (prev === id ? null : prev)),
-  });
 
   return (
     <div className="overflow-hidden rounded-xl border border-sky-200 bg-white text-gray-900 shadow-inner">
@@ -843,23 +822,6 @@ export default function EgoOkKtaaCompositeChart({
             />
           </ComposedChart>
         </ResponsiveContainer>
-        {plotBox ? (
-          <div className="pointer-events-none absolute inset-0">
-            {columns.map((col, index) => (
-              <div
-                key={`hit-${col.id}`}
-                className="pointer-events-auto absolute top-0"
-                style={{
-                  top: plotBox.top,
-                  left: plotBox.left + (index * plotBox.width) / COLUMN_ORDER.length,
-                  width: plotBox.width / COLUMN_ORDER.length,
-                  height: plotBox.height,
-                }}
-                {...bindColumnHover(col.id)}
-              />
-            ))}
-          </div>
-        ) : null}
       </div>
 
       <KtaaPlotLabelColumns plotBox={plotBox} style={TRAIT_LABEL_PLOT_GAP_BOTTOM}>
@@ -910,9 +872,7 @@ export default function EgoOkKtaaCompositeChart({
             <span className="inline-block h-2 w-3 rounded-sm align-middle" style={{ background: EGO_NEG_COLOR }} />{' '}
             <strong>주황(아래)</strong>은 부정 문항 합(0~25),{' '}
             <span className="inline-block h-2 w-3 rounded-sm align-middle" style={{ background: EGO_POS_COLOR }} />{' '}
-            <strong>하늘(위)</strong>은 긍정 문항 합(0~25). 막대 안 숫자는 각 층 점수,{' '}
-            <strong>막대 꼭대기 숫자</strong>는 두 층을 더한 <strong>이고그램 척도 총점(0~50)</strong>입니다.
-            막대에 마우스를 올리면 해당 열의 <strong>이고 합계</strong> 숫자가 깜빡입니다.
+            <strong>하늘(위)</strong>은 긍정 문항 합(0~25).
           </li>
           <li>
             <strong>배경색:</strong>{' '}

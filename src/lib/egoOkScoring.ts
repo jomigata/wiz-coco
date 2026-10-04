@@ -1,5 +1,6 @@
 import { EGO_OK_QUESTIONS } from '@/data/egoOkQuestions';
 import { buildPattern243Plus, type Pattern243Plus } from '@/lib/egogram243Plus';
+import { classifyOkLifePosition } from '@/lib/egoOkOkLifePosition';
 import patternSource from '../../docs/internal-materials/ego-ok/patterns-243-reports.json';
 
 export type EgoOkGender = 'male' | 'female';
@@ -320,22 +321,6 @@ function computeNonContinuity(answersInOrder: number[]): { percent: number; pena
   return { percent, penalty };
 }
 
-/** NP−CP, FC−AC: 0 미만만 부정, 0 이상은 긍정으로 판정 */
-function classifyLifePosition(uAxis: number, iAxis: number): { kind: LifePositionKind; summary: string } {
-  const uPos = uAxis >= 0;
-  const iPos = iAxis >= 0;
-  if (uPos && iPos) {
-    return { kind: '자타긍정', summary: '타인·자기 축 모두 긍정 방향입니다.' };
-  }
-  if (!uPos && !iPos) {
-    return { kind: '자타부정', summary: '타인·자기 축 모두 부정 방향입니다.' };
-  }
-  if (uPos && !iPos) {
-    return { kind: '타인긍정', summary: '타인 축(NP−CP)은 긍정, 자기 축(FC−AC)은 부정입니다.' };
-  }
-  return { kind: '자기긍정', summary: '타인 축(NP−CP)은 부정, 자기 축(FC−AC)은 긍정입니다.' };
-}
-
 export function computeEgoOkReport(
   answers: Record<string, number>,
   genderInput: string | undefined,
@@ -424,7 +409,9 @@ export function computeEgoOkReport(
   const missing = !hit || (bank.missingCodes || []).includes(patternCode);
 
   const { percent, penalty } = computeNonContinuity(orderedAnswers);
-  const life = classifyLifePosition(uAxis, iAxis);
+  const uTaOk = uMinus - uPlus;
+  const iTaOk = iPlus - iMinus;
+  const life = classifyOkLifePosition(uTaOk, iTaOk);
 
   const cpNpSum = cp + np;
   const fcAcSum = fc + ac;
