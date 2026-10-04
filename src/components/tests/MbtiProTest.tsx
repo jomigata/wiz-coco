@@ -9,8 +9,7 @@ import {
   isLocalPsychTestDirectActive,
 } from '@/lib/localPsychTestDirectStart';
 import { saveEgoOkReportDraft } from '@/lib/egoOkReportSession';
-import { EGO_OK_LIKERT_MIN_HEIGHT, EGO_OK_LIKERT_OPTIONS } from '@/lib/egoOkLikert';
-import { EgoOkQuestionText } from '@/lib/egoOkQuestionDisplay';
+import { EGO_OK_LIKERT_HEIGHT, EGO_OK_LIKERT_OPTIONS } from '@/lib/egoOkLikert';
 import { findEgoOkIncompleteQuestionNumbers } from '@/lib/egoOkScoring';
 import Link from 'next/link';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
@@ -813,23 +812,17 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
                     exit="exit"
                     className={`absolute inset-0 flex items-center justify-center px-4 py-3 text-center will-change-[transform,opacity,filter] ${
                       isEgoOkFlow
-                        ? 'text-lg sm:text-xl font-semibold leading-[1.75] text-slate-50'
+                        ? 'whitespace-pre-line text-lg sm:text-xl font-semibold leading-[1.75] tracking-[0.04em] text-slate-50'
                         : `text-xl leading-relaxed ${uiTheme === 'portal' ? 'text-white font-semibold tracking-tight' : 'text-slate-50 font-semibold'}`
                     }`}
                   >
-                    {isEgoOkFlow ? (
-                      <EgoOkQuestionText text={selectedQuestions[currentQuestion].text} />
-                    ) : (
-                      selectedQuestions[currentQuestion].text
-                    )}
+                    {selectedQuestions[currentQuestion].text}
                   </motion.h2>
                 </AnimatePresence>
               </div>
               
               <div className="flex flex-col gap-5">
-                <div
-                  className={`relative flex justify-between gap-2 px-2 sm:gap-3 sm:px-4 ${isEgoOkFlow ? 'items-stretch' : 'items-end'}`}
-                >
+                <div className="relative flex items-end justify-between gap-2 px-2 sm:gap-3 sm:px-4">
                   <div className={v.scaleArc}></div>
                   {isEgoOkFlow ? (
                     <>
@@ -846,7 +839,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
                             key={opt.letter}
                             type="button"
                             onClick={() => handleAnswer(opt.value)}
-                            className={`${answerBtnClass(opt.rounded, 'py-2', '', glow)} ${EGO_OK_LIKERT_MIN_HEIGHT[opt.heightTier]} flex flex-col justify-center`}
+                            className={`${answerBtnClass(opt.rounded, 'py-0', '', glow)} ${EGO_OK_LIKERT_HEIGHT[opt.heightTier]} flex shrink-0 flex-col justify-center`}
                           >
                             {answers[currentQuestion] === opt.value && (
                               <div
