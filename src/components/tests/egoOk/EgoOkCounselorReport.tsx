@@ -50,6 +50,9 @@ import {
   type TooltipProps,
 } from 'recharts';
 import EgoOkKtaaCompositeChart from '@/components/tests/egoOk/EgoOkKtaaCompositeChart';
+import EgoOkCounselorReportTabShell, {
+  type CounselorReportTab,
+} from '@/components/tests/egoOk/EgoOkCounselorReportTabShell';
 
 const THREE_LEVEL_STYLE: Record<string, string> = {
   A: 'bg-emerald-500/20 text-emerald-200 ring-emerald-400/40',
@@ -71,19 +74,67 @@ function SectionCard({
   title,
   subtitle,
   children,
+  compact,
 }: {
   title: string;
   subtitle?: React.ReactNode;
   children: React.ReactNode;
+  /** 탭 패널 안에서는 헤더 여백 축소 */
+  compact?: boolean;
 }) {
   return (
-    <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-slate-900/90 via-slate-950/95 to-indigo-950/80 p-6 shadow-xl shadow-black/30">
-      <header className="mb-5 border-b border-white/10 pb-4">
-        <h2 className="text-lg font-semibold tracking-tight text-white">{title}</h2>
-        {subtitle ? <div className="mt-1 text-sm text-slate-400">{subtitle}</div> : null}
+    <section
+      className={
+        compact
+          ? 'space-y-4'
+          : 'rounded-2xl border border-white/10 bg-gradient-to-br from-slate-900/90 via-slate-950/95 to-indigo-950/80 p-6 shadow-xl shadow-black/30'
+      }
+    >
+      <header className={compact ? 'border-b border-white/10 pb-3' : 'mb-5 border-b border-white/10 pb-4'}>
+        <h2 className="text-base font-semibold tracking-tight text-white sm:text-lg">{title}</h2>
+        {subtitle ? <div className="mt-1 text-xs text-slate-400 sm:text-sm">{subtitle}</div> : null}
       </header>
       {children}
     </section>
+  );
+}
+
+function InterpretationArticles({
+  sectionOrder,
+  sections,
+  sectionLabels,
+  variant = 'default',
+}: {
+  sectionOrder: readonly string[];
+  sections: Record<string, string>;
+  sectionLabels: Record<string, string>;
+  variant?: 'default' | 'pattern-cross';
+}) {
+  return (
+    <div className="grid gap-3 xl:grid-cols-2">
+      {sectionOrder.map((key) => {
+        const text = sections[key];
+        const label = sectionLabels[key] || `섹션 ${key}`;
+        if (!text) return null;
+        const articleClass =
+          variant === 'pattern-cross'
+            ? 'rounded-xl border border-indigo-500/20 bg-indigo-950/25 p-4'
+            : 'rounded-xl border border-white/5 bg-black/20 p-4';
+        return (
+          <article key={key} className={articleClass}>
+            <h3 className="flex items-center gap-2 text-sm font-semibold text-white">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-indigo-500/20 text-[10px] text-indigo-200">
+                {key}
+              </span>
+              {label}
+            </h3>
+            <p className="mt-2 max-h-[min(28vh,14rem)] overflow-y-auto whitespace-pre-wrap text-xs leading-relaxed text-slate-300 sm:text-sm [scrollbar-width:thin]">
+              {text}
+            </p>
+          </article>
+        );
+      })}
+    </div>
   );
 }
 
@@ -753,23 +804,289 @@ export default function EgoOkCounselorReport({
   );
   const plus243SectionOrder = ['1', '2', '3', '4', '5', '6'] as const;
 
+  const reportTabs = useMemo((): CounselorReportTab[] => {
+    const tabs: CounselorReportTab[] = [
+      {
+        id: 'overview',
+        label: '개요 · 요약',
+        short: '개요',
+        description: '내담자 정보 · 243 코드 · 형태명',
+        panel: (
+          <div className="space-y-4">
+            <p className="text-sm leading-relaxed text-slate-300">
+              96문항(타당도 6문항 분산) · 243패턴 · 인생태도 · 타당도를 탭별로 나누어 상담 시 빠르게 참고할 수
+              있습니다. 상단 탭에 마우스를 올리거나 클릭하면 해당 블록이 표시됩니다.
+            </p>
+            <dl className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="rounded-xl bg-white/[0.04] px-4 py-3 ring-1 ring-white/10">
+                <dt className="text-xs text-slate-500">인생태도</dt>
+                <dd className="mt-1 font-semibold text-indigo-100">{report.lifePosition.kind}</dd>
+                <dd className="mt-1 text-xs text-slate-400">{report.lifePosition.summary}</dd>
+              </div>
+              <div className="rounded-xl bg-white/[0.04] px-4 py-3 ring-1 ring-white/10">
+                <dt className="text-xs text-slate-500">최고 이고 척도</dt>
+                <dd className="mt-1 font-semibold text-white">
+                  {peakEgogram.id} · {peakEgogram.raw}점
+                </dd>
+                <dd className="mt-1 text-xs text-slate-400">{peakEgogram.label}</dd>
+              </div>
+              <div className="rounded-xl bg-white/[0.04] px-4 py-3 ring-1 ring-white/10">
+                <dt className="text-xs text-slate-500">최저 이고 척도</dt>
+                <dd className="mt-1 font-semibold text-white">
+                  {lowEgogram.id} · {lowEgogram.raw}점
+                </dd>
+                <dd className="mt-1 text-xs text-slate-400">{lowEgogram.label}</dd>
+              </div>
+              <div className="rounded-xl bg-white/[0.04] px-4 py-3 ring-1 ring-white/10">
+                <dt className="text-xs text-slate-500">형태명</dt>
+                <dd className="mt-1 font-semibold text-white">{formLabel && formLabel !== '—' ? formLabel : '—'}</dd>
+              </div>
+            </dl>
+            <div className="grid gap-4 lg:grid-cols-2">
+              <OkGramLifePositionBars rows={okBarData} />
+              <div className="rounded-xl border border-white/10 bg-black/20 p-4">
+                <p className="text-sm font-semibold text-indigo-100">{okLifeOverview.heading}</p>
+                <ul className="mt-2 list-inside list-disc space-y-1 text-xs text-slate-300 sm:text-sm">
+                  {okLifeOverview.bullets.map((line) => (
+                    <li key={line.slice(0, 24)}>{line}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        ),
+      },
+      {
+        id: 'validity',
+        label: '타당도',
+        short: '타당도',
+        panel: report.validity ? (
+          <EgoOkValiditySection validity={report.validity} />
+        ) : (
+          <p className="text-sm text-slate-400">타당도 프로파일 없음</p>
+        ),
+      },
+      {
+        id: 'ktaa',
+        label: 'KTAA 종합 그래프',
+        short: 'KTAA',
+        panel: (
+          <SectionCard compact title="이고-오케이그램 (Ego-Ok) 진단 결과 그래프" subtitle="96문항 성격(90) · KTAA 종합">
+            <div className="max-h-[min(72vh,640px)] overflow-hidden rounded-xl">
+              <EgoOkKtaaCompositeChart columns={report.compositeChart} gender={chartGender} />
+            </div>
+          </SectionCard>
+        ),
+      },
+      {
+        id: 'egogram',
+        label: '이고그램 5척도',
+        short: '이고',
+        panel: (
+          <SectionCard
+            compact
+            title="이고그램 5척도"
+            subtitle={
+              <EgogramRadarSummarySubtitle
+                peakScale={peakEgogram}
+                patternCode={report.patternCode}
+                pattern243Plus={report.pattern243Plus}
+                formLabel={formLabel}
+                missing={report.pattern243.missing}
+              />
+            }
+          >
+            <div className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] xl:items-start">
+              <div className="h-[min(42vh,22rem)] w-full min-h-[16rem]">
+                <EgogramFiveScaleRadarChart data={radarData} peakScaleId={peakEgogram.id} />
+              </div>
+              <div className="space-y-3">
+                <EgogramEnergyInsightPanel highScale={peakEgogram} lowScale={lowEgogram} />
+                <ul className="max-h-[min(32vh,16rem)] space-y-2 overflow-y-auto pr-1 [scrollbar-width:thin]">
+                  <li className="flex gap-3 px-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                    <span className="w-8">척도</span>
+                    <span className="flex-1">명칭</span>
+                    <span className="w-8 text-right">합계</span>
+                    <span className="w-10 text-center">243</span>
+                    <span className="w-8 text-center">9단계</span>
+                  </li>
+                  {report.egogram.map((s) => (
+                    <EgogramScaleRow
+                      key={s.id}
+                      id={s.id}
+                      label={s.label}
+                      raw={s.raw}
+                      threeLevel={s.threeLevel}
+                      plusStage={rawScoreToPlus243Tier(s.raw).stage}
+                    />
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </SectionCard>
+        ),
+      },
+      {
+        id: 'ok-life',
+        label: '오케이 · 인생태도',
+        short: '오케이',
+        panel: (
+          <SectionCard
+            compact
+            title="오케이그램 · 인생태도"
+            subtitle={
+              <span>
+                인생태도: <strong className="text-indigo-200">{report.lifePosition.kind}</strong> —{' '}
+                {report.lifePosition.summary}
+              </span>
+            }
+          >
+            <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+              <div className="rounded-xl border border-white/5 bg-slate-900/40 p-3">
+                <OkGramLifePositionBars rows={okBarData} />
+              </div>
+              <div className="space-y-3 text-sm leading-relaxed text-slate-300">
+                <p className="font-semibold text-indigo-100">{okLifeOverview.heading}</p>
+                <ul className="list-inside list-disc space-y-2 text-slate-300">
+                  {okLifeOverview.bullets.map((line) => (
+                    <li key={line.slice(0, 24)}>{line}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </SectionCard>
+        ),
+      },
+      {
+        id: 'inner',
+        label: '나의 속마음',
+        short: '속마음',
+        panel: (
+          <SectionCard
+            compact
+            title="나의 속마음"
+            subtitle="겉마음(이고) vs 속마음(오케이) · |차이| 4 이하 동일 · 5 이상 상세"
+          >
+            <InnerMindDualBarChart pairs={innerMindPairs} />
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              {innerMindPairs.map((pair) => {
+                const aligned = Math.abs(pair.okMinusEgo) <= INNER_MIND_ALIGNED_MAX;
+                return (
+                  <article key={pair.egoId} className="rounded-xl bg-white/[0.03] p-3 ring-1 ring-white/10">
+                    <p className="font-mono text-xs text-sky-200 sm:text-sm">
+                      {pair.egoShort} · (속마음) = {formatInnerMindDiff(pair.okMinusEgo)}
+                    </p>
+                    <p className="mt-1.5 text-xs leading-relaxed text-slate-300 sm:text-sm">{pair.summary}</p>
+                    {!aligned && pair.caution ? (
+                      <p className="mt-1.5 text-xs leading-relaxed text-amber-100/90 sm:text-sm">{pair.caution}</p>
+                    ) : null}
+                  </article>
+                );
+              })}
+            </div>
+          </SectionCard>
+        ),
+      },
+      {
+        id: 'plus243',
+        label: '243+ Plus 해석',
+        short: '243+',
+        panel: (
+          <SectionCard compact title="243+Plus 종합 해석" subtitle={`9단계 · ${chartGender ?? '성별 미입력'} norms`}>
+            <InterpretationArticles
+              sectionOrder={plus243SectionOrder}
+              sections={plus243Sections.sections}
+              sectionLabels={plus243Sections.sectionLabels}
+            />
+          </SectionCard>
+        ),
+      },
+      {
+        id: 'pattern243',
+        label: '243 패턴 해석',
+        short: '243',
+        panel: (
+          <div className="space-y-6">
+            {!report.pattern243.missing ? (
+              <SectionCard
+                compact
+                title="243+ 플러스 종합 해석 (243패턴 교차)"
+                subtitle={`243패턴 ${report.patternCode} · 9단계 + 패턴 문장`}
+              >
+                <InterpretationArticles
+                  sectionOrder={sectionOrder}
+                  sections={report.pattern243.sections}
+                  sectionLabels={report.pattern243.sectionLabels}
+                  variant="pattern-cross"
+                />
+              </SectionCard>
+            ) : null}
+            <SectionCard
+              compact
+              title="243패턴 종합 해석"
+              subtitle={
+                report.pattern243.missing
+                  ? '해당 코드의 보고서 문장이 기준 자료에 없습니다.'
+                  : `보고서 번호 ${report.pattern243.reportNo ?? '—'} · 코드 ${report.patternCode}`
+              }
+            >
+              {report.pattern243.missing ? (
+                <p className="text-sm leading-relaxed text-slate-400">
+                  척도별 243 구간 조합은 <strong className="text-slate-200">{report.patternCode}</strong>
+                  입니다. KTAA · 인생태도 · 오케이 막대를 함께 참고하세요.
+                </p>
+              ) : (
+                <InterpretationArticles
+                  sectionOrder={sectionOrder}
+                  sections={report.pattern243.sections}
+                  sectionLabels={report.pattern243.sectionLabels}
+                />
+              )}
+            </SectionCard>
+          </div>
+        ),
+      },
+    ];
+    return tabs;
+  }, [
+    chartGender,
+    formLabel,
+    innerMindPairs,
+    lowEgogram,
+    okBarData,
+    okLifeOverview.bullets,
+    okLifeOverview.heading,
+    peakEgogram,
+    plus243Sections.sectionLabels,
+    plus243Sections.sections,
+    radarData,
+    report,
+    sectionOrder,
+  ]);
+
   return (
-    <div className="mx-auto max-w-5xl space-y-8 pb-16">
-      <div className="relative overflow-hidden rounded-3xl border border-indigo-400/20 bg-gradient-to-br from-indigo-950 via-slate-950 to-[#070b14] p-8 shadow-2xl">
+    <div className="mx-auto w-full max-w-[min(100%,112rem)] pb-6">
+      <div className="relative overflow-hidden rounded-2xl border border-indigo-400/20 bg-gradient-to-br from-indigo-950 via-slate-950 to-[#070b14] p-4 shadow-2xl sm:p-5 lg:rounded-none lg:border-x-0 lg:border-t-0 lg:shadow-none">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_50%_-20%,rgba(99,102,241,0.25),transparent)]" />
         <div className="relative">
-          <p className="text-xs font-medium uppercase tracking-[0.2em] text-indigo-300/80">Counselor report</p>
-          <h1 className="mt-2 text-3xl font-bold text-white">TA 이고-오케이그램 검사 · 전문가 해석</h1>
-          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-300">
-            96문항(타당도 6문항 분산) · 243패턴 · 인생태도 · 타당도 프로파일을 종합한 상담 참고 리포트입니다.
-          </p>
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-indigo-300/80">Counselor report</p>
+              <h1 className="mt-1 text-xl font-bold text-white sm:text-2xl">
+                TA 이고-오케이그램 검사 · 전문가 해석
+              </h1>
+            </div>
+            {formLabel && formLabel !== '—' ? (
+              <p className="text-sm font-medium text-indigo-200/90 lg:text-right">형태명 · {formLabel}</p>
+            ) : null}
+          </div>
           {localTestMode ? (
             <p className="mt-3 max-w-2xl rounded-lg border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-xs leading-relaxed text-amber-100">
               로컬 테스트 모드 — 저장·발송되지 않습니다. 상단 <strong>성별</strong>에서 남/여를 바꾸면
               243 구간·그래프 배경이 즉시 갱신됩니다. 페이지 새로고침(F5) 시 성별 기준이 남↔여로 교대됩니다.
             </p>
           ) : null}
-          <dl className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <dl className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
             <div className="rounded-xl bg-white/[0.04] px-4 py-3 ring-1 ring-white/10">
               <dt className="text-xs text-slate-500">내담자</dt>
               <dd className="mt-1 font-medium text-white">{clientInfo?.name?.trim() || '—'}</dd>
@@ -823,204 +1140,13 @@ export default function EgoOkCounselorReport({
               </dd>
             </div>
           </dl>
-          {formLabel && formLabel !== '—' ? (
-            <p className="mt-4 text-sm font-medium text-indigo-200/90">형태명: {formLabel}</p>
-          ) : null}
+        </div>
+        <div className="relative z-10 -mx-4 mt-4 border-t border-white/10 sm:-mx-5">
+          <EgoOkCounselorReportTabShell tabs={reportTabs} defaultTabId="ktaa" stickyTopClass="top-14" />
         </div>
       </div>
 
-      {report.validity ? <EgoOkValiditySection validity={report.validity} /> : null}
-
-      <section className="rounded-2xl border border-white/10 bg-slate-900/40 p-4 shadow-xl sm:p-6">
-        <header className="mb-4">
-          <h2 className="text-lg font-semibold text-white">이고-오케이그램 (Ego-Ok) 진단 결과 그래프</h2>
-          <p className="mt-1 text-sm text-slate-400">
-            96문항 중 성격 문항(90) 채점 결과를 KTAA 종합 그래프 형식으로 표시합니다.
-          </p>
-        </header>
-        <EgoOkKtaaCompositeChart columns={report.compositeChart} gender={chartGender} />
-      </section>
-
-      <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
-        <SectionCard
-          title="이고그램 5척도"
-          subtitle={
-            <EgogramRadarSummarySubtitle
-              peakScale={peakEgogram}
-              patternCode={report.patternCode}
-              pattern243Plus={report.pattern243Plus}
-              formLabel={formLabel}
-              missing={report.pattern243.missing}
-            />
-          }
-        >
-          <div className="min-h-[22rem] w-full overflow-visible px-0.5 py-1">
-            <div className="h-[22rem] w-full overflow-visible">
-              <EgogramFiveScaleRadarChart data={radarData} peakScaleId={peakEgogram.id} />
-            </div>
-          </div>
-          <EgogramEnergyInsightPanel highScale={peakEgogram} lowScale={lowEgogram} />
-          <ul className="mt-4 space-y-3">
-            <li className="flex gap-3 px-4 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-              <span className="w-8">척도</span>
-              <span className="flex-1">명칭</span>
-              <span className="w-8 text-right">합계</span>
-              <span className="w-10 text-center">243</span>
-              <span className="w-8 text-center">9단계</span>
-            </li>
-            {report.egogram.map((s) => (
-              <EgogramScaleRow
-                key={s.id}
-                id={s.id}
-                label={s.label}
-                raw={s.raw}
-                threeLevel={s.threeLevel}
-                plusStage={rawScoreToPlus243Tier(s.raw).stage}
-              />
-            ))}
-          </ul>
-        </SectionCard>
-
-        <div className="flex flex-col gap-6">
-          <SectionCard
-            title="오케이그램 · 인생태도"
-            subtitle={
-              <span>
-                인생태도: <strong className="text-indigo-200">{report.lifePosition.kind}</strong> —{' '}
-                {report.lifePosition.summary}
-              </span>
-            }
-          >
-            <div className="h-56 w-full rounded-xl border border-white/5 bg-slate-900/40 p-3">
-              <OkGramLifePositionBars rows={okBarData} />
-            </div>
-            <div className="mt-4 space-y-3 text-sm leading-relaxed text-slate-300">
-              <p className="font-semibold text-indigo-100">{okLifeOverview.heading}</p>
-              <ul className="list-inside list-disc space-y-2 text-slate-300">
-                {okLifeOverview.bullets.map((line) => (
-                  <li key={line.slice(0, 24)}>{line}</li>
-                ))}
-              </ul>
-            </div>
-          </SectionCard>
-
-          <SectionCard
-            title="나의 속마음"
-            subtitle="겉마음(이고) vs 속마음(오케이) · |차이| 4 이하 동일 수준 · 5 이상 상세 해석"
-          >
-            <InnerMindDualBarChart pairs={innerMindPairs} />
-            <div className="mt-6 space-y-4">
-              {innerMindPairs.map((pair) => {
-                const aligned = Math.abs(pair.okMinusEgo) <= INNER_MIND_ALIGNED_MAX;
-                return (
-                  <article key={pair.egoId} className="rounded-xl bg-white/[0.03] p-4 ring-1 ring-white/10">
-                    {aligned ? (
-                      <>
-                        <p className="font-mono text-sm text-sky-200">
-                          {pair.egoShort} · (속마음) = {formatInnerMindDiff(pair.okMinusEgo)}
-                        </p>
-                        <p className="mt-2 text-sm leading-relaxed text-slate-300">{pair.summary}</p>
-                      </>
-                    ) : (
-                      <>
-                        <p className="font-mono text-sm text-sky-200">
-                          {pair.egoShort} · (속마음) = {formatInnerMindDiff(pair.okMinusEgo)}
-                        </p>
-                        <p className="mt-2 text-sm leading-relaxed text-slate-300">{pair.summary}</p>
-                        {pair.caution ? (
-                          <p className="mt-2 text-sm leading-relaxed text-amber-100/90">{pair.caution}</p>
-                        ) : null}
-                      </>
-                    )}
-                  </article>
-                );
-              })}
-            </div>
-          </SectionCard>
-        </div>
-      </div>
-
-      <SectionCard
-        title="243+Plus 종합 해석"
-        subtitle={`9단계 기준 · ${chartGender ?? '성별 미입력'} norms`}
-      >
-        <div className="space-y-6">
-          {plus243SectionOrder.map((key) => {
-            const text = plus243Sections.sections[key];
-            const label = plus243Sections.sectionLabels[key] || `섹션 ${key}`;
-            if (!text) return null;
-            return (
-              <article key={key} className="rounded-xl border border-white/5 bg-black/20 p-5">
-                <h3 className="flex items-center gap-2 text-base font-semibold text-white">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-500/20 text-xs text-indigo-200">
-                    {key}
-                  </span>
-                  {label}
-                </h3>
-                <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-slate-300">{text}</p>
-              </article>
-            );
-          })}
-        </div>
-      </SectionCard>
-
-      {!report.pattern243.missing ? (
-        <SectionCard
-          title="243+ 플러스 종합 해석 (243패턴 교차)"
-          subtitle={`243패턴 ${report.patternCode} · 9단계 + 패턴 문장`}
-        >
-          <div className="space-y-6">
-            {sectionOrder.map((key) => {
-              const text = report.pattern243.sections[key];
-              const label = report.pattern243.sectionLabels[key] || `섹션 ${key}`;
-              if (!text) return null;
-              return (
-                <article key={`plus-x-${key}`} className="rounded-xl border border-indigo-500/20 bg-indigo-950/20 p-5">
-                  <h3 className="text-sm font-semibold text-indigo-100">{label} (243패턴 참고)</h3>
-                  <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-slate-300">{text}</p>
-                </article>
-              );
-            })}
-          </div>
-        </SectionCard>
-      ) : null}
-
-      <SectionCard
-        title="243패턴 종합 해석"
-        subtitle={
-          report.pattern243.missing
-            ? '해당 코드의 보고서 문장이 기준 자료에 없습니다 (41개 결손 코드 중 하나일 수 있음).'
-            : `보고서 번호 ${report.pattern243.reportNo ?? '—'} · 코드 ${report.patternCode}`
-        }
-      >
-        {report.pattern243.missing ? (
-          <p className="text-sm leading-relaxed text-slate-400">
-            척도별 243 구간(A/B/C) 조합은 <strong className="text-slate-200">{report.patternCode}</strong>
-            입니다. 상담 시 KTAA 그래프·인생태도·오케이그램 막대를 함께 참고하세요.
-          </p>
-        ) : (
-          <div className="space-y-6">
-            {sectionOrder.map((key) => {
-              const text = report.pattern243.sections[key];
-              const label = report.pattern243.sectionLabels[key] || `섹션 ${key}`;
-              if (!text) return null;
-              return (
-                <article key={key} className="rounded-xl border border-white/5 bg-black/20 p-5">
-                  <h3 className="flex items-center gap-2 text-base font-semibold text-white">
-                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-500/20 text-xs text-indigo-200">
-                      {key}
-                    </span>
-                    {label}
-                  </h3>
-                  <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-slate-300">{text}</p>
-                </article>
-              );
-            })}
-          </div>
-        )}
-      </SectionCard>
-
-      <p className="text-center text-xs text-slate-600">
+      <p className="mt-3 text-center text-[10px] text-slate-600">
         기준: docs/internal-materials/ego-ok (items-96, norms 2020-04-01, patterns-243-reports) · 타당도 15·30·47·63·77·90
         미포함
       </p>
