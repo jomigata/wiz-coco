@@ -719,7 +719,8 @@ export default function EgoOkCounselorReport({
   const OK_BAR_U = '#6366f1';
   const OK_BAR_I = '#0d9488';
   const okById = Object.fromEntries(report.okgram.map((s) => [s.id, s]));
-  const okBarData: OkBarRowExt[] = OK_BAR_DISPLAY_ORDER.map((id) => {
+  /** Recharts vertical: 배열 첫 행=차트 하단 → 위→아래 U−…I− 는 역순으로 feed */
+  const okBarData: OkBarRowExt[] = [...OK_BAR_DISPLAY_ORDER].reverse().map((id) => {
     const s = okById[id];
     return {
       name: id,
@@ -891,7 +892,6 @@ export default function EgoOkCounselorReport({
                     type="category"
                     dataKey="name"
                     width={40}
-                    reversed
                     tick={{ fill: '#cbd5e1', fontSize: 12, fontWeight: 600 }}
                     axisLine={false}
                   />
