@@ -336,7 +336,7 @@ const EGOGRAM_RADAR_OK_RED = '#ef4444';
 const EGOGRAM_RADAR_SCORE_MAX = 50;
 const EGOGRAM_RADAR_BAND_INNER = 23;
 const EGOGRAM_RADAR_BAND_OUTER = 37;
-const EGOGRAM_RADAR_BAND_FILL = 'rgba(45, 212, 191, 0.38)';
+const EGOGRAM_RADAR_BAND_FILL = 'rgba(250, 204, 21, 0.42)';
 
 /** 이고 척도 → 오케이 합계 척도 (KTAA·종합그래프와 동일) */
 const EGO_TO_OK_SCORE: Record<EgoScaleId, OkScaleId | null> = {
