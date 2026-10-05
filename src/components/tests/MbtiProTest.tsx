@@ -840,7 +840,11 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
               </div>
               
               <div className="flex flex-col gap-5">
-                <div className="relative flex items-end justify-between gap-2 px-2 sm:gap-3 sm:px-4">
+                <div
+                  className={`relative flex items-end justify-between ${
+                    isEgoOkFlow ? 'gap-1 px-0 sm:gap-3 sm:px-4' : 'gap-2 px-2 sm:gap-3 sm:px-4'
+                  }`}
+                >
                   <div className={v.scaleArc}></div>
                   {isEgoOkFlow ? (
                     <>
@@ -884,7 +888,8 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
                                 <span className="text-white font-bold">{opt.letter}</span>
                               </div>
                               <span
-                                className={`block w-full px-0.5 text-center text-[11px] font-bold leading-tight sm:text-xs ${v.answerLabel} transform transition-all duration-500 ${isMouseMoved ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}
+                                className={`block w-full text-center font-bold leading-tight ${v.answerLabel} transform transition-all duration-500 ${isMouseMoved ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}
+                                style={{ fontSize: 'clamp(8px, 2.55vw, 12px)' }}
                               >
                                 {opt.labelLines.map((line, i) => (
                                   <span key={`${opt.letter}-${i}`} className="block whitespace-nowrap">
