@@ -27,7 +27,7 @@ function statusClass(status: ValidityScaleStatus): string {
   return 'text-rose-300';
 }
 
-function ValidityTable({ validity }: { validity: EgoOkValidityProfile }) {
+export function ValidityTable({ validity }: { validity: EgoOkValidityProfile }) {
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[32rem] border-collapse text-left text-xs text-slate-300">
