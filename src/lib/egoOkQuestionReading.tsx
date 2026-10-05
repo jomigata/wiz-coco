@@ -47,47 +47,39 @@ function ReadingLines({ text }: { text: string }) {
 export function EgoOkQuestionReading({ readingText }: { readingText: string }) {
   const [stripFixedBreaks, setStripFixedBreaks] = useState(false);
   const rootRef = useRef<HTMLSpanElement>(null);
-  const probeRef = useRef<HTMLSpanElement>(null);
   const hasBreak = hasOptionalLineBreak(readingText);
   const withBreaks = applyOptionalLineBreaks(readingText);
   const displayText = hasBreak && stripFixedBreaks ? collapseOptionalLineBreaks(readingText) : withBreaks;
 
   useLayoutEffect(() => {
-    if (!hasBreak) {
-      setStripFixedBreaks(false);
-      return;
+    setStripFixedBreaks(false);
+  }, [readingText]);
+
+  useLayoutEffect(() => {
+    if (!hasBreak || stripFixedBreaks) return;
+
+    const el = rootRef.current;
+    if (!el) return;
+
+    if (countVisualLines(el) >= 3) {
+      setStripFixedBreaks(true);
     }
+  }, [readingText, hasBreak, stripFixedBreaks, withBreaks]);
 
-    const container = rootRef.current;
-    const probe = probeRef.current;
-    if (!container || !probe) return;
+  useLayoutEffect(() => {
+    if (!hasBreak) return;
 
-    const decide = () => {
-      const width = container.clientWidth;
-      if (width <= 0) return;
-      probe.style.width = `${width}px`;
-      const lineCount = countVisualLines(probe);
-      setStripFixedBreaks(lineCount >= 3);
-    };
+    const el = rootRef.current;
+    if (!el) return;
 
-    decide();
-    const ro = new ResizeObserver(decide);
-    ro.observe(container);
+    const ro = new ResizeObserver(() => setStripFixedBreaks(false));
+    ro.observe(el);
     return () => ro.disconnect();
   }, [readingText, hasBreak]);
 
   return (
-    <>
-      <span
-        ref={probeRef}
-        aria-hidden
-        className={`pointer-events-none fixed left-[-10000px] top-0 ${WRAPPER_CLASS} invisible`}
-      >
-        <ReadingLines text={withBreaks} />
-      </span>
-      <span ref={rootRef} className={WRAPPER_CLASS}>
-        <ReadingLines text={displayText} />
-      </span>
-    </>
+    <span ref={rootRef} className={WRAPPER_CLASS}>
+      <ReadingLines text={displayText} />
+    </span>
   );
 }
