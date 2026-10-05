@@ -16,7 +16,7 @@ export type EgoOkLikertOption = {
 export const EGO_OK_LIKERT_HEIGHT: Record<EgoOkLikertHeightTier, string> = {
   tall: 'h-[12.5rem]',
   mid: 'h-[9.875rem]',
-  short: 'h-[7.25rem]',
+  short: 'h-[8.75rem]',
 };
 
 export const EGO_OK_LIKERT_OPTIONS: EgoOkLikertOption[] = [
@@ -31,7 +31,7 @@ export const EGO_OK_LIKERT_OPTIONS: EgoOkLikertOption[] = [
   {
     letter: 'B',
     value: 4,
-    labelLines: ['약간', '그렇다'],
+    labelLines: ['대체로', '그런', '편이다'],
     circle: 'md',
     heightTier: 'mid',
     rounded: 'rounded-[20px]',
@@ -39,7 +39,7 @@ export const EGO_OK_LIKERT_OPTIONS: EgoOkLikertOption[] = [
   {
     letter: 'C',
     value: 3,
-    labelLines: ['보통이다'],
+    labelLines: ['상황에', '따라', '다르다'],
     circle: 'md',
     heightTier: 'short',
     rounded: 'rounded-[20px]',
@@ -47,7 +47,7 @@ export const EGO_OK_LIKERT_OPTIONS: EgoOkLikertOption[] = [
   {
     letter: 'D',
     value: 2,
-    labelLines: ['약간', '아니다'],
+    labelLines: ['별로', '그렇지', '않다'],
     circle: 'md',
     heightTier: 'mid',
     rounded: 'rounded-[20px]',
@@ -56,7 +56,7 @@ export const EGO_OK_LIKERT_OPTIONS: EgoOkLikertOption[] = [
   {
     letter: 'E',
     value: 1,
-    labelLines: ['매우', '아니다'],
+    labelLines: ['전혀', '그렇지', '않다'],
     circle: 'lg',
     heightTier: 'tall',
     rounded: 'rounded-[20px]',

@@ -50,7 +50,7 @@ export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 27, text: "상대방의 의견보다는, 내 기준과 원칙을 지키는 것이, \n훨씬 중요하다고 생각한다.", readingText: "상대방의 의견보다는, 내 기준과 원칙을 지키는 것이, \n훨씬 중요하다고 생각한다.", code: "AC", egoIndex: null, okIndex: 39, scaleType: "u_minus", scaleKind: 'okgram' },
   { no: 28, text: "의견 차이가 생기면, 다른 사람과 원만하게, \n타협을 잘하는 편이다.", readingText: "의견 차이가 생기면, 다른 사람과 원만하게, \n타협을 잘하는 편이다.", code: "EA", egoIndex: 18, okIndex: null, scaleType: "ac_positive", scaleKind: 'egogram' },
   { no: 29, text: "동료가 실수를 하더라도, 질책하기보다는, 먼저 \n따뜻하게 격려해 준다.", readingText: "동료가 실수를 하더라도, 질책하기보다는, 먼저 \n따뜻하게 격려해 준다.", code: "BC", egoIndex: null, okIndex: 34, scaleType: "u_plus", scaleKind: 'okgram' },
-  { no: 30, text: "주의력을 확인하기 위한 질문입니다. \n‘E. 매우 아니다’ 를 선택하세요.", readingText: "주의력을 확인하기 위한 질문입니다. \n‘E. 매우 아니다’ 를 선택하세요.", code: "VX", egoIndex: null, okIndex: null, scaleType: "validity_imc", scaleKind: 'validity' },
+  { no: 30, text: "주의력을 확인하기 위한 질문입니다. \n‘E. 전혀 그렇지 않다’ 를 선택하세요.", readingText: "주의력을 확인하기 위한 질문입니다. \n‘E. 전혀 그렇지 않다’ 를 선택하세요.", code: "VX", egoIndex: null, okIndex: null, scaleType: "validity_imc", scaleKind: 'validity' },
   { no: 31, text: "남들의 시선이나 입장은 아랑곳하지 않고, \n내가 하고 싶은 대로 행동한다.", readingText: "남들의 시선이나 입장은 아랑곳하지 않고, \n내가 하고 싶은 대로 행동한다.", code: "DB", egoIndex: 16, okIndex: null, scaleType: "fc_negative", scaleKind: 'egogram' },
   { no: 32, text: "내 판단에 자신이 없어서, 다른 사람들이 하는대로, \n무작정 따르는 편이다.", readingText: "내 판단에 자신이 없어서, 다른 사람들이 하는대로, \n무작정 따르는 편이다.", code: "EC", egoIndex: null, okIndex: 22, scaleType: "i_minus", scaleKind: 'okgram' },
   { no: 33, text: "새로운 것에 호기심이 많고, \n알고 싶은 것도 많다.", readingText: "새로운 것에 호기심이 많고, \n알고 싶은 것도 많다.", code: "DA", egoIndex: 10, okIndex: null, scaleType: "fc_positive", scaleKind: 'egogram' },

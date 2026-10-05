@@ -866,7 +866,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
                               'py-0',
                               isCenterLikert ? cDualBottomGlow : '',
                               isCenterLikert ? '' : glow,
-                            )} ${EGO_OK_LIKERT_HEIGHT[opt.heightTier]} flex shrink-0 flex-col justify-center`}
+                            )} ${EGO_OK_LIKERT_HEIGHT[opt.heightTier]} flex min-w-0 flex-col justify-center !px-1`}
                           >
                             {answers[currentQuestion] === opt.value && (
                               <div
@@ -884,11 +884,10 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
                                 <span className="text-white font-bold">{opt.letter}</span>
                               </div>
                               <span
-                                className={`text-sm font-bold ${v.answerLabel} transform transition-all duration-500 ${isMouseMoved ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}
+                                className={`block w-full px-0.5 text-center text-[11px] font-bold leading-tight sm:text-xs ${v.answerLabel} transform transition-all duration-500 ${isMouseMoved ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}
                               >
                                 {opt.labelLines.map((line, i) => (
-                                  <span key={line}>
-                                    {i > 0 ? <br /> : null}
+                                  <span key={`${opt.letter}-${i}`} className="block whitespace-nowrap">
                                     {line}
                                   </span>
                                 ))}
@@ -1019,8 +1018,13 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
               </div>
 
               <div className="text-center mt-2">
-                <p className="text-sm text-gray-400 font-medium">
-                  깊이 생각하지 않고, 자연스럽게 떠오르는 대로 선택해주세요.
+                <p
+                  className="text-sm font-medium text-gray-400"
+                  style={isEgoOkFlow ? { wordBreak: 'keep-all' } : undefined}
+                >
+                  {isEgoOkFlow
+                    ? "정답이나 오답은 없습니다. '있는 그대로의 나'를 편안하게 선택해 주세요."
+                    : '깊이 생각하지 않고, 자연스럽게 떠오르는 대로 선택해주세요.'}
                 </p>
               </div>
 
