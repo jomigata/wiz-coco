@@ -143,8 +143,7 @@ function toReadingText(text) {
 
 const bank = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
 for (const item of bank.items) {
-  item.readingText = toReadingText(item.text);
-  item.text = item.readingText;
+  item.readingText = item.text;
 }
 fs.writeFileSync(jsonPath, `${JSON.stringify(bank, null, 2)}\n`, 'utf8');
 console.log(`Updated readingText for ${bank.items.length} items in items-96.json`);
