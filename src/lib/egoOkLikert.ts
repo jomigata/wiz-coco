@@ -12,11 +12,11 @@ export type EgoOkLikertOption = {
   glowPink?: boolean;
 };
 
-/** A/E(높음) · C(낮음) · B/D = (tall+short)/2 — 고정 높이(items-stretch 미사용) */
+/** A/E(높음) · B/D(중간) · C(낮음) — 고정 높이(items-stretch 미사용) */
 export const EGO_OK_LIKERT_HEIGHT: Record<EgoOkLikertHeightTier, string> = {
   tall: 'h-[12.5rem]',
-  mid: 'h-[9.875rem]',
-  short: 'h-[7.25rem]',
+  mid: 'h-[10.625rem]',
+  short: 'h-[8rem]',
 };
 
 export const EGO_OK_LIKERT_OPTIONS: EgoOkLikertOption[] = [
