@@ -53,7 +53,7 @@ export function ValidityTable({ validity }: { validity: EgoOkValidityProfile }) 
           <tr className="border-b border-white/10 text-xs font-semibold text-slate-400">
             <th className="py-2 pr-3">구분</th>
             <th className="py-2 pr-3">측정 문항</th>
-            <th className="py-2 pr-3">원점수</th>
+            <th className="py-2 pr-3">획득/전체</th>
             <th className="py-2 pr-3">상태</th>
             <th className="py-2">해석 기준</th>
           </tr>
