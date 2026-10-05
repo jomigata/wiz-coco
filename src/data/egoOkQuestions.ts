@@ -22,7 +22,7 @@ export interface EgoOkQuestion {
 
 export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 1, text: "다른 사람을 비난하기보다는, 칭찬을 더 자주 하는 편이다.", readingText: "다른 사람을 비난하기보다는, 칭찬을 더 자주 하는 편이다.", code: "BA", egoIndex: 1, okIndex: null, scaleType: "np_positive", scaleKind: 'egogram' },
-  { no: 2, text: "다른 사람들에게 ‘내가 시키는 대로만 하면 된다’는 식으로 말하곤 한다.", readingText: "다른 사람들에게 ‘내가 시키는 대로만 하면 된다’는 식으로 말하곤 한다.", code: "AB", egoIndex: 2, okIndex: null, scaleType: "cp_negative", scaleKind: 'egogram' },
+  { no: 2, text: "다른 사람들에게 ‘내가 시키는 대로만 하면 된다’는 식으로\n말하곤 한다.", readingText: "다른 사람들에게 ‘내가 시키는 대로만 하면 된다’는 식으로\n말하곤 한다.", code: "AB", egoIndex: 2, okIndex: null, scaleType: "cp_negative", scaleKind: 'egogram' },
   { no: 3, text: "나는 나 자신을 좋아하고, 긍정적으로 생각한다.", readingText: "나는 나 자신을 좋아하고, 긍정적으로 생각한다.", code: "DC", egoIndex: null, okIndex: 1, scaleType: "i_plus", scaleKind: 'okgram' },
   { no: 4, text: "나는 현실에 안주하기보다, 높은 이상을 추구하는 편이다.", readingText: "나는 현실에 안주하기보다, 높은 이상을 추구하는 편이다.", code: "AA", egoIndex: 6, okIndex: null, scaleType: "cp_positive", scaleKind: 'egogram' },
   { no: 5, text: "나는 다른 사람의 생각이나 행동 방식이, 나와 다르더라도 너그럽게 받아들인다.", readingText: "나는 다른 사람의 생각이나 행동 방식이, 나와 다르더라도 너그럽게 받아들인다.", code: "BC", egoIndex: null, okIndex: 8, scaleType: "u_plus", scaleKind: 'okgram' },
