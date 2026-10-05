@@ -97,7 +97,7 @@ export default function EgoOkCounselorReportTabShell({
         <div className="relative mx-auto w-full max-w-[min(100%,112rem)] px-3 py-2.5 sm:px-4">
           <div
             ref={tabScrollRef}
-            className="flex items-stretch gap-2 overflow-x-auto sm:gap-2 [scrollbar-width:thin]"
+            className="flex items-end gap-1 overflow-x-auto [scrollbar-width:thin]"
           >
             {tabs.map((tab) => {
             const isActive = tab.id === activeId;
@@ -115,22 +115,10 @@ export default function EgoOkCounselorReportTabShell({
                 onMouseEnter={() => onTabEnter(tab.id)}
                 aria-current={isActive ? 'true' : undefined}
                 title={tab.description ?? tab.label}
-                className={`group relative min-h-[3.25rem] shrink-0 rounded-[0.65rem] px-3 py-2 text-left transition-[border-color,background,box-shadow,color] duration-200 ease-out sm:min-w-[7.25rem] sm:flex-1 sm:px-3.5 ${shell}`}
+                className={`shrink-0 whitespace-nowrap px-3 py-3 text-[13px] font-medium tracking-tight transition-colors sm:px-4 ${shell}`}
               >
-                <span
-                  className={`block text-[11px] font-medium leading-none tracking-tight ${
-                    isActive ? 'text-white/90' : isPreview ? 'text-slate-200' : 'text-slate-500 group-hover:text-slate-300'
-                  }`}
-                >
-                  {tab.short ?? tab.label}
-                </span>
-                <span
-                  className={`mt-1 block truncate text-[13px] font-bold leading-snug sm:text-sm ${
-                    isActive ? 'text-white' : isPreview ? 'text-white/95' : 'text-slate-500 group-hover:text-slate-300'
-                  }`}
-                >
-                  {tab.label}
-                </span>
+                <span className="sm:hidden">{tab.short ?? tab.label}</span>
+                <span className="hidden sm:inline">{tab.label}</span>
               </button>
             );
           })}
@@ -147,7 +135,7 @@ export default function EgoOkCounselorReportTabShell({
         <div className="relative h-full min-h-0">
           <div
             ref={scrollRef}
-            className={`h-full overflow-auto overscroll-contain p-2 [scrollbar-width:thin] ${EGO_OK_REPORT_PANEL_SCROLL}`}
+            className={`h-full overflow-auto overscroll-contain px-4 py-6 [scrollbar-width:thin] sm:px-8 sm:py-8 ${EGO_OK_REPORT_PANEL_SCROLL}`}
           >
             <div key={displayId} className="flex min-h-min flex-col gap-2">
               {activePanel}

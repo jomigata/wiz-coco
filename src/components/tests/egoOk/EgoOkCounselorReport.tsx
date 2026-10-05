@@ -56,7 +56,6 @@ import EgoOkCounselorReportTabShell, {
 } from '@/components/tests/egoOk/EgoOkCounselorReportTabShell';
 import EgoOkEgogramPolarityPanel from '@/components/tests/egoOk/EgoOkEgogramPolarityPanel';
 import {
-  COVER_STAT_TONES,
   ReportInsightBlock,
   type ReportInsightTone,
 } from '@/components/tests/egoOk/egoOkReportInsight';
@@ -877,12 +876,6 @@ export default function EgoOkCounselorReport({
   onTestGenderChange?: (gender: EgoOkGender) => void;
 }) {
   const chartGender = localTestMode && testGender ? egoOkGenderToLabel(testGender) : clientInfo?.gender;
-  const displayGenderLine =
-    localTestMode && testGender
-      ? egoOkGenderToLabel(testGender)
-      : [clientInfo?.gender, clientInfo?.birthYear ? `${clientInfo.birthYear}년` : '']
-          .filter(Boolean)
-          .join(' · ') || '—';
   const compositeById = Object.fromEntries(report.compositeChart.map((c) => [c.id, c]));
 
   const egogramById = Object.fromEntries(report.egogram.map((s) => [s.id, s]));
@@ -958,89 +951,114 @@ export default function EgoOkCounselorReport({
         short: '표지',
         description: '검사 표지 · 내담자 · 243 · 요약',
         panel: (
-          <div className="flex flex-col gap-3">
-            <ReportInsightBlock tone="indigo" title="TA 이고-오케이그램 검사 · 전문가 해석">
-              <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-indigo-200/80">Counselor report</p>
-              <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-300">
-                96문항(타당도 6문항 분산) · 243패턴 · KTAA · 이고/오케이 · 243+ 해석. 상단 탭을 클릭하거나 마우스를
-                올린 뒤 아래 영역으로 이동하면 해당 결과가 고정됩니다.
+          <article className="mx-auto w-full max-w-5xl border border-white/10 bg-[#0c121c]">
+            <header className="border-b border-white/10 px-6 py-7 sm:px-8">
+              <p className="text-[11px] font-medium tracking-[0.32em] text-slate-500">COUNSELOR REPORT</p>
+              <h2 className="mt-3 text-2xl font-medium tracking-tight text-white sm:text-[1.75rem]">
+                TA 이고-오케이그램 검사
+              </h2>
+              <p className="mt-1 text-sm text-slate-400">전문가 해석</p>
+              <p className="mt-5 max-w-2xl text-xs leading-relaxed text-slate-500">
+                96문항(타당도 6문항 분산) · 243패턴 · KTAA · 이고/오케이 · 243+ 해석. 위 목차를 누르면 해당 장이
+                열립니다.
               </p>
-            </ReportInsightBlock>
-            {localTestMode ? (
-              <ReportInsightBlock tone="amber" compact title="로컬 테스트 모드">
-                <p className="text-xs leading-relaxed text-amber-50/90">
-                  저장·발송되지 않습니다. 성별 변경 시 243 구간·그래프 배경이 갱신됩니다.
+              {localTestMode ? (
+                <p className="mt-3 text-xs text-slate-400">
+                  로컬 테스트 · 저장·발송되지 않습니다. 성별은 243 구간과 그래프 배경에만 반영됩니다.
                 </p>
-              </ReportInsightBlock>
-            ) : null}
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              <ReportInsightBlock tone={COVER_STAT_TONES[0]} compact title="내담자">
-                <p className="font-medium text-white">{clientInfo?.name?.trim() || '—'}</p>
-              </ReportInsightBlock>
-              <ReportInsightBlock tone={COVER_STAT_TONES[1]} compact title="성별 · 출생">
-                <p className="font-medium text-white">
+              ) : null}
+            </header>
+
+            <dl className="grid grid-cols-2 border-b border-white/10 sm:grid-cols-4">
+              <div className="border-b border-r border-white/10 px-6 py-4 sm:border-b-0">
+                <dt className="text-[11px] tracking-[0.14em] text-slate-500">내담자</dt>
+                <dd className="mt-1.5 text-sm text-white">{clientInfo?.name?.trim() || '—'}</dd>
+              </div>
+              <div className="border-b border-white/10 px-6 py-4 sm:border-b-0 sm:border-r">
+                <dt className="text-[11px] tracking-[0.14em] text-slate-500">성별</dt>
+                <dd className="mt-1.5 text-sm text-white">
                   {localTestMode && onTestGenderChange && testGender ? (
-                    <span className="flex flex-wrap items-center gap-2">
-                      <span className="inline-flex rounded-lg bg-black/20 p-0.5 ring-1 ring-white/10">
-                        {(['male', 'female'] as const).map((g) => (
-                          <button
-                            key={g}
-                            type="button"
-                            onClick={() => onTestGenderChange(g)}
-                            className={`rounded-md px-2.5 py-1 text-xs font-semibold transition ${
-                              testGender === g
-                                ? g === 'male'
-                                  ? 'bg-sky-600 text-white'
-                                  : 'bg-rose-600 text-white'
-                                : 'text-slate-300 hover:text-white'
-                            }`}
-                          >
-                            {egoOkGenderToLabel(g)}
-                          </button>
-                        ))}
-                      </span>
-                      {clientInfo?.birthYear ? (
-                        <span className="text-slate-400">· {clientInfo.birthYear}년</span>
-                      ) : null}
+                    <span className="inline-flex items-center gap-3">
+                      {(['male', 'female'] as const).map((g) => (
+                        <button
+                          key={g}
+                          type="button"
+                          onClick={() => onTestGenderChange(g)}
+                          className={`text-sm transition ${
+                            testGender === g
+                              ? 'text-white underline decoration-white/40 underline-offset-4'
+                              : 'text-slate-500 hover:text-slate-200'
+                          }`}
+                        >
+                          {egoOkGenderToLabel(g)}
+                        </button>
+                      ))}
                     </span>
                   ) : (
-                    displayGenderLine
+                    clientInfo?.gender || '—'
                   )}
+                </dd>
+              </div>
+              <div className="border-r border-white/10 px-6 py-4">
+                <dt className="text-[11px] tracking-[0.14em] text-slate-500">출생</dt>
+                <dd className="mt-1.5 text-sm text-white">
+                  {clientInfo?.birthYear ? `${clientInfo.birthYear}년` : '—'}
+                </dd>
+              </div>
+              <div className="px-6 py-4">
+                <dt className="text-[11px] tracking-[0.14em] text-slate-500">타당도</dt>
+                <dd className="mt-1.5 text-sm text-white">{report.validity?.overallTitle ?? '—'}</dd>
+              </div>
+            </dl>
+
+            <div className="grid lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
+              <section className="border-b border-white/10 px-6 py-8 sm:px-8 lg:border-b-0 lg:border-r">
+                <p className="text-[11px] tracking-[0.22em] text-slate-500">243 PATTERN</p>
+                <p className="mt-4 font-mono text-3xl tracking-[0.32em] text-white sm:text-4xl">
+                  {report.patternCode}
                 </p>
-              </ReportInsightBlock>
-              <ReportInsightBlock tone={COVER_STAT_TONES[2]} compact title="243 패턴 · 243+">
-                <Pattern243AndPlusCode block patternCode={report.patternCode} plus={report.pattern243Plus} />
-              </ReportInsightBlock>
-              <ReportInsightBlock tone={COVER_STAT_TONES[3]} compact title="타당도">
-                <p className="text-sm font-semibold text-white">{report.validity?.overallTitle ?? '—'}</p>
-              </ReportInsightBlock>
-              <ReportInsightBlock tone={COVER_STAT_TONES[4]} compact title="인생태도(명칭)">
-                <p className="font-semibold text-indigo-100">{report.lifePosition.kind}</p>
-              </ReportInsightBlock>
-              <ReportInsightBlock tone={COVER_STAT_TONES[5]} compact title="최고 이고 척도">
-                <p className="font-semibold text-white">
-                  {peakEgogram.id} · {peakEgogram.raw}점
-                </p>
-                <p className="mt-1 text-xs text-slate-400">{peakEgogram.label}</p>
-              </ReportInsightBlock>
-              <ReportInsightBlock tone={COVER_STAT_TONES[6]} compact title="최저 이고 척도">
-                <p className="font-semibold text-white">
-                  {lowEgogram.id} · {lowEgogram.raw}점
-                </p>
-                <p className="mt-1 text-xs text-slate-400">{lowEgogram.label}</p>
-              </ReportInsightBlock>
-              <ReportInsightBlock tone={COVER_STAT_TONES[7]} compact title="형태명">
-                <p className="font-semibold text-white">{formLabel && formLabel !== '—' ? formLabel : '—'}</p>
-              </ReportInsightBlock>
-              <ReportInsightBlock tone={COVER_STAT_TONES[8]} compact title="243패턴 문장">
-                <p className="text-xs text-slate-300">
+                <div className="mt-5 flex items-baseline gap-3">
+                  <span className="text-[11px] tracking-[0.14em] text-slate-500">243+</span>
+                  <Pattern243PlusCode plus={report.pattern243Plus} className="text-base" />
+                </div>
+                <p className="mt-8 max-w-sm text-xs leading-relaxed text-slate-500">
                   {report.pattern243.missing
-                    ? '기준 문장 없음 — 코드만 참고'
-                    : `보고서 ${report.pattern243.reportNo ?? '—'} · 탭「243+」「오케이」참고`}
+                    ? '기준 문장 없음. 코드만 참고합니다.'
+                    : `보고서 ${report.pattern243.reportNo ?? '—'} · 243+ · 오케이 장에서 문장을 봅니다.`}
                 </p>
-              </ReportInsightBlock>
+              </section>
+
+              <dl>
+                {[
+                  ['인생태도', report.lifePosition.kind],
+                  [
+                    '최고 이고',
+                    `${peakEgogram.id} · ${peakEgogram.raw}점`,
+                    peakEgogram.label,
+                  ],
+                  [
+                    '최저 이고',
+                    `${lowEgogram.id} · ${lowEgogram.raw}점`,
+                    lowEgogram.label,
+                  ],
+                  ['형태명', formLabel && formLabel !== '—' ? formLabel : '—'],
+                ].map(([label, value, note], index, rows) => (
+                  <div
+                    key={label}
+                    className={`grid grid-cols-[7.5rem_minmax(0,1fr)] gap-3 px-6 py-4 sm:px-8 ${
+                      index < rows.length - 1 ? 'border-b border-white/10' : ''
+                    }`}
+                  >
+                    <dt className="pt-0.5 text-[11px] tracking-[0.12em] text-slate-500">{label}</dt>
+                    <dd>
+                      <p className="text-sm text-white">{value}</p>
+                      {note ? <p className="mt-0.5 text-xs text-slate-500">{note}</p> : null}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
             </div>
-          </div>
+          </article>
         ),
       },
       {
@@ -1210,7 +1228,6 @@ export default function EgoOkCounselorReport({
   }, [
     chartGender,
     clientInfo,
-    displayGenderLine,
     formLabel,
     innerMindPairs,
     localTestMode,
