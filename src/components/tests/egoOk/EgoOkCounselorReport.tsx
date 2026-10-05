@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useMemo } from 'react';
+import { useMemo } from 'react';
 import type {
   EgoOkCompositeColumn,
   EgoOkGender,
@@ -330,9 +330,13 @@ type EgogramRadarRow = {
   bottomTrait: string;
 };
 
-const EGOGRAM_RADAR_SKY = '#7dd3fc';
 const EGOGRAM_RADAR_PINK = '#f472b6';
 const EGOGRAM_RADAR_OK_RED = '#ef4444';
+/** 합계 10~50 · 9단계 중 4~6단계(23~37점) 권장 구간 */
+const EGOGRAM_RADAR_SCORE_MAX = 50;
+const EGOGRAM_RADAR_BAND_INNER = 23;
+const EGOGRAM_RADAR_BAND_OUTER = 37;
+const EGOGRAM_RADAR_BAND_FILL = 'rgba(45, 212, 191, 0.38)';
 
 /** 이고 척도 → 오케이 합계 척도 (KTAA·종합그래프와 동일) */
 const EGO_TO_OK_SCORE: Record<EgoScaleId, OkScaleId | null> = {
@@ -468,7 +472,6 @@ function EgogramFiveScaleRadarChart({
   data: EgogramRadarRow[];
   peakScaleId: EgoScaleId;
 }) {
-  const gradientId = useId().replace(/:/g, '');
   const resolvedPeakId = useMemo(() => egogramRadarPeakScaleId(data, peakScaleId), [data, peakScaleId]);
   const OkRadarVertexDot = useMemo(
     () => createEgogramOkRadarVertexDot(resolvedPeakId),
@@ -510,30 +513,6 @@ function EgogramFiveScaleRadarChart({
     [resolvedPeakId],
   );
 
-  const FillOpacityMaskDefs = useMemo(
-    () =>
-      function EgogramRadarFillOpacityMaskDefs() {
-        return (
-          <defs>
-            <radialGradient
-              id={gradientId}
-              gradientUnits="objectBoundingBox"
-              cx="0.5"
-              cy="0.5"
-              r="0.5"
-              fx="0.5"
-              fy="0.5"
-            >
-              <stop offset="0%" stopColor={EGOGRAM_RADAR_SKY} stopOpacity={0} />
-              <stop offset="45%" stopColor={EGOGRAM_RADAR_SKY} stopOpacity={0.12} />
-              <stop offset="100%" stopColor={EGOGRAM_RADAR_SKY} stopOpacity={0.52} />
-            </radialGradient>
-          </defs>
-        );
-      },
-    [gradientId],
-  );
-
   return (
     <ResponsiveContainer
       width="100%"
@@ -547,7 +526,6 @@ function EgogramFiveScaleRadarChart({
         cy="50%"
         margin={{ top: 10, right: 6, bottom: 2, left: 6 }}
       >
-        <Customized component={FillOpacityMaskDefs} />
         <Customized component={EgogramRadarRecommendedBand} />
         <PolarGrid
           gridType="polygon"
@@ -585,8 +563,7 @@ function EgogramFiveScaleRadarChart({
           name="점수"
           dataKey="score"
           stroke="#c7d2fe"
-          fill={`url(#${gradientId})`}
-          fillOpacity={1}
+          fill="none"
           strokeWidth={2.5}
           isAnimationActive={false}
           dot={<RadarVertexDot />}
@@ -599,49 +576,19 @@ function EgogramFiveScaleRadarChart({
   );
 }
 
-/** 방사형 축 0~50점 위에서, 30~50점을 9단계로 나눈 4~6단계 구간 */
-const EGOGRAM_RADAR_STAGE_SCORE_START = 30;
-const EGOGRAM_RADAR_STAGE_SCORE_END = 50;
-const EGOGRAM_RADAR_STAGE_COUNT = 9;
-const EGOGRAM_RADAR_DOMAIN_MAX = 50;
-const EGOGRAM_RADAR_BAND_FILL = 'rgba(52, 211, 153, 0.38)';
-
-function egogramStageScoreBounds(fromStage: number, toStage: number): { inner: number; outer: number } {
-  const span = EGOGRAM_RADAR_STAGE_SCORE_END - EGOGRAM_RADAR_STAGE_SCORE_START;
+function radarPolarPoint(cx: number, cy: number, radius: number, angleDeg: number) {
+  const rad = (-angleDeg * Math.PI) / 180;
   return {
-    inner: EGOGRAM_RADAR_STAGE_SCORE_START + ((fromStage - 1) * span) / EGOGRAM_RADAR_STAGE_COUNT,
-    outer: EGOGRAM_RADAR_STAGE_SCORE_START + (toStage * span) / EGOGRAM_RADAR_STAGE_COUNT,
+    x: cx + Math.cos(rad) * radius,
+    y: cy + Math.sin(rad) * radius,
   };
 }
 
-function egogramPolarPoint(cx: number, cy: number, radius: number, angleDeg: number): [number, number] {
-  const rad = (-angleDeg * Math.PI) / 180;
-  return [cx + Math.cos(rad) * radius, cy + Math.sin(rad) * radius];
+function polygonPath(points: { x: number; y: number }[]): string {
+  return `${points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ')} Z`;
 }
 
-function egogramPentagonPath(cx: number, cy: number, radius: number): string {
-  return (
-    Array.from({ length: 5 }, (_, index) => {
-      const [x, y] = egogramPolarPoint(cx, cy, radius, 90 - index * 72);
-      return `${index === 0 ? 'M' : 'L'}${x},${y}`;
-    }).join(' ') + ' Z'
-  );
-}
-
-function resolveEgogramOuterRadius(
-  outerRadius: number | string | undefined,
-  width?: number,
-  height?: number,
-): number {
-  const minSide = Math.min(width ?? 0, height ?? 0);
-  if (typeof outerRadius === 'number' && outerRadius > 0) return outerRadius;
-  if (typeof outerRadius === 'string' && outerRadius.endsWith('%') && minSide > 0) {
-    return (parseFloat(outerRadius) / 100) * (minSide / 2);
-  }
-  return minSide > 0 ? minSide * 0.47 : 0;
-}
-
-/** 4~6단계(30점 시작·50점 끝, 9등분) 오각형 띠 */
+/** 4~6단계(23~37점) 고리. 획득 점수 면은 그리지 않음 */
 function EgogramRadarRecommendedBand(props: {
   cx?: number;
   cy?: number;
@@ -651,13 +598,30 @@ function EgogramRadarRecommendedBand(props: {
 }) {
   const { cx, cy, outerRadius, width, height } = props;
   if (cx == null || cy == null) return null;
-  const radiusMax = resolveEgogramOuterRadius(outerRadius, width, height);
-  if (radiusMax <= 0) return null;
-  const { inner, outer } = egogramStageScoreBounds(4, 6);
-  const rInner = (inner / EGOGRAM_RADAR_DOMAIN_MAX) * radiusMax;
-  const rOuter = (outer / EGOGRAM_RADAR_DOMAIN_MAX) * radiusMax;
-  const d = `${egogramPentagonPath(cx, cy, rOuter)} ${egogramPentagonPath(cx, cy, rInner)}`;
-  return <path d={d} fill={EGOGRAM_RADAR_BAND_FILL} fillRule="evenodd" stroke="none" pointerEvents="none" />;
+
+  let radiusMax: number | null = typeof outerRadius === 'number' ? outerRadius : null;
+  if (radiusMax == null && typeof outerRadius === 'string' && outerRadius.endsWith('%') && width && height) {
+    const pct = parseFloat(outerRadius) / 100;
+    radiusMax = (Math.min(width, height) / 2) * pct;
+  }
+  if (radiusMax == null || radiusMax <= 0) return null;
+  const outerR = radiusMax;
+
+  const angles = Array.from({ length: 5 }, (_, i) => 90 - i * 72);
+  const ring = (score: number) =>
+    angles.map((angle) => radarPolarPoint(cx, cy, (score / EGOGRAM_RADAR_SCORE_MAX) * outerR, angle));
+  const outer = ring(EGOGRAM_RADAR_BAND_OUTER);
+  const inner = ring(EGOGRAM_RADAR_BAND_INNER).reverse();
+
+  return (
+    <path
+      d={`${polygonPath(outer)} ${polygonPath(inner)}`}
+      fill={EGOGRAM_RADAR_BAND_FILL}
+      fillRule="evenodd"
+      stroke="none"
+      pointerEvents="none"
+    />
+  );
 }
 
 function EgogramRadarCenterMark(props: { cx?: number; cy?: number }) {
