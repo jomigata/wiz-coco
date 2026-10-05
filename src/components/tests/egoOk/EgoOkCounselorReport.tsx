@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import type {
   EgoOkCompositeColumn,
   EgoOkGender,
@@ -36,7 +36,7 @@ import {
 } from '@/lib/egoOkOkLifePosition';
 import { resolveEgogramFormLabel } from '@/lib/egoOkFormPattern';
 import EgoOkValiditySection, { ValidityTable } from '@/components/tests/egoOk/EgoOkValiditySection';
-import { OK_LABELS } from '@/lib/egoOkScoring';
+import { KTAA_GRAPH_ZONES, OK_LABELS, normalizeEgoOkGender } from '@/lib/egoOkScoring';
 import { egoOkGenderToLabel } from '@/lib/egoOkTestGender';
 import type { ClientInfo } from '@/components/tests/MbtiProClientInfo';
 import {
@@ -332,11 +332,14 @@ type EgogramRadarRow = {
 
 const EGOGRAM_RADAR_PINK = '#f472b6';
 const EGOGRAM_RADAR_OK_RED = '#ef4444';
-/** 합계 10~50 · 9단계 중 4~6단계(23~37점) 권장 구간 */
+/** 합계 눈금 0~50. 243+ 플러스 4~6단계는 23~37점 */
 const EGOGRAM_RADAR_SCORE_MAX = 50;
-const EGOGRAM_RADAR_BAND_INNER = 23;
-const EGOGRAM_RADAR_BAND_OUTER = 37;
-const EGOGRAM_RADAR_BAND_FILL = 'rgba(250, 204, 21, 0.5)';
+const EGOGRAM_PLUS_BAND_INNER = 23;
+const EGOGRAM_PLUS_BAND_OUTER = 37;
+const PATTERN_FILL = 'rgba(139, 92, 246, 0.5)';
+const PATTERN_FILL_HOT = 'rgba(196, 181, 253, 0.88)';
+const PLUS_FILL = 'rgba(250, 204, 21, 0.5)';
+const PLUS_FILL_HOT = 'rgba(254, 240, 138, 0.9)';
 
 /** 이고 척도 → 오케이 합계 척도 (KTAA·종합그래프와 동일) */
 const EGO_TO_OK_SCORE: Record<EgoScaleId, OkScaleId | null> = {
@@ -468,11 +471,19 @@ function EgogramRadarTooltip({ active, payload }: TooltipProps<number, string>) 
 function EgogramFiveScaleRadarChart({
   data,
   peakScaleId,
+  genderLabel,
 }: {
   data: EgogramRadarRow[];
   peakScaleId: EgoScaleId;
+  genderLabel?: string;
 }) {
   const resolvedPeakId = useMemo(() => egogramRadarPeakScaleId(data, peakScaleId), [data, peakScaleId]);
+  const gender = normalizeEgoOkGender(genderLabel);
+  const [hotBand, setHotBand] = useState<'pattern' | 'plus' | null>(null);
+  const RecommendedBand = useMemo(
+    () => createEgogramRadarBands(data, gender, hotBand),
+    [data, gender, hotBand],
+  );
   const OkRadarVertexDot = useMemo(
     () => createEgogramOkRadarVertexDot(resolvedPeakId),
     [resolvedPeakId],
@@ -550,7 +561,7 @@ function EgogramFiveScaleRadarChart({
             />
           )}
         />
-        <Customized component={EgogramRadarRecommendedBand} />
+        <Customized component={RecommendedBand} />
         <Radar
           name="오케이"
           dataKey="okRadarValue"
@@ -576,14 +587,55 @@ function EgogramFiveScaleRadarChart({
       </RadarChart>
     </ResponsiveContainer>
     </div>
-    <p className="mt-1 flex items-center justify-center gap-2 text-xs text-slate-200">
-      <span
-        className="inline-block h-3.5 w-3.5 shrink-0 rounded-[2px] ring-1 ring-yellow-200/80"
-        style={{ backgroundColor: EGOGRAM_RADAR_BAND_FILL }}
-        aria-hidden
-      />
-      권장구간(4~6단계)
-    </p>
+    <div className="mt-1 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs text-slate-200">
+      <span>권장구간 :</span>
+      <button
+        type="button"
+        className="inline-flex items-center gap-1.5 rounded-md px-1 py-0.5"
+        onMouseEnter={() => setHotBand('pattern')}
+        onMouseLeave={() => setHotBand(null)}
+        onFocus={() => setHotBand('pattern')}
+        onBlur={() => setHotBand(null)}
+      >
+        <span
+          className={`inline-block shrink-0 rounded-[2px] ring-1 ring-violet-200/80 transition-all duration-200 ${
+            hotBand === 'pattern' ? 'h-5 w-5' : 'h-3.5 w-3.5'
+          }`}
+          style={{ backgroundColor: hotBand === 'pattern' ? PATTERN_FILL_HOT : PATTERN_FILL }}
+          aria-hidden
+        />
+        <span
+          className={`transition-all duration-200 ${
+            hotBand === 'pattern' ? 'text-sm font-semibold text-violet-100' : ''
+          }`}
+        >
+          243패턴
+        </span>
+      </button>
+      <button
+        type="button"
+        className="inline-flex items-center gap-1.5 rounded-md px-1 py-0.5"
+        onMouseEnter={() => setHotBand('plus')}
+        onMouseLeave={() => setHotBand(null)}
+        onFocus={() => setHotBand('plus')}
+        onBlur={() => setHotBand(null)}
+      >
+        <span
+          className={`inline-block shrink-0 rounded-[2px] ring-1 ring-yellow-200/80 transition-all duration-200 ${
+            hotBand === 'plus' ? 'h-5 w-5' : 'h-3.5 w-3.5'
+          }`}
+          style={{ backgroundColor: hotBand === 'plus' ? PLUS_FILL_HOT : PLUS_FILL }}
+          aria-hidden
+        />
+        <span
+          className={`transition-all duration-200 ${
+            hotBand === 'plus' ? 'text-sm font-semibold text-yellow-100' : ''
+          }`}
+        >
+          243+ 플러스(4~6단계)
+        </span>
+      </button>
+    </div>
     </div>
   );
 }
@@ -609,41 +661,106 @@ type RadarAxisGeometry = {
   ticks?: { coordinate?: number }[];
 };
 
-/** 4~6단계(23~37점) 고리. 차트 props의 cx는 "50%"라 축 맵의 픽셀 좌표를 쓴다. */
-function EgogramRadarRecommendedBand(props: {
-  angleAxisMap?: Record<string, RadarAxisGeometry>;
-  radiusAxisMap?: Record<string, RadarAxisGeometry>;
-}) {
-  const angleAxis = props.angleAxisMap ? Object.values(props.angleAxisMap)[0] : undefined;
-  const radiusAxis = props.radiusAxisMap ? Object.values(props.radiusAxisMap)[0] : undefined;
-  const cx = angleAxis?.cx;
-  const cy = angleAxis?.cy;
-  const outerRadius = angleAxis?.outerRadius;
-  const innerRadius = angleAxis?.innerRadius ?? 0;
-  if (cx == null || cy == null || outerRadius == null || outerRadius <= 0) return null;
+function bandRingPath(
+  cx: number,
+  cy: number,
+  angles: number[],
+  radiusAt: (score: number) => number,
+  innerScores: number[],
+  outerScores: number[],
+): string {
+  const outer = angles.map((angle, index) => radarPolarPoint(cx, cy, radiusAt(outerScores[index] ?? 0), angle));
+  const inner = angles
+    .map((angle, index) => radarPolarPoint(cx, cy, radiusAt(innerScores[index] ?? 0), angle))
+    .reverse();
+  return `${polygonPath(outer)} ${polygonPath(inner)}`;
+}
 
-  const radiusAt = (score: number) => {
-    if (typeof radiusAxis?.scale === 'function') return radiusAxis.scale(score);
-    return innerRadius + (score / EGOGRAM_RADAR_SCORE_MAX) * (outerRadius - innerRadius);
+/** 243패턴=KTAA 흰 구간(성별별) · 243+ = 23~37점 */
+function createEgogramRadarBands(
+  rows: EgogramRadarRow[],
+  gender: EgoOkGender,
+  highlight: 'pattern' | 'plus' | null,
+) {
+  return function EgogramRadarRecommendedBand(props: {
+    angleAxisMap?: Record<string, RadarAxisGeometry>;
+    radiusAxisMap?: Record<string, RadarAxisGeometry>;
+  }) {
+    const angleAxis = props.angleAxisMap ? Object.values(props.angleAxisMap)[0] : undefined;
+    const radiusAxis = props.radiusAxisMap ? Object.values(props.radiusAxisMap)[0] : undefined;
+    const cx = angleAxis?.cx;
+    const cy = angleAxis?.cy;
+    const outerRadius = angleAxis?.outerRadius;
+    const innerRadius = angleAxis?.innerRadius ?? 0;
+    if (cx == null || cy == null || outerRadius == null || outerRadius <= 0 || rows.length === 0) return null;
+
+    const radiusAt = (score: number) => {
+      const clamped = Math.min(EGOGRAM_RADAR_SCORE_MAX, Math.max(0, score));
+      if (typeof radiusAxis?.scale === 'function') return radiusAxis.scale(clamped);
+      return innerRadius + (clamped / EGOGRAM_RADAR_SCORE_MAX) * (outerRadius - innerRadius);
+    };
+
+    const tickAngles = angleAxis?.ticks
+      ?.map((tick) => tick.coordinate)
+      .filter((angle): angle is number => typeof angle === 'number');
+    const angles =
+      tickAngles && tickAngles.length === rows.length
+        ? tickAngles
+        : Array.from({ length: rows.length }, (_, index) => 90 - index * (360 / rows.length));
+
+    const zones = KTAA_GRAPH_ZONES[gender];
+    const patternExpand = highlight === 'pattern' ? 2 : 0;
+    const patternInner = rows.map((row) =>
+      Math.max(0, zones[row.scale as EgoScaleId].redTop - patternExpand),
+    );
+    const patternOuter = rows.map((row) =>
+      Math.min(EGOGRAM_RADAR_SCORE_MAX, zones[row.scale as EgoScaleId].whiteTop + patternExpand),
+    );
+    const plusExpand = highlight === 'plus' ? 2 : 0;
+    const plusInner = rows.map(() => EGOGRAM_PLUS_BAND_INNER - plusExpand);
+    const plusOuter = rows.map(() => EGOGRAM_PLUS_BAND_OUTER + plusExpand);
+
+    const patternPath = bandRingPath(cx, cy, angles, radiusAt, patternInner, patternOuter);
+    const plusPath = bandRingPath(cx, cy, angles, radiusAt, plusInner, plusOuter);
+    const patternFill = highlight === 'pattern' ? PATTERN_FILL_HOT : PATTERN_FILL;
+    const plusFill = highlight === 'plus' ? PLUS_FILL_HOT : PLUS_FILL;
+    const patternNode = (
+      <path
+        d={patternPath}
+        fill={patternFill}
+        fillRule="evenodd"
+        stroke={patternFill}
+        strokeWidth={highlight === 'pattern' ? 2 : 1}
+        pointerEvents="none"
+      />
+    );
+    const plusNode = (
+      <path
+        d={plusPath}
+        fill={plusFill}
+        fillRule="evenodd"
+        stroke={plusFill}
+        strokeWidth={highlight === 'plus' ? 2 : 1}
+        pointerEvents="none"
+      />
+    );
+
+    return (
+      <g pointerEvents="none">
+        {highlight === 'pattern' ? (
+          <>
+            {plusNode}
+            {patternNode}
+          </>
+        ) : (
+          <>
+            {patternNode}
+            {plusNode}
+          </>
+        )}
+      </g>
+    );
   };
-
-  const tickAngles = angleAxis?.ticks?.map((tick) => tick.coordinate).filter((angle): angle is number => typeof angle === 'number');
-  const angles =
-    tickAngles && tickAngles.length >= 5 ? tickAngles.slice(0, 5) : Array.from({ length: 5 }, (_, i) => 90 - i * 72);
-  const ring = (score: number) => angles.map((angle) => radarPolarPoint(cx, cy, radiusAt(score), angle));
-  const outer = ring(EGOGRAM_RADAR_BAND_OUTER);
-  const inner = ring(EGOGRAM_RADAR_BAND_INNER).reverse();
-
-  return (
-    <path
-      d={`${polygonPath(outer)} ${polygonPath(inner)}`}
-      fill={EGOGRAM_RADAR_BAND_FILL}
-      fillRule="evenodd"
-      stroke="rgba(250, 204, 21, 0.5)"
-      strokeWidth={1}
-      pointerEvents="none"
-    />
-  );
 }
 
 function EgogramRadarCenterMark(props: { cx?: number; cy?: number }) {
@@ -1140,7 +1257,11 @@ export default function EgoOkCounselorReport({
             <div className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] xl:items-start">
               <div className="w-full xl:sticky xl:top-1/2 xl:z-10 xl:-translate-y-1/2 xl:self-start">
                 <div className="h-[min(42vh,22rem)] w-full min-h-[16rem]">
-                  <EgogramFiveScaleRadarChart data={radarData} peakScaleId={peakEgogram.id} />
+                  <EgogramFiveScaleRadarChart
+                    data={radarData}
+                    peakScaleId={peakEgogram.id}
+                    genderLabel={chartGender}
+                  />
                 </div>
               </div>
               <div className="space-y-3">
