@@ -624,6 +624,32 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
     },
   };
 
+  /** 이고-오케이: blur·동시 재생 시 글자 겹침(ghost) 방지 */
+  const egoOkQuestionVariants = {
+    enter: (dir: number) => ({
+      y: dir > 0 ? -20 : 20,
+      opacity: 0,
+    }),
+    center: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        duration: 0.28,
+        ease: QUESTION_ENTER_EASE,
+      },
+    },
+    exit: (dir: number) => {
+      const sign = dir > 0 ? 1 : -1;
+      return {
+        y: sign * 24,
+        opacity: 0,
+        transition: { duration: 0.22, ease: QUESTION_EXIT_EASE },
+      };
+    },
+  };
+
+  const questionMotionVariants = isEgoOkFlow ? egoOkQuestionVariants : variants;
+
   // 포털 상담(코드) 전용: accessCode 없이 직접 접근 차단 (로컬 메뉴 테스트는 예외)
   if (
     urlParsed &&
@@ -810,18 +836,18 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
                 className={`${v.questionCard} relative mb-10 min-h-[112px] overflow-hidden ${isEgoOkFlow ? 'min-h-[128px]' : ''}`}
                 style={{ height: isEgoOkFlow ? Math.max(QUESTION_FRAME_HEIGHT, 128) : QUESTION_FRAME_HEIGHT }}
               >
-                <AnimatePresence initial={false} mode="sync" custom={direction}>
+                <AnimatePresence initial={false} mode={isEgoOkFlow ? 'wait' : 'sync'} custom={direction}>
                   <motion.h2
                     key={currentQuestion}
                     custom={direction}
-                    variants={variants}
+                    variants={questionMotionVariants}
                     initial="enter"
                     animate="center"
                     exit="exit"
-                    className={`absolute inset-0 flex items-center justify-center px-4 py-3 text-center will-change-[transform,opacity,filter] ${
+                    className={`absolute inset-0 flex items-center justify-center px-4 py-3 text-center ${
                       isEgoOkFlow
-                        ? ''
-                        : `text-xl leading-relaxed ${uiTheme === 'portal' ? 'text-white font-semibold tracking-tight' : 'text-slate-50 font-semibold'}`
+                        ? 'will-change-[transform,opacity]'
+                        : `will-change-[transform,opacity,filter] text-xl leading-relaxed ${uiTheme === 'portal' ? 'text-white font-semibold tracking-tight' : 'text-slate-50 font-semibold'}`
                     }`}
                   >
                     {isEgoOkFlow && isEgoOkQuestion(selectedQuestions[currentQuestion]) ? (
