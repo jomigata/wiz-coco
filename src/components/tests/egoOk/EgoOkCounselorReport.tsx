@@ -548,6 +548,7 @@ function EgogramFiveScaleRadarChart({
         margin={{ top: 10, right: 6, bottom: 2, left: 6 }}
       >
         <Customized component={FillOpacityMaskDefs} />
+        <Customized component={EgogramRadarRecommendedBand} />
         <PolarGrid
           gridType="polygon"
           radialLines={false}
@@ -596,6 +597,67 @@ function EgogramFiveScaleRadarChart({
       </RadarChart>
     </ResponsiveContainer>
   );
+}
+
+/** 방사형 축 0~50점 위에서, 30~50점을 9단계로 나눈 4~6단계 구간 */
+const EGOGRAM_RADAR_STAGE_SCORE_START = 30;
+const EGOGRAM_RADAR_STAGE_SCORE_END = 50;
+const EGOGRAM_RADAR_STAGE_COUNT = 9;
+const EGOGRAM_RADAR_DOMAIN_MAX = 50;
+const EGOGRAM_RADAR_BAND_FILL = 'rgba(52, 211, 153, 0.38)';
+
+function egogramStageScoreBounds(fromStage: number, toStage: number): { inner: number; outer: number } {
+  const span = EGOGRAM_RADAR_STAGE_SCORE_END - EGOGRAM_RADAR_STAGE_SCORE_START;
+  return {
+    inner: EGOGRAM_RADAR_STAGE_SCORE_START + ((fromStage - 1) * span) / EGOGRAM_RADAR_STAGE_COUNT,
+    outer: EGOGRAM_RADAR_STAGE_SCORE_START + (toStage * span) / EGOGRAM_RADAR_STAGE_COUNT,
+  };
+}
+
+function egogramPolarPoint(cx: number, cy: number, radius: number, angleDeg: number): [number, number] {
+  const rad = (-angleDeg * Math.PI) / 180;
+  return [cx + Math.cos(rad) * radius, cy + Math.sin(rad) * radius];
+}
+
+function egogramPentagonPath(cx: number, cy: number, radius: number): string {
+  return (
+    Array.from({ length: 5 }, (_, index) => {
+      const [x, y] = egogramPolarPoint(cx, cy, radius, 90 - index * 72);
+      return `${index === 0 ? 'M' : 'L'}${x},${y}`;
+    }).join(' ') + ' Z'
+  );
+}
+
+function resolveEgogramOuterRadius(
+  outerRadius: number | string | undefined,
+  width?: number,
+  height?: number,
+): number {
+  const minSide = Math.min(width ?? 0, height ?? 0);
+  if (typeof outerRadius === 'number' && outerRadius > 0) return outerRadius;
+  if (typeof outerRadius === 'string' && outerRadius.endsWith('%') && minSide > 0) {
+    return (parseFloat(outerRadius) / 100) * (minSide / 2);
+  }
+  return minSide > 0 ? minSide * 0.47 : 0;
+}
+
+/** 4~6단계(30점 시작·50점 끝, 9등분) 오각형 띠 */
+function EgogramRadarRecommendedBand(props: {
+  cx?: number;
+  cy?: number;
+  outerRadius?: number | string;
+  width?: number;
+  height?: number;
+}) {
+  const { cx, cy, outerRadius, width, height } = props;
+  if (cx == null || cy == null) return null;
+  const radiusMax = resolveEgogramOuterRadius(outerRadius, width, height);
+  if (radiusMax <= 0) return null;
+  const { inner, outer } = egogramStageScoreBounds(4, 6);
+  const rInner = (inner / EGOGRAM_RADAR_DOMAIN_MAX) * radiusMax;
+  const rOuter = (outer / EGOGRAM_RADAR_DOMAIN_MAX) * radiusMax;
+  const d = `${egogramPentagonPath(cx, cy, rOuter)} ${egogramPentagonPath(cx, cy, rInner)}`;
+  return <path d={d} fill={EGOGRAM_RADAR_BAND_FILL} fillRule="evenodd" stroke="none" pointerEvents="none" />;
 }
 
 function EgogramRadarCenterMark(props: { cx?: number; cy?: number }) {
