@@ -160,7 +160,7 @@ export function buildPeakEgogramEnergyInsight(scale: EgoOkScaleScore): EgogramEn
   const tier = rawScoreToPlus243Tier(scale.raw);
   const stage = tier.stage;
   const name = EGO_ENERGY_DISPLAY_NAMES[scale.id];
-  const comment = `${scale.id} ${name} · 이고그램 합계 ${scale.raw}점 · 다섯 이고그램 중 최고 사용 에너지입니다.`;
+  const comment = `${scale.id} ${name} · 이고그램 합계 ${scale.raw}점 · 다섯 이고그램 중 최고 사용 에너지(9단계중 ${stage}단계)입니다.`;
   return wrapInsight(tier, comment, [peakStrength(scale.id, stage, scale.raw)], peakCautions(scale.id, stage, scale.raw));
 }
 
@@ -169,7 +169,7 @@ export function buildLowEgogramEnergyInsight(scale: EgoOkScaleScore): EgogramEne
   const stage = tier.stage;
   const band = plus243StageBand(stage);
   const name = EGO_ENERGY_DISPLAY_NAMES[scale.id];
-  const comment = `${scale.id} ${name} · 이고그램 합계 ${scale.raw}점 · 다섯 이고그램 중 상대적으로 낮은 사용 에너지입니다.`;
+  const comment = `${scale.id} ${name} · 이고그램 합계 ${scale.raw}점 · 다섯 이고그램 중 상대적으로 낮은 사용 에너지(9단계중 ${stage}단계)입니다.`;
   return wrapInsight(
     tier,
     comment,
