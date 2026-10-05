@@ -10,6 +10,14 @@ export type ValidityCounselorNote = {
   body: string;
 };
 
+/** 표지 세부 내역 · 타당도 지표 · 상담 가이드가 함께 쓰는 구분명 */
+export const VALIDITY_SCALE_LABELS = {
+  imc: '1. 반응 성실도 (IMC)',
+  lie: '2. 사회적 바람직성 (L)',
+  infreq: '3. 비전형 왜곡 (F)',
+  vrin: '4. 일관성 (VRIN)',
+} as const;
+
 export type EgoOkValidityProfile = {
   overall: ValidityTraffic;
   overallTitle: string;
@@ -117,28 +125,28 @@ export function computeEgoOkValidityProfile(answers: Record<string, number>): Eg
 
   const counselorNotes: ValidityCounselorNote[] = [
     {
-      label: '반응 성실도 (IMC)',
+      label: VALIDITY_SCALE_LABELS.imc,
       body:
         imcStatus === 'normal'
           ? '반응 성실도 (IMC)는 정상입니다. 지시된 답을 고르도록 한 문항을 읽고 응답한 것으로 볼 수 있습니다.'
           : '반응 성실도 (IMC)가 주의 또는 무효입니다. 피로·집중력 저하로 지문을 제대로 읽지 않았을 가능성이 있습니다. 수검 당시 컨디션을 점검한 뒤 재검사를 권장합니다.',
     },
     {
-      label: '사회적 바람직성 (L)',
+      label: VALIDITY_SCALE_LABELS.lie,
       body:
         lieStatus === 'normal'
           ? '사회적 바람직성 (L)은 정상입니다. 자신을 지나치게 좋게 포장한 응답으로 보기는 어렵습니다.'
           : '사회적 바람직성 (L)이 높게 나온 경우, 평가에 대한 불안으로 자신을 도덕적·완벽한 사람으로 위장하려 했을 가능성이 큽니다. 상담에서는 정답이 없음을 다시 알려 주고, 취약성을 말해도 비난받지 않는 자리를 만들어 주십시오.',
     },
     {
-      label: '비전형 왜곡 (F)',
+      label: VALIDITY_SCALE_LABELS.infreq,
       body:
         infreqStatus === 'normal'
           ? '비전형 왜곡 (F)은 정상입니다. 흔하지 않은 반응을 과도하게 고른 양상은 두드러지지 않습니다.'
           : '비전형 왜곡 (F)이 높게 나온 경우, 실제 증상이 아니라면 도움 요청 신호일 수 있습니다. 점수보다 지금 느끼는 불안·우울의 버거움을 먼저 공감해 주십시오.',
     },
     {
-      label: '일관성 (VRIN)',
+      label: VALIDITY_SCALE_LABELS.vrin,
       body:
         vrinStatus === 'normal'
           ? '일관성 (VRIN)은 정상입니다. 뜻이 반대인 문항에 동시에 동의한 불일치는 없습니다.'

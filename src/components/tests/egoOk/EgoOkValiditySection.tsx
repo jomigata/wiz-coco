@@ -1,7 +1,12 @@
 'use client';
 
 import { ReportInsightBlock } from '@/components/tests/egoOk/egoOkReportInsight';
-import type { EgoOkValidityProfile, ValidityScaleStatus, ValidityTraffic } from '@/lib/egoOkValidity';
+import {
+  VALIDITY_SCALE_LABELS,
+  type EgoOkValidityProfile,
+  type ValidityScaleStatus,
+  type ValidityTraffic,
+} from '@/lib/egoOkValidity';
 
 function trafficDot(overall: ValidityTraffic): string {
   if (overall === 'normal') return '●';
@@ -53,14 +58,14 @@ export function ValidityTable({ validity }: { validity: EgoOkValidityProfile }) 
           <tr className="border-b border-white/10 text-xs font-semibold text-slate-400">
             <th className="py-2 pr-3">구분</th>
             <th className="py-2 pr-3">측정 문항</th>
-            <th className="py-2 pr-3">획득/전체</th>
+            <th className="py-2 pr-3">획득 / 전체</th>
             <th className="py-2 pr-3">상태</th>
             <th className="py-2">해석 기준</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-white/10">
           <tr>
-            <td className="py-3 pr-3 align-top font-medium text-white">반응 성실도 (IMC)</td>
+            <td className="py-3 pr-3 align-top font-medium text-white">{VALIDITY_SCALE_LABELS.imc}</td>
             <td className="py-3 pr-3 align-top">{validity.imc.itemNos.join('번, ')}번</td>
             <td className="py-3 pr-3 align-top font-mono">{validity.imc.failCount} / 2개</td>
             <td className={`py-3 pr-3 align-top font-semibold ${statusClass(validity.imc.status)}`}>
@@ -74,7 +79,7 @@ export function ValidityTable({ validity }: { validity: EgoOkValidityProfile }) 
             </td>
           </tr>
           <tr>
-            <td className="py-3 pr-3 align-top font-medium text-white">사회적 바람직성 (L)</td>
+            <td className="py-3 pr-3 align-top font-medium text-white">{VALIDITY_SCALE_LABELS.lie}</td>
             <td className="py-3 pr-3 align-top">{validity.lie.itemNos.join('번, ')}번</td>
             <td className="py-3 pr-3 align-top font-mono">
               {validity.lie.raw} / {validity.lie.max}점
@@ -90,7 +95,7 @@ export function ValidityTable({ validity }: { validity: EgoOkValidityProfile }) 
             </td>
           </tr>
           <tr>
-            <td className="py-3 pr-3 align-top font-medium text-white">비전형 왜곡 (F)</td>
+            <td className="py-3 pr-3 align-top font-medium text-white">{VALIDITY_SCALE_LABELS.infreq}</td>
             <td className="py-3 pr-3 align-top">{validity.infreq.itemNos.join('번, ')}번</td>
             <td className="py-3 pr-3 align-top font-mono">
               {validity.infreq.raw} / {validity.infreq.max}점
@@ -106,7 +111,7 @@ export function ValidityTable({ validity }: { validity: EgoOkValidityProfile }) 
             </td>
           </tr>
           <tr>
-            <td className="py-3 pr-3 align-top font-medium text-white">일관성 (VRIN)</td>
+            <td className="py-3 pr-3 align-top font-medium text-white">{VALIDITY_SCALE_LABELS.vrin}</td>
             <td className="py-3 pr-3 align-top">대립 {validity.vrin.pairCount}개 문항쌍</td>
             <td className="py-3 pr-3 align-top font-mono">
               {validity.vrin.mismatchPairs} / {validity.vrin.maxPairs}점
