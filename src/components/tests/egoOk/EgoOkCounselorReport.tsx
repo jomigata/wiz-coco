@@ -336,7 +336,7 @@ const EGOGRAM_RADAR_OK_RED = '#ef4444';
 const EGOGRAM_RADAR_SCORE_MAX = 50;
 const EGOGRAM_RADAR_BAND_INNER = 23;
 const EGOGRAM_RADAR_BAND_OUTER = 37;
-const EGOGRAM_RADAR_BAND_FILL = 'rgba(250, 204, 21, 0.42)';
+const EGOGRAM_RADAR_BAND_FILL = 'rgba(250, 204, 21, 0.55)';
 
 /** 이고 척도 → 오케이 합계 척도 (KTAA·종합그래프와 동일) */
 const EGO_TO_OK_SCORE: Record<EgoScaleId, OkScaleId | null> = {
@@ -526,7 +526,6 @@ function EgogramFiveScaleRadarChart({
         cy="50%"
         margin={{ top: 10, right: 6, bottom: 2, left: 6 }}
       >
-        <Customized component={EgogramRadarRecommendedBand} />
         <PolarGrid
           gridType="polygon"
           radialLines={false}
@@ -549,6 +548,7 @@ function EgogramFiveScaleRadarChart({
             />
           )}
         />
+        <Customized component={EgogramRadarRecommendedBand} />
         <Radar
           name="오케이"
           dataKey="okRadarValue"
@@ -588,28 +588,37 @@ function polygonPath(points: { x: number; y: number }[]): string {
   return `${points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ')} Z`;
 }
 
-/** 4~6단계(23~37점) 고리. 획득 점수 면은 그리지 않음 */
-function EgogramRadarRecommendedBand(props: {
+type RadarAxisGeometry = {
   cx?: number;
   cy?: number;
-  outerRadius?: number | string;
-  width?: number;
-  height?: number;
+  innerRadius?: number;
+  outerRadius?: number;
+  scale?: (value: number) => number;
+  ticks?: { coordinate?: number }[];
+};
+
+/** 4~6단계(23~37점) 고리. 차트 props의 cx는 "50%"라 축 맵의 픽셀 좌표를 쓴다. */
+function EgogramRadarRecommendedBand(props: {
+  angleAxisMap?: Record<string, RadarAxisGeometry>;
+  radiusAxisMap?: Record<string, RadarAxisGeometry>;
 }) {
-  const { cx, cy, outerRadius, width, height } = props;
-  if (cx == null || cy == null) return null;
+  const angleAxis = props.angleAxisMap ? Object.values(props.angleAxisMap)[0] : undefined;
+  const radiusAxis = props.radiusAxisMap ? Object.values(props.radiusAxisMap)[0] : undefined;
+  const cx = angleAxis?.cx;
+  const cy = angleAxis?.cy;
+  const outerRadius = angleAxis?.outerRadius;
+  const innerRadius = angleAxis?.innerRadius ?? 0;
+  if (cx == null || cy == null || outerRadius == null || outerRadius <= 0) return null;
 
-  let radiusMax: number | null = typeof outerRadius === 'number' ? outerRadius : null;
-  if (radiusMax == null && typeof outerRadius === 'string' && outerRadius.endsWith('%') && width && height) {
-    const pct = parseFloat(outerRadius) / 100;
-    radiusMax = (Math.min(width, height) / 2) * pct;
-  }
-  if (radiusMax == null || radiusMax <= 0) return null;
-  const outerR = radiusMax;
+  const radiusAt = (score: number) => {
+    if (typeof radiusAxis?.scale === 'function') return radiusAxis.scale(score);
+    return innerRadius + (score / EGOGRAM_RADAR_SCORE_MAX) * (outerRadius - innerRadius);
+  };
 
-  const angles = Array.from({ length: 5 }, (_, i) => 90 - i * 72);
-  const ring = (score: number) =>
-    angles.map((angle) => radarPolarPoint(cx, cy, (score / EGOGRAM_RADAR_SCORE_MAX) * outerR, angle));
+  const tickAngles = angleAxis?.ticks?.map((tick) => tick.coordinate).filter((angle): angle is number => typeof angle === 'number');
+  const angles =
+    tickAngles && tickAngles.length >= 5 ? tickAngles.slice(0, 5) : Array.from({ length: 5 }, (_, i) => 90 - i * 72);
+  const ring = (score: number) => angles.map((angle) => radarPolarPoint(cx, cy, radiusAt(score), angle));
   const outer = ring(EGOGRAM_RADAR_BAND_OUTER);
   const inner = ring(EGOGRAM_RADAR_BAND_INNER).reverse();
 
@@ -618,7 +627,8 @@ function EgogramRadarRecommendedBand(props: {
       d={`${polygonPath(outer)} ${polygonPath(inner)}`}
       fill={EGOGRAM_RADAR_BAND_FILL}
       fillRule="evenodd"
-      stroke="none"
+      stroke="rgba(250, 204, 21, 0.9)"
+      strokeWidth={1}
       pointerEvents="none"
     />
   );
