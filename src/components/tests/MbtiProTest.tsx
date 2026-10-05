@@ -807,7 +807,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
 
             <div className="text-center mb-3">
               <div
-                className={`${v.questionCard} relative mb-10 min-h-[112px] overflow-hidden ${isEgoOkFlow ? 'min-h-[128px] !backdrop-blur-none' : ''}`}
+                className={`${v.questionCard} relative mb-10 min-h-[112px] overflow-hidden ${isEgoOkFlow ? 'min-h-[128px] !backdrop-blur-none !shadow-none' : ''}`}
                 style={{ height: isEgoOkFlow ? Math.max(QUESTION_FRAME_HEIGHT, 128) : QUESTION_FRAME_HEIGHT }}
               >
                 {isEgoOkFlow && isEgoOkQuestion(selectedQuestions[currentQuestion]) ? (
