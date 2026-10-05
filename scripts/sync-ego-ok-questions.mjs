@@ -39,6 +39,8 @@ lines.push('');
 lines.push('export interface EgoOkQuestion {');
 lines.push('  no: number;');
 lines.push('  text: string;');
+lines.push('  /** 화면 표시용(의미 그룹 · 넓은 간격). 없으면 text 사용 */');
+lines.push('  readingText?: string;');
 lines.push('  code: string;');
 lines.push('  egoIndex: number | null;');
 lines.push('  okIndex: number | null;');
@@ -53,10 +55,14 @@ for (const item of bank.items) {
   const egoIndex = item.egoIndex ?? null;
   const okIndex = item.okIndex ?? null;
   const text = JSON.stringify(item.text);
+  const readingText =
+    typeof item.readingText === 'string' && item.readingText.length > 0
+      ? `, readingText: ${JSON.stringify(item.readingText)}`
+      : '';
   const code = JSON.stringify(item.code);
   const scaleType = JSON.stringify(item.scaleType);
   lines.push(
-    `  { no: ${item.no}, text: ${text}, code: ${code}, egoIndex: ${egoIndex}, okIndex: ${okIndex}, scaleType: ${scaleType}, scaleKind: '${scaleKind}' },`,
+    `  { no: ${item.no}, text: ${text}${readingText}, code: ${code}, egoIndex: ${egoIndex}, okIndex: ${okIndex}, scaleType: ${scaleType}, scaleKind: '${scaleKind}' },`,
   );
 }
 

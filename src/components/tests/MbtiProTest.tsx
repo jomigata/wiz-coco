@@ -10,6 +10,7 @@ import {
 } from '@/lib/localPsychTestDirectStart';
 import { saveEgoOkReportDraft } from '@/lib/egoOkReportSession';
 import { EGO_OK_LIKERT_HEIGHT, EGO_OK_LIKERT_OPTIONS } from '@/lib/egoOkLikert';
+import { EgoOkQuestionReading } from '@/lib/egoOkQuestionReading';
 import { findEgoOkIncompleteQuestionNumbers } from '@/lib/egoOkScoring';
 import Link from 'next/link';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
@@ -59,10 +60,16 @@ type SelectedQuestion =
   | {
       number: number;
       text: string;
+      readingText?: string;
       scaleKind: EgoOkScaleKind;
     };
 
-function isEgoOkQuestion(q: SelectedQuestion): q is { number: number; text: string; scaleKind: EgoOkScaleKind } {
+function isEgoOkQuestion(q: SelectedQuestion): q is {
+  number: number;
+  text: string;
+  readingText?: string;
+  scaleKind: EgoOkScaleKind;
+} {
   return 'scaleKind' in q;
 }
 
@@ -276,6 +283,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
         EGO_OK_QUESTIONS.map((q) => ({
           number: q.no,
           text: q.text,
+          readingText: q.readingText ?? q.text,
           scaleKind: q.scaleKind,
         })),
       );
@@ -812,11 +820,17 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
                     exit="exit"
                     className={`absolute inset-0 flex items-center justify-center px-4 py-3 text-center will-change-[transform,opacity,filter] ${
                       isEgoOkFlow
-                        ? 'whitespace-pre-line text-lg sm:text-xl font-semibold leading-[1.75] tracking-[0.04em] text-slate-50'
+                        ? ''
                         : `text-xl leading-relaxed ${uiTheme === 'portal' ? 'text-white font-semibold tracking-tight' : 'text-slate-50 font-semibold'}`
                     }`}
                   >
-                    {selectedQuestions[currentQuestion].text}
+                    {isEgoOkFlow && isEgoOkQuestion(selectedQuestions[currentQuestion]) ? (
+                      <EgoOkQuestionReading
+                        readingText={selectedQuestions[currentQuestion].readingText ?? selectedQuestions[currentQuestion].text}
+                      />
+                    ) : (
+                      selectedQuestions[currentQuestion].text
+                    )}
                   </motion.h2>
                 </AnimatePresence>
               </div>
@@ -834,12 +848,14 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
                               ? 'w-12 h-12 text-lg'
                               : 'w-10 h-10 text-base';
                         const glow = opt.glowPink ? answerGlowPink : answerGlowSky;
+                        const cSplitGlow =
+                          '[&::after]:!bg-[linear-gradient(to_right,rgba(56,189,248,0.78)_0%,rgba(56,189,248,0.78)_50%,rgba(244,114,182,0.78)_50%,rgba(244,114,182,0.78)_100%)]';
                         return (
                           <button
                             key={opt.letter}
                             type="button"
                             onClick={() => handleAnswer(opt.value)}
-                            className={`${answerBtnClass(opt.rounded, 'py-0', '', glow)} ${EGO_OK_LIKERT_HEIGHT[opt.heightTier]} flex shrink-0 flex-col justify-center`}
+                            className={`${answerBtnClass(opt.rounded, 'py-0', opt.letter === 'C' ? cSplitGlow : '', glow)} ${EGO_OK_LIKERT_HEIGHT[opt.heightTier]} flex shrink-0 flex-col justify-center`}
                           >
                             {answers[currentQuestion] === opt.value && (
                               <div
