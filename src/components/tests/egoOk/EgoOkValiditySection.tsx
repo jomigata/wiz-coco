@@ -52,14 +52,62 @@ function CriteriaCell({ role, bands }: { role: string; bands?: string[] }) {
   );
 }
 
+function ScaleMetricRow({
+  label,
+  measured,
+  score,
+  status,
+  role,
+  bands,
+  guide,
+}: {
+  label: string;
+  measured: string;
+  score: string;
+  status: ValidityScaleStatus;
+  role: string;
+  bands?: string[];
+  guide?: string;
+}) {
+  return (
+    <>
+      <tr className="border-b border-white/10">
+        <td className="py-3 pr-3 align-top font-medium text-white">{label}</td>
+        <td className="py-3 pr-3 align-top">{measured}</td>
+        <td className="py-3 pr-3 align-top font-mono">{score}</td>
+        <td className={`py-3 pr-3 align-top font-semibold ${statusClass(status)}`}>{statusKo(status)}</td>
+        <td className="py-3 align-top" rowSpan={guide ? 2 : 1}>
+          <CriteriaCell role={role} bands={bands} />
+        </td>
+      </tr>
+      {guide ? (
+        <tr className="border-b border-white/10">
+          <td colSpan={4} className="px-1 pb-3 pt-0">
+            <p className="text-sm leading-relaxed text-slate-200">
+              <span className="font-semibold text-violet-100">상담사 가이드용 : </span>
+              {guide}
+            </p>
+          </td>
+        </tr>
+      ) : null}
+    </>
+  );
+}
+
 export function ValidityTable({
   validity,
   showScoreBands = true,
+  showCounselorGuide = false,
 }: {
   validity: EgoOkValidityProfile;
   /** 표지 세부 내역에서는 정상·주의·무효 줄을 숨김 */
   showScoreBands?: boolean;
+  /** 타당도 탭 — 정상·주의·무효 왼쪽 칸에 상담 가이드 */
+  showCounselorGuide?: boolean;
 }) {
+  const guideOf = (label: string) =>
+    showCounselorGuide ? validity.counselorNotes.find((note) => note.label === label)?.body : undefined;
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[40rem] border-collapse text-left text-sm text-slate-300">
@@ -72,83 +120,57 @@ export function ValidityTable({
             <th className="py-2">해석 기준</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-white/10">
-          <tr>
-            <td className="py-3 pr-3 align-top font-medium text-white">{VALIDITY_SCALE_LABELS.imc}</td>
-            <td className="py-3 pr-3 align-top">{validity.imc.itemNos.join('번, ')}번</td>
-            <td className="py-3 pr-3 align-top font-mono">{validity.imc.failCount} / 2개</td>
-            <td className={`py-3 pr-3 align-top font-semibold ${statusClass(validity.imc.status)}`}>
-              {statusKo(validity.imc.status)}
-            </td>
-            <td className="py-3 align-top">
-              <CriteriaCell
-                role="지시된 답을 골랐는지 확인해, 문항을 읽지 않고 응답했는지 봅니다."
-                bands={
-                  showScoreBands
-                    ? ['정상: 두 문항 모두 지정 응답', '주의: 지정 응답 실패 1개', '무효: 지정 응답 실패 2개']
-                    : undefined
-                }
-              />
-            </td>
-          </tr>
-          <tr>
-            <td className="py-3 pr-3 align-top font-medium text-white">{VALIDITY_SCALE_LABELS.lie}</td>
-            <td className="py-3 pr-3 align-top">{validity.lie.itemNos.join('번, ')}번</td>
-            <td className="py-3 pr-3 align-top font-mono">
-              {validity.lie.raw} / {validity.lie.max}점
-            </td>
-            <td className={`py-3 pr-3 align-top font-semibold ${statusClass(validity.lie.status)}`}>
-              {statusKo(validity.lie.status)}
-            </td>
-            <td className="py-3 align-top">
-              <CriteriaCell
-                role="자신을 사회적으로 좋아 보이게 답하는 경향을 봅니다."
-                bands={
-                  showScoreBands ? ['정상: 5점 이하', '주의: 6–7점', '무효: 8점 이상 (과도한 방어·위선)'] : undefined
-                }
-              />
-            </td>
-          </tr>
-          <tr>
-            <td className="py-3 pr-3 align-top font-medium text-white">{VALIDITY_SCALE_LABELS.infreq}</td>
-            <td className="py-3 pr-3 align-top">{validity.infreq.itemNos.join('번, ')}번</td>
-            <td className="py-3 pr-3 align-top font-mono">
-              {validity.infreq.raw} / {validity.infreq.max}점
-            </td>
-            <td className={`py-3 pr-3 align-top font-semibold ${statusClass(validity.infreq.status)}`}>
-              {statusKo(validity.infreq.status)}
-            </td>
-            <td className="py-3 align-top">
-              <CriteriaCell
-                role="흔하지 않은 반응을 골라, 과장이나 무작위 응답 가능성을 봅니다."
-                bands={
-                  showScoreBands
-                    ? ['정상: 3점 이하', '주의: 4–5점', '무효: 6점 이상 (꾀병 또는 무작위 응답)']
-                    : undefined
-                }
-              />
-            </td>
-          </tr>
-          <tr>
-            <td className="py-3 pr-3 align-top font-medium text-white">{VALIDITY_SCALE_LABELS.vrin}</td>
-            <td className="py-3 pr-3 align-top">대립 {validity.vrin.pairCount}개 문항쌍</td>
-            <td className="py-3 pr-3 align-top font-mono">
-              {validity.vrin.mismatchPairs} / {validity.vrin.maxPairs}점
-            </td>
-            <td className={`py-3 pr-3 align-top font-semibold ${statusClass(validity.vrin.status)}`}>
-              {statusKo(validity.vrin.status)}
-            </td>
-            <td className="py-3 align-top">
-              <CriteriaCell
-                role="뜻이 반대인 문항에 함께 동의하는지 봐서, 답이 서로 맞는지 확인합니다."
-                bands={
-                  showScoreBands
-                    ? ['정상: 불일치 없음', '주의: 불일치 1쌍', '무효: 불일치 2쌍 이상 (비일관적)']
-                    : undefined
-                }
-              />
-            </td>
-          </tr>
+        <tbody>
+          <ScaleMetricRow
+            label={VALIDITY_SCALE_LABELS.imc}
+            measured={`${validity.imc.itemNos.join('번, ')}번`}
+            score={`${validity.imc.failCount} / 2개`}
+            status={validity.imc.status}
+            role="지시된 답을 골랐는지 확인해, 문항을 읽지 않고 응답했는지 봅니다."
+            bands={
+              showScoreBands
+                ? ['정상: 두 문항 모두 지정 응답', '주의: 지정 응답 실패 1개', '무효: 지정 응답 실패 2개']
+                : undefined
+            }
+            guide={guideOf(VALIDITY_SCALE_LABELS.imc)}
+          />
+          <ScaleMetricRow
+            label={VALIDITY_SCALE_LABELS.lie}
+            measured={`${validity.lie.itemNos.join('번, ')}번`}
+            score={`${validity.lie.raw} / ${validity.lie.max}점`}
+            status={validity.lie.status}
+            role="자신을 사회적으로 좋아 보이게 답하는 경향을 봅니다."
+            bands={
+              showScoreBands ? ['정상: 5점 이하', '주의: 6–7점', '무효: 8점 이상 (과도한 방어·위선)'] : undefined
+            }
+            guide={guideOf(VALIDITY_SCALE_LABELS.lie)}
+          />
+          <ScaleMetricRow
+            label={VALIDITY_SCALE_LABELS.infreq}
+            measured={`${validity.infreq.itemNos.join('번, ')}번`}
+            score={`${validity.infreq.raw} / ${validity.infreq.max}점`}
+            status={validity.infreq.status}
+            role="흔하지 않은 반응을 골라, 과장이나 무작위 응답 가능성을 봅니다."
+            bands={
+              showScoreBands
+                ? ['정상: 3점 이하', '주의: 4–5점', '무효: 6점 이상 (꾀병 또는 무작위 응답)']
+                : undefined
+            }
+            guide={guideOf(VALIDITY_SCALE_LABELS.infreq)}
+          />
+          <ScaleMetricRow
+            label={VALIDITY_SCALE_LABELS.vrin}
+            measured={`대립 ${validity.vrin.pairCount}개 문항쌍`}
+            score={`${validity.vrin.mismatchPairs} / ${validity.vrin.maxPairs}점`}
+            status={validity.vrin.status}
+            role="뜻이 반대인 문항에 함께 동의하는지 봐서, 답이 서로 맞는지 확인합니다."
+            bands={
+              showScoreBands
+                ? ['정상: 불일치 없음', '주의: 불일치 1쌍', '무효: 불일치 2쌍 이상 (비일관적)']
+                : undefined
+            }
+            guide={guideOf(VALIDITY_SCALE_LABELS.vrin)}
+          />
         </tbody>
       </table>
     </div>
@@ -183,17 +205,7 @@ export default function EgoOkValiditySection({
           </p>
         </ReportInsightBlock>
         <ReportInsightBlock tone="sky" title="타당도 지표">
-          <ValidityTable validity={validity} />
-        </ReportInsightBlock>
-        <ReportInsightBlock tone="violet" title="상담사를 위한 임상적 해석 및 개입 가이드">
-          <ul className="space-y-3">
-            {validity.counselorNotes.map((note) => (
-              <li key={note.label} className="rounded-lg bg-black/20 px-3 py-2 ring-1 ring-white/10">
-                <p className="text-sm font-semibold text-violet-100">{note.label}</p>
-                <p className="mt-1 text-sm leading-relaxed text-slate-200">{note.body}</p>
-              </li>
-            ))}
-          </ul>
+          <ValidityTable validity={validity} showCounselorGuide />
         </ReportInsightBlock>
       </div>
     );
