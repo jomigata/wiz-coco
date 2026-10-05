@@ -847,15 +847,22 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
                             : opt.circle === 'md'
                               ? 'w-12 h-12 text-lg'
                               : 'w-10 h-10 text-base';
+                        const isCenterLikert = opt.letter === 'C';
                         const glow = opt.glowPink ? answerGlowPink : answerGlowSky;
-                        const cSplitGlow =
-                          '[&::after]:!bg-[linear-gradient(to_right,rgba(56,189,248,0.78)_0%,rgba(56,189,248,0.78)_50%,rgba(244,114,182,0.78)_50%,rgba(244,114,182,0.78)_100%)]';
+                        /** C: B(하늘)·D(분홍)와 동일한 to-top 페이드, 좌·우 반씩 */
+                        const cDualBottomGlow =
+                          '[&::after]:!bg-[linear-gradient(to_top,rgba(56,189,248,0.6),transparent),linear-gradient(to_top,rgba(244,114,182,0.6),transparent)] [&::after]:![background-size:50%_100%,50%_100%] [&::after]:![background-position:left_bottom,right_bottom] [&::after]:!bg-no-repeat';
                         return (
                           <button
                             key={opt.letter}
                             type="button"
                             onClick={() => handleAnswer(opt.value)}
-                            className={`${answerBtnClass(opt.rounded, 'py-0', opt.letter === 'C' ? cSplitGlow : '', glow)} ${EGO_OK_LIKERT_HEIGHT[opt.heightTier]} flex shrink-0 flex-col justify-center`}
+                            className={`${answerBtnClass(
+                              opt.rounded,
+                              'py-0',
+                              isCenterLikert ? cDualBottomGlow : '',
+                              isCenterLikert ? '' : glow,
+                            )} ${EGO_OK_LIKERT_HEIGHT[opt.heightTier]} flex shrink-0 flex-col justify-center`}
                           >
                             {answers[currentQuestion] === opt.value && (
                               <div
