@@ -164,30 +164,14 @@ function pickExtremeEgogramScale(scales: EgoOkScaleScore[], mode: 'max' | 'min')
   });
 }
 
-function plus243StageDigitColorOnLight(stage: Plus243Stage): string {
-  if (stage <= 3) return '#0369a1';
-  if (stage <= 6) return '#047857';
-  return '#be185d';
-}
-
-function Plus243PlusGlyph({
-  entry,
-  className,
-  ink = 'onDark',
-}: {
-  entry: Plus243ScaleEntry;
-  className?: string;
-  ink?: 'onDark' | 'onLight';
-}) {
+function Plus243PlusGlyph({ entry, className }: { entry: Plus243ScaleEntry; className?: string }) {
   const { tier, pattern243Letter } = entry;
   return (
     <span className={`inline-flex items-baseline ${className ?? ''}`}>
-      <span className={`font-mono text-sm font-semibold ${ink === 'onLight' ? 'text-slate-900' : 'text-slate-200'}`}>
-        {pattern243Letter}
-      </span>
+      <span className="font-mono text-sm font-semibold text-slate-200">{pattern243Letter}</span>
       <sup
         className="ml-px font-mono text-[0.55em] font-bold leading-none"
-        style={{ color: ink === 'onLight' ? plus243StageDigitColorOnLight(tier.stage) : plus243StageDigitColor(tier.stage) }}
+        style={{ color: plus243StageDigitColor(tier.stage) }}
       >
         {tier.stage}
       </sup>
@@ -195,19 +179,11 @@ function Plus243PlusGlyph({
   );
 }
 
-function Pattern243PlusCode({
-  plus,
-  className,
-  ink = 'onDark',
-}: {
-  plus: Pattern243Plus;
-  className?: string;
-  ink?: 'onDark' | 'onLight';
-}) {
+function Pattern243PlusCode({ plus, className }: { plus: Pattern243Plus; className?: string }) {
   return (
     <span className={`inline-flex flex-wrap items-baseline gap-0.5 font-mono tracking-wide ${className ?? ''}`}>
       {EGO_SCALE_PATTERN_ORDER.map((id) => (
-        <Plus243PlusGlyph key={id} entry={plus.byScale[id]} ink={ink} />
+        <Plus243PlusGlyph key={id} entry={plus.byScale[id]} />
       ))}
     </span>
   );
@@ -900,6 +876,12 @@ export default function EgoOkCounselorReport({
   onTestGenderChange?: (gender: EgoOkGender) => void;
 }) {
   const chartGender = localTestMode && testGender ? egoOkGenderToLabel(testGender) : clientInfo?.gender;
+  const displayGenderLine =
+    localTestMode && testGender
+      ? egoOkGenderToLabel(testGender)
+      : [clientInfo?.gender, clientInfo?.birthYear ? `${clientInfo.birthYear}년` : '']
+          .filter(Boolean)
+          .join(' · ') || '—';
   const compositeById = Object.fromEntries(report.compositeChart.map((c) => [c.id, c]));
 
   const egogramById = Object.fromEntries(report.egogram.map((s) => [s.id, s]));
@@ -974,116 +956,142 @@ export default function EgoOkCounselorReport({
         label: '표지 · 개요',
         short: '표지',
         description: '검사 표지 · 내담자 · 243 · 요약',
-        surface: 'light',
         panel: (
-          <article className="mx-auto w-full max-w-5xl bg-white text-slate-900 shadow-[0_1px_2px_rgba(28,25,23,0.04),0_16px_40px_rgba(28,25,23,0.06)] ring-1 ring-stone-200/80">
-            <header className="px-6 pb-6 pt-8 sm:px-10 sm:pt-10">
-              <div className="flex items-start justify-between gap-8">
-                <div>
-                  <p className="text-[11px] font-medium tracking-[0.28em] text-stone-400">COUNSELOR REPORT</p>
-                  <h2 className="mt-3 text-[1.7rem] font-semibold leading-tight tracking-tight text-slate-950 sm:text-3xl">
-                    TA 이고-오케이그램 검사
-                  </h2>
-                  <p className="mt-2 text-sm text-stone-500">전문가 해석</p>
-                </div>
-                <p className="hidden shrink-0 pt-1 text-right text-[11px] leading-relaxed text-stone-400 sm:block">
-                  96문항 · 243 · KTAA
-                </p>
-              </div>
-              <p className="mt-6 max-w-xl text-[13px] leading-relaxed text-stone-500">
-                위 목차에서 장을 고르면 해당 결과가 열립니다. 표지는 내담자와 핵심 지표만 모아 둡니다.
+          <div className="flex flex-col gap-3">
+            <ReportInsightBlock tone="indigo" vivid title="TA 이고-오케이그램 검사 · 전문가 해석">
+              <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-indigo-200/80">Counselor report</p>
+              <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-200">
+                96문항(타당도 6문항 분산) · 243패턴 · KTAA · 이고/오케이 · 243+ 해석. 상단 탭을 클릭하거나 마우스를
+                올린 뒤 아래 영역으로 이동하면 해당 결과가 고정됩니다.
               </p>
-              {localTestMode ? (
-                <p className="mt-3 text-xs leading-relaxed text-stone-500">
-                  로컬 테스트입니다. 저장·발송되지 않으며, 성별은 243 구간과 그래프 배경에만 반영됩니다.
+            </ReportInsightBlock>
+            {localTestMode ? (
+              <ReportInsightBlock tone="amber" vivid compact title="로컬 테스트 모드">
+                <p className="text-xs leading-relaxed text-amber-50/90">
+                  저장·발송되지 않습니다. 성별 변경 시 243 구간·그래프 배경이 갱신됩니다.
                 </p>
-              ) : null}
-            </header>
-
-            <dl className="grid grid-cols-2 border-y border-stone-200 bg-stone-50 sm:grid-cols-4">
-              <div className="border-b border-r border-stone-200 px-6 py-4 sm:border-b-0 sm:px-8">
-                <dt className="text-[11px] tracking-[0.12em] text-stone-400">내담자</dt>
-                <dd className="mt-1 text-sm font-medium text-slate-950">{clientInfo?.name?.trim() || '—'}</dd>
-              </div>
-              <div className="border-b border-stone-200 px-6 py-4 sm:border-b-0 sm:border-r sm:px-8">
-                <dt className="text-[11px] tracking-[0.12em] text-stone-400">성별</dt>
-                <dd className="mt-1 text-sm font-medium text-slate-950">
+              </ReportInsightBlock>
+            ) : null}
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-6 lg:auto-rows-min">
+              <ReportInsightBlock
+                tone="emerald"
+                vivid
+                className="min-h-[6.5rem] sm:col-span-1 lg:col-span-2"
+                title="내담자"
+              >
+                <p className="text-xl font-semibold text-white">{clientInfo?.name?.trim() || '—'}</p>
+              </ReportInsightBlock>
+              <ReportInsightBlock
+                tone="sky"
+                vivid
+                className="min-h-[6.5rem] sm:col-span-1 lg:col-span-2"
+                title="성별 · 출생"
+              >
+                <p className="font-medium text-white">
                   {localTestMode && onTestGenderChange && testGender ? (
-                    <span className="inline-flex items-center gap-3">
-                      {(['male', 'female'] as const).map((g) => (
-                        <button
-                          key={g}
-                          type="button"
-                          onClick={() => onTestGenderChange(g)}
-                          className={`text-sm font-medium transition ${
-                            testGender === g
-                              ? 'text-slate-950 underline decoration-stone-400 underline-offset-4'
-                              : 'text-stone-400 hover:text-slate-700'
-                          }`}
-                        >
-                          {egoOkGenderToLabel(g)}
-                        </button>
-                      ))}
+                    <span className="flex flex-wrap items-center gap-2">
+                      <span className="inline-flex rounded-lg bg-black/25 p-0.5 ring-1 ring-white/15">
+                        {(['male', 'female'] as const).map((g) => (
+                          <button
+                            key={g}
+                            type="button"
+                            onClick={() => onTestGenderChange(g)}
+                            className={`rounded-md px-2.5 py-1 text-xs font-semibold transition ${
+                              testGender === g
+                                ? g === 'male'
+                                  ? 'bg-sky-600 text-white'
+                                  : 'bg-rose-600 text-white'
+                                : 'text-slate-300 hover:text-white'
+                            }`}
+                          >
+                            {egoOkGenderToLabel(g)}
+                          </button>
+                        ))}
+                      </span>
+                      {clientInfo?.birthYear ? (
+                        <span className="text-sm text-sky-100/80">· {clientInfo.birthYear}년</span>
+                      ) : null}
                     </span>
                   ) : (
-                    clientInfo?.gender || '—'
+                    <span className="text-lg font-semibold">{displayGenderLine}</span>
                   )}
-                </dd>
-              </div>
-              <div className="border-r border-stone-200 px-6 py-4 sm:px-8">
-                <dt className="text-[11px] tracking-[0.12em] text-stone-400">출생</dt>
-                <dd className="mt-1 text-sm font-medium text-slate-950">
-                  {clientInfo?.birthYear ? `${clientInfo.birthYear}년` : '—'}
-                </dd>
-              </div>
-              <div className="px-6 py-4 sm:px-8">
-                <dt className="text-[11px] tracking-[0.12em] text-stone-400">타당도</dt>
-                <dd className="mt-1 text-sm font-medium text-slate-950">{report.validity?.overallTitle ?? '—'}</dd>
-              </div>
-            </dl>
-
-            <div className="grid lg:grid-cols-2">
-              <section className="border-b border-stone-200 px-6 py-8 sm:px-10 lg:border-b-0 lg:border-r">
-                <p className="text-[11px] tracking-[0.2em] text-stone-400">243 PATTERN</p>
-                <p className="mt-4 font-mono text-3xl font-medium tracking-[0.28em] text-slate-950 sm:text-4xl">
-                  {report.patternCode}
                 </p>
-                <div className="mt-5 flex items-baseline gap-3">
-                  <span className="text-[11px] tracking-[0.14em] text-stone-400">243+</span>
-                  <Pattern243PlusCode plus={report.pattern243Plus} ink="onLight" className="text-base" />
-                </div>
-                <p className="mt-8 max-w-sm text-xs leading-relaxed text-stone-500">
+              </ReportInsightBlock>
+              <ReportInsightBlock
+                tone="violet"
+                vivid
+                className="min-h-[11rem] sm:col-span-2 lg:col-span-2 lg:row-span-2"
+                title="243 패턴 · 243+"
+              >
+                <Pattern243AndPlusCode block patternCode={report.patternCode} plus={report.pattern243Plus} />
+              </ReportInsightBlock>
+              <ReportInsightBlock
+                tone={
+                  report.validity?.overall === 'invalid'
+                    ? 'rose'
+                    : report.validity?.overall === 'caution'
+                      ? 'amber'
+                      : 'teal'
+                }
+                vivid
+                className="min-h-[6.5rem] lg:col-span-2"
+                title="타당도"
+              >
+                <p className="text-lg font-semibold leading-snug text-white">
+                  {report.validity?.overallTitle ?? '—'}
+                </p>
+              </ReportInsightBlock>
+              <ReportInsightBlock
+                tone="indigo"
+                vivid
+                className="min-h-[6.5rem] lg:col-span-2"
+                title="인생태도(명칭)"
+              >
+                <p className="text-lg font-semibold text-indigo-50">{report.lifePosition.kind}</p>
+              </ReportInsightBlock>
+              <ReportInsightBlock
+                tone="fuchsia"
+                vivid
+                className="min-h-[7.5rem] lg:col-span-2"
+                title="최고 이고 척도"
+              >
+                <p className="text-2xl font-semibold tracking-normal text-white">
+                  {peakEgogram.id}
+                  <span className="ml-2 text-base font-medium text-fuchsia-100/90">{peakEgogram.raw}점</span>
+                </p>
+                <p className="mt-1 text-sm text-fuchsia-100/75">{peakEgogram.label}</p>
+              </ReportInsightBlock>
+              <ReportInsightBlock
+                tone="teal"
+                vivid
+                className="min-h-[7.5rem] lg:col-span-2"
+                title="최저 이고 척도"
+              >
+                <p className="text-2xl font-semibold tracking-normal text-white">
+                  {lowEgogram.id}
+                  <span className="ml-2 text-base font-medium text-teal-100/90">{lowEgogram.raw}점</span>
+                </p>
+                <p className="mt-1 text-sm text-teal-100/75">{lowEgogram.label}</p>
+              </ReportInsightBlock>
+              <ReportInsightBlock tone="amber" vivid className="min-h-[7.5rem] lg:col-span-2" title="형태명">
+                <p className="text-lg font-semibold leading-snug text-amber-50">
+                  {formLabel && formLabel !== '—' ? formLabel : '—'}
+                </p>
+              </ReportInsightBlock>
+              <ReportInsightBlock
+                tone="rose"
+                vivid
+                className="min-h-[5.5rem] sm:col-span-2 lg:col-span-6"
+                title="243패턴 문장"
+              >
+                <p className="text-sm leading-relaxed text-rose-50/90">
                   {report.pattern243.missing
-                    ? '기준 문장 없음. 코드만 참고합니다.'
-                    : `보고서 ${report.pattern243.reportNo ?? '—'} · 243+와 오케이 장에서 문장을 봅니다.`}
+                    ? '기준 문장 없음 — 코드만 참고'
+                    : `보고서 ${report.pattern243.reportNo ?? '—'} · 탭「243+」「오케이」참고`}
                 </p>
-              </section>
-
-              <dl>
-                {(
-                  [
-                    ['인생태도', report.lifePosition.kind],
-                    ['최고 이고', `${peakEgogram.id} · ${peakEgogram.raw}점`, peakEgogram.label],
-                    ['최저 이고', `${lowEgogram.id} · ${lowEgogram.raw}점`, lowEgogram.label],
-                    ['형태명', formLabel && formLabel !== '—' ? formLabel : '—'],
-                  ] as [string, string, string?][]
-                ).map(([label, value, note], index, rows) => (
-                  <div
-                    key={label}
-                    className={`grid grid-cols-[6.5rem_minmax(0,1fr)] items-baseline gap-4 px-6 py-4 sm:px-8 ${
-                      index < rows.length - 1 ? 'border-b border-stone-100' : ''
-                    }`}
-                  >
-                    <dt className="text-[11px] tracking-[0.08em] text-stone-400">{label}</dt>
-                    <dd>
-                      <p className="text-sm font-medium text-slate-950">{value}</p>
-                      {note ? <p className="mt-0.5 text-xs text-stone-500">{note}</p> : null}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
+              </ReportInsightBlock>
             </div>
-          </article>
+          </div>
         ),
       },
       {
@@ -1253,6 +1261,7 @@ export default function EgoOkCounselorReport({
   }, [
     chartGender,
     clientInfo,
+    displayGenderLine,
     formLabel,
     innerMindPairs,
     localTestMode,
