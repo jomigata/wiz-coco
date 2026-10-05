@@ -336,10 +336,11 @@ const EGOGRAM_RADAR_OK_RED = '#ef4444';
 const EGOGRAM_RADAR_SCORE_MAX = 50;
 const EGOGRAM_PLUS_BAND_INNER = 23;
 const EGOGRAM_PLUS_BAND_OUTER = 37;
-const PATTERN_FILL = 'rgba(139, 92, 246, 0.5)';
-const PATTERN_FILL_HOT = 'rgba(196, 181, 253, 0.88)';
+const PATTERN_FILL = 'rgba(192, 38, 211, 0.5)';
+const PATTERN_STROKE = 'rgba(232, 121, 249, 0.95)';
 const PLUS_FILL = 'rgba(250, 204, 21, 0.5)';
-const PLUS_FILL_HOT = 'rgba(254, 240, 138, 0.9)';
+const PLUS_STROKE = 'rgba(250, 204, 21, 0.95)';
+const EGOGRAM_SCORE_RED = '#ef4444';
 
 /** 이고 척도 → 오케이 합계 척도 (KTAA·종합그래프와 동일) */
 const EGO_TO_OK_SCORE: Record<EgoScaleId, OkScaleId | null> = {
@@ -500,14 +501,11 @@ function EgogramFiveScaleRadarChart({
         if (cx == null || cy == null || !payload) return null;
         if (payload.scale === resolvedPeakId) {
           return (
-            <g pointerEvents="none">
-              <circle cx={cx} cy={cy} r={9} fill={EGOGRAM_RADAR_PINK} fillOpacity={0.35} />
-              <circle cx={cx} cy={cy} r={6.5} fill={EGOGRAM_RADAR_PINK} stroke="#ffffff" strokeWidth={2.5} />
-            </g>
+            <circle cx={cx} cy={cy} r={6.5} fill={EGOGRAM_SCORE_RED} stroke="#ffffff" strokeWidth={2.5} pointerEvents="none" />
           );
         }
         return (
-          <circle cx={cx} cy={cy} r={4} fill="#eef2ff" stroke="#818cf8" strokeWidth={2} />
+          <circle cx={cx} cy={cy} r={4.5} fill={EGOGRAM_SCORE_RED} stroke="#ffffff" strokeWidth={1.5} />
         );
       },
     [resolvedPeakId],
@@ -519,7 +517,7 @@ function EgogramFiveScaleRadarChart({
         const { cx, cy, payload } = props;
         if (cx == null || cy == null || !payload) return null;
         if (payload.scale === resolvedPeakId) return null;
-        return <circle cx={cx} cy={cy} r={6} fill="#ffffff" stroke="#a5b4fc" strokeWidth={2} />;
+        return <circle cx={cx} cy={cy} r={6} fill={EGOGRAM_SCORE_RED} stroke="#ffffff" strokeWidth={2} />;
       },
     [resolvedPeakId],
   );
@@ -575,7 +573,7 @@ function EgogramFiveScaleRadarChart({
         <Radar
           name="점수"
           dataKey="score"
-          stroke="#c7d2fe"
+          stroke={EGOGRAM_SCORE_RED}
           fill="none"
           strokeWidth={2.5}
           isAnimationActive={false}
@@ -598,15 +596,18 @@ function EgogramFiveScaleRadarChart({
         onBlur={() => setHotBand(null)}
       >
         <span
-          className={`inline-block shrink-0 rounded-[2px] ring-1 ring-violet-200/80 transition-all duration-200 ${
+          className={`inline-block shrink-0 rounded-[2px] transition-all duration-200 ${
             hotBand === 'pattern' ? 'h-5 w-5' : 'h-3.5 w-3.5'
           }`}
-          style={{ backgroundColor: hotBand === 'pattern' ? PATTERN_FILL_HOT : PATTERN_FILL }}
+          style={{
+            backgroundColor: hotBand === 'plus' ? 'transparent' : PATTERN_FILL,
+            boxShadow: `inset 0 0 0 2px ${PATTERN_STROKE}`,
+          }}
           aria-hidden
         />
         <span
           className={`transition-all duration-200 ${
-            hotBand === 'pattern' ? 'text-sm font-semibold text-violet-100' : ''
+            hotBand === 'pattern' ? 'text-sm font-semibold text-fuchsia-100' : ''
           }`}
         >
           243패턴
@@ -621,10 +622,13 @@ function EgogramFiveScaleRadarChart({
         onBlur={() => setHotBand(null)}
       >
         <span
-          className={`inline-block shrink-0 rounded-[2px] ring-1 ring-yellow-200/80 transition-all duration-200 ${
+          className={`inline-block shrink-0 rounded-[2px] transition-all duration-200 ${
             hotBand === 'plus' ? 'h-5 w-5' : 'h-3.5 w-3.5'
           }`}
-          style={{ backgroundColor: hotBand === 'plus' ? PLUS_FILL_HOT : PLUS_FILL }}
+          style={{
+            backgroundColor: hotBand === 'plus' ? PLUS_FILL : 'transparent',
+            boxShadow: `inset 0 0 0 2px ${PLUS_STROKE}`,
+          }}
           aria-hidden
         />
         <span
@@ -709,38 +713,31 @@ function createEgogramRadarBands(
         : Array.from({ length: rows.length }, (_, index) => 90 - index * (360 / rows.length));
 
     const zones = KTAA_GRAPH_ZONES[gender];
-    const patternExpand = highlight === 'pattern' ? 2 : 0;
-    const patternInner = rows.map((row) =>
-      Math.max(0, zones[row.scale as EgoScaleId].redTop - patternExpand),
-    );
-    const patternOuter = rows.map((row) =>
-      Math.min(EGOGRAM_RADAR_SCORE_MAX, zones[row.scale as EgoScaleId].whiteTop + patternExpand),
-    );
-    const plusExpand = highlight === 'plus' ? 2 : 0;
-    const plusInner = rows.map(() => EGOGRAM_PLUS_BAND_INNER - plusExpand);
-    const plusOuter = rows.map(() => EGOGRAM_PLUS_BAND_OUTER + plusExpand);
+    const showPlusFill = highlight === 'plus';
+    const patternInner = rows.map((row) => zones[row.scale as EgoScaleId].redTop);
+    const patternOuter = rows.map((row) => zones[row.scale as EgoScaleId].whiteTop);
+    const plusInner = rows.map(() => EGOGRAM_PLUS_BAND_INNER);
+    const plusOuter = rows.map(() => EGOGRAM_PLUS_BAND_OUTER);
 
     const patternPath = bandRingPath(cx, cy, angles, radiusAt, patternInner, patternOuter);
     const plusPath = bandRingPath(cx, cy, angles, radiusAt, plusInner, plusOuter);
-    const patternFill = highlight === 'pattern' ? PATTERN_FILL_HOT : PATTERN_FILL;
-    const plusFill = highlight === 'plus' ? PLUS_FILL_HOT : PLUS_FILL;
     const patternNode = (
       <path
         d={patternPath}
-        fill={patternFill}
+        fill={showPlusFill ? 'none' : PATTERN_FILL}
         fillRule="evenodd"
-        stroke={patternFill}
-        strokeWidth={highlight === 'pattern' ? 2 : 1}
+        stroke={PATTERN_STROKE}
+        strokeWidth={1.5}
         pointerEvents="none"
       />
     );
     const plusNode = (
       <path
         d={plusPath}
-        fill={plusFill}
+        fill={showPlusFill ? PLUS_FILL : 'none'}
         fillRule="evenodd"
-        stroke={plusFill}
-        strokeWidth={highlight === 'plus' ? 2 : 1}
+        stroke={PLUS_STROKE}
+        strokeWidth={1.5}
         pointerEvents="none"
       />
     );
