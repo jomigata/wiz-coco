@@ -17,6 +17,8 @@ export type CounselorReportTab = {
   label: string;
   short?: string;
   description?: string;
+  /** 표지처럼 본문 지면을 밝게 쓸 때 */
+  surface?: 'light';
   panel: ReactNode;
 };
 
@@ -64,8 +66,9 @@ export default function EgoOkCounselorReportTabShell({
   }, [tabs.length]);
 
   const displayId = previewId ?? activeId;
-  const activePanel =
-    tabs.find((t) => t.id === displayId)?.panel ?? tabs.find((t) => t.id === activeId)?.panel;
+  const displayTab = tabs.find((t) => t.id === displayId) ?? tabs.find((t) => t.id === activeId);
+  const activePanel = displayTab?.panel;
+  const lightSurface = displayTab?.surface === 'light';
 
   const selectTab = useCallback((id: string) => {
     setActiveId(id);
@@ -128,14 +131,16 @@ export default function EgoOkCounselorReportTabShell({
       </nav>
 
       <div
-        className={`fixed inset-x-2 bottom-2 z-40 ${EGO_OK_REPORT_PANEL_OUTER}`}
+        className={`fixed inset-x-2 bottom-2 z-40 ${lightSurface ? 'bg-[#f3f1ec]' : EGO_OK_REPORT_PANEL_OUTER}`}
         style={{ top: navBottomPx, height: panelHeight }}
         onMouseEnter={lockPreviewToActive}
       >
         <div className="relative h-full min-h-0">
           <div
             ref={scrollRef}
-            className={`h-full overflow-auto overscroll-contain px-4 py-6 [scrollbar-width:thin] sm:px-8 sm:py-8 ${EGO_OK_REPORT_PANEL_SCROLL}`}
+            className={`h-full overflow-auto overscroll-contain [scrollbar-width:thin] ${
+              lightSurface ? 'px-4 py-8 sm:px-8 sm:py-10' : `px-4 py-6 sm:px-8 sm:py-8 ${EGO_OK_REPORT_PANEL_SCROLL}`
+            }`}
           >
             <div key={displayId} className="flex min-h-min flex-col gap-2">
               {activePanel}

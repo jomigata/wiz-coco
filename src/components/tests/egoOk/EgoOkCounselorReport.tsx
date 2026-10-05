@@ -164,14 +164,30 @@ function pickExtremeEgogramScale(scales: EgoOkScaleScore[], mode: 'max' | 'min')
   });
 }
 
-function Plus243PlusGlyph({ entry, className }: { entry: Plus243ScaleEntry; className?: string }) {
+function plus243StageDigitColorOnLight(stage: Plus243Stage): string {
+  if (stage <= 3) return '#0369a1';
+  if (stage <= 6) return '#047857';
+  return '#be185d';
+}
+
+function Plus243PlusGlyph({
+  entry,
+  className,
+  ink = 'onDark',
+}: {
+  entry: Plus243ScaleEntry;
+  className?: string;
+  ink?: 'onDark' | 'onLight';
+}) {
   const { tier, pattern243Letter } = entry;
   return (
     <span className={`inline-flex items-baseline ${className ?? ''}`}>
-      <span className="font-mono text-sm font-semibold text-slate-200">{pattern243Letter}</span>
+      <span className={`font-mono text-sm font-semibold ${ink === 'onLight' ? 'text-slate-900' : 'text-slate-200'}`}>
+        {pattern243Letter}
+      </span>
       <sup
         className="ml-px font-mono text-[0.55em] font-bold leading-none"
-        style={{ color: plus243StageDigitColor(tier.stage) }}
+        style={{ color: ink === 'onLight' ? plus243StageDigitColorOnLight(tier.stage) : plus243StageDigitColor(tier.stage) }}
       >
         {tier.stage}
       </sup>
@@ -179,11 +195,19 @@ function Plus243PlusGlyph({ entry, className }: { entry: Plus243ScaleEntry; clas
   );
 }
 
-function Pattern243PlusCode({ plus, className }: { plus: Pattern243Plus; className?: string }) {
+function Pattern243PlusCode({
+  plus,
+  className,
+  ink = 'onDark',
+}: {
+  plus: Pattern243Plus;
+  className?: string;
+  ink?: 'onDark' | 'onLight';
+}) {
   return (
     <span className={`inline-flex flex-wrap items-baseline gap-0.5 font-mono tracking-wide ${className ?? ''}`}>
       {EGO_SCALE_PATTERN_ORDER.map((id) => (
-        <Plus243PlusGlyph key={id} entry={plus.byScale[id]} />
+        <Plus243PlusGlyph key={id} entry={plus.byScale[id]} ink={ink} />
       ))}
     </span>
   );
@@ -950,33 +974,40 @@ export default function EgoOkCounselorReport({
         label: '표지 · 개요',
         short: '표지',
         description: '검사 표지 · 내담자 · 243 · 요약',
+        surface: 'light',
         panel: (
-          <article className="mx-auto w-full max-w-5xl border border-white/10 bg-[#0c121c]">
-            <header className="border-b border-white/10 px-6 py-7 sm:px-8">
-              <p className="text-[11px] font-medium tracking-[0.32em] text-slate-500">COUNSELOR REPORT</p>
-              <h2 className="mt-3 text-2xl font-medium tracking-tight text-white sm:text-[1.75rem]">
-                TA 이고-오케이그램 검사
-              </h2>
-              <p className="mt-1 text-sm text-slate-400">전문가 해석</p>
-              <p className="mt-5 max-w-2xl text-xs leading-relaxed text-slate-500">
-                96문항(타당도 6문항 분산) · 243패턴 · KTAA · 이고/오케이 · 243+ 해석. 위 목차를 누르면 해당 장이
-                열립니다.
+          <article className="mx-auto w-full max-w-5xl bg-white text-slate-900 shadow-[0_1px_2px_rgba(28,25,23,0.04),0_16px_40px_rgba(28,25,23,0.06)] ring-1 ring-stone-200/80">
+            <header className="px-6 pb-6 pt-8 sm:px-10 sm:pt-10">
+              <div className="flex items-start justify-between gap-8">
+                <div>
+                  <p className="text-[11px] font-medium tracking-[0.28em] text-stone-400">COUNSELOR REPORT</p>
+                  <h2 className="mt-3 text-[1.7rem] font-semibold leading-tight tracking-tight text-slate-950 sm:text-3xl">
+                    TA 이고-오케이그램 검사
+                  </h2>
+                  <p className="mt-2 text-sm text-stone-500">전문가 해석</p>
+                </div>
+                <p className="hidden shrink-0 pt-1 text-right text-[11px] leading-relaxed text-stone-400 sm:block">
+                  96문항 · 243 · KTAA
+                </p>
+              </div>
+              <p className="mt-6 max-w-xl text-[13px] leading-relaxed text-stone-500">
+                위 목차에서 장을 고르면 해당 결과가 열립니다. 표지는 내담자와 핵심 지표만 모아 둡니다.
               </p>
               {localTestMode ? (
-                <p className="mt-3 text-xs text-slate-400">
-                  로컬 테스트 · 저장·발송되지 않습니다. 성별은 243 구간과 그래프 배경에만 반영됩니다.
+                <p className="mt-3 text-xs leading-relaxed text-stone-500">
+                  로컬 테스트입니다. 저장·발송되지 않으며, 성별은 243 구간과 그래프 배경에만 반영됩니다.
                 </p>
               ) : null}
             </header>
 
-            <dl className="grid grid-cols-2 border-b border-white/10 sm:grid-cols-4">
-              <div className="border-b border-r border-white/10 px-6 py-4 sm:border-b-0">
-                <dt className="text-[11px] tracking-[0.14em] text-slate-500">내담자</dt>
-                <dd className="mt-1.5 text-sm text-white">{clientInfo?.name?.trim() || '—'}</dd>
+            <dl className="grid grid-cols-2 border-y border-stone-200 bg-stone-50 sm:grid-cols-4">
+              <div className="border-b border-r border-stone-200 px-6 py-4 sm:border-b-0 sm:px-8">
+                <dt className="text-[11px] tracking-[0.12em] text-stone-400">내담자</dt>
+                <dd className="mt-1 text-sm font-medium text-slate-950">{clientInfo?.name?.trim() || '—'}</dd>
               </div>
-              <div className="border-b border-white/10 px-6 py-4 sm:border-b-0 sm:border-r">
-                <dt className="text-[11px] tracking-[0.14em] text-slate-500">성별</dt>
-                <dd className="mt-1.5 text-sm text-white">
+              <div className="border-b border-stone-200 px-6 py-4 sm:border-b-0 sm:border-r sm:px-8">
+                <dt className="text-[11px] tracking-[0.12em] text-stone-400">성별</dt>
+                <dd className="mt-1 text-sm font-medium text-slate-950">
                   {localTestMode && onTestGenderChange && testGender ? (
                     <span className="inline-flex items-center gap-3">
                       {(['male', 'female'] as const).map((g) => (
@@ -984,10 +1015,10 @@ export default function EgoOkCounselorReport({
                           key={g}
                           type="button"
                           onClick={() => onTestGenderChange(g)}
-                          className={`text-sm transition ${
+                          className={`text-sm font-medium transition ${
                             testGender === g
-                              ? 'text-white underline decoration-white/40 underline-offset-4'
-                              : 'text-slate-500 hover:text-slate-200'
+                              ? 'text-slate-950 underline decoration-stone-400 underline-offset-4'
+                              : 'text-stone-400 hover:text-slate-700'
                           }`}
                         >
                           {egoOkGenderToLabel(g)}
@@ -999,60 +1030,54 @@ export default function EgoOkCounselorReport({
                   )}
                 </dd>
               </div>
-              <div className="border-r border-white/10 px-6 py-4">
-                <dt className="text-[11px] tracking-[0.14em] text-slate-500">출생</dt>
-                <dd className="mt-1.5 text-sm text-white">
+              <div className="border-r border-stone-200 px-6 py-4 sm:px-8">
+                <dt className="text-[11px] tracking-[0.12em] text-stone-400">출생</dt>
+                <dd className="mt-1 text-sm font-medium text-slate-950">
                   {clientInfo?.birthYear ? `${clientInfo.birthYear}년` : '—'}
                 </dd>
               </div>
-              <div className="px-6 py-4">
-                <dt className="text-[11px] tracking-[0.14em] text-slate-500">타당도</dt>
-                <dd className="mt-1.5 text-sm text-white">{report.validity?.overallTitle ?? '—'}</dd>
+              <div className="px-6 py-4 sm:px-8">
+                <dt className="text-[11px] tracking-[0.12em] text-stone-400">타당도</dt>
+                <dd className="mt-1 text-sm font-medium text-slate-950">{report.validity?.overallTitle ?? '—'}</dd>
               </div>
             </dl>
 
-            <div className="grid lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
-              <section className="border-b border-white/10 px-6 py-8 sm:px-8 lg:border-b-0 lg:border-r">
-                <p className="text-[11px] tracking-[0.22em] text-slate-500">243 PATTERN</p>
-                <p className="mt-4 font-mono text-3xl tracking-[0.32em] text-white sm:text-4xl">
+            <div className="grid lg:grid-cols-2">
+              <section className="border-b border-stone-200 px-6 py-8 sm:px-10 lg:border-b-0 lg:border-r">
+                <p className="text-[11px] tracking-[0.2em] text-stone-400">243 PATTERN</p>
+                <p className="mt-4 font-mono text-3xl font-medium tracking-[0.28em] text-slate-950 sm:text-4xl">
                   {report.patternCode}
                 </p>
                 <div className="mt-5 flex items-baseline gap-3">
-                  <span className="text-[11px] tracking-[0.14em] text-slate-500">243+</span>
-                  <Pattern243PlusCode plus={report.pattern243Plus} className="text-base" />
+                  <span className="text-[11px] tracking-[0.14em] text-stone-400">243+</span>
+                  <Pattern243PlusCode plus={report.pattern243Plus} ink="onLight" className="text-base" />
                 </div>
-                <p className="mt-8 max-w-sm text-xs leading-relaxed text-slate-500">
+                <p className="mt-8 max-w-sm text-xs leading-relaxed text-stone-500">
                   {report.pattern243.missing
                     ? '기준 문장 없음. 코드만 참고합니다.'
-                    : `보고서 ${report.pattern243.reportNo ?? '—'} · 243+ · 오케이 장에서 문장을 봅니다.`}
+                    : `보고서 ${report.pattern243.reportNo ?? '—'} · 243+와 오케이 장에서 문장을 봅니다.`}
                 </p>
               </section>
 
               <dl>
-                {[
-                  ['인생태도', report.lifePosition.kind],
+                {(
                   [
-                    '최고 이고',
-                    `${peakEgogram.id} · ${peakEgogram.raw}점`,
-                    peakEgogram.label,
-                  ],
-                  [
-                    '최저 이고',
-                    `${lowEgogram.id} · ${lowEgogram.raw}점`,
-                    lowEgogram.label,
-                  ],
-                  ['형태명', formLabel && formLabel !== '—' ? formLabel : '—'],
-                ].map(([label, value, note], index, rows) => (
+                    ['인생태도', report.lifePosition.kind],
+                    ['최고 이고', `${peakEgogram.id} · ${peakEgogram.raw}점`, peakEgogram.label],
+                    ['최저 이고', `${lowEgogram.id} · ${lowEgogram.raw}점`, lowEgogram.label],
+                    ['형태명', formLabel && formLabel !== '—' ? formLabel : '—'],
+                  ] as [string, string, string?][]
+                ).map(([label, value, note], index, rows) => (
                   <div
                     key={label}
-                    className={`grid grid-cols-[7.5rem_minmax(0,1fr)] gap-3 px-6 py-4 sm:px-8 ${
-                      index < rows.length - 1 ? 'border-b border-white/10' : ''
+                    className={`grid grid-cols-[6.5rem_minmax(0,1fr)] items-baseline gap-4 px-6 py-4 sm:px-8 ${
+                      index < rows.length - 1 ? 'border-b border-stone-100' : ''
                     }`}
                   >
-                    <dt className="pt-0.5 text-[11px] tracking-[0.12em] text-slate-500">{label}</dt>
+                    <dt className="text-[11px] tracking-[0.08em] text-stone-400">{label}</dt>
                     <dd>
-                      <p className="text-sm text-white">{value}</p>
-                      {note ? <p className="mt-0.5 text-xs text-slate-500">{note}</p> : null}
+                      <p className="text-sm font-medium text-slate-950">{value}</p>
+                      {note ? <p className="mt-0.5 text-xs text-stone-500">{note}</p> : null}
                     </dd>
                   </div>
                 ))}
