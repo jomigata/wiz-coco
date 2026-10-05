@@ -1043,7 +1043,7 @@ export default function EgoOkCounselorReport({
                 {report.validity ? (
                   <div className="mt-3 rounded-lg bg-black/25 p-3 ring-1 ring-white/10">
                     <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-300">세부 내역</p>
-                    <ValidityTable validity={report.validity} />
+                    <ValidityTable validity={report.validity} showScoreBands={false} />
                   </div>
                 ) : null}
               </ReportInsightBlock>

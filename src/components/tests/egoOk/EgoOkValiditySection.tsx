@@ -32,25 +32,34 @@ function statusClass(status: ValidityScaleStatus): string {
   return 'text-rose-300';
 }
 
-function CriteriaCell({ role, bands }: { role: string; bands: string[] }) {
+function CriteriaCell({ role, bands }: { role: string; bands?: string[] }) {
   return (
     <div className="min-w-[16rem] max-w-md space-y-2 py-0.5">
       <p className="text-sm leading-relaxed text-slate-100">{role}</p>
-      <ul className="space-y-1">
-        {bands.map((band) => (
-          <li
-            key={band}
-            className="rounded-md bg-black/30 px-2 py-1 text-xs leading-relaxed text-slate-200 ring-1 ring-white/10"
-          >
-            {band}
-          </li>
-        ))}
-      </ul>
+      {bands && bands.length > 0 ? (
+        <ul className="space-y-1">
+          {bands.map((band) => (
+            <li
+              key={band}
+              className="rounded-md bg-black/30 px-2 py-1 text-xs leading-relaxed text-slate-200 ring-1 ring-white/10"
+            >
+              {band}
+            </li>
+          ))}
+        </ul>
+      ) : null}
     </div>
   );
 }
 
-export function ValidityTable({ validity }: { validity: EgoOkValidityProfile }) {
+export function ValidityTable({
+  validity,
+  showScoreBands = true,
+}: {
+  validity: EgoOkValidityProfile;
+  /** 표지 세부 내역에서는 정상·주의·무효 줄을 숨김 */
+  showScoreBands?: boolean;
+}) {
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[40rem] border-collapse text-left text-sm text-slate-300">
@@ -74,7 +83,11 @@ export function ValidityTable({ validity }: { validity: EgoOkValidityProfile }) 
             <td className="py-3 align-top">
               <CriteriaCell
                 role="지시된 답을 골랐는지 확인해, 문항을 읽지 않고 응답했는지 봅니다."
-                bands={['정상: 두 문항 모두 지정 응답', '주의: 지정 응답 실패 1개', '무효: 지정 응답 실패 2개']}
+                bands={
+                  showScoreBands
+                    ? ['정상: 두 문항 모두 지정 응답', '주의: 지정 응답 실패 1개', '무효: 지정 응답 실패 2개']
+                    : undefined
+                }
               />
             </td>
           </tr>
@@ -90,7 +103,9 @@ export function ValidityTable({ validity }: { validity: EgoOkValidityProfile }) 
             <td className="py-3 align-top">
               <CriteriaCell
                 role="자신을 사회적으로 좋아 보이게 답하는 경향을 봅니다."
-                bands={['정상: 5점 이하', '주의: 6–7점', '무효: 8점 이상 (과도한 방어·위선)']}
+                bands={
+                  showScoreBands ? ['정상: 5점 이하', '주의: 6–7점', '무효: 8점 이상 (과도한 방어·위선)'] : undefined
+                }
               />
             </td>
           </tr>
@@ -106,7 +121,11 @@ export function ValidityTable({ validity }: { validity: EgoOkValidityProfile }) 
             <td className="py-3 align-top">
               <CriteriaCell
                 role="흔하지 않은 반응을 골라, 과장이나 무작위 응답 가능성을 봅니다."
-                bands={['정상: 3점 이하', '주의: 4–5점', '무효: 6점 이상 (꾀병 또는 무작위 응답)']}
+                bands={
+                  showScoreBands
+                    ? ['정상: 3점 이하', '주의: 4–5점', '무효: 6점 이상 (꾀병 또는 무작위 응답)']
+                    : undefined
+                }
               />
             </td>
           </tr>
@@ -122,7 +141,11 @@ export function ValidityTable({ validity }: { validity: EgoOkValidityProfile }) 
             <td className="py-3 align-top">
               <CriteriaCell
                 role="뜻이 반대인 문항에 함께 동의하는지 봐서, 답이 서로 맞는지 확인합니다."
-                bands={['정상: 불일치 없음', '주의: 불일치 1쌍', '무효: 불일치 2쌍 이상 (비일관적)']}
+                bands={
+                  showScoreBands
+                    ? ['정상: 불일치 없음', '주의: 불일치 1쌍', '무효: 불일치 2쌍 이상 (비일관적)']
+                    : undefined
+                }
               />
             </td>
           </tr>
