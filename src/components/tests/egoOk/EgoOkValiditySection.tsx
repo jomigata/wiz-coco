@@ -72,18 +72,18 @@ function ScaleMetricRow({
   return (
     <>
       <tr className={guide ? undefined : 'border-b border-white/10'}>
-        <td className="pb-1 pr-3 pt-3 align-top font-medium text-white">{label}</td>
-        <td className="pb-1 pr-3 pt-3 align-top">{measured}</td>
-        <td className="pb-1 pr-3 pt-3 align-top font-mono">{score}</td>
-        <td className={`pb-1 pr-3 pt-3 align-top font-semibold ${statusClass(status)}`}>{statusKo(status)}</td>
+        <td className="pr-3 pt-3 align-top font-medium text-white">{label}</td>
+        <td className="pr-3 pt-3 align-top">{measured}</td>
+        <td className="pr-3 pt-3 align-top font-mono">{score}</td>
+        <td className={`pr-3 pt-3 align-top font-semibold ${statusClass(status)}`}>{statusKo(status)}</td>
         <td className="py-3 align-top" rowSpan={guide ? 2 : 1}>
           <CriteriaCell role={role} bands={bands} />
         </td>
       </tr>
       {guide ? (
         <tr className="border-b border-white/10">
-          <td colSpan={4} className="px-1 pb-3 pt-1">
-            <div className="rounded-lg bg-violet-500/15 px-3 py-2 ring-1 ring-violet-300/35">
+          <td colSpan={4} className="p-0">
+            <div className="mx-2 mb-3 mt-2 rounded-lg bg-violet-500/15 px-3 py-2 ring-1 ring-violet-300/35">
               <p className="text-sm leading-relaxed text-slate-100">
                 <span className="font-semibold text-violet-100">상담사 가이드용 : </span>
                 {guide}
