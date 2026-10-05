@@ -28,7 +28,8 @@ for (let i = 0; i < 96; i++) {
     console.error(`Missing item no ${i + 1}`);
     process.exit(1);
   }
-  const text = texts[i];
+  const raw = texts[i];
+  const text = raw.replace(/@/g, '\n');
   item.text = text;
   item.readingText = text;
 }

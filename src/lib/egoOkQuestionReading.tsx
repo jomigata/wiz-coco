@@ -1,11 +1,16 @@
 'use client';
 
 import { useLayoutEffect, useRef, useState } from 'react';
+import {
+  applyOptionalLineBreaks,
+  collapseOptionalLineBreaks,
+  hasOptionalLineBreak,
+} from '@/lib/egoOkQuestionBreaks';
 
 const WRAPPER_CLASS =
   "inline-block max-w-[min(100%,38rem)] font-['Malgun_Gothic','Apple_SD_Gothic_Neo','Noto_Sans_KR',sans-serif] text-[17px] font-normal leading-[1.65] tracking-[0.02em] text-slate-50 sm:text-[18px]";
 
-/** 고정 \\n + 자동 줄바꿈으로 시각 줄 수가 3줄 이상(줄바꿈 2회 이상)이면 고정 줄바꿈 제거 */
+/** 시각 줄 수가 3줄 이상(줄바꿈 2회 이상)이면 @/\\n 고정 줄바꿈 제거 */
 function countVisualLines(el: HTMLElement): number {
   const range = document.createRange();
   range.selectNodeContents(el);
@@ -16,10 +21,6 @@ function countVisualLines(el: HTMLElement): number {
     tops.add(Math.round(rects[i].top));
   }
   return tops.size;
-}
-
-function collapseFixedBreaks(text: string): string {
-  return text.replace(/\n+/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
 function ReadingLines({ text }: { text: string }) {
@@ -44,16 +45,17 @@ function ReadingLines({ text }: { text: string }) {
   );
 }
 
-/** 엑셀 체크리스트와 유사한 고딕 · 구절 쉼표(,) 가독성 */
+/** 엑셀 체크리스트와 유사한 고딕 · 구절 쉼표(,) · @ 선택 줄바꿈 */
 export function EgoOkQuestionReading({ readingText }: { readingText: string }) {
   const [stripFixedBreaks, setStripFixedBreaks] = useState(false);
   const rootRef = useRef<HTMLSpanElement>(null);
   const probeRef = useRef<HTMLSpanElement>(null);
-  const hasFixedBreak = readingText.includes('\n');
-  const displayText = hasFixedBreak && stripFixedBreaks ? collapseFixedBreaks(readingText) : readingText;
+  const hasBreak = hasOptionalLineBreak(readingText);
+  const withBreaks = applyOptionalLineBreaks(readingText);
+  const displayText = hasBreak && stripFixedBreaks ? collapseOptionalLineBreaks(readingText) : withBreaks;
 
   useLayoutEffect(() => {
-    if (!hasFixedBreak) {
+    if (!hasBreak) {
       setStripFixedBreaks(false);
       return;
     }
@@ -74,7 +76,7 @@ export function EgoOkQuestionReading({ readingText }: { readingText: string }) {
     const ro = new ResizeObserver(decide);
     ro.observe(container);
     return () => ro.disconnect();
-  }, [readingText, hasFixedBreak]);
+  }, [readingText, hasBreak]);
 
   return (
     <>
@@ -83,7 +85,7 @@ export function EgoOkQuestionReading({ readingText }: { readingText: string }) {
         aria-hidden
         className={`pointer-events-none fixed left-[-10000px] top-0 ${WRAPPER_CLASS} invisible`}
       >
-        <ReadingLines text={readingText} />
+        <ReadingLines text={withBreaks} />
       </span>
       <span ref={rootRef} className={WRAPPER_CLASS}>
         <ReadingLines text={displayText} />
