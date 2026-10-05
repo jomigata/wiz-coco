@@ -48,34 +48,46 @@ function ReadingLines({ text }: { text: string }) {
 export function EgoOkQuestionReading({ readingText }: { readingText: string }) {
   const [stripFixedBreaks, setStripFixedBreaks] = useState(false);
   const rootRef = useRef<HTMLSpanElement>(null);
+  const probeRef = useRef<HTMLSpanElement>(null);
   const hasFixedBreak = readingText.includes('\n');
   const displayText = hasFixedBreak && stripFixedBreaks ? collapseFixedBreaks(readingText) : readingText;
 
   useLayoutEffect(() => {
-    setStripFixedBreaks(false);
-    if (!hasFixedBreak) return;
-
-    const el = rootRef.current;
-    if (!el) return;
-
-    const measure = () => {
+    if (!hasFixedBreak) {
       setStripFixedBreaks(false);
-      queueMicrotask(() => {
-        const node = rootRef.current;
-        if (!node || !readingText.includes('\n')) return;
-        if (countVisualLines(node) >= 3) setStripFixedBreaks(true);
-      });
+      return;
+    }
+
+    const container = rootRef.current;
+    const probe = probeRef.current;
+    if (!container || !probe) return;
+
+    const decide = () => {
+      const width = container.clientWidth;
+      if (width <= 0) return;
+      probe.style.width = `${width}px`;
+      const lineCount = countVisualLines(probe);
+      setStripFixedBreaks(lineCount >= 3);
     };
 
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
+    decide();
+    const ro = new ResizeObserver(decide);
+    ro.observe(container);
     return () => ro.disconnect();
   }, [readingText, hasFixedBreak]);
 
   return (
-    <span ref={rootRef} className={WRAPPER_CLASS}>
-      <ReadingLines text={displayText} />
-    </span>
+    <>
+      <span
+        ref={probeRef}
+        aria-hidden
+        className={`pointer-events-none fixed left-[-10000px] top-0 ${WRAPPER_CLASS} invisible`}
+      >
+        <ReadingLines text={readingText} />
+      </span>
+      <span ref={rootRef} className={WRAPPER_CLASS}>
+        <ReadingLines text={displayText} />
+      </span>
+    </>
   );
 }
