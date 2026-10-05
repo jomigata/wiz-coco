@@ -4,6 +4,12 @@ export type ValidityTraffic = 'normal' | 'caution' | 'invalid';
 
 export type ValidityScaleStatus = 'normal' | 'caution' | 'invalid';
 
+export type ValidityCounselorNote = {
+  /** 타당도 표 「구분」과 같은 이름 */
+  label: string;
+  body: string;
+};
+
 export type EgoOkValidityProfile = {
   overall: ValidityTraffic;
   overallTitle: string;
@@ -36,67 +42,6 @@ export type EgoOkValidityProfile = {
     detail: string;
   };
   counselorNotes: ValidityCounselorNote[];
-};
-
-export type ValidityScaleId = 'imc' | 'lie' | 'infreq' | 'vrin';
-
-export type ValidityCounselorNote = {
-  scaleId: ValidityScaleId;
-  /** 타당도 표의 구분명과 동일 */
-  label: string;
-  status: ValidityScaleStatus;
-  explanation: string;
-};
-
-export type ValidityBand = {
-  status: ValidityScaleStatus;
-  text: string;
-};
-
-export type ValidityScaleMeta = {
-  label: string;
-  /** 이 지표가 무엇을 보는지 */
-  functionText: string;
-  bands: ValidityBand[];
-};
-
-export const VALIDITY_SCALE_META: Record<ValidityScaleId, ValidityScaleMeta> = {
-  imc: {
-    label: '반응 성실도 (IMC)',
-    functionText: '지시된 답을 정확히 골랐는지 확인합니다. 문항을 읽지 않고 응답했는지를 가늠합니다.',
-    bands: [
-      { status: 'normal', text: '두 문항 모두 지정 응답' },
-      { status: 'caution', text: '1개 미준수' },
-      { status: 'invalid', text: '2개 모두 미준수' },
-    ],
-  },
-  lie: {
-    label: '사회적 바람직성 (L)',
-    functionText: '자신을 지나치게 도덕적이거나 완벽한 사람으로 보이려는 응답 경향을 봅니다.',
-    bands: [
-      { status: 'normal', text: '5점 이하' },
-      { status: 'caution', text: '6–7점' },
-      { status: 'invalid', text: '8점 이상 · 바람직성 과장' },
-    ],
-  },
-  infreq: {
-    label: '비전형 왜곡 (F)',
-    functionText: '대부분의 사람이 하지 않는 극단 응답이 얼마나 있는지를 봅니다. 무작위 응답이나 과장, 도움 요청 신호를 가늠합니다.',
-    bands: [
-      { status: 'normal', text: '3점 이하' },
-      { status: 'caution', text: '4–5점' },
-      { status: 'invalid', text: '6점 이상 · 극단·무작위 응답' },
-    ],
-  },
-  vrin: {
-    label: '일관성 (VRIN)',
-    functionText: '뜻이 반대인 문항쌍에 동시에 「그렇다」 이상으로 답했는지를 봅니다. 앞뒤가 맞지 않는 응답인지를 확인합니다.',
-    bands: [
-      { status: 'normal', text: '불일치 0쌍' },
-      { status: 'caution', text: '불일치 1쌍' },
-      { status: 'invalid', text: '불일치 2쌍 이상' },
-    ],
-  },
 };
 
 function answerByNo(answers: Record<string, number>, no: number): number {
@@ -172,32 +117,32 @@ export function computeEgoOkValidityProfile(answers: Record<string, number>): Eg
 
   const counselorNotes: ValidityCounselorNote[] = [
     {
-      scaleId: 'imc',
-      label: VALIDITY_SCALE_META.imc.label,
-      status: imcStatus,
-      explanation:
-        '반응 성실도(IMC)는 지정된 답을 정확히 골랐는지를 봅니다. 주의이거나 무효이면 피로·집중력 저하로 지문을 제대로 읽지 않았을 가능성이 있습니다. 수검 당시 컨디션을 점검한 뒤 재검사를 권합니다.',
+      label: '반응 성실도 (IMC)',
+      body:
+        imcStatus === 'normal'
+          ? '반응 성실도 (IMC)는 정상입니다. 지시된 답을 고르도록 한 문항을 읽고 응답한 것으로 볼 수 있습니다.'
+          : '반응 성실도 (IMC)가 주의 또는 무효입니다. 피로·집중력 저하로 지문을 제대로 읽지 않았을 가능성이 있습니다. 수검 당시 컨디션을 점검한 뒤 재검사를 권장합니다.',
     },
     {
-      scaleId: 'lie',
-      label: VALIDITY_SCALE_META.lie.label,
-      status: lieStatus,
-      explanation:
-        '사회적 바람직성(L)은 자신을 도덕적이거나 완벽한 사람으로 보이려는 경향입니다. 점수가 높으면 평가에 대한 불안으로 취약함을 숨겼을 수 있습니다. 정답이 없음을 다시 알려 주고, 취약성을 드러내도 비난받지 않는 자리를 만들어 주십시오.',
+      label: '사회적 바람직성 (L)',
+      body:
+        lieStatus === 'normal'
+          ? '사회적 바람직성 (L)은 정상입니다. 자신을 지나치게 좋게 포장한 응답으로 보기는 어렵습니다.'
+          : '사회적 바람직성 (L)이 높게 나온 경우, 평가에 대한 불안으로 자신을 도덕적·완벽한 사람으로 위장하려 했을 가능성이 큽니다. 상담에서는 정답이 없음을 다시 알려 주고, 취약성을 말해도 비난받지 않는 자리를 만들어 주십시오.',
     },
     {
-      scaleId: 'infreq',
-      label: VALIDITY_SCALE_META.infreq.label,
-      status: infreqStatus,
-      explanation:
-        '비전형 왜곡(F)은 흔하지 않은 극단 응답이 얼마나 있는지를 봅니다. 실제 증상이 아니라면 도움 요청일 수 있습니다. 점수보다 지금 느끼는 불안·우울의 버거움을 먼저 공감해 주십시오.',
+      label: '비전형 왜곡 (F)',
+      body:
+        infreqStatus === 'normal'
+          ? '비전형 왜곡 (F)은 정상입니다. 흔하지 않은 반응을 과도하게 고른 양상은 두드러지지 않습니다.'
+          : '비전형 왜곡 (F)이 높게 나온 경우, 실제 증상이 아니라면 도움 요청 신호일 수 있습니다. 점수보다 지금 느끼는 불안·우울의 버거움을 먼저 공감해 주십시오.',
     },
     {
-      scaleId: 'vrin',
-      label: VALIDITY_SCALE_META.vrin.label,
-      status: vrinStatus,
-      explanation:
-        '일관성(VRIN)은 서로 반대되는 문항에 동시에 동의했는지를 봅니다. 불일치가 있으면 문항을 앞뒤 맞게 읽지 못했을 가능성이 있습니다. 컨디션을 확인한 뒤 재검사를 권합니다.',
+      label: '일관성 (VRIN)',
+      body:
+        vrinStatus === 'normal'
+          ? '일관성 (VRIN)은 정상입니다. 뜻이 반대인 문항에 동시에 동의한 불일치는 없습니다.'
+          : '일관성 (VRIN)이 주의 또는 무효입니다. 서로 맞지 않는 답을 함께 골랐을 수 있습니다. 피로·집중력 저하로 지문을 제대로 읽지 않았을 가능성이 있으니, 수검 당시 컨디션을 점검한 뒤 재검사를 권장합니다.',
     },
   ];
 
@@ -209,28 +154,28 @@ export function computeEgoOkValidityProfile(answers: Record<string, number>): Eg
       itemNos: [30, 77],
       failCount: imcFails,
       status: imcStatus,
-      detail: '정상 0개 미준수 · 주의 1개 · 무효 2개',
+      detail: '지정 번호 미선택 1개 이상 시 주의/무효',
     },
     lie: {
       itemNos: [15, 63],
       raw: lieRaw,
       max: 10,
       status: lieStatus,
-      detail: '정상 5점 이하 · 주의 6–7점 · 무효 8점 이상',
+      detail: '8점 이상 시 과도한 방어 및 위선',
     },
     infreq: {
       itemNos: [47, 90],
       raw: infreqRaw,
       max: 10,
       status: infreqStatus,
-      detail: '정상 3점 이하 · 주의 4–5점 · 무효 6점 이상',
+      detail: '6점 이상 시 꾀병 또는 무작위 응답',
     },
     vrin: {
       pairCount: VRIN_PAIRS.length,
       mismatchPairs: vrinMismatch,
       maxPairs: VRIN_PAIRS.length,
       status: vrinStatus,
-      detail: '정상 0쌍 · 주의 1쌍 · 무효 2쌍 이상',
+      detail: '불일치 쌍 2개 이상 시 비일관적',
     },
     counselorNotes,
   };
