@@ -336,11 +336,9 @@ const EGOGRAM_RADAR_OK_RED = '#ef4444';
 const EGOGRAM_RADAR_SCORE_MAX = 50;
 const EGOGRAM_PLUS_BAND_INNER = 23;
 const EGOGRAM_PLUS_BAND_OUTER = 37;
-const PATTERN_FILL = 'rgba(192, 38, 211, 0.5)';
-const PATTERN_STROKE = 'rgba(232, 121, 249, 0.95)';
+const PATTERN_FILL = 'rgba(139, 92, 246, 0.5)';
 const PLUS_FILL = 'rgba(250, 204, 21, 0.5)';
-const PLUS_STROKE = 'rgba(250, 204, 21, 0.95)';
-const EGOGRAM_SCORE_RED = '#ef4444';
+const PLUS_FILL_HOT = 'rgba(254, 240, 138, 0.9)';
 
 /** 이고 척도 → 오케이 합계 척도 (KTAA·종합그래프와 동일) */
 const EGO_TO_OK_SCORE: Record<EgoScaleId, OkScaleId | null> = {
@@ -480,11 +478,16 @@ function EgogramFiveScaleRadarChart({
 }) {
   const resolvedPeakId = useMemo(() => egogramRadarPeakScaleId(data, peakScaleId), [data, peakScaleId]);
   const gender = normalizeEgoOkGender(genderLabel);
-  const [hotBand, setHotBand] = useState<'pattern' | 'plus' | null>(null);
+  const [showPlusBand, setShowPlusBand] = useState(false);
   const RecommendedBand = useMemo(
-    () => createEgogramRadarBands(data, gender, hotBand),
-    [data, gender, hotBand],
+    () => createEgogramRadarBands(data, gender, showPlusBand),
+    [data, gender, showPlusBand],
   );
+  const genderKo = gender === 'female' ? '여' : '남';
+  const patternRanges = EGO_SCALE_PATTERN_ORDER.map((id) => {
+    const zone = KTAA_GRAPH_ZONES[gender][id];
+    return `${id} ${zone.redTop}~${zone.whiteTop}`;
+  }).join(' · ');
   const OkRadarVertexDot = useMemo(
     () => createEgogramOkRadarVertexDot(resolvedPeakId),
     [resolvedPeakId],
@@ -501,11 +504,14 @@ function EgogramFiveScaleRadarChart({
         if (cx == null || cy == null || !payload) return null;
         if (payload.scale === resolvedPeakId) {
           return (
-            <circle cx={cx} cy={cy} r={6.5} fill={EGOGRAM_SCORE_RED} stroke="#ffffff" strokeWidth={2.5} pointerEvents="none" />
+            <g pointerEvents="none">
+              <circle cx={cx} cy={cy} r={9} fill={EGOGRAM_RADAR_PINK} fillOpacity={0.35} />
+              <circle cx={cx} cy={cy} r={6.5} fill={EGOGRAM_RADAR_PINK} stroke="#ffffff" strokeWidth={2.5} />
+            </g>
           );
         }
         return (
-          <circle cx={cx} cy={cy} r={4.5} fill={EGOGRAM_SCORE_RED} stroke="#ffffff" strokeWidth={1.5} />
+          <circle cx={cx} cy={cy} r={4} fill="#eef2ff" stroke="#818cf8" strokeWidth={2} />
         );
       },
     [resolvedPeakId],
@@ -517,14 +523,15 @@ function EgogramFiveScaleRadarChart({
         const { cx, cy, payload } = props;
         if (cx == null || cy == null || !payload) return null;
         if (payload.scale === resolvedPeakId) return null;
-        return <circle cx={cx} cy={cy} r={6} fill={EGOGRAM_SCORE_RED} stroke="#ffffff" strokeWidth={2} />;
+        return <circle cx={cx} cy={cy} r={6} fill="#ffffff" stroke="#a5b4fc" strokeWidth={2} />;
       },
     [resolvedPeakId],
   );
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
-    <div className="min-h-0 flex-1">
+    <div className="flex w-full flex-col">
+    <p className="mb-1 text-center text-sm font-semibold tracking-normal text-slate-100">방사형 이고그램 5척도</p>
+    <div className="h-[min(38vh,20rem)] min-h-[15rem] w-full">
     <ResponsiveContainer
       width="100%"
       height="100%"
@@ -573,7 +580,7 @@ function EgogramFiveScaleRadarChart({
         <Radar
           name="점수"
           dataKey="score"
-          stroke={EGOGRAM_SCORE_RED}
+          stroke="#c7d2fe"
           fill="none"
           strokeWidth={2.5}
           isAnimationActive={false}
@@ -590,55 +597,45 @@ function EgogramFiveScaleRadarChart({
       <button
         type="button"
         className="inline-flex items-center gap-1.5 rounded-md px-1 py-0.5"
-        onMouseEnter={() => setHotBand('pattern')}
-        onMouseLeave={() => setHotBand(null)}
-        onFocus={() => setHotBand('pattern')}
-        onBlur={() => setHotBand(null)}
+        onMouseEnter={() => setShowPlusBand(false)}
+        onFocus={() => setShowPlusBand(false)}
       >
         <span
-          className={`inline-block shrink-0 rounded-[2px] transition-all duration-200 ${
-            hotBand === 'pattern' ? 'h-5 w-5' : 'h-3.5 w-3.5'
-          }`}
-          style={{
-            backgroundColor: hotBand === 'plus' ? 'transparent' : PATTERN_FILL,
-            boxShadow: `inset 0 0 0 2px ${PATTERN_STROKE}`,
-          }}
+          className="inline-block h-3.5 w-3.5 shrink-0 rounded-[2px] ring-1 ring-violet-200/80"
+          style={{ backgroundColor: PATTERN_FILL }}
           aria-hidden
         />
-        <span
-          className={`transition-all duration-200 ${
-            hotBand === 'pattern' ? 'text-sm font-semibold text-fuchsia-100' : ''
-          }`}
-        >
-          243패턴
-        </span>
+        <span>243패턴</span>
       </button>
       <button
         type="button"
         className="inline-flex items-center gap-1.5 rounded-md px-1 py-0.5"
-        onMouseEnter={() => setHotBand('plus')}
-        onMouseLeave={() => setHotBand(null)}
-        onFocus={() => setHotBand('plus')}
-        onBlur={() => setHotBand(null)}
+        onMouseEnter={() => setShowPlusBand(true)}
+        onMouseLeave={() => setShowPlusBand(false)}
+        onFocus={() => setShowPlusBand(true)}
+        onBlur={() => setShowPlusBand(false)}
       >
         <span
-          className={`inline-block shrink-0 rounded-[2px] transition-all duration-200 ${
-            hotBand === 'plus' ? 'h-5 w-5' : 'h-3.5 w-3.5'
+          className={`inline-block shrink-0 rounded-[2px] ring-1 ring-yellow-200/80 transition-all duration-200 ${
+            showPlusBand ? 'h-5 w-5' : 'h-3.5 w-3.5'
           }`}
-          style={{
-            backgroundColor: hotBand === 'plus' ? PLUS_FILL : 'transparent',
-            boxShadow: `inset 0 0 0 2px ${PLUS_STROKE}`,
-          }}
+          style={{ backgroundColor: showPlusBand ? PLUS_FILL_HOT : PLUS_FILL }}
           aria-hidden
         />
-        <span
-          className={`transition-all duration-200 ${
-            hotBand === 'plus' ? 'text-sm font-semibold text-yellow-100' : ''
-          }`}
-        >
+        <span className={`transition-all duration-200 ${showPlusBand ? 'text-sm font-semibold text-yellow-100' : ''}`}>
           243+ 플러스(4~6단계)
         </span>
       </button>
+    </div>
+    <div className="mt-1 space-y-0.5 text-center text-[11px] leading-relaxed text-slate-300">
+      <p>
+        <span className="mr-1 inline-block h-2.5 w-2.5 rounded-[2px] align-middle" style={{ backgroundColor: PATTERN_FILL }} />
+        243패턴 ({genderKo}) {patternRanges}
+      </p>
+      <p>
+        <span className="mr-1 inline-block h-2.5 w-2.5 rounded-[2px] align-middle" style={{ backgroundColor: PLUS_FILL }} />
+        243+ 플러스 ({genderKo}) {EGOGRAM_PLUS_BAND_INNER}~{EGOGRAM_PLUS_BAND_OUTER}
+      </p>
     </div>
     </div>
   );
@@ -681,11 +678,7 @@ function bandRingPath(
 }
 
 /** 243패턴=KTAA 흰 구간(성별별) · 243+ = 23~37점 */
-function createEgogramRadarBands(
-  rows: EgogramRadarRow[],
-  gender: EgoOkGender,
-  highlight: 'pattern' | 'plus' | null,
-) {
+function createEgogramRadarBands(rows: EgogramRadarRow[], gender: EgoOkGender, showPlus: boolean) {
   return function EgogramRadarRecommendedBand(props: {
     angleAxisMap?: Record<string, RadarAxisGeometry>;
     radiusAxisMap?: Record<string, RadarAxisGeometry>;
@@ -713,49 +706,35 @@ function createEgogramRadarBands(
         : Array.from({ length: rows.length }, (_, index) => 90 - index * (360 / rows.length));
 
     const zones = KTAA_GRAPH_ZONES[gender];
-    const showPlusFill = highlight === 'plus';
     const patternInner = rows.map((row) => zones[row.scale as EgoScaleId].redTop);
     const patternOuter = rows.map((row) => zones[row.scale as EgoScaleId].whiteTop);
     const plusInner = rows.map(() => EGOGRAM_PLUS_BAND_INNER);
     const plusOuter = rows.map(() => EGOGRAM_PLUS_BAND_OUTER);
-
     const patternPath = bandRingPath(cx, cy, angles, radiusAt, patternInner, patternOuter);
     const plusPath = bandRingPath(cx, cy, angles, radiusAt, plusInner, plusOuter);
-    const patternNode = (
-      <path
-        d={patternPath}
-        fill={showPlusFill ? 'none' : PATTERN_FILL}
-        fillRule="evenodd"
-        stroke={PATTERN_STROKE}
-        strokeWidth={1.5}
-        pointerEvents="none"
-      />
-    );
-    const plusNode = (
-      <path
-        d={plusPath}
-        fill={showPlusFill ? PLUS_FILL : 'none'}
-        fillRule="evenodd"
-        stroke={PLUS_STROKE}
-        strokeWidth={1.5}
-        pointerEvents="none"
-      />
-    );
+
+    if (showPlus) {
+      return (
+        <path
+          d={plusPath}
+          fill={PLUS_FILL}
+          fillRule="evenodd"
+          stroke="rgba(250, 204, 21, 0.95)"
+          strokeWidth={1.5}
+          pointerEvents="none"
+        />
+      );
+    }
 
     return (
-      <g pointerEvents="none">
-        {highlight === 'pattern' ? (
-          <>
-            {plusNode}
-            {patternNode}
-          </>
-        ) : (
-          <>
-            {patternNode}
-            {plusNode}
-          </>
-        )}
-      </g>
+      <path
+        d={patternPath}
+        fill={PATTERN_FILL}
+        fillRule="evenodd"
+        stroke="rgba(167, 139, 250, 0.95)"
+        strokeWidth={1.5}
+        pointerEvents="none"
+      />
     );
   };
 }
@@ -1252,8 +1231,8 @@ export default function EgoOkCounselorReport({
             }
           >
             <div className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] xl:items-start">
-              <div className="w-full xl:sticky xl:top-1/2 xl:z-10 xl:-translate-y-1/2 xl:self-start">
-                <div className="h-[min(42vh,22rem)] w-full min-h-[16rem]">
+              <div className="flex min-h-[calc(100dvh-8rem)] w-full items-center justify-center xl:sticky xl:top-[6.25rem] xl:z-10 xl:h-[calc(100dvh-7.5rem)] xl:min-h-0">
+                <div className="w-full">
                   <EgogramFiveScaleRadarChart
                     data={radarData}
                     peakScaleId={peakEgogram.id}
