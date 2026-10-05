@@ -12,15 +12,13 @@ const WRAPPER_CLASS =
 
 /** 시각 줄 수가 3줄 이상(줄바꿈 2회 이상)이면 @/\\n 고정 줄바꿈 제거 */
 function countVisualLines(el: HTMLElement): number {
-  const range = document.createRange();
-  range.selectNodeContents(el);
-  const rects = range.getClientRects();
-  if (rects.length === 0) return 1;
-  const tops = new Set<number>();
-  for (let i = 0; i < rects.length; i++) {
-    tops.add(Math.round(rects[i].top));
+  const style = getComputedStyle(el);
+  const lineHeight = parseFloat(style.lineHeight);
+  const height = el.getBoundingClientRect().height;
+  if (lineHeight > 0 && !Number.isNaN(lineHeight)) {
+    return Math.max(1, Math.round(height / lineHeight));
   }
-  return tops.size;
+  return Math.max(1, Math.round(height / 28));
 }
 
 function ReadingLines({ text }: { text: string }) {

@@ -70,6 +70,7 @@
     "migrate:strip-code-hyphens": "python backend/scripts/migrate_strip_code_hyphens.py",
     "migrate:strip-code-hyphens:dry": "python backend/scripts/migrate_strip_code_hyphens.py --dry-run",
     "build:ego-ok-items-96": "node scripts/build-ego-ok-items-96.mjs",
+    "merge:ego-ok-batch2-at-breaks": "node scripts/merge-ego-ok-batch2-at-breaks.mjs",
     "apply:ego-ok-canonical-text": "node scripts/apply-ego-ok-canonical-text.mjs",
     "sync:ego-ok-questions": "node scripts/sync-ego-ok-questions.mjs",
     "sync:ego-ok-pattern-reports": "node scripts/sync-ego-ok-pattern-reports.mjs",
