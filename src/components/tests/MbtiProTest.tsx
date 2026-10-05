@@ -813,7 +813,8 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
                 {isEgoOkFlow && isEgoOkQuestion(selectedQuestions[currentQuestion]) ? (
                   <h2
                     key={currentQuestion}
-                    className="absolute inset-0 flex items-center justify-center px-4 py-3 text-center [transform:none]"
+                    className="absolute inset-0 flex items-center justify-center px-4 py-3 text-center font-normal tracking-normal [transform:none]"
+                    style={{ letterSpacing: '0px', fontWeight: 400 }}
                   >
                     <EgoOkQuestionReading
                       readingText={
