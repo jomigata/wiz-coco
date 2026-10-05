@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useLayoutEffect, useRef, useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import {
   applyOptionalLineBreaks,
   collapseOptionalLineBreaks,
@@ -8,11 +8,16 @@ import {
 } from '@/lib/egoOkQuestionBreaks';
 
 const WRAPPER_CLASS =
-  "inline-block max-w-[min(100%,38rem)] font-['Malgun_Gothic','Apple_SD_Gothic_Neo','Noto_Sans_KR',sans-serif] text-[17px] font-normal leading-[1.65] tracking-[0.02em] text-slate-50 sm:text-[18px]";
+  "inline-block max-w-[min(100%,38rem)] font-['Malgun_Gothic','Apple_SD_Gothic_Neo','Noto_Sans_KR',sans-serif] text-[17px] font-normal leading-[1.65] tracking-[0.02em] text-slate-50 antialiased sm:text-[18px]";
 
 const INNER_CLASS = 'block w-full whitespace-pre-line';
 
 const MIN_LINES_TO_STRIP = 3;
+
+/** 쉼표 뒤 여백 — 중첩 span 없이 한 텍스트 노드로 렌더 (GPU 겹침 방지) */
+function formatCommaSpacing(text: string): string {
+  return text.replace(/, /g, ',\u2009');
+}
 
 function countVisualLines(el: HTMLElement): number {
   const style = getComputedStyle(el);
@@ -24,38 +29,6 @@ function countVisualLines(el: HTMLElement): number {
   return Math.max(1, Math.round(height / 28));
 }
 
-function CommaLineParts({ line }: { line: string }) {
-  return (
-    <>
-      {line.split(/(, )/g).map((part, partIndex) =>
-        part === ', ' ? (
-          <span key={`comma-${partIndex}`} className="mr-[0.35em]">
-            ,
-          </span>
-        ) : (
-          <span key={`part-${partIndex}-${part.slice(0, 8)}`}>{part}</span>
-        ),
-      )}
-    </>
-  );
-}
-
-function ReadingLines({ text }: { text: string }) {
-  const lines = text.split('\n');
-
-  return (
-    <span className={INNER_CLASS}>
-      {lines.map((line, lineIndex) => (
-        <Fragment key={`line-${lineIndex}`}>
-          {lineIndex > 0 ? '\n' : null}
-          <CommaLineParts line={line} />
-        </Fragment>
-      ))}
-    </span>
-  );
-}
-
-/** 화면에 그리지 않고 줄 수만 측정 (React 트리와 분리) */
 function measureLineCountOffscreen(widthPx: number, textWithBreaks: string, fontSource: HTMLElement): number {
   if (widthPx <= 0) return 1;
 
@@ -66,22 +39,21 @@ function measureLineCountOffscreen(widthPx: number, textWithBreaks: string, font
     left: '-10000px',
     top: '0',
     width: `${widthPx}px`,
-    height: 'auto',
     overflow: 'hidden',
     visibility: 'hidden',
     pointerEvents: 'none',
-    contain: 'strict',
   });
 
   const inner = document.createElement('span');
   inner.className = INNER_CLASS;
   inner.style.display = 'block';
   inner.style.width = `${widthPx}px`;
+  inner.style.whiteSpace = 'pre-line';
   const cs = getComputedStyle(fontSource);
   inner.style.font = cs.font;
   inner.style.letterSpacing = cs.letterSpacing;
   inner.style.lineHeight = cs.lineHeight;
-  inner.textContent = textWithBreaks;
+  inner.textContent = formatCommaSpacing(textWithBreaks);
 
   host.appendChild(inner);
   document.body.appendChild(host);
@@ -122,8 +94,8 @@ export function EgoOkQuestionReading({ readingText }: { readingText: string }) {
   }, [readingText, hasBreak, withBreaks]);
 
   return (
-    <span ref={rootRef} className={WRAPPER_CLASS}>
-      <ReadingLines text={displayText} />
+    <span ref={rootRef} className={WRAPPER_CLASS} style={{ transform: 'none' }}>
+      <span className={INNER_CLASS}>{formatCommaSpacing(displayText)}</span>
     </span>
   );
 }
