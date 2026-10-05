@@ -336,7 +336,7 @@ const EGOGRAM_RADAR_OK_RED = '#ef4444';
 const EGOGRAM_RADAR_SCORE_MAX = 50;
 const EGOGRAM_RADAR_BAND_INNER = 23;
 const EGOGRAM_RADAR_BAND_OUTER = 37;
-const EGOGRAM_RADAR_BAND_FILL = 'rgba(250, 204, 21, 0.55)';
+const EGOGRAM_RADAR_BAND_FILL = 'rgba(250, 204, 21, 0.5)';
 
 /** 이고 척도 → 오케이 합계 척도 (KTAA·종합그래프와 동일) */
 const EGO_TO_OK_SCORE: Record<EgoScaleId, OkScaleId | null> = {
@@ -514,6 +514,8 @@ function EgogramFiveScaleRadarChart({
   );
 
   return (
+    <div className="flex h-full min-h-0 flex-col">
+    <div className="min-h-0 flex-1">
     <ResponsiveContainer
       width="100%"
       height="100%"
@@ -573,6 +575,16 @@ function EgogramFiveScaleRadarChart({
         <Tooltip content={<EgogramRadarTooltip />} />
       </RadarChart>
     </ResponsiveContainer>
+    </div>
+    <p className="mt-1 flex items-center justify-center gap-2 text-xs text-slate-200">
+      <span
+        className="inline-block h-3.5 w-3.5 shrink-0 rounded-[2px] ring-1 ring-yellow-200/80"
+        style={{ backgroundColor: EGOGRAM_RADAR_BAND_FILL }}
+        aria-hidden
+      />
+      권장구간(4~6단계)
+    </p>
+    </div>
   );
 }
 
@@ -627,7 +639,7 @@ function EgogramRadarRecommendedBand(props: {
       d={`${polygonPath(outer)} ${polygonPath(inner)}`}
       fill={EGOGRAM_RADAR_BAND_FILL}
       fillRule="evenodd"
-      stroke="rgba(250, 204, 21, 0.9)"
+      stroke="rgba(250, 204, 21, 0.5)"
       strokeWidth={1}
       pointerEvents="none"
     />
