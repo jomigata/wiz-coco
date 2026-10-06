@@ -39,7 +39,7 @@ import {
   OK_BAR_POLE_LABEL,
 } from '@/lib/egoOkOkLifePosition';
 import { resolveEgogramFormLabel } from '@/lib/egoOkFormPattern';
-import EgoOkValiditySection, { ValidityTable } from '@/components/tests/egoOk/EgoOkValiditySection';
+import EgoOkValiditySection from '@/components/tests/egoOk/EgoOkValiditySection';
 import { KTAA_GRAPH_ZONES, OK_LABELS, normalizeEgoOkGender } from '@/lib/egoOkScoring';
 import { egoOkGenderToLabel } from '@/lib/egoOkTestGender';
 import type { ClientInfo } from '@/components/tests/MbtiProClientInfo';
@@ -58,6 +58,7 @@ import EgoOkKtaaCompositeChart from '@/components/tests/egoOk/EgoOkKtaaComposite
 import EgoOkCounselorReportTabShell, {
   type CounselorReportTab,
 } from '@/components/tests/egoOk/EgoOkCounselorReportTabShell';
+import EgoOkReportExecutiveSummary from '@/components/tests/egoOk/EgoOkReportExecutiveSummary';
 import EgoOkEgogramPolarityPanel from '@/components/tests/egoOk/EgoOkEgogramPolarityPanel';
 import {
   ReportInsightBlock,
@@ -1158,102 +1159,27 @@ export default function EgoOkCounselorReport({
     const tabs: CounselorReportTab[] = [
       {
         id: 'cover',
-        label: '표지 · 개요',
-        short: '표지',
-        description: '검사 표지 · 내담자 · 243 · 요약',
+        label: '종합 요약',
+        short: '요약',
+        description: '타당도~부정성 핵심 개요 · 미니 그래프',
         panel: (
-          <div className="flex flex-col gap-3">
-            <ReportInsightBlock tone="indigo" vivid title="TA 이고-오케이그램 검사 · 전문가 해석">
-              <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-indigo-200/80">Counselor report</p>
-              <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-200">
-                96문항(타당도 6문항 분산) · 243패턴 · KTAA · 이고/오케이 · 243+ 해석. 상단 탭을 클릭하거나 마우스를
-                올린 뒤 아래 영역으로 이동하면 해당 결과가 고정됩니다.
-              </p>
-            </ReportInsightBlock>
-            {localTestMode ? (
-              <ReportInsightBlock tone="amber" vivid compact title="로컬 테스트 모드">
-                <p className="text-xs leading-relaxed text-amber-50/90">
-                  저장·발송되지 않습니다. 성별 변경 시 243 구간·그래프 배경이 갱신됩니다.
-                </p>
-              </ReportInsightBlock>
-            ) : null}
-            <div className="grid grid-cols-1 gap-3 lg:grid-cols-5">
-              <ReportInsightBlock tone="emerald" vivid className="lg:col-span-2" title="내담자 · 성별 · 출생">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-emerald-200/70">내담자</p>
-                    <p className="mt-1 text-xl font-semibold text-white">{clientInfo?.name?.trim() || '—'}</p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-emerald-200/70">성별 · 출생</p>
-                    <p className="mt-1 font-medium text-white">
-                      {localTestMode && onTestGenderChange && testGender ? (
-                        <span className="flex flex-wrap items-center gap-2">
-                          <span className="inline-flex rounded-lg bg-black/25 p-0.5 ring-1 ring-white/15">
-                            {(['male', 'female'] as const).map((g) => (
-                              <button
-                                key={g}
-                                type="button"
-                                onClick={() => onTestGenderChange(g)}
-                                className={`rounded-md px-2.5 py-1 text-xs font-semibold transition ${
-                                  testGender === g
-                                    ? g === 'male'
-                                      ? 'bg-sky-600 text-white'
-                                      : 'bg-rose-600 text-white'
-                                    : 'text-slate-300 hover:text-white'
-                                }`}
-                              >
-                                {egoOkGenderToLabel(g)}
-                              </button>
-                            ))}
-                          </span>
-                          {clientInfo?.birthYear ? (
-                            <span className="text-sm text-emerald-100/80">{clientInfo.birthYear}년</span>
-                          ) : null}
-                        </span>
-                      ) : (
-                        <span className="text-lg font-semibold">{displayGenderLine}</span>
-                      )}
-                    </p>
-                  </div>
-                </div>
-              </ReportInsightBlock>
-              <ReportInsightBlock tone="violet" vivid className="lg:col-span-3" title="243 패턴 · 243+ · 인생태도">
-                <div className="grid gap-4 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,0.8fr)] sm:items-center">
-                  <Pattern243AndPlusCode block patternCode={report.patternCode} plus={report.pattern243Plus} />
-                  <div className="rounded-lg bg-black/20 px-3 py-2 ring-1 ring-white/10">
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-violet-200/75">인생태도</p>
-                    <p className="mt-1 text-lg font-semibold text-violet-50">{report.lifePosition.kind}</p>
-                  </div>
-                </div>
-              </ReportInsightBlock>
-              <ReportInsightBlock
-                tone={
-                  report.validity?.overall === 'invalid'
-                    ? 'rose'
-                    : report.validity?.overall === 'caution'
-                      ? 'amber'
-                      : 'teal'
-                }
-                vivid
-                className="lg:col-span-5"
-                title="타당도"
-              >
-                <p className="text-lg font-semibold leading-snug text-white">
-                  {report.validity?.overallTitle ?? '—'}
-                </p>
-                {report.validity?.overallSummary ? (
-                  <p className="mt-1 text-sm leading-relaxed text-slate-200">{report.validity.overallSummary}</p>
-                ) : null}
-                {report.validity ? (
-                  <div className="mt-3 rounded-lg bg-black/25 p-3 ring-1 ring-white/10">
-                    <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-300">세부 내역</p>
-                    <ValidityTable validity={report.validity} showScoreBands={false} />
-                  </div>
-                ) : null}
-              </ReportInsightBlock>
-            </div>
-          </div>
+          <EgoOkReportExecutiveSummary
+            report={report}
+            clientInfo={clientInfo}
+            displayGenderLine={displayGenderLine}
+            chartGender={chartGender}
+            localTestMode={localTestMode}
+            testGender={testGender}
+            onTestGenderChange={onTestGenderChange}
+            peakEgograms={peakEgograms}
+            lowEgograms={lowEgograms}
+            formLabel={formLabel}
+            okBarData={okBarData}
+            okLifeHeading={okLifeOverview.heading}
+            okLifeBullets={okLifeOverview.bullets}
+            innerMindPairs={innerMindPairs}
+            plus243Section6={plus243Sections.sections['6'] ?? ''}
+          />
         ),
       },
       {
