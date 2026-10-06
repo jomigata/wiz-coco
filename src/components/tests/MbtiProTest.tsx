@@ -1073,10 +1073,20 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
       {/* 검사완료 버튼 (마지막 질문에 답변 후 계속 표시) */}
       {!editResultId.trim() && currentQuestion === totalQuestions - 1 && answers[totalQuestions - 1] !== undefined && (
         <>
-          <div className={`fixed left-0 right-0 mx-auto w-1/4 bg-blue-900/90 backdrop-blur-sm py-6 px-10 rounded-2xl shadow-lg z-50 text-center border border-blue-800/50 transition-all duration-500 transform ${popupPosition === 'bottom' ? 'bottom-[7%]' : 'bottom-[calc(7%+150px)] -translate-y-full'}`}>
-            <button 
+          <div
+            className={`fixed left-0 right-0 z-50 mx-auto overflow-hidden text-center transition-all duration-500 ${
+              isEgoOkFlow
+                ? 'w-[min(22rem,calc(100%-1.5rem))] rounded-2xl border-2 border-sky-400/40 bg-gradient-to-b from-[#2a4568] to-[#1e3555] px-6 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_12px_32px_rgba(0,0,0,0.45)] after:pointer-events-none after:absolute after:bottom-0 after:left-0 after:right-0 after:h-4 after:bg-[linear-gradient(to_top,rgba(56,189,248,0.5),transparent),linear-gradient(to_top,rgba(244,114,182,0.45),transparent)] after:[background-size:50%_100%,50%_100%] after:[background-position:left_bottom,right_bottom] after:bg-no-repeat'
+                : 'w-1/4 rounded-2xl border border-blue-800/50 bg-blue-900/90 px-10 py-6 shadow-lg backdrop-blur-sm'
+            } ${popupPosition === 'bottom' ? 'bottom-[7%]' : 'bottom-[calc(7%+150px)] -translate-y-full'}`}
+          >
+            <button
               onClick={() => setPopupPosition(popupPosition === 'bottom' ? 'up' : 'bottom')}
-              className={`absolute right-2 w-6 h-6 rounded-full bg-blue-700/80 flex items-center justify-center hover:bg-blue-600/80 transition-all duration-500 ${popupPosition === 'bottom' ? 'top-2' : 'bottom-2'}`}
+              className={`absolute right-2 z-10 flex h-7 w-7 items-center justify-center rounded-full transition-all duration-500 ${
+                isEgoOkFlow
+                  ? 'border border-white/15 bg-[#1a3352]/80 text-white hover:bg-[#234568]'
+                  : 'bg-blue-700/80 hover:bg-blue-600/80'
+              } ${popupPosition === 'bottom' ? 'top-2' : 'bottom-2'}`}
               aria-label={popupPosition === 'bottom' ? '팝업 위로 이동' : '팝업 아래로 이동'}
             >
               {popupPosition === 'bottom' ? (
@@ -1089,10 +1099,23 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
                 </svg>
               )}
             </button>
-            <p className="text-lg text-white mb-4">검사가 완료되었습니다.<br />확인을 누르면, 내 검사실로 이동합니다.</p>
+            <p
+              className={`relative z-10 mb-4 leading-relaxed ${
+                isEgoOkFlow ? 'text-[15px] font-medium text-slate-100' : 'text-lg text-white'
+              }`}
+              style={isEgoOkFlow ? { wordBreak: 'keep-all' } : undefined}
+            >
+              검사가 완료되었습니다.
+              <br />
+              확인을 누르면, 내 검사실로 이동합니다.
+            </p>
             <button
               onClick={handleComplete}
-              className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-12 rounded-xl transition-colors duration-200 mx-auto shadow-md w-3/4"
+              className={`relative z-10 mx-auto w-3/4 rounded-xl py-3 px-8 font-medium text-white transition duration-200 ${
+                isEgoOkFlow
+                  ? 'bg-gradient-to-br from-sky-400 to-sky-500 font-semibold shadow-[inset_0_1px_0_rgba(255,255,255,0.3),0_6px_16px_rgba(14,165,233,0.28)] hover:from-sky-300 hover:to-sky-400'
+                  : 'bg-blue-500 shadow-md hover:bg-blue-600'
+              }`}
               disabled={isLoading}
             >
               {isLoading ? (
