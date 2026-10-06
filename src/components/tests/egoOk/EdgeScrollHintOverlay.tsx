@@ -48,24 +48,21 @@ const TONE_STYLES: Record<
   },
 };
 
-const TRACK_TONE: Record<
-  HintTone,
-  { border: string; borderActive: string; chevron: string; glow: string; glowActive: string }
-> = {
-  'on-dark': {
-    border: 'border-yellow-400/80',
-    borderActive: 'border-yellow-300/95',
-    chevron: 'text-yellow-400',
-    glow: 'shadow-[0_0_10px_rgba(250,204,21,0.16)]',
-    glowActive: 'shadow-[0_0_16px_rgba(250,204,21,0.38)]',
-  },
-  'on-light': {
-    border: 'border-amber-600/70',
-    borderActive: 'border-amber-700/90',
-    chevron: 'text-amber-700',
-    glow: 'shadow-[0_0_8px_rgba(180,83,9,0.12)]',
-    glowActive: 'shadow-[0_0_14px_rgba(180,83,9,0.22)]',
-  },
+/** 흰 지면·청색(다크) 패널 모두에서 대비 — 시안 테두리 + 내부 스카이 그라데이션 */
+const SCROLL_TRACK_UNIVERSAL = {
+  border: 'border-cyan-400/90',
+  borderActive: 'border-sky-300',
+  glow:
+    'shadow-[0_0_14px_rgba(56,189,248,0.28),inset_0_0_0_1px_rgba(255,255,255,0.12)]',
+  glowActive:
+    'shadow-[0_0_20px_rgba(34,211,238,0.42),inset_0_0_0_1px_rgba(255,255,255,0.22)]',
+  chevron: 'text-sky-50',
+  chevronShadow:
+    'drop-shadow-[0_1px_2px_rgba(15,23,42,0.9),0_0_8px_rgba(56,189,248,0.85)]',
+  fillTop:
+    'bg-gradient-to-b from-sky-400/50 via-cyan-500/28 to-sky-950/5',
+  fillBottom:
+    'bg-gradient-to-t from-sky-400/50 via-cyan-500/28 to-sky-950/5',
 };
 
 /** 상·하 트랙 — 화면보다 좁게 좌우 여백 */
@@ -96,28 +93,35 @@ function ScrollChevron({ side, active, tone }: { side: Side; active: boolean; to
 
 function TopBottomScrollTrack({
   side,
-  tone,
   active,
   label,
 }: {
   side: 'top' | 'bottom';
-  tone: HintTone;
   active: boolean;
   label: string;
 }) {
-  const track = TRACK_TONE[tone];
+  const track = SCROLL_TRACK_UNIVERSAL;
+  const fillClass = side === 'top' ? track.fillTop : track.fillBottom;
   return (
     <div
-      className={`relative flex h-8 w-full items-center justify-center rounded-lg border-2 bg-transparent transition-[border-color,box-shadow] duration-150 ${
+      className={`relative flex h-8 w-full items-center justify-center overflow-hidden rounded-lg border-2 transition-[border-color,box-shadow] duration-150 ${
         active ? `${track.borderActive} ${track.glowActive}` : `${track.border} ${track.glow}`
       }`}
       title={label}
     >
       <span
-        className={`inline-flex ${TRACK_NUDGE_CLASS[side]} ${active ? 'scale-110' : 'scale-100'} transition-transform duration-150`}
+        className={`pointer-events-none absolute inset-0 rounded-[inherit] ${fillClass}`}
+        aria-hidden
+      />
+      <span
+        className={`pointer-events-none absolute inset-0 rounded-[inherit] bg-gradient-to-r from-slate-900/10 via-transparent to-slate-900/10`}
+        aria-hidden
+      />
+      <span
+        className={`relative inline-flex ${TRACK_NUDGE_CLASS[side]} ${active ? 'scale-110' : 'scale-100'} transition-transform duration-150`}
       >
         <svg
-          className={`h-5 w-5 ${track.chevron} drop-shadow-[0_1px_2px_rgba(0,0,0,0.45)]`}
+          className={`h-5 w-5 ${track.chevron} ${track.chevronShadow}`}
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -230,7 +234,7 @@ function EdgeHint({
         className={`pointer-events-none absolute z-30 ${position}`}
         aria-hidden={!visible}
       >
-        <TopBottomScrollTrack side={side} tone={tone} active={active} label={label} />
+        <TopBottomScrollTrack side={side} active={active} label={label} />
       </div>
     );
   }
