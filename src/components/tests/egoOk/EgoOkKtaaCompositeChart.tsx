@@ -74,6 +74,9 @@ const BOTTOM_TRAIT_TO_CODE_GAP = 'pt-2.5';
 const COLUMN_TRAIT_TITLE_CLASS =
   'flex items-center justify-center px-0.5 text-center text-[10px] font-semibold leading-tight text-gray-700 sm:text-xs';
 
+const COLUMN_TRAIT_TITLE_COMPACT_CLASS =
+  'flex items-center justify-center px-px text-center text-[7px] font-semibold leading-[1.15] text-gray-700 sm:text-[8px]';
+
 const COLUMN_DIVIDER_CLASS = 'border-r-2 border-slate-500/80';
 
 type KtaaPlotBox = { left: number; top: number; width: number; height: number };
@@ -724,6 +727,9 @@ export default function EgoOkKtaaCompositeChart({
   const barSize = compact ? 20 : 52;
   const yTicks = compact ? Y_TICKS_COMPACT : Y_TICKS;
   const columnDividerClass = compact ? 'border-r border-slate-400/70' : COLUMN_DIVIDER_CLASS;
+  const traitTitleClass = compact ? COLUMN_TRAIT_TITLE_COMPACT_CLASS : COLUMN_TRAIT_TITLE_CLASS;
+  const traitGapTop = compact ? { paddingBottom: 2 } : TRAIT_LABEL_PLOT_GAP_TOP;
+  const traitGapBottom = compact ? { paddingTop: 2 } : TRAIT_LABEL_PLOT_GAP_BOTTOM;
   const genderProvided = isClientGenderProvided(genderInput);
   const backgroundGender: EgoOkGender = genderProvided
     ? normalizeEgoOkGender(genderInput)
@@ -773,18 +779,16 @@ export default function EgoOkKtaaCompositeChart({
         </div>
       ) : null}
 
-      {!compact ? (
-        <KtaaPlotLabelColumns plotBox={plotBox} style={TRAIT_LABEL_PLOT_GAP_TOP}>
-          {columns.map((col, index) => (
-            <div
-              key={col.id}
-              className={`${COLUMN_TRAIT_TITLE_CLASS} ${index < columns.length - 1 ? COLUMN_DIVIDER_CLASS : ''}`}
-            >
-              {col.topLabel}
-            </div>
-          ))}
-        </KtaaPlotLabelColumns>
-      ) : null}
+      <KtaaPlotLabelColumns plotBox={plotBox} style={traitGapTop}>
+        {columns.map((col, index) => (
+          <div
+            key={col.id}
+            className={`${traitTitleClass} ${index < columns.length - 1 ? columnDividerClass : ''}`}
+          >
+            {col.topLabel}
+          </div>
+        ))}
+      </KtaaPlotLabelColumns>
 
       <div className="relative w-full leading-none" style={{ height: plotHeightPx }}>
         <ResponsiveContainer width="100%" height="100%">
@@ -847,18 +851,16 @@ export default function EgoOkKtaaCompositeChart({
         </ResponsiveContainer>
       </div>
 
-      {!compact ? (
-        <KtaaPlotLabelColumns plotBox={plotBox} style={TRAIT_LABEL_PLOT_GAP_BOTTOM}>
-          {columns.map((col, index) => (
-            <div
-              key={`${col.id}-bottom`}
-              className={`${COLUMN_TRAIT_TITLE_CLASS} ${index < columns.length - 1 ? COLUMN_DIVIDER_CLASS : ''}`}
-            >
-              {col.bottomLabel}
-            </div>
-          ))}
-        </KtaaPlotLabelColumns>
-      ) : null}
+      <KtaaPlotLabelColumns plotBox={plotBox} style={traitGapBottom}>
+        {columns.map((col, index) => (
+          <div
+            key={`${col.id}-bottom`}
+            className={`${traitTitleClass} ${index < columns.length - 1 ? columnDividerClass : ''}`}
+          >
+            {col.bottomLabel}
+          </div>
+        ))}
+      </KtaaPlotLabelColumns>
 
       <KtaaPlotLabelColumns
         plotBox={plotBox}

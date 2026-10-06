@@ -119,6 +119,14 @@ export function useScrollEdgeHints(
   return hints;
 }
 
+/** 상·하 엣지 스크롤·힌트 — 뷰포트 가로 2/3 (가운데) */
+function inViewportVerticalEdgeBand(clientX: number): boolean {
+  if (typeof window === 'undefined') return true;
+  const bandWidth = window.innerWidth * (2 / 3);
+  const left = (window.innerWidth - bandWidth) / 2;
+  return clientX >= left && clientX <= left + bandWidth;
+}
+
 function edgeScrollDelta(
   clientX: number,
   clientY: number,
@@ -128,8 +136,8 @@ function edgeScrollDelta(
   let dy = 0;
   if (clientX - rect.left < EDGE_SIZE_PX) dx = -SCROLL_STEP_PX;
   else if (rect.right - clientX < EDGE_SIZE_PX) dx = SCROLL_STEP_PX;
-  if (clientY - rect.top < EDGE_SIZE_PX) dy = -SCROLL_STEP_PX;
-  else if (rect.bottom - clientY < EDGE_SIZE_PX) dy = SCROLL_STEP_PX;
+  if (clientY - rect.top < EDGE_SIZE_PX && inViewportVerticalEdgeBand(clientX)) dy = -SCROLL_STEP_PX;
+  else if (rect.bottom - clientY < EDGE_SIZE_PX && inViewportVerticalEdgeBand(clientX)) dy = SCROLL_STEP_PX;
   return { dx, dy };
 }
 

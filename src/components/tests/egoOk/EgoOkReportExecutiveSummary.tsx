@@ -483,7 +483,7 @@ export default function EgoOkReportExecutiveSummary({
           {report.validity ? <ValiditySummaryDonuts validity={report.validity} /> : null}
         </SummaryShell>
 
-        <SummaryShell title="KTAA 종합" tabHint="KTAA 탭">
+        <SummaryShell title="KTAA 종합 그래프" tabHint="KTAA 탭">
           <div className="-mx-1 overflow-hidden">
             <EgoOkKtaaCompositeChart
               columns={report.compositeChart}
@@ -491,9 +491,6 @@ export default function EgoOkReportExecutiveSummary({
               compact
             />
           </div>
-          <p className="mt-1.5 text-[11px] leading-snug text-slate-600">
-            KTAA 탭과 동일 그래프(243 구간·이고 막대·오케이 선)를 축소해 표시합니다.
-          </p>
         </SummaryShell>
 
         <SummaryShell title="이고그램" tabHint="이고 탭">

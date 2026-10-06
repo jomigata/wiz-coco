@@ -42,6 +42,9 @@ function ScrollChevron({ side, active }: { side: Side; active: boolean }) {
   );
 }
 
+/** 상·하 스크롤 힌트·엣지 감지 — 뷰포트 가로 2/3 (가운데) */
+export const VIEWPORT_EDGE_HINT_WIDTH_CLASS = 'left-1/2 w-[66.666vw] max-w-full -translate-x-1/2';
+
 function EdgeHint({
   side,
   visible,
@@ -55,11 +58,13 @@ function EdgeHint({
 }) {
   if (!visible) return null;
 
+  const topBottomWide = pinEdges && (side === 'top' || side === 'bottom');
+
   const position = pinEdges
     ? side === 'top'
-      ? 'inset-x-0 top-0 flex justify-center pt-1.5'
+      ? `top-0 flex justify-center pt-1.5 ${topBottomWide ? VIEWPORT_EDGE_HINT_WIDTH_CLASS : 'inset-x-0'}`
       : side === 'bottom'
-        ? 'inset-x-0 bottom-0 flex justify-center pb-1.5'
+        ? `bottom-0 flex justify-center pb-1.5 ${topBottomWide ? VIEWPORT_EDGE_HINT_WIDTH_CLASS : 'inset-x-0'}`
         : side === 'left'
           ? 'inset-y-0 left-0 flex w-11 items-center justify-center'
           : 'inset-y-0 right-0 flex w-11 items-center justify-center'
@@ -73,12 +78,12 @@ function EdgeHint({
 
   const gradient =
     side === 'top'
-      ? 'inset-x-0 top-0 h-14 bg-gradient-to-b from-black/20 via-black/5 to-transparent'
+      ? 'absolute inset-x-0 top-0 h-14 bg-gradient-to-b from-black/20 via-black/5 to-transparent'
       : side === 'bottom'
-        ? 'inset-x-0 bottom-0 h-14 bg-gradient-to-t from-black/20 via-black/5 to-transparent'
+        ? 'absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-black/20 via-black/5 to-transparent'
         : side === 'left'
-          ? 'inset-y-0 left-0 w-14 bg-gradient-to-r from-black/18 via-black/5 to-transparent'
-          : 'inset-y-0 right-0 w-14 bg-gradient-to-l from-black/18 via-black/5 to-transparent';
+          ? 'absolute inset-y-0 left-0 w-14 bg-gradient-to-r from-black/18 via-black/5 to-transparent'
+          : 'absolute inset-y-0 right-0 w-14 bg-gradient-to-l from-black/18 via-black/5 to-transparent';
 
   const label =
     side === 'top'
@@ -89,22 +94,34 @@ function EdgeHint({
           ? '왼쪽으로 스크롤'
           : '오른쪽으로 스크롤';
 
+  const chevronBubble = (
+    <span
+      className={`relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full border bg-transparent transition-all duration-150 ${
+        active
+          ? 'border-white/60 shadow-[0_0_14px_rgba(255,255,255,0.18)] ring-1 ring-white/10'
+          : 'border-white/30 ring-1 ring-black/25'
+      }`}
+      title={label}
+    >
+      <ScrollChevron side={side} active={active} />
+    </span>
+  );
+
   return (
     <div
-      className={`pointer-events-none absolute z-30 ${pinEdges ? '' : 'flex items-center justify-center'} ${position}`}
+      className={`pointer-events-none absolute z-30 ${topBottomWide || pinEdges ? '' : 'flex items-center justify-center'} ${position}`}
       aria-hidden={!visible}
     >
-      <span className={`pointer-events-none absolute ${gradient}`} />
-      <span
-        className={`relative flex h-9 w-9 items-center justify-center rounded-full border bg-transparent transition-all duration-150 ${
-          active
-            ? 'border-white/60 shadow-[0_0_14px_rgba(255,255,255,0.18)] ring-1 ring-white/10'
-            : 'border-white/30 ring-1 ring-black/25'
-        }`}
-        title={label}
-      >
-        <ScrollChevron side={side} active={active} />
-      </span>
+      <span className={`pointer-events-none ${gradient}`} />
+      {topBottomWide ? (
+        <div className="relative flex w-full items-center justify-between px-[12%]">
+          {chevronBubble}
+          {chevronBubble}
+          {chevronBubble}
+        </div>
+      ) : (
+        chevronBubble
+      )}
     </div>
   );
 }
