@@ -1354,7 +1354,7 @@ export default function EgoOkCounselorReport({
         short: '대책',
         description: '상담사 개입 · 내담자 자율 실천 (9단계 기준)',
         panel: (
-          <SectionCard compact title="자율치료 및 대책" subtitle="243+플러스 9단계 · 상담사용 · 내담자용">
+          <SectionCard compact title="자율치료 및 대책" subtitle="243+플러스 9단계 · 상담사용 (자율치료는 설명·과제로 전달)">
             <EgoOkSelfHelpTherapyPanel egogram={report.egogram} />
           </SectionCard>
         ),

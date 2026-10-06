@@ -272,24 +272,25 @@ export function buildPlus243StageGuidance(scaleId: EgoScaleId, stage: Plus243Sta
   const block = getManualNineStageBlock(scaleId, stage);
   const prev = (stage - 1) as Plus243Stage;
   const next = (stage + 1) as Plus243Stage;
+  const head = `${scaleId} ·`;
 
   if (isPlus243RecommendedStage(stage)) {
     const strengthText = block.strengths.filter(Boolean).slice(0, 2).join(' ');
     lines.push(
-      `지금 ${stage}단계(권장 4~6)를 유지하는 것이 좋습니다. ${strengthText} 한 단계만 올리거나 내려도 4·5·6단계 안이면 굳이 바꿀 필요 없이, 지금처럼 쓰는 편이 안정적입니다.`,
+      `${head} 지금 ${stage}단계(권장 4~6)를 유지하는 것이 좋습니다. ${strengthText} 한 단계만 올리거나 내려도 4·5·6단계 안이면 굳이 바꿀 필요 없이, 지금처럼 쓰는 편이 안정적입니다.`,
     );
     if (prev === 3) {
       const b = getManualNineStageBlock(scaleId, 3);
       const downs = b.cautions.filter(Boolean).slice(0, 2).join(' ');
       lines.push(
-        `주의: 한 단계 내려 3단계(부족)가 되면 권장 구간을 벗어납니다. ${downs || b.trait}`,
+        `${head} 주의: 한 단계 내려 3단계(부족)가 되면 권장 구간을 벗어납니다. ${downs || b.trait}`,
       );
     }
     if (next === 7) {
       const b = getManualNineStageBlock(scaleId, 7);
       const downs = b.cautions.filter(Boolean).slice(0, 2).join(' ');
       lines.push(
-        `주의: 한 단계 올려 7단계(과잉)가 되면 권장 구간을 벗어납니다. ${downs || b.trait}`,
+        `${head} 주의: 한 단계 올려 7단계(과잉)가 되면 권장 구간을 벗어납니다. ${downs || b.trait}`,
       );
     }
     return lines;
@@ -302,15 +303,15 @@ export function buildPlus243StageGuidance(scaleId: EgoScaleId, stage: Plus243Sta
         : stage === 2
           ? '에너지가 꽤 부족한 편입니다.'
           : '에너지가 부족한 편입니다.';
-    lines.push(`현재 ${stage}단계(부족 1~3)입니다. ${lack} ${block.cautions[0] ?? block.trait}`);
+    lines.push(`${head} 현재 ${stage}단계(부족 1~3)입니다. ${lack} ${block.cautions[0] ?? block.trait}`);
     if (isPlus243RecommendedStage(next)) {
       const b4 = getManualNineStageBlock(scaleId, next);
       lines.push(
-        `권장: 한 단계 올리면 ${next}단계(권장 4~6)에 들어옵니다. ${b4.strengths[0] ?? b4.trait} 급하게 여러 단계를 올리지 말고, 한 단계만 목표로 하세요.`,
+        `${head} 권장: 한 단계 올리면 ${next}단계(권장 4~6)에 들어옵니다. ${b4.strengths[0] ?? b4.trait} 급하게 여러 단계를 올리지 말고, 한 단계만 목표로 하세요.`,
       );
     } else {
       lines.push(
-        `권장: 한 단계 올려도 아직 부족 구간일 수 있습니다. 조금씩 4~6단계를 향해 가세요. ${block.raiseMeasures.slice(0, 3).join(' · ')}`,
+        `${head} 권장: 한 단계 올려도 아직 부족 구간일 수 있습니다. 조금씩 4~6단계를 향해 가세요. ${block.raiseMeasures.slice(0, 3).join(' · ')}`,
       );
     }
     return lines;
@@ -319,27 +320,84 @@ export function buildPlus243StageGuidance(scaleId: EgoScaleId, stage: Plus243Sta
   if (stage >= 7) {
     const heavy =
       stage >= 9 ? '에너지가 매우 과한 편입니다.' : stage === 8 ? '에너지가 꽤 과한 편입니다.' : '에너지가 과한 편입니다.';
-    lines.push(`현재 ${stage}단계(과잉 7~9)입니다. ${heavy} ${block.cautions.filter(Boolean).slice(0, 2).join(' ')}`);
+    lines.push(`${head} 현재 ${stage}단계(과잉 7~9)입니다. ${heavy} ${block.cautions.filter(Boolean).slice(0, 2).join(' ')}`);
     if (isPlus243RecommendedStage(prev)) {
       const b6 = getManualNineStageBlock(scaleId, prev);
       lines.push(
-        `권장: 한 단계 내리면 ${prev}단계(권장 4~6)에 가까워집니다. ${b6.strengths[0] ?? b6.trait} 한 번에 여러 단계 내리기보다 한 단계만 목표로 하세요.`,
+        `${head} 권장: 한 단계 내리면 ${prev}단계(권장 4~6)에 가까워집니다. ${b6.strengths[0] ?? b6.trait} 한 번에 여러 단계 내리기보다 한 단계만 목표로 하세요.`,
       );
     } else {
       lines.push(
-        `권장: 한 단계 내려도 아직 과잉일 수 있습니다. 조금씩 4~6단계를 향해 가세요. ${block.lowerMeasures.slice(0, 3).join(' · ')}`,
+        `${head} 권장: 한 단계 내려도 아직 과잉일 수 있습니다. 조금씩 4~6단계를 향해 가세요. ${block.lowerMeasures.slice(0, 3).join(' · ')}`,
       );
     }
     if (stage < 9 && next <= 9) {
       const bNext = getManualNineStageBlock(scaleId, next);
       lines.push(
-        `주의: 한 단계 더 올리면 ${next}단계로 과잉이 더 커집니다. ${bNext.cautions[0] ?? bNext.trait}`,
+        `${head} 주의: 한 단계 더 올리면 ${next}단계로 과잉이 더 커집니다. ${bNext.cautions[0] ?? bNext.trait}`,
       );
     }
     return lines;
   }
 
   return lines;
+}
+
+/** 상담사용 — CP↔NP, FC↔AC 상대 관계 · A 조율 */
+export function buildCounselorPairAndAdultGuidance(egogram: EgoOkScaleScore[]): string[] {
+  const byId = Object.fromEntries(egogram.map((s) => [s.id, s])) as Record<EgoScaleId, EgoOkScaleScore>;
+  const cp = byId.CP;
+  const np = byId.NP;
+  const fc = byId.FC;
+  const ac = byId.AC;
+  const a = byId.A;
+  if (!cp || !np || !fc || !ac || !a) return [];
+
+  const cpSt = rawScoreToPlus243Tier(cp.raw).stage;
+  const npSt = rawScoreToPlus243Tier(np.raw).stage;
+  const fcSt = rawScoreToPlus243Tier(fc.raw).stage;
+  const acSt = rawScoreToPlus243Tier(ac.raw).stage;
+  const aSt = rawScoreToPlus243Tier(a.raw).stage;
+
+  const lines: string[] = [];
+
+  if (cp.raw > np.raw) {
+    lines.push(
+      `CP↔NP: CP ${cpSt}단계가 NP ${npSt}단계보다 높습니다. 한쪽(부모 에너지)이 올라가면 다른 쪽은 상대적으로 줄어들기 쉽다고 설명합니다. 내담자에게 NP 쪽 자율치료(돌봄·격려 말하기)를 과제로 제시하고, CP는 한 단계 낮추는 방향을 함께 정합니다.`,
+    );
+  } else if (np.raw > cp.raw) {
+    lines.push(
+      `CP↔NP: NP ${npSt}단계가 CP ${cpSt}단계보다 높습니다. NP가 높을수록 CP(기준·책임)가 상대적으로 약해 보일 수 있음을 설명합니다. 내담자에게 CP 쪽 자율치료(원칙·경계 말하기)를 과제로 제시하고, NP 과보호로 넘어가지 않도록 조절합니다.`,
+    );
+  } else {
+    lines.push(`CP↔NP: CP·NP 모두 ${cpSt}단계로 같습니다. 부모 에너지 균형은 유지하되, 둘 중 하나만 키우면 다른 쪽이 줄 수 있음을 미리 안내합니다.`);
+  }
+
+  if (fc.raw > ac.raw) {
+    lines.push(
+      `FC↔AC: FC ${fcSt}단계가 AC ${acSt}단계보다 높습니다. 즐거움·표현(FC)과 배려·순응(AC)은 서로 줄고 늘기 쉽다고 설명합니다. AC 쪽 자율치료(경청·타혹)를 설명·과제화하고, FC가 과하면 한 단계 내리는 방향을 함께 봅니다.`,
+    );
+  } else if (ac.raw > fc.raw) {
+    lines.push(
+      `FC↔AC: AC ${acSt}단계가 FC ${fcSt}단계보다 높습니다. 순응이 높으면 자유·표현이 상대적으로 약해 보일 수 있음을 설명합니다. FC 쪽 자율치료(유머·작은 즐거움)를 설명·과제화하고, AC 과순응은 한 단계 조절합니다.`,
+    );
+  } else {
+    lines.push(`FC↔AC: FC·AC 모두 ${fcSt}단계로 같습니다. 아이 에너지 균형은 유지하되, 한쪽만 올리면 다른 쪽이 줄 수 있음을 안내합니다.`);
+  }
+
+  lines.push(
+    `A(성인) ${aSt}단계: 다섯 에너지를 바꾸기 전에 A로 「지금 문제가 무엇인지」「한 단계만 바꾸면 무엇이 좋아질지」를 문장으로 정리하게 합니다. A가 부족(1~3)이면 메모·확인 질문부터, A가 과잉(7~9)이면 감정·관계 한 줄을 붙이도록 상담합니다.`,
+  );
+
+  return lines;
+}
+
+/** 내담자 자율치료 — 상담사가 설명·과제로 전달하는 문장 */
+export function formatClientTasksForCounselor(scaleId: EgoScaleId, tasks: string[]): string[] {
+  return tasks.map(
+    (task) =>
+      `내담자에게 자율치료로 설명: 「${task}」— 이번 상담·다음 면담까지 ${scaleId} 관련 실천 1가지만 골라 과제로 정합니다.`,
+  );
 }
 
 /** @deprecated buildPlus243StageGuidance 사용 */

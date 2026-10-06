@@ -88,8 +88,8 @@ export function buildOffRangeEgogramComment(scale: EgoOkScaleScore): string | nu
 
   const steer =
     tier.stage <= 3
-      ? '「자율치료 및 대책」 탭(상담사용 · 내담자용)을 참고하세요.'
-      : '「자율치료 및 대책」 탭(상담사용 · 내담자용)을 참고하세요.';
+      ? '「자율치료 및 대책」 탭의 상담·설명 안내를 참고하세요.'
+      : '「자율치료 및 대책」 탭의 상담·설명 안내를 참고하세요.';
 
   const hints = buildPlus243StageGuidance(scale.id, tier.stage).join(' ');
 

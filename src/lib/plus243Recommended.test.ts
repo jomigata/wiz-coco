@@ -49,7 +49,7 @@ describe('243+ recommended stage (single source of truth)', () => {
   it('stage 5 has maintain only; stage 6 warns on move to 7', () => {
     const g5 = buildPlus243StageGuidance('A', 5);
     expect(g5).toHaveLength(1);
-    expect(g5[0]).toMatch(/유지/);
+    expect(g5[0]).toMatch(/A ·.*유지/);
     const g6 = buildPlus243StageGuidance('A', 6);
     expect(g6.some((l) => l.includes('7단계'))).toBe(true);
   });
@@ -61,7 +61,7 @@ describe('243+ recommended stage (single source of truth)', () => {
 
   it('stage 2 still outside recommended after one step up', () => {
     const g = buildPlus243StageGuidance('FC', 2);
-    expect(g.some((l) => l.startsWith('권장:') && l.includes('아직 부족'))).toBe(true);
+    expect(g.some((l) => l.includes('권장:') && l.includes('아직 부족'))).toBe(true);
   });
 
   it('243+ FC excess uses stage guidance', () => {
@@ -80,6 +80,6 @@ describe('243+ recommended stage (single source of truth)', () => {
     const fc = sections['4'] ?? '';
     expect(fc).not.toMatch(/\d+점/);
     expect(fc).toMatch(/7단계|과잉/);
-    expect(fc).toMatch(/권장:|주의:/);
+    expect(fc).toMatch(/FC ·.*권장:|FC ·.*주의:/);
   });
 });

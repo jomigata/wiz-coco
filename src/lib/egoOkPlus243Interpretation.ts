@@ -1,7 +1,8 @@
-import type { EgoOkScaleScore, EgoScaleId } from '@/lib/egoOkScoring';
+import type { EgoOkScaleScore } from '@/lib/egoOkScoring';
 import { normalizeEgoOkGender } from '@/lib/egoOkScoring';
 import {
   formatCurrentStageLeadIn,
+  isPlus243RecommendedStage,
   plus243TierToAscii,
   rawScoreToPlus243Tier,
   type Pattern243Plus,
@@ -34,6 +35,41 @@ function formatExtremeGroup(scales: EgoOkScaleScore[]): string {
   const ids = scales.map((s) => s.id).join(' · ');
   const codes = Array.from(new Set(scales.map((s) => plus243TierToAscii(rawScoreToPlus243Tier(s.raw))))).join('/');
   return `${ids} (현재 ${stage}단계, ${codes})`;
+}
+
+function formatGuidanceBlock(title: string, scales: EgoOkScaleScore[]): string {
+  const body = scales
+    .flatMap((s) => buildPlus243StageGuidance(s.id, rawScoreToPlus243Tier(s.raw).stage))
+    .join('\n');
+  return body ? `${title}\n${body}` : '';
+}
+
+function simpleBalanceHint(
+  highs: EgoOkScaleScore[],
+  lows: EgoOkScaleScore[],
+  aStage: Plus243Stage,
+): string {
+  const lowIds = lows.map((l) => l.id).join(' · ');
+  const highIds = highs.map((h) => h.id).join(' · ');
+  const lowStages = lows.map((l) => `${l.id} ${rawScoreToPlus243Tier(l.raw).stage}단계`).join(', ');
+  const highStages = highs.map((h) => `${h.id} ${rawScoreToPlus243Tier(h.raw).stage}단계`).join(', ');
+
+  const lowNeed = lows.some((l) => !isPlus243RecommendedStage(rawScoreToPlus243Tier(l.raw).stage));
+  const highNeed = highs.some((h) => !isPlus243RecommendedStage(rawScoreToPlus243Tier(h.raw).stage));
+
+  let line = `정리하면, 에너지가 가장 약한 쪽은 ${lowIds}(${lowStages})이고, 가장 강한 쪽은 ${highIds}(${highStages})입니다. `;
+  if (lowNeed) {
+    line += `${lowIds}은(는) 부족 쪽이면 한 단계씩 키우는 실천을, `;
+  } else {
+    line += `${lowIds}은(는) 권장 구간이면 지금 리듬을 유지하고, `;
+  }
+  if (highNeed) {
+    line += `${highIds}은(는) 과잉 쪽이면 한 단계씩 낮추는 실천을 돕습니다. `;
+  } else {
+    line += `${highIds}은(는) 권장 구간이면 무리하게 더 올리지 않도록 돕습니다. `;
+  }
+  line += `A ${aStage}단계(생각·판단)로 「무엇을 한 단계만 바꿀지」를 먼저 말로 정리하면, 다섯 에너지 조절이 한 번에 정리되기 쉽습니다.`;
+  return line;
 }
 
 function scaleBlock(s: EgoOkScaleScore, stage: Plus243Stage): string {
@@ -72,22 +108,13 @@ function comprehensive(egogram: EgoOkScaleScore[]): string {
       ? '다섯 척도가 한 줄로 묶여 극단 비교가 어렵습니다.'
       : `한 성격 안에서 에너지가 ${highs.map((h) => h.id).join('·')} 쪽으로 기울고, ${lows.map((l) => l.id).join('·')}은(는) 상대적으로 약합니다.`;
 
-  const highGuidance = highs
-    .flatMap((h) => buildPlus243StageGuidance(h.id, rawScoreToPlus243Tier(h.raw).stage))
-    .slice(0, 3)
-    .join('\n');
-  const lowGuidance = lows
-    .flatMap((l) => buildPlus243StageGuidance(l.id, rawScoreToPlus243Tier(l.raw).stage))
-    .slice(0, 3)
-    .join('\n');
-
   return [
     `9단계 기준 다섯 이고그램을 함께 봅니다. ${highLine} ${lowLine} ${tilt}`,
-    `CP ${cpStage}단계 · NP ${npStage}단계 — ${cpUpNpDown ? 'CP가 NP보다 높아 기준·비판 쪽이 두드러집니다.' : 'NP가 CP보다 높아 돌봄·지지 쪽이 두드러집니다.'} (CP와 NP는 서로 줄고 늘기 쉬운 관계로 봅니다.)`,
-    `FC ${fcStage}단계 · AC ${acStage}단계 — ${fc.raw > ac.raw ? 'FC(자유·표현)가 AC(배려·순응)보다 높습니다.' : 'AC가 FC보다 높습니다.'} 둘 다 동시에 크게 오르거나 내리면, 맞추려는 표현일 수 있어 함께 짚습니다.`,
-    `균형 힌트: ${lows.map((l) => `${l.id} ${rawScoreToPlus243Tier(l.raw).stage}단계`).join(' · ')}는 보완·키우기, ${highs.map((h) => `${h.id} ${rawScoreToPlus243Tier(h.raw).stage}단계`).join(' · ')}는 쉬어 가기·조절하기. A ${aStage}단계(생각·판단)로 선택지를 정리하면 다섯 에너지가 한 흐름으로 이어집니다.`,
-    highGuidance ? `최고 쪽 단계 안내:\n${highGuidance}` : '',
-    lowGuidance ? `최저 쪽 단계 안내:\n${lowGuidance}` : '',
+    `CP ${cpStage}단계 · NP ${npStage}단계 — ${cpUpNpDown ? 'CP가 NP보다 높아 기준·비판 쪽이 두드러집니다.' : 'NP가 CP보다 높아 돌봄·지지 쪽이 두드러집니다.'} CP와 NP는 한쪽이 커지면 다른 쪽이 상대적으로 작아 보이기 쉽다고 설명할 수 있습니다.`,
+    `FC ${fcStage}단계 · AC ${acStage}단계 — ${fc.raw > ac.raw ? 'FC(자유·표현)가 AC(배려·순응)보다 높습니다.' : fc.raw < ac.raw ? 'AC(배려·순응)가 FC(자유·표현)보다 높습니다.' : 'FC와 AC가 같은 단계입니다.'} FC와 AC도 서로 상대적으로 비교해 설명합니다.`,
+    simpleBalanceHint(highs, lows, aStage),
+    formatGuidanceBlock('최고 쪽 단계 안내:', highs),
+    formatGuidanceBlock('최저 쪽 단계 안내:', lows),
   ]
     .filter(Boolean)
     .join('\n\n');
