@@ -169,7 +169,7 @@ export function buildLowEgogramEnergyInsight(scale: EgoOkScaleScore): EgogramEne
   const stage = tier.stage;
   const band = plus243StageBand(stage);
   const name = EGO_ENERGY_DISPLAY_NAMES[scale.id];
-  const comment = `${scale.id} ${name} · 이고그램 합계 ${scale.raw}점 · 다섯 이고그램 중 상대적으로 낮은 사용 에너지(9단계중 ${stage}단계)입니다.`;
+  const comment = `${scale.id} ${name} · 이고그램 합계 ${scale.raw}점 · 다섯 이고그램 중 최저 사용 에너지(9단계중 ${stage}단계)입니다.`;
   return wrapInsight(
     tier,
     comment,
@@ -180,4 +180,48 @@ export function buildLowEgogramEnergyInsight(scale: EgoOkScaleScore): EgogramEne
 
 export function formatEgogramEnergyHeadline(scale: EgoOkScaleScore): string {
   return `${scale.id} - ${EGO_ENERGY_DISPLAY_NAMES[scale.id]}`;
+}
+
+const EGOGRAM_PLUS_RECOMMENDED_LOW = 23;
+const EGOGRAM_PLUS_RECOMMENDED_HIGH = 37;
+
+/** 243패턴 흰 구간 또는 243+ 23~37 밖. 최고·최저가 아닌 척도용 한 줄 코멘트 */
+export function buildOffRangeEgogramComment(
+  scale: EgoOkScaleScore,
+  pattern: { low: number; high: number } | null,
+): string | null {
+  const tier = rawScoreToPlus243Tier(scale.raw);
+  const abovePattern = pattern != null && scale.raw > pattern.high;
+  const belowPattern = pattern != null && scale.raw < pattern.low;
+  const abovePlus = scale.raw > EGOGRAM_PLUS_RECOMMENDED_HIGH;
+  const belowPlus = scale.raw < EGOGRAM_PLUS_RECOMMENDED_LOW;
+  if (!abovePattern && !belowPattern && !abovePlus && !belowPlus) return null;
+
+  const name = EGO_ENERGY_DISPLAY_NAMES[scale.id];
+  const role = SCALE_ROLE[scale.id];
+  const notes: string[] = [];
+  if (pattern && (abovePattern || belowPattern)) {
+    notes.push(
+      abovePattern
+        ? `243패턴 ${pattern.low}–${pattern.high}보다 높음`
+        : `243패턴 ${pattern.low}–${pattern.high}보다 낮음`,
+    );
+  }
+  if (abovePlus || belowPlus) {
+    notes.push(
+      abovePlus
+        ? `243+ ${EGOGRAM_PLUS_RECOMMENDED_LOW}–${EGOGRAM_PLUS_RECOMMENDED_HIGH}보다 높음`
+        : `243+ ${EGOGRAM_PLUS_RECOMMENDED_LOW}–${EGOGRAM_PLUS_RECOMMENDED_HIGH}보다 낮음`,
+    );
+  }
+  const above = abovePattern || abovePlus;
+  const below = belowPattern || belowPlus;
+  const steer =
+    above && !below
+      ? `${role.excessRisk}이(가) 커지지 않도록 권장 구간 쪽으로 낮출 여지를 두세요.`
+      : below && !above
+        ? `${role.deficitRisk}이(가) 더 줄지 않도록 권장 구간을 향해 조금씩 끌어올리세요.`
+        : `${role.benefit}의 높낮이를 두 권장 구간 안에서 맞추면 좋습니다.`;
+
+  return `${scale.id} ${name} · ${scale.raw}점 · ${tier.stage}단계. 최고·최저는 아닙니다. ${notes.join(' · ')}. ${steer}`;
 }
