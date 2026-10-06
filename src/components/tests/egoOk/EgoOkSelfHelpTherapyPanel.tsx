@@ -37,10 +37,17 @@ function ScaleBlock({
       {variant === 'counselor' ? (
         <p className="mt-3 text-xs leading-relaxed text-slate-400">{plan.summary}</p>
       ) : null}
-      {plan.adjacentHints.length > 0 ? (
-        <ul className="mt-3 space-y-2 border-t border-white/5 pt-3 text-xs leading-relaxed text-amber-100/85">
-          {plan.adjacentHints.map((line) => (
-            <li key={line}>{line}</li>
+      {plan.guidanceLines.length > 0 ? (
+        <ul className="mt-3 space-y-2.5 border-t border-white/10 pt-3">
+          {plan.guidanceLines.map((line) => (
+            <li
+              key={line}
+              className={`text-sm leading-relaxed ${
+                line.startsWith('주의:') ? 'text-amber-100/90' : line.startsWith('권장:') ? 'text-emerald-100/85' : 'text-slate-300'
+              }`}
+            >
+              {line}
+            </li>
           ))}
         </ul>
       ) : null}

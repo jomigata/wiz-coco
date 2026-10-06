@@ -9,7 +9,7 @@ import {
   type Plus243Tier,
 } from '@/lib/egogram243Plus';
 import {
-  buildAdjacentTransitionMessages,
+  buildPlus243StageGuidance,
   buildManualNineStageInsight,
   type ManualInsightRole,
 } from '@/lib/egogramManualNineStage';
@@ -56,7 +56,7 @@ export function buildPeakEgogramEnergyInsight(scale: EgoOkScaleScore): EgogramEn
   const manual = buildManualNineStageInsight(scale.id, scale.raw, role);
   const name = EGO_ENERGY_DISPLAY_NAMES[scale.id];
   const comment = `${scale.id} ${name} · ${manual.trait}`;
-  const cautions = [...manual.cautions, ...buildAdjacentTransitionMessages(scale.id, tier.stage)];
+  const cautions = [...manual.cautions, ...buildPlus243StageGuidance(scale.id, tier.stage)];
   return wrapInsight(manual.tier, comment, manual.strengths, cautions);
 }
 
@@ -66,7 +66,7 @@ export function buildLowEgogramEnergyInsight(scale: EgoOkScaleScore): EgogramEne
   const manual = buildManualNineStageInsight(scale.id, scale.raw, role);
   const name = EGO_ENERGY_DISPLAY_NAMES[scale.id];
   const comment = `${scale.id} ${name} · ${manual.trait}`;
-  const cautions = [...manual.cautions, ...buildAdjacentTransitionMessages(scale.id, tier.stage)];
+  const cautions = [...manual.cautions, ...buildPlus243StageGuidance(scale.id, tier.stage)];
   return wrapInsight(manual.tier, comment, manual.strengths, cautions);
 }
 
@@ -91,7 +91,7 @@ export function buildOffRangeEgogramComment(scale: EgoOkScaleScore): string | nu
       ? '「자율치료 및 대책」 탭(상담사용 · 내담자용)을 참고하세요.'
       : '「자율치료 및 대책」 탭(상담사용 · 내담자용)을 참고하세요.';
 
-  const hints = buildAdjacentTransitionMessages(scale.id, tier.stage).join(' ');
+  const hints = buildPlus243StageGuidance(scale.id, tier.stage).join(' ');
 
   return `${scale.id} ${name} · ${formatCurrentStageLeadIn(tier)}. ${bandLabel}. ${manual.trait} ${hints} ${steer}`;
 }

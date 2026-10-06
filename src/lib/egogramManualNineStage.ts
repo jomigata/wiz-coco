@@ -72,7 +72,7 @@ const NP: Record<BandKey, Omit<ManualNineStageBlock, 'raiseMeasures' | 'lowerMea
     ],
   },
   normal: {
-    trait: 'NP가 중심을 넘어 34점 전후면 모성적·온화하고, 돕고 동정하며 거절을 잘 못하는 경향이 있습니다.',
+    trait: 'NP가 권장 구간(4~6단계) 상단~과잉 쪽이면 모성적·온화하고, 돕고 동정하며 거절을 잘 못하는 경향이 있습니다.',
     strengths: [
       '타인을 배려하고 공감하며, 관계를 따뜻하게 유지하려 합니다.',
       '원조 요청에 응하며 협력 분위기를 만듭니다.',
@@ -99,7 +99,7 @@ const A: Record<BandKey, Omit<ManualNineStageBlock, 'raiseMeasures' | 'lowerMeas
     ],
   },
   normal: {
-    trait: 'A가 중심을 넘어 30점 이상이면 이성·합리·냉정·결단이 강하고 계획적으로 일을 처리합니다.',
+    trait: 'A가 권장 구간(4~6단계)을 넘어 높아지면 이성·합리·냉정·결단이 강하고 계획적으로 일을 처리합니다.',
     strengths: [
       '경청하고 사실을 모아 문제 해결로 연결합니다.',
       '감정적 꾸중보다 이해 가능한 태도를 취합니다.',
@@ -122,7 +122,7 @@ const FC: Record<BandKey, Omit<ManualNineStageBlock, 'raiseMeasures' | 'lowerMea
     strengths: ['차분하고 변화가 적은 일에서 인내력·집중이 발휘되기 쉽습니다.'],
     cautions: [
       'AC·CP가 높으면 억압·불평·음주·화풀이 등으로 스트레스가 새 나올 수 있습니다.',
-      '15점 이하 수준은 치료·상담이 필요한 경우가 많다는 임상 참고가 있습니다.',
+      '1~2단계처럼 매우 낮을 때는 치료·상담이 필요한 경우가 많다는 임상 참고가 있습니다.',
     ],
   },
   normal: {
@@ -263,60 +263,88 @@ function stageIntensityNote(tier: Plus243Tier): string {
 }
 
 /**
- * ±1단계 이동 시 권장(4~6)을 벗어날 때만 장·단점·주의를 안내. 권장 안에서의 이동(4↔5↔6)은 생략.
+ * 243+ · 자율치료 · 이고 탭 공통 — 단계만 사용(점수 없음).
+ * - 권장(4~6): 유지 장점 + 4·5·6 내부 이동은 유지 권장 + 벗어날 때만 주의
+ * - 권장 밖: 과·부족 설명 + 한 단계 이동 후에도 밖이면 회복 방법
  */
-export function buildAdjacentTransitionMessages(scaleId: EgoScaleId, stage: Plus243Stage): string[] {
+export function buildPlus243StageGuidance(scaleId: EgoScaleId, stage: Plus243Stage): string[] {
   const lines: string[] = [];
+  const block = getManualNineStageBlock(scaleId, stage);
   const prev = (stage - 1) as Plus243Stage;
   const next = (stage + 1) as Plus243Stage;
 
-  const lineForTarget = (target: Plus243Stage, direction: 'up' | 'down'): string | null => {
-    const targetBand = bandKey(target);
-    const block = getManualNineStageBlock(scaleId, target);
-    const strength = block.strengths[0];
-    const caution = block.cautions[0];
-    const arrow = direction === 'up' ? '한 단계 올려' : '한 단계 내려';
-    if (targetBand === 'deficit') {
-      return `${arrow} ${target}단계가 되면 부족 구간입니다. ${caution ?? block.trait}`;
-    }
-    if (targetBand === 'excess') {
-      return `${arrow} ${target}단계가 되면 과잉 구간입니다. ${caution ?? block.trait}`;
-    }
-    if (stage <= 3 || stage >= 7) {
-      return `${arrow} ${target}단계(권장 4~6)에 가까워집니다. ${strength ?? block.trait} 다만 급격히 바꾸기보다 한 단계씩 조절하세요.`;
-    }
-    return null;
-  };
-
   if (isPlus243RecommendedStage(stage)) {
+    const strengthText = block.strengths.filter(Boolean).slice(0, 2).join(' ');
+    lines.push(
+      `지금 ${stage}단계(권장 4~6)를 유지하는 것이 좋습니다. ${strengthText} 한 단계만 올리거나 내려도 4·5·6단계 안이면 굳이 바꿀 필요 없이, 지금처럼 쓰는 편이 안정적입니다.`,
+    );
     if (prev === 3) {
-      const msg = lineForTarget(3, 'down');
-      if (msg) lines.push(msg);
+      const b = getManualNineStageBlock(scaleId, 3);
+      const downs = b.cautions.filter(Boolean).slice(0, 2).join(' ');
+      lines.push(
+        `주의: 한 단계 내려 3단계(부족)가 되면 권장 구간을 벗어납니다. ${downs || b.trait}`,
+      );
     }
     if (next === 7) {
-      const msg = lineForTarget(7, 'up');
-      if (msg) lines.push(msg);
+      const b = getManualNineStageBlock(scaleId, 7);
+      const downs = b.cautions.filter(Boolean).slice(0, 2).join(' ');
+      lines.push(
+        `주의: 한 단계 올려 7단계(과잉)가 되면 권장 구간을 벗어납니다. ${downs || b.trait}`,
+      );
     }
     return lines;
   }
 
-  if (stage <= 3 && next <= 9) {
-    const msg = lineForTarget(next, 'up');
-    if (msg) lines.push(msg);
+  if (stage <= 3) {
+    const lack =
+      stage === 1
+        ? '에너지가 매우 부족한 편입니다.'
+        : stage === 2
+          ? '에너지가 꽤 부족한 편입니다.'
+          : '에너지가 부족한 편입니다.';
+    lines.push(`현재 ${stage}단계(부족 1~3)입니다. ${lack} ${block.cautions[0] ?? block.trait}`);
+    if (isPlus243RecommendedStage(next)) {
+      const b4 = getManualNineStageBlock(scaleId, next);
+      lines.push(
+        `권장: 한 단계 올리면 ${next}단계(권장 4~6)에 들어옵니다. ${b4.strengths[0] ?? b4.trait} 급하게 여러 단계를 올리지 말고, 한 단계만 목표로 하세요.`,
+      );
+    } else {
+      lines.push(
+        `권장: 한 단계 올려도 아직 부족 구간일 수 있습니다. 조금씩 4~6단계를 향해 가세요. ${block.raiseMeasures.slice(0, 3).join(' · ')}`,
+      );
+    }
     return lines;
   }
 
-  if (stage >= 7 && prev >= 1) {
-    const down = lineForTarget(prev, 'down');
-    if (down) lines.push(down);
+  if (stage >= 7) {
+    const heavy =
+      stage >= 9 ? '에너지가 매우 과한 편입니다.' : stage === 8 ? '에너지가 꽤 과한 편입니다.' : '에너지가 과한 편입니다.';
+    lines.push(`현재 ${stage}단계(과잉 7~9)입니다. ${heavy} ${block.cautions.filter(Boolean).slice(0, 2).join(' ')}`);
+    if (isPlus243RecommendedStage(prev)) {
+      const b6 = getManualNineStageBlock(scaleId, prev);
+      lines.push(
+        `권장: 한 단계 내리면 ${prev}단계(권장 4~6)에 가까워집니다. ${b6.strengths[0] ?? b6.trait} 한 번에 여러 단계 내리기보다 한 단계만 목표로 하세요.`,
+      );
+    } else {
+      lines.push(
+        `권장: 한 단계 내려도 아직 과잉일 수 있습니다. 조금씩 4~6단계를 향해 가세요. ${block.lowerMeasures.slice(0, 3).join(' · ')}`,
+      );
+    }
     if (stage < 9 && next <= 9) {
-      const up = lineForTarget(next, 'up');
-      if (up) lines.push(up);
+      const bNext = getManualNineStageBlock(scaleId, next);
+      lines.push(
+        `주의: 한 단계 더 올리면 ${next}단계로 과잉이 더 커집니다. ${bNext.cautions[0] ?? bNext.trait}`,
+      );
     }
-    return lines.slice(0, 2);
+    return lines;
   }
 
   return lines;
+}
+
+/** @deprecated buildPlus243StageGuidance 사용 */
+export function buildAdjacentTransitionMessages(scaleId: EgoScaleId, stage: Plus243Stage): string[] {
+  return buildPlus243StageGuidance(scaleId, stage);
 }
 
 /** 현재 단계와 맞지 않는 ‘7단계 이상’ 등 일반 경고 문구 제거 */
@@ -475,7 +503,8 @@ export type SelfHelpTherapyScalePlan = {
   stageLeadIn: string;
   summary: string;
   inRecommended: boolean;
-  adjacentHints: string[];
+  /** 단계 유지·이동·회복 안내 (243+와 동일) */
+  guidanceLines: string[];
   counselorTasks: string[];
   clientTasks: string[];
 };
@@ -495,7 +524,7 @@ export function buildSelfHelpTherapyScalePlan(scale: EgoOkScaleScore): SelfHelpT
     stageLeadIn: formatCurrentStageLeadIn(tier),
     summary: focused.trait,
     inRecommended,
-    adjacentHints: buildAdjacentTransitionMessages(scale.id, tier.stage),
+    guidanceLines: buildPlus243StageGuidance(scale.id, tier.stage),
     counselorTasks: COUNSELOR_TASKS[scale.id][band],
     clientTasks: focused.measures,
   };

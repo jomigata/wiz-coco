@@ -2,15 +2,12 @@ import type { EgoOkScaleScore, EgoScaleId } from '@/lib/egoOkScoring';
 import { normalizeEgoOkGender } from '@/lib/egoOkScoring';
 import {
   formatCurrentStageLeadIn,
-  isPlus243RecommendedStage,
-  plus243StageBand,
   plus243TierToAscii,
   rawScoreToPlus243Tier,
   type Pattern243Plus,
   type Plus243Stage,
-  type Plus243StageBand,
 } from '@/lib/egogram243Plus';
-import { buildAdjacentTransitionMessages } from '@/lib/egogramManualNineStage';
+import { buildPlus243StageGuidance } from '@/lib/egogramManualNineStage';
 
 const SCALE_ORDER: EgoOkScaleScore['id'][] = ['CP', 'NP', 'A', 'FC', 'AC'];
 
@@ -21,14 +18,6 @@ const SECTION_LABELS: Record<string, string> = {
   '4': 'FC (자유로운 아이)',
   '5': 'AC (순응하는 아이)',
   '6': '9단계 기준 종합 평가',
-};
-
-const SCALE_PLAIN: Record<EgoScaleId, string> = {
-  CP: '기준·책임',
-  NP: '돌봄·위로',
-  A: '생각·판단',
-  FC: '즐거움·표현',
-  AC: '배려·협력',
 };
 
 function pickTiedExtremeScales(scales: EgoOkScaleScore[], mode: 'max' | 'min'): EgoOkScaleScore[] {
@@ -47,46 +36,11 @@ function formatExtremeGroup(scales: EgoOkScaleScore[]): string {
   return `${ids} (현재 ${stage}단계, ${codes})`;
 }
 
-function stageZoneLabel(stage: Plus243Stage): string {
-  if (isPlus243RecommendedStage(stage)) return '권장 구간(4~6단계)';
-  if (stage <= 3) return '부족 구간(1~3단계)';
-  return '과잉 구간(7~9단계)';
-}
-
-function easySituation(scaleId: EgoScaleId, band: Plus243StageBand, stage: Plus243Stage): string {
-  const topic = SCALE_PLAIN[scaleId];
-  if (band === 'normal') {
-    return `지금 ${stage}단계로 ${topic} 에너지를 무난히 쓰고 있습니다(${stageZoneLabel(stage)}).`;
-  }
-  if (band === 'deficit') {
-    return `지금 ${stage}단계로 ${topic} 에너지가 적은 편입니다(${stageZoneLabel(stage)}). 필요할 때 힘을 내기 어렵거나, 주변에 그렇게 보일 수 있습니다.`;
-  }
-  return `지금 ${stage}단계로 ${topic} 에너지가 많이 쓰이고 있습니다(${stageZoneLabel(stage)}). 기운은 넘치지만, 무리하면 지치거나 사람들과 자주 부딪힐 수 있습니다.`;
-}
-
-function easyGuidance(scaleId: EgoScaleId, band: Plus243StageBand, stage: Plus243Stage): string {
-  const transitions = buildAdjacentTransitionMessages(scaleId, stage);
-  if (transitions.length) {
-    return transitions.join('\n');
-  }
-  if (band === 'normal') {
-    return '지금 리듬을 유지하되, 한 번에 두 단계 이상 크게 바꾸지 않는 것이 좋습니다.';
-  }
-  if (band === 'deficit') {
-    return '목표는 바로 옆 단계(한 단계)만 올리는 것입니다. 「자율치료 및 대책」 탭의 내담자용 실천을 참고하세요.';
-  }
-  return '목표는 바로 옆 단계(한 단계)만 내리는 것입니다. 쉬어 가고, 혼자 다 하려 하지 않도록 조율하세요. 「자율치료 및 대책」 탭을 함께 보세요.';
-}
-
 function scaleBlock(s: EgoOkScaleScore, stage: Plus243Stage): string {
   const tier = rawScoreToPlus243Tier(s.raw);
-  const band = plus243StageBand(stage);
   const lead = formatCurrentStageLeadIn(tier);
-  return [
-    `${lead}`,
-    easySituation(s.id, band, stage),
-    easyGuidance(s.id, band, stage),
-  ].join('\n\n');
+  const guidance = buildPlus243StageGuidance(s.id, stage);
+  return [lead, ...guidance].join('\n\n');
 }
 
 function comprehensive(egogram: EgoOkScaleScore[]): string {
@@ -118,12 +72,25 @@ function comprehensive(egogram: EgoOkScaleScore[]): string {
       ? '다섯 척도가 한 줄로 묶여 극단 비교가 어렵습니다.'
       : `한 성격 안에서 에너지가 ${highs.map((h) => h.id).join('·')} 쪽으로 기울고, ${lows.map((l) => l.id).join('·')}은(는) 상대적으로 약합니다.`;
 
+  const highGuidance = highs
+    .flatMap((h) => buildPlus243StageGuidance(h.id, rawScoreToPlus243Tier(h.raw).stage))
+    .slice(0, 3)
+    .join('\n');
+  const lowGuidance = lows
+    .flatMap((l) => buildPlus243StageGuidance(l.id, rawScoreToPlus243Tier(l.raw).stage))
+    .slice(0, 3)
+    .join('\n');
+
   return [
     `9단계 기준 다섯 이고그램을 함께 봅니다. ${highLine} ${lowLine} ${tilt}`,
     `CP ${cpStage}단계 · NP ${npStage}단계 — ${cpUpNpDown ? 'CP가 NP보다 높아 기준·비판 쪽이 두드러집니다.' : 'NP가 CP보다 높아 돌봄·지지 쪽이 두드러집니다.'} (CP와 NP는 서로 줄고 늘기 쉬운 관계로 봅니다.)`,
     `FC ${fcStage}단계 · AC ${acStage}단계 — ${fc.raw > ac.raw ? 'FC(자유·표현)가 AC(배려·순응)보다 높습니다.' : 'AC가 FC보다 높습니다.'} 둘 다 동시에 크게 오르거나 내리면, 맞추려는 표현일 수 있어 함께 짚습니다.`,
     `균형 힌트: ${lows.map((l) => `${l.id} ${rawScoreToPlus243Tier(l.raw).stage}단계`).join(' · ')}는 보완·키우기, ${highs.map((h) => `${h.id} ${rawScoreToPlus243Tier(h.raw).stage}단계`).join(' · ')}는 쉬어 가기·조절하기. A ${aStage}단계(생각·판단)로 선택지를 정리하면 다섯 에너지가 한 흐름으로 이어집니다.`,
-  ].join('\n\n');
+    highGuidance ? `최고 쪽 단계 안내:\n${highGuidance}` : '',
+    lowGuidance ? `최저 쪽 단계 안내:\n${lowGuidance}` : '',
+  ]
+    .filter(Boolean)
+    .join('\n\n');
 }
 
 export function buildPlus243InterpretationSections(
