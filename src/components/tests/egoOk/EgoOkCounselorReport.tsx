@@ -32,10 +32,7 @@ import {
   type InnerMindPair,
 } from '@/lib/egoOkInnerMind';
 import { buildPlus243InterpretationSections } from '@/lib/egoOkPlus243Interpretation';
-import {
-  buildSelfHelpTherapySections,
-  SELF_HELP_THERAPY_SECTION_ORDER,
-} from '@/lib/egoOkSelfHelpTherapy';
+import { EgoOkSelfHelpTherapyPanel } from '@/components/tests/egoOk/EgoOkSelfHelpTherapyPanel';
 import {
   buildOkLifeOverviewBlock,
   OK_BAR_DISPLAY_ORDER,
@@ -1157,11 +1154,6 @@ export default function EgoOkCounselorReport({
     [report.pattern243Plus, report.egogram, chartGender],
   );
   const plus243SectionOrder = ['1', '2', '3', '4', '5', '6'] as const;
-  const selfHelpSections = useMemo(
-    () => buildSelfHelpTherapySections(report.egogram),
-    [report.egogram],
-  );
-
   const reportTabs = useMemo((): CounselorReportTab[] => {
     const tabs: CounselorReportTab[] = [
       {
@@ -1362,12 +1354,8 @@ export default function EgoOkCounselorReport({
         short: '대책',
         description: '상담사 개입 · 내담자 자율 실천 (9단계 기준)',
         panel: (
-          <SectionCard compact title="자율치료 및 대책" subtitle="243+플러스 9단계 · 상담사 · 내담자">
-            <InterpretationArticles
-              sectionOrder={SELF_HELP_THERAPY_SECTION_ORDER}
-              sections={selfHelpSections.sections}
-              sectionLabels={selfHelpSections.sectionLabels}
-            />
+          <SectionCard compact title="자율치료 및 대책" subtitle="243+플러스 9단계 · 상담사용 · 내담자용">
+            <EgoOkSelfHelpTherapyPanel egogram={report.egogram} />
           </SectionCard>
         ),
       },
@@ -1468,8 +1456,6 @@ export default function EgoOkCounselorReport({
     peakEgogram,
     plus243Sections.sectionLabels,
     plus243Sections.sections,
-    selfHelpSections.sectionLabels,
-    selfHelpSections.sections,
     radarData,
     report,
     testGender,

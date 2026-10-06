@@ -1,5 +1,8 @@
 import type { EgoOkScaleScore, EgoScaleId } from '@/lib/egoOkScoring';
 import {
+  formatCurrentStageLeadIn,
+  isPlus243RecommendedStage,
+  plus243AdjacentStageHints,
   plus243RecommendedRawRange,
   plus243StageBand,
   rawScoreToPlus243Tier,
@@ -7,7 +10,11 @@ import {
   type Plus243StageBand,
   type Plus243Tier,
 } from '@/lib/egogram243Plus';
-import { buildManualNineStageInsight } from '@/lib/egogramManualNineStage';
+import {
+  buildManualNineStageInsight,
+  resolveManualInsightRole,
+  type ManualInsightRole,
+} from '@/lib/egogramManualNineStage';
 
 export type EgogramEnergyStageBand = Plus243StageBand;
 
@@ -30,42 +37,11 @@ export const EGO_ENERGY_DISPLAY_NAMES: Record<EgoScaleId, string> = {
 
 const { min: RECOMMENDED_RAW_MIN, max: RECOMMENDED_RAW_MAX } = plus243RecommendedRawRange();
 
-function adjacentStageWarning(stage: Plus243Stage, raw: number, kind: 'peak' | 'low'): string[] {
-  const lines: string[] = [];
-  if (kind === 'peak') {
-    if (stage >= 9) {
-      lines.push(
-        `현재 ${stage}단계(${raw}점) — 9단계 최상 구간으로 소진·관계 부담에 유의하세요.`,
-      );
-    } else if (stage === 8) {
-      lines.push(`현재 ${stage}단계(${raw}점) — 9단계로 치솟지 않도록 한 단계 낮추는 여지를 두세요.`);
-    } else if (stage === 7) {
-      lines.push(`현재 ${stage}단계(${raw}점) — 8단계 이상(과잉)으로 올라가지 않도록 조절하세요.`);
-    } else if (stage === 6) {
-      lines.push(
-        `현재 6단계(${raw}점) — 4~6단계(24~36점) 권장 안이나, 7단계(37점~)로 올라가면 과한 에너지가 보일 수 있습니다.`,
-      );
-    } else if (stage === 5) {
-      lines.push(
-        `현재 5단계(${raw}점) — 권장 구간이나, 한 단계 아래(4단계)로 내려가면 에너지가 약해질 수 있어 유의하세요.`,
-      );
-    }
-  } else {
-    if (stage <= 1) {
-      lines.push(`현재 ${stage}단계(${raw}점) — 1~3단계(10~23점) 최하 구간으로 에너지 키우기 연습이 필요합니다.`);
-    } else if (stage <= 3) {
-      lines.push(
-        `현재 ${stage}단계(${raw}점) — 4단계(24~27점) 권장 구간을 향해 인접 단계만 목표로 끌어올리세요.`,
-      );
-    } else if (stage === 4) {
-      lines.push(`현재 4단계(${raw}점) — 권장 하단이나, 3단계(19~23점)로 내려가지 않도록 유지하세요.`);
-    } else if (stage === 5) {
-      lines.push(`현재 5단계(${raw}점) — 4~6단계(24~36점) 권장 구간에서 안정적으로 활용 중입니다.`);
-    } else if (stage === 6) {
-      lines.push(`현재 6단계(${raw}점) — 권장 구간 상단이며, 7단계(과잉)로 올라가지 않도록 유지하세요.`);
-    }
-  }
-  return lines;
+function insightRoleForExtreme(stage: Plus243Stage, kind: 'peak' | 'low'): ManualInsightRole {
+  if (isPlus243RecommendedStage(stage)) return 'inRange';
+  if (stage >= 7) return 'peak';
+  if (stage <= 3) return 'low';
+  return kind === 'peak' ? 'offRange' : 'offRange';
 }
 
 function wrapInsight(
@@ -79,18 +55,22 @@ function wrapInsight(
 }
 
 export function buildPeakEgogramEnergyInsight(scale: EgoOkScaleScore): EgogramEnergyInsight {
-  const manual = buildManualNineStageInsight(scale.id, scale.raw, 'peak');
+  const tier = rawScoreToPlus243Tier(scale.raw);
+  const role = insightRoleForExtreme(tier.stage, 'peak');
+  const manual = buildManualNineStageInsight(scale.id, scale.raw, role);
   const name = EGO_ENERGY_DISPLAY_NAMES[scale.id];
   const comment = `${scale.id} ${name} · 합계 ${scale.raw}점 · ${manual.trait}`;
-  const cautions = [...manual.cautions, ...adjacentStageWarning(manual.stage, scale.raw, 'peak')];
+  const cautions = [...manual.cautions, ...plus243AdjacentStageHints(tier.stage)];
   return wrapInsight(manual.tier, comment, manual.strengths, cautions);
 }
 
 export function buildLowEgogramEnergyInsight(scale: EgoOkScaleScore): EgogramEnergyInsight {
-  const manual = buildManualNineStageInsight(scale.id, scale.raw, 'low');
+  const tier = rawScoreToPlus243Tier(scale.raw);
+  const role = insightRoleForExtreme(tier.stage, 'low');
+  const manual = buildManualNineStageInsight(scale.id, scale.raw, role);
   const name = EGO_ENERGY_DISPLAY_NAMES[scale.id];
   const comment = `${scale.id} ${name} · 합계 ${scale.raw}점 · ${manual.trait}`;
-  const cautions = [...manual.cautions, ...adjacentStageWarning(manual.stage, scale.raw, 'low')];
+  const cautions = [...manual.cautions, ...plus243AdjacentStageHints(tier.stage)];
   return wrapInsight(manual.tier, comment, manual.strengths, cautions);
 }
 
@@ -101,21 +81,21 @@ export function formatEgogramEnergyHeadline(scale: EgoOkScaleScore): string {
 /** 최고·최저가 아닌 척도 — 9단계 4~6단계(24~36점) 밖일 때 */
 export function buildOffRangeEgogramComment(scale: EgoOkScaleScore): string | null {
   const tier = rawScoreToPlus243Tier(scale.raw);
-  const stage = tier.stage;
-  const inRecommended = stage >= 4 && stage <= 6;
-  if (inRecommended) return null;
+  if (isPlus243RecommendedStage(tier.stage)) return null;
 
-  const manual = buildManualNineStageInsight(scale.id, scale.raw, 'mid');
+  const manual = buildManualNineStageInsight(scale.id, scale.raw, 'offRange');
   const name = EGO_ENERGY_DISPLAY_NAMES[scale.id];
   const bandLabel =
-    stage <= 3
-      ? `1~3단계(10~23점) 부족 구간 — 권장 4~6단계(${RECOMMENDED_RAW_MIN}~${RECOMMENDED_RAW_MAX}점)보다 낮음`
-      : `7~9단계(37~50점) 과잉 구간 — 권장 4~6단계(${RECOMMENDED_RAW_MIN}~${RECOMMENDED_RAW_MAX}점)보다 높음`;
+    tier.stage <= 3
+      ? `1~3단계(10~23점) 부족 — 권장 4~6단계(${RECOMMENDED_RAW_MIN}~${RECOMMENDED_RAW_MAX}점)보다 낮음`
+      : `7~9단계(37~50점) 과잉 — 권장 4~6단계(${RECOMMENDED_RAW_MIN}~${RECOMMENDED_RAW_MAX}점)보다 높음`;
 
   const steer =
-    stage <= 3
-      ? '「자율치료 및 대책」 탭에서 부족 구간 대책을 확인하세요.'
-      : '「자율치료 및 대책」 탭에서 과잉 구간 대책을 확인하세요.';
+    tier.stage <= 3
+      ? '「자율치료 및 대책」 탭(상담사용 · 내담자용)에서 부족 구간 안내를 확인하세요.'
+      : '「자율치료 및 대책」 탭(상담사용 · 내담자용)에서 과잉 구간 안내를 확인하세요.';
 
-  return `${scale.id} ${name} · ${scale.raw}점 · 현재 ${tier.stage}단계(${tier.min}~${tier.max}점, ${tier.label}). ${bandLabel}. ${manual.trait} ${steer}`;
+  const hints = plus243AdjacentStageHints(tier.stage).join(' ');
+
+  return `${scale.id} ${name} · ${formatCurrentStageLeadIn(tier, scale.raw)}. ${bandLabel}. ${manual.trait} ${hints} ${steer}`;
 }

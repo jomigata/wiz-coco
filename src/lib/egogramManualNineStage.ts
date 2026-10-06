@@ -4,7 +4,15 @@
  */
 import type { EgoOkScaleScore, EgoScaleId } from '@/lib/egoOkScoring';
 import type { Plus243Stage, Plus243Tier } from '@/lib/egogram243Plus';
-import { plus243StageBand, rawScoreToPlus243Tier } from '@/lib/egogram243Plus';
+import {
+  formatCurrentStageLeadIn,
+  isPlus243RecommendedStage,
+  plus243AdjacentStageHints,
+  plus243StageBand,
+  rawScoreToPlus243Tier,
+} from '@/lib/egogram243Plus';
+
+export type ManualInsightRole = 'peak' | 'low' | 'inRange' | 'offRange';
 
 export type ManualNineStageBlock = {
   /** 상담자용 한 줄 특징 */
@@ -251,8 +259,8 @@ function bandKey(stage: Plus243Stage): BandKey {
   return plus243StageBand(stage);
 }
 
-function stageIntensityNote(stage: Plus243Stage, tier: Plus243Tier): string {
-  return `현재 ${stage}단계(${tier.min}~${tier.max}점, ${tier.label})`;
+function stageIntensityNote(tier: Plus243Tier, raw: number): string {
+  return formatCurrentStageLeadIn(tier, raw);
 }
 
 /** 현재 단계와 맞지 않는 ‘7단계 이상’ 등 일반 경고 문구 제거 */
@@ -353,27 +361,44 @@ export type ManualNineStageInsight = {
   measures: string[];
 };
 
-/** peak=최고 에너지(과다 쪽 주의·낮추기 대책), low=최저(부족 쪽·키우기 대책) */
+export function resolveManualInsightRole(
+  stage: Plus243Stage,
+  context: 'extreme' | 'neutral',
+): ManualInsightRole {
+  if (isPlus243RecommendedStage(stage)) {
+    return 'inRange';
+  }
+  if (context === 'extreme') {
+    return stage >= 7 ? 'peak' : 'low';
+  }
+  return 'offRange';
+}
+
+/** peak/low=극단 척도 · inRange=4~6 · offRange=권장 밖(중간 척도) */
 export function buildManualNineStageInsight(
   scaleId: EgoScaleId,
   raw: number,
-  role: 'peak' | 'low' | 'mid',
+  role: ManualInsightRole,
 ): ManualNineStageInsight {
   const tier = rawScoreToPlus243Tier(raw);
   const block = getManualNineStageBlock(scaleId, tier.stage);
-  const intensity = stageIntensityNote(tier.stage, tier);
+  const leadIn = stageIntensityNote(tier, raw);
 
-  let trait = `${block.trait} (${intensity})`;
-  if (role === 'mid') {
-    trait = `4~6단계(24~36점) 권장 밖입니다. ${trait}`;
+  let trait = `${leadIn}. ${block.trait}`;
+  if (role === 'offRange') {
+    trait = `${leadIn}. 권장 구간(4~6단계) 밖입니다. ${block.trait}`;
+  } else if (role === 'inRange') {
+    trait = `${leadIn}. ${block.trait}`;
   }
 
   const measures =
-    role === 'peak' || tier.stage >= 7
+    tier.stage >= 7
       ? block.lowerMeasures
-      : role === 'low' || tier.stage <= 3
+      : tier.stage <= 3
         ? block.raiseMeasures
-        : [...block.raiseMeasures.slice(0, 2), ...block.lowerMeasures.slice(0, 2)];
+        : isPlus243RecommendedStage(tier.stage)
+          ? [...block.raiseMeasures.slice(0, 2), ...block.lowerMeasures.slice(0, 2)]
+          : block.raiseMeasures;
 
   return {
     tier,
@@ -387,10 +412,14 @@ export function buildManualNineStageInsight(
 
 export type SelfHelpTherapyScalePlan = {
   scaleId: EgoScaleId;
+  displayName: string;
   raw: number;
   stage: Plus243Stage;
   tierLabel: string;
-  trait: string;
+  stageLeadIn: string;
+  summary: string;
+  inRecommended: boolean;
+  adjacentHints: string[];
   counselorTasks: string[];
   clientTasks: string[];
 };
@@ -398,15 +427,19 @@ export type SelfHelpTherapyScalePlan = {
 export function buildSelfHelpTherapyScalePlan(scale: EgoOkScaleScore): SelfHelpTherapyScalePlan {
   const tier = rawScoreToPlus243Tier(scale.raw);
   const band = bandKey(tier.stage);
-  const role: 'peak' | 'low' | 'mid' =
-    tier.stage >= 7 ? 'peak' : tier.stage <= 3 ? 'low' : 'mid';
+  const inRecommended = isPlus243RecommendedStage(tier.stage);
+  const role = resolveManualInsightRole(tier.stage, 'neutral');
   const focused = buildManualNineStageInsight(scale.id, scale.raw, role);
   return {
     scaleId: scale.id,
+    displayName: scale.label,
     raw: scale.raw,
     stage: tier.stage,
     tierLabel: tier.label,
-    trait: focused.trait,
+    stageLeadIn: formatCurrentStageLeadIn(tier, scale.raw),
+    summary: focused.trait,
+    inRecommended,
+    adjacentHints: plus243AdjacentStageHints(tier.stage),
     counselorTasks: COUNSELOR_TASKS[scale.id][band],
     clientTasks: focused.measures,
   };
