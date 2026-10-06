@@ -23,8 +23,15 @@ import { INNER_MIND_ALIGNED_MAX, type InnerMindPair } from '@/lib/egoOkInnerMind
 import { formatEgogramEnergyHeadline } from '@/lib/egogramEnergyStageComments';
 import type { ClientInfo } from '@/components/tests/MbtiProClientInfo';
 import { egoOkGenderToLabel } from '@/lib/egoOkTestGender';
-import { ValidityTable } from '@/components/tests/egoOk/EgoOkValiditySection';
 import {
+  VALIDITY_SCALE_LABELS,
+  type EgoOkValidityProfile,
+  type ValidityScaleStatus,
+} from '@/lib/egoOkValidity';
+import {
+  Cell,
+  Pie,
+  PieChart,
   Radar,
   RadarChart,
   PolarGrid,
@@ -95,6 +102,142 @@ function Pattern243Block({ patternCode, plus }: { patternCode: string; plus: Pat
           ))}
         </p>
       </div>
+    </div>
+  );
+}
+
+type ValidityDonutItem = {
+  id: string;
+  title: string;
+  scoreText: string;
+  acquired: number;
+  total: number;
+  status: ValidityScaleStatus;
+  hint: string;
+};
+
+function validityStatusKo(status: ValidityScaleStatus): string {
+  if (status === 'normal') return '정상';
+  if (status === 'caution') return '주의';
+  return '무효';
+}
+
+function validityStatusRingColor(status: ValidityScaleStatus): string {
+  if (status === 'normal') return '#10b981';
+  if (status === 'caution') return '#f59e0b';
+  return '#f43f5e';
+}
+
+function validityStatusBadgeClass(status: ValidityScaleStatus): string {
+  if (status === 'normal') return 'bg-emerald-50 text-emerald-800 ring-emerald-200';
+  if (status === 'caution') return 'bg-amber-50 text-amber-900 ring-amber-200';
+  return 'bg-rose-50 text-rose-800 ring-rose-200';
+}
+
+function buildValidityDonutItems(validity: EgoOkValidityProfile): ValidityDonutItem[] {
+  return [
+    {
+      id: 'imc',
+      title: VALIDITY_SCALE_LABELS.imc.replace(/^\d+\.\s*/, ''),
+      scoreText: `${validity.imc.failCount} / 2`,
+      acquired: validity.imc.failCount,
+      total: 2,
+      status: validity.imc.status,
+      hint: `${validity.imc.itemNos.join('·')}번`,
+    },
+    {
+      id: 'lie',
+      title: VALIDITY_SCALE_LABELS.lie.replace(/^\d+\.\s*/, ''),
+      scoreText: `${validity.lie.raw} / ${validity.lie.max}`,
+      acquired: validity.lie.raw,
+      total: validity.lie.max,
+      status: validity.lie.status,
+      hint: `${validity.lie.itemNos.join('·')}번`,
+    },
+    {
+      id: 'infreq',
+      title: VALIDITY_SCALE_LABELS.infreq.replace(/^\d+\.\s*/, ''),
+      scoreText: `${validity.infreq.raw} / ${validity.infreq.max}`,
+      acquired: validity.infreq.raw,
+      total: validity.infreq.max,
+      status: validity.infreq.status,
+      hint: `${validity.infreq.itemNos.join('·')}번`,
+    },
+    {
+      id: 'vrin',
+      title: VALIDITY_SCALE_LABELS.vrin.replace(/^\d+\.\s*/, ''),
+      scoreText: `${validity.vrin.mismatchPairs} / ${validity.vrin.maxPairs}`,
+      acquired: validity.vrin.mismatchPairs,
+      total: validity.vrin.maxPairs,
+      status: validity.vrin.status,
+      hint: `대립 ${validity.vrin.pairCount}쌍`,
+    },
+  ];
+}
+
+function ValidityDonutRing({ item }: { item: ValidityDonutItem }) {
+  const total = Math.max(item.total, 1);
+  const acquired = Math.min(Math.max(item.acquired, 0), total);
+  const rest = total - acquired;
+  const ringColor = validityStatusRingColor(item.status);
+  const pieData =
+    acquired <= 0
+      ? [{ key: 'rest', value: total }]
+      : rest <= 0
+        ? [{ key: 'acquired', value: total }]
+        : [
+            { key: 'acquired', value: acquired },
+            { key: 'rest', value: rest },
+          ];
+
+  return (
+    <div className="flex flex-col items-center rounded-xl bg-white/80 px-2 py-3 ring-1 ring-slate-100">
+      <p className="line-clamp-2 min-h-[2.25rem] text-center text-[10px] font-bold leading-tight text-slate-700">
+        {item.title}
+      </p>
+      <div className="relative h-[5.5rem] w-full max-w-[7rem]">
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={pieData}
+              dataKey="value"
+              cx="50%"
+              cy="50%"
+              innerRadius="58%"
+              outerRadius="88%"
+              startAngle={90}
+              endAngle={-270}
+              stroke="none"
+              isAnimationActive={false}
+            >
+              {pieData.map((slice) => (
+                <Cell key={slice.key} fill={slice.key === 'acquired' ? ringColor : '#e2e8f0'} />
+              ))}
+            </Pie>
+          </PieChart>
+        </ResponsiveContainer>
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+          <span className="font-mono text-sm font-bold tabular-nums text-slate-800">{item.scoreText}</span>
+          <span className="text-[9px] text-slate-500">획득/전체</span>
+        </div>
+      </div>
+      <span
+        className={`mt-1 inline-flex rounded-md px-2 py-0.5 text-[10px] font-bold ring-1 ${validityStatusBadgeClass(item.status)}`}
+      >
+        {validityStatusKo(item.status)}
+      </span>
+      <p className="mt-1 text-center text-[9px] text-slate-500">{item.hint}</p>
+    </div>
+  );
+}
+
+function ValiditySummaryDonuts({ validity }: { validity: EgoOkValidityProfile }) {
+  const items = buildValidityDonutItems(validity);
+  return (
+    <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+      {items.map((item) => (
+        <ValidityDonutRing key={item.id} item={item} />
+      ))}
     </div>
   );
 }
@@ -350,16 +493,19 @@ export default function EgoOkReportExecutiveSummary({
       </header>
 
       <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
-        <SummaryShell title="타당도" tabHint="타당도 탭">
+        <SummaryShell title="타당도" tabHint="타당도 탭" className="lg:col-span-2 xl:col-span-3">
           <ValidityTrafficBadge overall={report.validity?.overall} />
           <p className="mt-2 text-sm font-semibold text-slate-800">{report.validity?.overallTitle ?? '—'}</p>
           {report.validity?.overallSummary ? (
             <p className="mt-1 text-xs leading-relaxed text-slate-600">{report.validity.overallSummary}</p>
           ) : null}
           {report.validity ? (
-            <div className="mt-3 overflow-x-auto rounded-xl bg-slate-50/80 p-2 ring-1 ring-slate-100 [&_table]:text-slate-700 [&_th]:text-slate-500">
-              <ValidityTable validity={report.validity} showScoreBands={false} />
-            </div>
+            <>
+              <p className="mt-2 text-[10px] text-slate-500">
+                원형: 획득/전체 비율 · 색=상태(정상·주의·무효) · 아래 문항 번호는 측정 문항
+              </p>
+              <ValiditySummaryDonuts validity={report.validity} />
+            </>
           ) : null}
         </SummaryShell>
 
