@@ -48,21 +48,21 @@ const TONE_STYLES: Record<
   },
 };
 
-/** 흰 지면·청색(다크) 패널 모두에서 대비 — 시안 테두리 + 내부 스카이 그라데이션 */
+/** 흰 지면·청색(다크) 패널 — 주황 테두리 + 내부 주황 그라데이션 */
 const SCROLL_TRACK_UNIVERSAL = {
-  border: 'border-cyan-400/90',
-  borderActive: 'border-sky-300',
+  border: 'border-orange-400/90',
+  borderActive: 'border-amber-300',
   glow:
-    'shadow-[0_0_14px_rgba(56,189,248,0.28),inset_0_0_0_1px_rgba(255,255,255,0.12)]',
+    'shadow-[0_0_14px_rgba(251,146,60,0.32),inset_0_0_0_1px_rgba(255,255,255,0.12)]',
   glowActive:
-    'shadow-[0_0_20px_rgba(34,211,238,0.42),inset_0_0_0_1px_rgba(255,255,255,0.22)]',
-  chevron: 'text-sky-50',
+    'shadow-[0_0_20px_rgba(251,191,36,0.45),inset_0_0_0_1px_rgba(255,255,255,0.22)]',
+  chevron: 'text-amber-50',
   chevronShadow:
-    'drop-shadow-[0_1px_2px_rgba(15,23,42,0.9),0_0_8px_rgba(56,189,248,0.85)]',
+    'drop-shadow-[0_1px_2px_rgba(15,23,42,0.9),0_0_8px_rgba(251,146,60,0.85)]',
   fillTop:
-    'bg-gradient-to-b from-sky-400/50 via-cyan-500/28 to-sky-950/5',
+    'bg-gradient-to-b from-orange-400/50 via-amber-500/30 to-orange-950/5',
   fillBottom:
-    'bg-gradient-to-t from-sky-400/50 via-cyan-500/28 to-sky-950/5',
+    'bg-gradient-to-t from-orange-400/50 via-amber-500/30 to-orange-950/5',
 };
 
 /** 상·하 트랙 — 화면보다 좁게 좌우 여백 */
