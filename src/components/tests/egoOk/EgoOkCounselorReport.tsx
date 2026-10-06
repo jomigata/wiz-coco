@@ -311,16 +311,17 @@ function EgogramEnergyInsightPanel({
     lowScales.length === highScales.length &&
     lowScales.every((scale) => highScales.some((high) => high.id === scale.id));
   const highTitle = sameExtremes ? '최고·최저 사용에너지' : '최고 사용에너지';
+  const lowStart = highScales.length;
 
   return (
     <div className="mt-5 space-y-4 border-t border-white/10 pt-5">
-      {highScales.map((scale) => {
+      {highScales.map((scale, index) => {
         const insight = buildPeakEgogramEnergyInsight(scale);
         return (
           <EgogramEnergyDetailCard
             key={`high-${scale.id}`}
             tone="high"
-            title={`${highTitle} · ${formatEgogramEnergyHeadline(scale)}`}
+            title={`${index + 1}. ${highTitle} · ${formatEgogramEnergyHeadline(scale)}`}
             comment={insight.comment}
             strengths={insight.strengths}
             cautions={insight.cautions}
@@ -332,13 +333,13 @@ function EgogramEnergyInsightPanel({
 
       {sameExtremes
         ? null
-        : lowScales.map((scale) => {
+        : lowScales.map((scale, index) => {
             const insight = buildLowEgogramEnergyInsight(scale);
             return (
               <EgogramEnergyDetailCard
                 key={`low-${scale.id}`}
                 tone="low"
-                title={`최저 사용에너지 · ${formatEgogramEnergyHeadline(scale)}`}
+                title={`${lowStart + index + 1}. 최저 사용에너지 · ${formatEgogramEnergyHeadline(scale)}`}
                 comment={insight.comment}
                 strengths={insight.strengths}
                 cautions={insight.cautions}
@@ -530,10 +531,10 @@ function EgogramFiveScaleRadarChart({
     [data, gender, showPlusBand],
   );
   const genderKo = gender === 'female' ? '여' : '남';
-  const patternRanges = EGO_SCALE_PATTERN_ORDER.map((id) => {
+  const patternBands = EGO_SCALE_PATTERN_ORDER.map((id) => {
     const zone = KTAA_GRAPH_ZONES[gender][id];
-    return `${id} ${zone.redTop}–${zone.whiteTop}`;
-  }).join(' · ');
+    return { id, low: zone.redTop, high: zone.whiteTop };
+  });
   const OkRadarVertexDot = useMemo(
     () => createEgogramOkRadarVertexDot(resolvedPeakIds),
     [resolvedPeakIds],
@@ -577,7 +578,7 @@ function EgogramFiveScaleRadarChart({
   return (
     <div className="flex h-full min-h-0 w-full flex-col">
     <p className="mb-1 shrink-0 text-center text-sm font-semibold tracking-normal text-slate-100">방사형 이고그램 5척도</p>
-    <div className="min-h-[22rem] w-full flex-1">
+    <div className="min-h-0 w-full flex-1">
     <ResponsiveContainer
       width="100%"
       height="100%"
@@ -638,51 +639,64 @@ function EgogramFiveScaleRadarChart({
       </RadarChart>
     </ResponsiveContainer>
     </div>
-    <div className="mt-2 shrink-0 text-center">
-      <p className="text-[10px] font-medium tracking-[0.28em] text-slate-500">권장구간</p>
-      <div className="mt-1.5 flex items-center justify-center gap-5 text-xs text-slate-200">
+    <div className="mt-2 shrink-0 rounded-xl border border-white/15 bg-[#101828]/95 px-3 py-2.5 text-center shadow-[0_8px_24px_rgba(0,0,0,0.35)]">
+      <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
+        <span className="text-xs font-semibold tracking-[0.22em] text-slate-200">권장구간</span>
         <button
           type="button"
-          className="inline-flex items-center gap-1.5 rounded-md px-1 py-0.5"
+          className="inline-flex items-center gap-2 rounded-md px-1.5 py-1 text-sm text-slate-100"
           onMouseEnter={() => setShowPlusBand(false)}
           onFocus={() => setShowPlusBand(false)}
         >
           <span
-            className="inline-block h-2.5 w-2.5 shrink-0 rounded-[2px] ring-1 ring-violet-200/70"
+            className="inline-block h-3.5 w-3.5 shrink-0 rounded-[3px] ring-1 ring-violet-200/80"
             style={{ backgroundColor: PATTERN_FILL }}
             aria-hidden
           />
-          <span className="tracking-wide">243패턴</span>
+          <span className="font-medium tracking-wide">243패턴</span>
         </button>
         <button
           type="button"
-          className="inline-flex items-center gap-1.5 rounded-md px-1 py-0.5"
+          className="inline-flex items-center gap-2 rounded-md px-1.5 py-1 text-sm text-slate-100"
           onMouseEnter={() => setShowPlusBand(true)}
           onMouseLeave={() => setShowPlusBand(false)}
           onFocus={() => setShowPlusBand(true)}
           onBlur={() => setShowPlusBand(false)}
         >
           <span
-            className={`inline-block shrink-0 rounded-[2px] ring-1 ring-yellow-200/70 transition-all duration-200 ${
-              showPlusBand ? 'h-4 w-4' : 'h-2.5 w-2.5'
+            className={`inline-block shrink-0 rounded-[3px] ring-1 ring-yellow-200/80 transition-all duration-200 ${
+              showPlusBand ? 'h-5 w-5' : 'h-3.5 w-3.5'
             }`}
             style={{ backgroundColor: showPlusBand ? PLUS_FILL_HOT : PLUS_FILL }}
             aria-hidden
           />
           <span
-            className={`tracking-wide transition-all duration-200 ${
-              showPlusBand ? 'font-semibold text-yellow-100' : ''
+            className={`font-medium tracking-wide transition-all duration-200 ${
+              showPlusBand ? 'text-base font-semibold text-yellow-100' : ''
             }`}
           >
-            243+
+            243+플러스(9단계)
           </span>
         </button>
       </div>
-      <p className="mt-1.5 font-mono text-[11px] tabular-nums tracking-wide text-slate-400">
-        {showPlusBand
-          ? `${genderKo}  ${EGOGRAM_PLUS_BAND_INNER}–${EGOGRAM_PLUS_BAND_OUTER}`
-          : `${genderKo}  ${patternRanges}`}
-      </p>
+      <div className="mt-2 flex flex-wrap items-center justify-center gap-1.5">
+        <span className="rounded-full bg-white/10 px-2.5 py-1 text-xs font-semibold text-slate-100">{genderKo}</span>
+        {showPlusBand ? (
+          <span className="rounded-md bg-yellow-300/15 px-3 py-1 text-sm font-semibold tabular-nums text-yellow-50 ring-1 ring-yellow-200/40">
+            {EGOGRAM_PLUS_BAND_INNER}–{EGOGRAM_PLUS_BAND_OUTER}
+          </span>
+        ) : (
+          patternBands.map((band) => (
+            <span
+              key={band.id}
+              className="rounded-md bg-violet-400/15 px-2 py-1 text-sm font-medium tabular-nums text-violet-50 ring-1 ring-violet-200/35"
+            >
+              <span className="mr-1 text-violet-200/80">{band.id}</span>
+              {band.low}–{band.high}
+            </span>
+          ))
+        )}
+      </div>
     </div>
     </div>
   );
@@ -1287,7 +1301,7 @@ export default function EgoOkCounselorReport({
             }
           >
             <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(18rem,0.9fr)] xl:items-start">
-              <div className="flex h-[calc(100dvh-19rem)] min-h-[28rem] w-full items-center justify-center xl:sticky xl:top-[6.25rem] xl:z-10">
+              <div className="sticky top-0 z-10 flex h-[calc(100svh-19.5rem)] min-h-[24rem] w-full flex-col">
                 <div className="h-full w-full min-h-0">
                   <EgogramFiveScaleRadarChart
                     data={radarData}
