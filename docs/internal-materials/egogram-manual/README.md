@@ -21,6 +21,8 @@
 
 제3장 기법·말·태도는 채점이 아니다. 원문은 [source-before-243.txt](./source-before-243.txt) 1817행 근처에 있다. 243 해석의 개선방안은 [기존 202코드](../ego-ok/patterns-243-reports.json)를 쓴다.
 
+이고 탭 9단계(243+플러스) 특징·장단점·대책은 원고 §911~979(척도별 높·낮·과다)와 제3장 기법을 `src/lib/egogramManualNineStage.ts`에 반영한다. 점수 구간은 [plus243-tiers.json](../ego-ok/plus243-tiers.json)만 사용한다.
+
 | 높이는 쪽 | 기법 이름 |
 |---|---|
 | CP | 두 개의 의자, 비판적 논평, 베개 두들기기, 리더십 훈련, 운전 |

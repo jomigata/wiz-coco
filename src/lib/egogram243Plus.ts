@@ -147,3 +147,13 @@ export function plus243StageBandLabel(band: Plus243StageBand): string {
 export function formatPlus243StageLabel(tier: Plus243Tier): string {
   return `243+ 플러스 ${tier.stage}단계`;
 }
+
+/** 4~6단계(243+플러스 권장) — 9단계 점수표만 사용 */
+export const PLUS243_RECOMMENDED_STAGE_MIN = 4 as Plus243Stage;
+export const PLUS243_RECOMMENDED_STAGE_MAX = 6 as Plus243Stage;
+
+export function plus243RecommendedRawRange(): { min: number; max: number } {
+  const low = TIER_DEFS.find((t) => t.stage === PLUS243_RECOMMENDED_STAGE_MIN)!;
+  const high = TIER_DEFS.find((t) => t.stage === PLUS243_RECOMMENDED_STAGE_MAX)!;
+  return { min: low.min, max: high.max };
+}

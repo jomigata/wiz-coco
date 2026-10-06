@@ -18,6 +18,7 @@ import {
 } from '@/lib/egogramEnergyStageComments';
 import {
   EGO_SCALE_PATTERN_ORDER,
+  plus243RecommendedRawRange,
   plus243StageDigitColor,
   rawScoreToPlus243Tier,
   type Pattern243Plus,
@@ -255,16 +256,20 @@ function EgogramEnergyDetailCard({
   comment,
   strengths,
   cautions,
+  measures,
   strengthLabel,
   cautionLabel,
+  measureLabel,
 }: {
   tone: 'high' | 'low';
   title: string;
   comment: string;
   strengths: string[];
   cautions: string[];
+  measures: string[];
   strengthLabel: string;
   cautionLabel: string;
+  measureLabel: string;
 }) {
   const shell =
     tone === 'high'
@@ -293,6 +298,16 @@ function EgogramEnergyDetailCard({
           </ul>
         </div>
       </div>
+      {measures.length > 0 ? (
+        <div className="mt-3 border-t border-white/10 pt-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-violet-300/90">{measureLabel}</p>
+          <ul className="mt-1.5 list-inside list-disc space-y-1 text-sm text-slate-300">
+            {measures.map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
     </article>
   );
 }
@@ -325,8 +340,10 @@ function EgogramEnergyInsightPanel({
             comment={insight.comment}
             strengths={insight.strengths}
             cautions={insight.cautions}
+            measures={insight.measures}
             strengthLabel="장점"
             cautionLabel="주의·단점"
+            measureLabel="상담 대책"
           />
         );
       })}
@@ -343,8 +360,10 @@ function EgogramEnergyInsightPanel({
                 comment={insight.comment}
                 strengths={insight.strengths}
                 cautions={insight.cautions}
+                measures={insight.measures}
                 strengthLabel="장점(낮을 때)"
                 cautionLabel="주의·단점"
+                measureLabel="상담 대책"
               />
             );
           })}
@@ -375,10 +394,10 @@ type EgogramRadarRow = {
 
 const EGOGRAM_RADAR_PINK = '#f472b6';
 const EGOGRAM_RADAR_OK_RED = '#ef4444';
-/** 합계 눈금 0~50. 243+ 플러스 4~6단계는 23~37점 */
+/** 합계 눈금 0~50. 243+ 플러스 4~6단계(9단계 점수표 24~36점) */
 const EGOGRAM_RADAR_SCORE_MAX = 50;
-const EGOGRAM_PLUS_BAND_INNER = 23;
-const EGOGRAM_PLUS_BAND_OUTER = 37;
+const EGOGRAM_PLUS_BAND_INNER = plus243RecommendedRawRange().min;
+const EGOGRAM_PLUS_BAND_OUTER = plus243RecommendedRawRange().max;
 const PATTERN_FILL = 'rgba(139, 92, 246, 0.5)';
 const PLUS_FILL = 'rgba(250, 204, 21, 0.5)';
 const PLUS_FILL_HOT = 'rgba(254, 240, 138, 0.9)';
@@ -738,7 +757,7 @@ function bandRingPath(
   return `${polygonPath(outer)} ${polygonPath(inner)}`;
 }
 
-/** 243패턴=KTAA 흰 구간(성별별) · 243+ = 23~37점 */
+/** 243패턴=KTAA 흰 구간(성별별) · 243+ = 4~6단계(24~36점) */
 function createEgogramRadarBands(rows: EgogramRadarRow[], gender: EgoOkGender, showPlus: boolean) {
   return function EgogramRadarRecommendedBand(props: {
     angleAxisMap?: Record<string, RadarAxisGeometry>;
@@ -1113,12 +1132,10 @@ export default function EgoOkCounselorReport({
   const peakEgogram = pickExtremeEgogramScale(report.egogram, 'max');
   const peakEgograms = pickTiedEgogramScales(report.egogram, 'max');
   const lowEgograms = pickTiedEgogramScales(report.egogram, 'min');
-  const chartGenderKey = normalizeEgoOkGender(chartGender);
   const extremeIds = new Set([...peakEgograms, ...lowEgograms].map((scale) => scale.id));
   const offRangeNotes = report.egogram.flatMap((scale) => {
     if (extremeIds.has(scale.id)) return [];
-    const zone = KTAA_GRAPH_ZONES[chartGenderKey][scale.id];
-    const text = buildOffRangeEgogramComment(scale, { low: zone.redTop, high: zone.whiteTop });
+    const text = buildOffRangeEgogramComment(scale);
     return text ? [{ id: scale.id, title: formatEgogramEnergyHeadline(scale), text }] : [];
   });
   const okLifeOverview = buildOkLifeOverviewBlock(
@@ -1301,8 +1318,8 @@ export default function EgoOkCounselorReport({
             }
           >
             <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(18rem,0.9fr)] xl:items-start">
-              <div className="sticky top-0 z-10 flex h-[calc(100svh-19.5rem)] min-h-[24rem] w-full flex-col">
-                <div className="h-full w-full min-h-0">
+              <div className="order-2 flex w-full flex-col max-xl:static max-xl:min-h-0 max-xl:h-auto xl:order-1 xl:sticky xl:top-0 xl:z-10 xl:h-[calc(100svh-19.5rem)] xl:min-h-[24rem]">
+                <div className="h-full w-full min-h-[18rem] max-xl:min-h-[16rem] xl:min-h-0">
                   <EgogramFiveScaleRadarChart
                     data={radarData}
                     peakScaleIds={peakEgograms.map((scale) => scale.id)}
@@ -1310,7 +1327,7 @@ export default function EgoOkCounselorReport({
                   />
                 </div>
               </div>
-              <div className="space-y-3">
+              <div className="order-1 space-y-3 xl:order-2">
                 <EgogramEnergyInsightPanel
                   highScales={peakEgograms}
                   lowScales={lowEgograms}
