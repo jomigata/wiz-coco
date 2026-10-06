@@ -44,18 +44,12 @@ const TONE_STYLES: Record<
   },
 };
 
-/** 흰 지면·청색(다크) 패널 — 주황 테두리 + 내부 주황 그라데이션 */
+/** 상·하 스크롤 트랙 — 빨간 테두리, 배경 없음 */
 const SCROLL_TRACK_UNIVERSAL = {
-  border: 'border-orange-400/90',
-  borderActive: 'border-amber-300',
-  glow:
-    'shadow-[0_0_14px_rgba(251,146,60,0.32),inset_0_0_0_1px_rgba(255,255,255,0.12)]',
-  glowActive:
-    'shadow-[0_0_20px_rgba(251,191,36,0.45),inset_0_0_0_1px_rgba(255,255,255,0.22)]',
-  fillTop:
-    'bg-gradient-to-b from-orange-400/50 via-amber-500/30 to-orange-950/5',
-  fillBottom:
-    'bg-gradient-to-t from-orange-400/50 via-amber-500/30 to-orange-950/5',
+  border: 'border-red-500/90',
+  borderActive: 'border-red-400',
+  glow: 'shadow-[0_0_12px_rgba(239,68,68,0.28)]',
+  glowActive: 'shadow-[0_0_18px_rgba(248,113,113,0.4)]',
 };
 
 /** 상·하 트랙 — 화면보다 좁게 좌우 여백 */
@@ -104,22 +98,13 @@ function TopBottomScrollTrack({
   label: string;
 }) {
   const track = SCROLL_TRACK_UNIVERSAL;
-  const fillClass = side === 'top' ? track.fillTop : track.fillBottom;
   return (
     <div
-      className={`relative flex h-8 w-full items-center justify-center overflow-hidden rounded-lg border-2 transition-[border-color,box-shadow] duration-150 ${
+      className={`relative flex h-8 w-full items-center justify-center overflow-hidden rounded-lg border-2 bg-transparent transition-[border-color,box-shadow] duration-150 ${
         active ? `${track.borderActive} ${track.glowActive}` : `${track.border} ${track.glow}`
       }`}
       title={label}
     >
-      <span
-        className={`pointer-events-none absolute inset-0 rounded-[inherit] ${fillClass}`}
-        aria-hidden
-      />
-      <span
-        className={`pointer-events-none absolute inset-0 rounded-[inherit] bg-gradient-to-r from-slate-900/10 via-transparent to-slate-900/10`}
-        aria-hidden
-      />
       <span
         className={`relative inline-flex ${TRACK_NUDGE_CLASS[side]} ${active ? 'scale-110' : 'scale-100'} transition-transform duration-150`}
       >
