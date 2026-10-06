@@ -1,20 +1,19 @@
 /**
  * 243Plus(+) 9단계 — docs/internal-materials/ego-ok/README.md · plus243-tiers.json
- * 합계 10~50: A³(46~50), A²(41~45), A¹(37~40), B³(33~36), B²(28~32), B¹(24~27),
- * C³(19~23), C²(15~18), C¹(10~14)
+ * 합계 10~50: A9(46~50) … C1(10~14) — UI 표기는 A9,A8,A7,B6,B5,B4,C3,C2,C1
  */
 import type { EgoOkScaleScore, EgoScaleId } from '@/lib/egoOkScoring';
 
 export type Plus243Letter = 'A' | 'B' | 'C';
 export type Plus243Degree = 1 | 2 | 3;
-/** 1=가장 낮음(C¹) … 9=가장 높음(A³) */
+/** 1=가장 낮음(C1) … 9=가장 높음(A9) */
 export type Plus243Stage = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
 export type Plus243Tier = {
   letter: Plus243Letter;
   degree: Plus243Degree;
   stage: Plus243Stage;
-  /** 유니코드 지수 표기 (A³) */
+  /** 243+플러스 9단계 표기 (예: A9, B5, C1) */
   label: string;
   min: number;
   max: number;
@@ -38,9 +37,11 @@ const TIER_DEFS: Array<{
   { stage: 1, letter: 'C', degree: 1, min: 10, max: 14 },
 ];
 
-const SUPER = { 1: '¹', 2: '²', 3: '³' } as const;
-
 export const EGO_SCALE_PATTERN_ORDER: EgoScaleId[] = ['CP', 'NP', 'A', 'FC', 'AC'];
+
+export function formatPlus243NineStageLabel(tier: Pick<Plus243Tier, 'letter' | 'stage'>): string {
+  return `${tier.letter}${tier.stage}`;
+}
 
 export function rawScoreToPlus243Tier(raw: number): Plus243Tier {
   const clamped = Math.min(50, Math.max(10, Math.round(raw)));
@@ -50,15 +51,15 @@ export function rawScoreToPlus243Tier(raw: number): Plus243Tier {
     letter: def.letter,
     degree: def.degree,
     stage: def.stage,
-    label: `${def.letter}${SUPER[def.degree]}`,
+    label: formatPlus243NineStageLabel(def),
     min: def.min,
     max: def.max,
   };
 }
 
-/** 243+ 플러스 표기 — 글자(A/B/C) + 9단계 숫자(1~9) */
+/** 243+ 플러스 9단계 표기 (A9 … C1) */
 export function plus243TierToAscii(tier: Plus243Tier): string {
-  return `${tier.letter}${tier.stage}`;
+  return formatPlus243NineStageLabel(tier);
 }
 
 /** 1~3 하늘 · 4~6 녹색 · 7~9 분홍 */
@@ -88,7 +89,7 @@ export type Pattern243Plus = {
 };
 
 export function plus243DisplayAscii(entry: Plus243ScaleEntry): string {
-  return `${entry.pattern243Letter}${entry.tier.stage}`;
+  return plus243TierToAscii(entry.tier);
 }
 
 export function buildPattern243Plus(egogram: EgoOkScaleScore[]): Pattern243Plus {

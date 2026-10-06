@@ -20,6 +20,7 @@ import {
   EGO_SCALE_PATTERN_ORDER,
   plus243RecommendedRawRange,
   plus243StageDigitColor,
+  plus243TierToAscii,
   rawScoreToPlus243Tier,
   type Pattern243Plus,
   type Plus243ScaleEntry,
@@ -31,6 +32,10 @@ import {
   type InnerMindPair,
 } from '@/lib/egoOkInnerMind';
 import { buildPlus243InterpretationSections } from '@/lib/egoOkPlus243Interpretation';
+import {
+  buildSelfHelpTherapySections,
+  SELF_HELP_THERAPY_SECTION_ORDER,
+} from '@/lib/egoOkSelfHelpTherapy';
 import {
   buildOkLifeOverviewBlock,
   OK_BAR_DISPLAY_ORDER,
@@ -165,16 +170,14 @@ function pickTiedEgogramScales(scales: EgoOkScaleScore[], mode: 'max' | 'min'): 
 }
 
 function Plus243PlusGlyph({ entry, className }: { entry: Plus243ScaleEntry; className?: string }) {
-  const { tier, pattern243Letter } = entry;
+  const { tier } = entry;
+  const label = plus243TierToAscii(tier);
   return (
-    <span className={`inline-flex items-baseline ${className ?? ''}`}>
-      <span className="font-mono text-sm font-semibold text-slate-200">{pattern243Letter}</span>
-      <sup
-        className="ml-px font-mono text-[0.55em] font-bold leading-none"
-        style={{ color: plus243StageDigitColor(tier.stage) }}
-      >
-        {tier.stage}
-      </sup>
+    <span
+      className={`font-mono text-sm font-bold tabular-nums ${className ?? ''}`}
+      style={{ color: plus243StageDigitColor(tier.stage) }}
+    >
+      {label}
     </span>
   );
 }
@@ -256,20 +259,16 @@ function EgogramEnergyDetailCard({
   comment,
   strengths,
   cautions,
-  measures,
   strengthLabel,
   cautionLabel,
-  measureLabel,
 }: {
   tone: 'high' | 'low';
   title: string;
   comment: string;
   strengths: string[];
   cautions: string[];
-  measures: string[];
   strengthLabel: string;
   cautionLabel: string;
-  measureLabel: string;
 }) {
   const shell =
     tone === 'high'
@@ -298,16 +297,6 @@ function EgogramEnergyDetailCard({
           </ul>
         </div>
       </div>
-      {measures.length > 0 ? (
-        <div className="mt-3 border-t border-white/10 pt-3">
-          <p className="text-xs font-semibold uppercase tracking-wide text-violet-300/90">{measureLabel}</p>
-          <ul className="mt-1.5 list-inside list-disc space-y-1 text-sm text-slate-300">
-            {measures.map((line) => (
-              <li key={line}>{line}</li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
     </article>
   );
 }
@@ -340,10 +329,8 @@ function EgogramEnergyInsightPanel({
             comment={insight.comment}
             strengths={insight.strengths}
             cautions={insight.cautions}
-            measures={insight.measures}
             strengthLabel="장점"
             cautionLabel="주의·단점"
-            measureLabel="상담 대책"
           />
         );
       })}
@@ -360,10 +347,8 @@ function EgogramEnergyInsightPanel({
                 comment={insight.comment}
                 strengths={insight.strengths}
                 cautions={insight.cautions}
-                measures={insight.measures}
-                strengthLabel="장점(낮을 때)"
+                strengthLabel="장점"
                 cautionLabel="주의·단점"
-                measureLabel="상담 대책"
               />
             );
           })}
@@ -1168,14 +1153,14 @@ export default function EgoOkCounselorReport({
     [report.egogram, report.okgram],
   );
   const plus243Sections = useMemo(
-    () =>
-      buildPlus243InterpretationSections(report.pattern243Plus, report.egogram, chartGender, {
-        sections: report.pattern243.sections,
-        sectionLabels: report.pattern243.sectionLabels,
-      }),
-    [report.pattern243Plus, report.egogram, chartGender, report.pattern243.sections, report.pattern243.sectionLabels],
+    () => buildPlus243InterpretationSections(report.pattern243Plus, report.egogram, chartGender),
+    [report.pattern243Plus, report.egogram, chartGender],
   );
   const plus243SectionOrder = ['1', '2', '3', '4', '5', '6'] as const;
+  const selfHelpSections = useMemo(
+    () => buildSelfHelpTherapySections(report.egogram),
+    [report.egogram],
+  );
 
   const reportTabs = useMemo((): CounselorReportTab[] => {
     const tabs: CounselorReportTab[] = [
@@ -1362,11 +1347,26 @@ export default function EgoOkCounselorReport({
         label: '243+ Plus 해석',
         short: '243+',
         panel: (
-          <SectionCard compact title="243+Plus 종합 해석" subtitle={`9단계 · ${chartGender ?? '성별 미입력'} norms`}>
+          <SectionCard compact title="243+Plus 종합 해석" subtitle={`9단계 A9~C1 · ${chartGender ?? '성별 미입력'}`}>
             <InterpretationArticles
               sectionOrder={plus243SectionOrder}
               sections={plus243Sections.sections}
               sectionLabels={plus243Sections.sectionLabels}
+            />
+          </SectionCard>
+        ),
+      },
+      {
+        id: 'self-help',
+        label: '자율치료 및 대책',
+        short: '대책',
+        description: '상담사 개입 · 내담자 자율 실천 (9단계 기준)',
+        panel: (
+          <SectionCard compact title="자율치료 및 대책" subtitle="243+플러스 9단계 · 상담사 · 내담자">
+            <InterpretationArticles
+              sectionOrder={SELF_HELP_THERAPY_SECTION_ORDER}
+              sections={selfHelpSections.sections}
+              sectionLabels={selfHelpSections.sectionLabels}
             />
           </SectionCard>
         ),
@@ -1468,6 +1468,8 @@ export default function EgoOkCounselorReport({
     peakEgogram,
     plus243Sections.sectionLabels,
     plus243Sections.sections,
+    selfHelpSections.sectionLabels,
+    selfHelpSections.sections,
     radarData,
     report,
     testGender,

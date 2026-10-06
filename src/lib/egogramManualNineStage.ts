@@ -2,7 +2,7 @@
  * 2020.04.02 이고그램총합 원고(서은숙) — docs/internal-materials/egogram-manual/source-before-243.txt
  * 9단계(243+플러스) 구간만 사용. 충돌 시 이 모듈 문구가 egogramEnergyStageComments보다 우선.
  */
-import type { EgoScaleId } from '@/lib/egoOkScoring';
+import type { EgoOkScaleScore, EgoScaleId } from '@/lib/egoOkScoring';
 import type { Plus243Stage, Plus243Tier } from '@/lib/egogram243Plus';
 import { plus243StageBand, rawScoreToPlus243Tier } from '@/lib/egogram243Plus';
 
@@ -252,8 +252,87 @@ function bandKey(stage: Plus243Stage): BandKey {
 }
 
 function stageIntensityNote(stage: Plus243Stage, tier: Plus243Tier): string {
-  return `${stage}단계(${tier.min}~${tier.max}점, ${tier.label})`;
+  return `현재 ${stage}단계(${tier.min}~${tier.max}점, ${tier.label})`;
 }
+
+/** 현재 단계와 맞지 않는 ‘7단계 이상’ 등 일반 경고 문구 제거 */
+function cautionsForStage(cautions: string[], stage: Plus243Stage): string[] {
+  return cautions.filter((line) => {
+    if (stage < 7 && /7단계\s*이상/.test(line)) return false;
+    if (stage >= 7 && /4~6단계|권장 구간에서 안정/.test(line) && stage > 6) return false;
+    return true;
+  });
+}
+
+const COUNSELOR_TASKS: Record<EgoScaleId, Record<BandKey, string[]>> = {
+  CP: {
+    deficit: [
+      '현재 CP 단계·243+ 표기(A9~C1)를 설명하고, 목표를 인접 단계(현재+1)로만 합의합니다.',
+      '과제: 두 의자·리더십 훈련 등 1~2가지를 주간 단위로 정하고 다음 상담에서 점검합니다.',
+      'FC·AC와의 조합을 보며 impulsive/억압 패턴이 있는지 관찰합니다.',
+    ],
+    normal: [
+      '현재 CP 단계가 권장(4~6)인지 확인하고, 7단계(과잉)로 올라가는 스트레스 요인을 짚습니다.',
+      '원칙·책임 강점을 인정한 뒤, 관계에서의 권위 사용 방식을 구체 사례로 검토합니다.',
+    ],
+    excess: [
+      '과잉 CP(7~9단계)의 비판·통제가 관계에 미치는 영향을 사실 위주로 정리합니다.',
+      '한 단계 낮추기 계약(경청·질문 비율 늘리기)을 세우고, 소진 징후를 모니터링합니다.',
+      'CP·AC 동반 과잉 시 억압 후 폭발 가능성을 안전하게 탐색합니다.',
+    ],
+  },
+  NP: {
+    deficit: [
+      'NP 부족(1~3)일 때 관계·가정에서의 ‘차가움’ 인식을 탐색하고, 작은 돌봄 행동 하나를 과제로 둡니다.',
+      'CP가 높은 경우 엄격함+NP 부족 조합을 설명합니다.',
+    ],
+    normal: [
+      '현재 NP 단계와 권장 구간을 확인하고, 과보호로 넘어가는지 경계합니다.',
+      '거절 연습·역할 분담을 상담 안에서 리허설합니다.',
+    ],
+    excess: [
+      '7~9단계 NP는 과보호·과잉개입 구간임을 명확히 설명합니다(권장 4~6 아님).',
+      '상대의 자립을 해치지 않도록 개입 강도를 단계적으로 낮추는 계획을 세웁니다.',
+    ],
+  },
+  A: {
+    deficit: [
+      'A 부족 시 즉흥·일관성 문제를 사례와 함께 정리하고, 메모·1~10 세기 등 A 활성화 과제를 줍니다.',
+    ],
+    normal: [
+      '현재 A 단계가 권장인지 확인하고, 감정·관계 배려 균형을 점검합니다.',
+    ],
+    excess: [
+      '7~9단계 A는 과잉(기계적·무감정) 구간임을 설명합니다.',
+      'FC·여가 활동을 일정에 넣도록 돕고, 감정 라벨링을 연습하게 합니다.',
+    ],
+  },
+  FC: {
+    deficit: [
+      'FC 낮음(1~3)과 폐쇄·억압 패턴을 탐색하고, 유머·작은 즐거움 과제를 1개씩 부여합니다.',
+      'AC·CP가 높을 때의 스트레스 배출 경로를 함께 봅니다.',
+    ],
+    normal: [
+      '현재 FC 단계 유지·미세 조절(6↔7)만 논의합니다.',
+    ],
+    excess: [
+      '7~9단계 FC는 충동·자기중심 과잉 구간임을 설명합니다.',
+      '약속·규칙 준수 계약과 AC 쪽 배려 행동을 짝지어 과제로 둡니다.',
+    ],
+  },
+  AC: {
+    deficit: [
+      'AC 낮음(1~3)과 독단·자기중심 인상을 사례로 검토하고, 경청·타협 과제를 둡니다.',
+    ],
+    normal: [
+      '현재 AC 단계와 협력 강점을 인정하고, 억압 누적 신호를 체크합니다.',
+    ],
+    excess: [
+      '7~9단계 AC는 자기비하·과순응 과잉 구간임을 설명합니다.',
+      'A 자아로 경계·거절 문장을 작성하는 연습을 상담에서 합니다.',
+    ],
+  },
+};
 
 export function getManualNineStageBlock(scaleId: EgoScaleId, stage: Plus243Stage): ManualNineStageBlock {
   const key = bandKey(stage);
@@ -285,12 +364,8 @@ export function buildManualNineStageInsight(
   const intensity = stageIntensityNote(tier.stage, tier);
 
   let trait = `${block.trait} (${intensity})`;
-  if (role === 'peak') {
-    trait = `최고 사용 에너지 척도입니다. ${trait}`;
-  } else if (role === 'low') {
-    trait = `최저 사용 에너지 척도입니다. ${trait}`;
-  } else {
-    trait = `최고·최저는 아니나 4~6단계(24~36점) 권장 밖입니다. ${trait}`;
+  if (role === 'mid') {
+    trait = `4~6단계(24~36점) 권장 밖입니다. ${trait}`;
   }
 
   const measures =
@@ -305,7 +380,34 @@ export function buildManualNineStageInsight(
     stage: tier.stage,
     trait,
     strengths: [...block.strengths],
-    cautions: [...block.cautions],
+    cautions: cautionsForStage([...block.cautions], tier.stage),
     measures,
+  };
+}
+
+export type SelfHelpTherapyScalePlan = {
+  scaleId: EgoScaleId;
+  raw: number;
+  stage: Plus243Stage;
+  tierLabel: string;
+  trait: string;
+  counselorTasks: string[];
+  clientTasks: string[];
+};
+
+export function buildSelfHelpTherapyScalePlan(scale: EgoOkScaleScore): SelfHelpTherapyScalePlan {
+  const tier = rawScoreToPlus243Tier(scale.raw);
+  const band = bandKey(tier.stage);
+  const role: 'peak' | 'low' | 'mid' =
+    tier.stage >= 7 ? 'peak' : tier.stage <= 3 ? 'low' : 'mid';
+  const focused = buildManualNineStageInsight(scale.id, scale.raw, role);
+  return {
+    scaleId: scale.id,
+    raw: scale.raw,
+    stage: tier.stage,
+    tierLabel: tier.label,
+    trait: focused.trait,
+    counselorTasks: COUNSELOR_TASKS[scale.id][band],
+    clientTasks: focused.measures,
   };
 }
