@@ -1,14 +1,16 @@
-import type { EgoOkScaleScore } from '@/lib/egoOkScoring';
+import type { EgoOkScaleScore, EgoScaleId } from '@/lib/egoOkScoring';
 import { normalizeEgoOkGender } from '@/lib/egoOkScoring';
 import {
-  plus243RecommendedRawRange,
+  formatCurrentStageLeadIn,
+  isPlus243RecommendedStage,
   plus243StageBand,
-  plus243StageBandLabel,
   plus243TierToAscii,
   rawScoreToPlus243Tier,
   type Pattern243Plus,
   type Plus243Stage,
+  type Plus243StageBand,
 } from '@/lib/egogram243Plus';
+import { buildAdjacentTransitionMessages } from '@/lib/egogramManualNineStage';
 
 const SCALE_ORDER: EgoOkScaleScore['id'][] = ['CP', 'NP', 'A', 'FC', 'AC'];
 
@@ -21,44 +23,70 @@ const SECTION_LABELS: Record<string, string> = {
   '6': '9단계 기준 종합 평가',
 };
 
-const { min: REC_MIN, max: REC_MAX } = plus243RecommendedRawRange();
+const SCALE_PLAIN: Record<EgoScaleId, string> = {
+  CP: '기준·책임',
+  NP: '돌봄·위로',
+  A: '생각·판단',
+  FC: '즐거움·표현',
+  AC: '배려·협력',
+};
 
-function stagePositionText(stage: Plus243Stage): string {
-  const band = plus243StageBand(stage);
+function pickTiedExtremeScales(scales: EgoOkScaleScore[], mode: 'max' | 'min'): EgoOkScaleScore[] {
+  if (!scales.length) return [];
+  const value = mode === 'max' ? Math.max(...scales.map((s) => s.raw)) : Math.min(...scales.map((s) => s.raw));
+  return SCALE_ORDER.flatMap((id) => {
+    const s = scales.find((x) => x.id === id);
+    return s && s.raw === value ? [s] : [];
+  });
+}
+
+function formatExtremeGroup(scales: EgoOkScaleScore[]): string {
+  const stage = rawScoreToPlus243Tier(scales[0]!.raw).stage;
+  const ids = scales.map((s) => s.id).join(' · ');
+  const codes = Array.from(new Set(scales.map((s) => plus243TierToAscii(rawScoreToPlus243Tier(s.raw))))).join('/');
+  return `${ids} (현재 ${stage}단계, ${codes})`;
+}
+
+function stageZoneLabel(stage: Plus243Stage): string {
+  if (isPlus243RecommendedStage(stage)) return '권장 구간(4~6단계)';
+  if (stage <= 3) return '부족 구간(1~3단계)';
+  return '과잉 구간(7~9단계)';
+}
+
+function easySituation(scaleId: EgoScaleId, band: Plus243StageBand, stage: Plus243Stage): string {
+  const topic = SCALE_PLAIN[scaleId];
   if (band === 'normal') {
-    return `현재 ${stage}단계는 243+플러스 권장 구간(4~6단계, ${REC_MIN}~${REC_MAX}점)에 해당합니다.`;
+    return `지금 ${stage}단계로 ${topic} 에너지를 무난히 쓰고 있습니다(${stageZoneLabel(stage)}).`;
   }
   if (band === 'deficit') {
-    return `현재 ${stage}단계는 1~3단계(10~23점) 부족 구간입니다. 권장 4~6단계(${REC_MIN}~${REC_MAX}점)를 향해 인접 단계만 목표로 합니다.`;
+    return `지금 ${stage}단계로 ${topic} 에너지가 적은 편입니다(${stageZoneLabel(stage)}). 필요할 때 힘을 내기 어렵거나, 주변에 그렇게 보일 수 있습니다.`;
   }
-  return `현재 ${stage}단계는 7~9단계(37~50점) 과잉 구간입니다. 권장 4~6단계(${REC_MIN}~${REC_MAX}점) 쪽으로 한 단계씩 낮추는 것을 목표로 합니다.`;
+  return `지금 ${stage}단계로 ${topic} 에너지가 많이 쓰이고 있습니다(${stageZoneLabel(stage)}). 기운은 넘치지만, 무리하면 지치거나 사람들과 자주 부딪힐 수 있습니다.`;
+}
+
+function easyGuidance(scaleId: EgoScaleId, band: Plus243StageBand, stage: Plus243Stage): string {
+  const transitions = buildAdjacentTransitionMessages(scaleId, stage);
+  if (transitions.length) {
+    return transitions.join('\n');
+  }
+  if (band === 'normal') {
+    return '지금 리듬을 유지하되, 한 번에 두 단계 이상 크게 바꾸지 않는 것이 좋습니다.';
+  }
+  if (band === 'deficit') {
+    return '목표는 바로 옆 단계(한 단계)만 올리는 것입니다. 「자율치료 및 대책」 탭의 내담자용 실천을 참고하세요.';
+  }
+  return '목표는 바로 옆 단계(한 단계)만 내리는 것입니다. 쉬어 가고, 혼자 다 하려 하지 않도록 조율하세요. 「자율치료 및 대책」 탭을 함께 보세요.';
 }
 
 function scaleBlock(s: EgoOkScaleScore, stage: Plus243Stage): string {
   const tier = rawScoreToPlus243Tier(s.raw);
   const band = plus243StageBand(stage);
-  const bandKo = plus243StageBandLabel(band);
-  const pros =
-    band === 'excess'
-      ? '추진·영향력은 크나 과잉·소진·관계 부담에 주의가 필요합니다.'
-      : band === 'deficit'
-        ? '부담은 상대적으로 적으나, 필요할 때 에너지를 키우는 연습이 도움이 됩니다.'
-        : '일상·관계에서 무리 없이 에너지를 사용하는 편입니다.';
-  const action =
-    band === 'excess'
-      ? '대책: 강도를 낮추고 휴식·위임·경청을 늘리세요. 「자율치료 및 대책」 탭의 과잉 구간 안내를 참고하세요.'
-      : band === 'deficit'
-        ? '대책: 4~6단계 권장 구간을 향해 작은 실천을 쌓으세요. 「자율치료 및 대책」 탭의 부족 구간 안내를 참고하세요.'
-        : '대책: 현재 리듬을 유지하며 급격한 확대·축소는 피하세요.';
+  const lead = formatCurrentStageLeadIn(tier);
   return [
-    `${stage}단계 · ${s.raw}점 · ${plus243TierToAscii(tier)} · ${bandKo}(${stagePositionText(stage)})`,
-    pros,
-    action,
-  ].join('\n');
-}
-
-function pickExtreme(scales: EgoOkScaleScore[], mode: 'max' | 'min'): EgoOkScaleScore {
-  return scales.reduce((a, b) => (mode === 'max' ? (b.raw > a.raw ? b : a) : b.raw < a.raw ? b : a));
+    `${lead}`,
+    easySituation(s.id, band, stage),
+    easyGuidance(s.id, band, stage),
+  ].join('\n\n');
 }
 
 function comprehensive(egogram: EgoOkScaleScore[]): string {
@@ -66,18 +94,35 @@ function comprehensive(egogram: EgoOkScaleScore[]): string {
   const np = egogram.find((s) => s.id === 'NP')!;
   const fc = egogram.find((s) => s.id === 'FC')!;
   const ac = egogram.find((s) => s.id === 'AC')!;
-  const high = pickExtreme(egogram, 'max');
-  const low = pickExtreme(egogram, 'min');
+  const a = egogram.find((s) => s.id === 'A')!;
+  const highs = pickTiedExtremeScales(egogram, 'max');
+  const lows = pickTiedExtremeScales(egogram, 'min');
+  const cpStage = rawScoreToPlus243Tier(cp.raw).stage;
+  const npStage = rawScoreToPlus243Tier(np.raw).stage;
+  const fcStage = rawScoreToPlus243Tier(fc.raw).stage;
+  const acStage = rawScoreToPlus243Tier(ac.raw).stage;
+  const aStage = rawScoreToPlus243Tier(a.raw).stage;
   const cpUpNpDown = cp.raw > np.raw;
-  const fcUpAcDown = fc.raw > ac.raw;
-  const highTier = plus243TierToAscii(rawScoreToPlus243Tier(high.raw));
-  const lowTier = plus243TierToAscii(rawScoreToPlus243Tier(low.raw));
+
+  const highLine =
+    highs.length > 1
+      ? `최고 사용 에너지는 ${formatExtremeGroup(highs)}로, 같은 높이입니다.`
+      : `최고 사용 에너지는 ${formatExtremeGroup(highs)}입니다.`;
+  const lowLine =
+    lows.length > 1
+      ? `최저 사용 에너지는 ${formatExtremeGroup(lows)}로, 같은 낮이입니다.`
+      : `최저 사용 에너지는 ${formatExtremeGroup(lows)}입니다.`;
+
+  const tilt =
+    highs.length === 1 && lows.length === 1 && highs[0]!.id === lows[0]!.id
+      ? '다섯 척도가 한 줄로 묶여 극단 비교가 어렵습니다.'
+      : `한 성격 안에서 에너지가 ${highs.map((h) => h.id).join('·')} 쪽으로 기울고, ${lows.map((l) => l.id).join('·')}은(는) 상대적으로 약합니다.`;
 
   return [
-    `9단계 기준 5이고그램 종합입니다. 최고 사용 ${high.id}(${high.raw}점, ${highTier}), 최저 사용 ${low.id}(${low.raw}점, ${lowTier}) — 한 성격 안에서 에너지가 ${high.id} 쪽으로 기울고 ${low.id}은(는) 상대적으로 약합니다.`,
-    `CP와 NP는 한쪽이 늘면 다른 쪽이 줄어드는 상대 관계(약 90% 이상)로 보는 것이 타당합니다. 현재 CP ${cp.raw} · NP ${np.raw} — ${cpUpNpDown ? 'CP가 NP보다 높아 비판·기준 쪽이 두드러집니다.' : 'NP가 CP보다 높아 양육·지지 쪽이 두드러집니다.'}`,
-    `FC와 AC도 서로 상대적입니다. FC ${fc.raw} · AC ${ac.raw} — ${fcUpAcDown ? 'FC(자유·창의)가 AC(순응)보다 높습니다.' : 'AC(순응·협력)가 FC보다 높습니다.'} 둘 다 동시에 크게 오르거나 내리면 의도적 표현·역할 연기 가능성을 함께 짚습니다.`,
-    `해결·균형: ${low.id}(${low.raw})는 현재 ${rawScoreToPlus243Tier(low.raw).stage}단계 — 의식적 보완, ${high.id}(${high.raw})는 현재 ${rawScoreToPlus243Tier(high.raw).stage}단계 — 과함·소진을 조절하세요. A(${egogram.find((s) => s.id === 'A')!.raw}) 성인 자아로 선택지·현실 검토를 중심에 두면 다섯 에너지가 한 과정으로 엮입니다.`,
+    `9단계 기준 다섯 이고그램을 함께 봅니다. ${highLine} ${lowLine} ${tilt}`,
+    `CP ${cpStage}단계 · NP ${npStage}단계 — ${cpUpNpDown ? 'CP가 NP보다 높아 기준·비판 쪽이 두드러집니다.' : 'NP가 CP보다 높아 돌봄·지지 쪽이 두드러집니다.'} (CP와 NP는 서로 줄고 늘기 쉬운 관계로 봅니다.)`,
+    `FC ${fcStage}단계 · AC ${acStage}단계 — ${fc.raw > ac.raw ? 'FC(자유·표현)가 AC(배려·순응)보다 높습니다.' : 'AC가 FC보다 높습니다.'} 둘 다 동시에 크게 오르거나 내리면, 맞추려는 표현일 수 있어 함께 짚습니다.`,
+    `균형 힌트: ${lows.map((l) => `${l.id} ${rawScoreToPlus243Tier(l.raw).stage}단계`).join(' · ')}는 보완·키우기, ${highs.map((h) => `${h.id} ${rawScoreToPlus243Tier(h.raw).stage}단계`).join(' · ')}는 쉬어 가기·조절하기. A ${aStage}단계(생각·판단)로 선택지를 정리하면 다섯 에너지가 한 흐름으로 이어집니다.`,
   ].join('\n\n');
 }
 

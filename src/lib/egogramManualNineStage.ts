@@ -7,7 +7,6 @@ import type { Plus243Stage, Plus243Tier } from '@/lib/egogram243Plus';
 import {
   formatCurrentStageLeadIn,
   isPlus243RecommendedStage,
-  plus243AdjacentStageHints,
   plus243StageBand,
   rawScoreToPlus243Tier,
 } from '@/lib/egogram243Plus';
@@ -40,7 +39,7 @@ const CP: Record<BandKey, Omit<ManualNineStageBlock, 'raiseMeasures' | 'lowerMea
     ],
   },
   normal: {
-    trait: 'CP가 중심(약 25점)을 넘으면 이상·양심·책임·권위적 특성이 강해져 상대에게 안정감을 주기도 합니다.',
+    trait: 'CP가 권장 구간(4~6단계)을 넘어 높아지면 이상·양심·책임·권위적 특성이 강해져 상대에게 안정감을 주기도 합니다.',
     strengths: [
       '원칙과 책임감을 바탕으로 일을 끝까지 해내려는 태도가 있습니다.',
       '기준과 질서를 지키려는 긍정적 CP 면이 드러납니다.',
@@ -223,7 +222,7 @@ const LOWER_MEASURES: Record<EgoScaleId, string[]> = {
     '『그 까지것 아무려면 어때』『의견을 말해 봤자…』 같은 회피·무책임 패턴을 줄입니다.',
     '과잉 보호·침묵·걱정만 하는 태도 대신, 분명한 기대와 피드백을 균형 있게 줍니다.',
     '두 의자요법으로 상대 입장을 먼저 말해 보며 비판 강도를 낮춥니다.',
-    '4~6단계(24~36점) 권장 구간을 목표로 CP 에너지를 한 단계씩 조절합니다.',
+    '4~6단계 권장 구간을 목표로 CP 에너지를 한 단계씩 조절합니다.',
   ],
   NP: [
     '『확실히 하세요』『무슨 짓을』 등 압박·비판 언어를 줄입니다.',
@@ -237,7 +236,7 @@ const LOWER_MEASURES: Record<EgoScaleId, string[]> = {
     '상대 말을 끝까지 듣고, 감정 라벨링(『화가 나셨군요』)을 추가합니다.',
     '명상·요가·단전호호흡 등 긴장 이완으로 냉정함만 남지 않게 합니다.',
     '일 외 여가·FC 활동을 일정에 넣어 ‘컴퓨터 인간’ 인상을 완화합니다.',
-    '7단계 이상이면 6단계(33~36점) 쪽으로 에너지를 낮추는 것을 목표로 합니다.',
+    '7단계 이상이면 6단계(권장) 쪽으로 에너지를 한 단계씩 낮추는 것을 목표로 합니다.',
   ],
   FC: [
     '『하기 싫어』『지루해』『우울해』 등 FC 저하 언어·수동 태도를 줄입니다.',
@@ -259,8 +258,65 @@ function bandKey(stage: Plus243Stage): BandKey {
   return plus243StageBand(stage);
 }
 
-function stageIntensityNote(tier: Plus243Tier, raw: number): string {
-  return formatCurrentStageLeadIn(tier, raw);
+function stageIntensityNote(tier: Plus243Tier): string {
+  return formatCurrentStageLeadIn(tier);
+}
+
+/**
+ * ±1단계 이동 시 권장(4~6)을 벗어날 때만 장·단점·주의를 안내. 권장 안에서의 이동(4↔5↔6)은 생략.
+ */
+export function buildAdjacentTransitionMessages(scaleId: EgoScaleId, stage: Plus243Stage): string[] {
+  const lines: string[] = [];
+  const prev = (stage - 1) as Plus243Stage;
+  const next = (stage + 1) as Plus243Stage;
+
+  const lineForTarget = (target: Plus243Stage, direction: 'up' | 'down'): string | null => {
+    const targetBand = bandKey(target);
+    const block = getManualNineStageBlock(scaleId, target);
+    const strength = block.strengths[0];
+    const caution = block.cautions[0];
+    const arrow = direction === 'up' ? '한 단계 올려' : '한 단계 내려';
+    if (targetBand === 'deficit') {
+      return `${arrow} ${target}단계가 되면 부족 구간입니다. ${caution ?? block.trait}`;
+    }
+    if (targetBand === 'excess') {
+      return `${arrow} ${target}단계가 되면 과잉 구간입니다. ${caution ?? block.trait}`;
+    }
+    if (stage <= 3 || stage >= 7) {
+      return `${arrow} ${target}단계(권장 4~6)에 가까워집니다. ${strength ?? block.trait} 다만 급격히 바꾸기보다 한 단계씩 조절하세요.`;
+    }
+    return null;
+  };
+
+  if (isPlus243RecommendedStage(stage)) {
+    if (prev === 3) {
+      const msg = lineForTarget(3, 'down');
+      if (msg) lines.push(msg);
+    }
+    if (next === 7) {
+      const msg = lineForTarget(7, 'up');
+      if (msg) lines.push(msg);
+    }
+    return lines;
+  }
+
+  if (stage <= 3 && next <= 9) {
+    const msg = lineForTarget(next, 'up');
+    if (msg) lines.push(msg);
+    return lines;
+  }
+
+  if (stage >= 7 && prev >= 1) {
+    const down = lineForTarget(prev, 'down');
+    if (down) lines.push(down);
+    if (stage < 9 && next <= 9) {
+      const up = lineForTarget(next, 'up');
+      if (up) lines.push(up);
+    }
+    return lines.slice(0, 2);
+  }
+
+  return lines;
 }
 
 /** 현재 단계와 맞지 않는 ‘7단계 이상’ 등 일반 경고 문구 제거 */
@@ -382,7 +438,7 @@ export function buildManualNineStageInsight(
 ): ManualNineStageInsight {
   const tier = rawScoreToPlus243Tier(raw);
   const block = getManualNineStageBlock(scaleId, tier.stage);
-  const leadIn = stageIntensityNote(tier, raw);
+  const leadIn = stageIntensityNote(tier);
 
   let trait = `${leadIn}. ${block.trait}`;
   if (role === 'offRange') {
@@ -436,10 +492,10 @@ export function buildSelfHelpTherapyScalePlan(scale: EgoOkScaleScore): SelfHelpT
     raw: scale.raw,
     stage: tier.stage,
     tierLabel: tier.label,
-    stageLeadIn: formatCurrentStageLeadIn(tier, scale.raw),
+    stageLeadIn: formatCurrentStageLeadIn(tier),
     summary: focused.trait,
     inRecommended,
-    adjacentHints: plus243AdjacentStageHints(tier.stage),
+    adjacentHints: buildAdjacentTransitionMessages(scale.id, tier.stage),
     counselorTasks: COUNSELOR_TASKS[scale.id][band],
     clientTasks: focused.measures,
   };

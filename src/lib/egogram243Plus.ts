@@ -168,53 +168,14 @@ export function isPlus243RecommendedRaw(raw: number): boolean {
   return isPlus243RecommendedStage(rawScoreToPlus243Tier(raw).stage);
 }
 
-/** 최초 단계 언급 — 권장 구간이면 (권장구간 4~6단계) 표시 */
-export function formatCurrentStageLeadIn(tier: Plus243Tier, raw?: number): string {
-  const score = raw != null ? ` · ${raw}점` : '';
-  const range = `${tier.min}~${tier.max}점 · ${tier.label}`;
+/** 최초 단계 언급(점수 없음) — 권장이면 (권장구간 4~6단계) */
+export function formatCurrentStageLeadIn(tier: Plus243Tier): string {
+  const tag = ` · ${tier.label}`;
   if (isPlus243RecommendedStage(tier.stage)) {
-    return `현재 ${tier.stage}단계(권장구간 4~6단계)${score} · ${range}`;
+    return `현재 ${tier.stage}단계(권장구간 4~6단계)${tag}`;
   }
   if (tier.stage <= 3) {
-    return `현재 ${tier.stage}단계(부족 1~3단계)${score} · ${range}`;
+    return `현재 ${tier.stage}단계(부족 1~3단계)${tag}`;
   }
-  return `현재 ${tier.stage}단계(과잉 7~9단계)${score} · ${range}`;
-}
-
-/**
- * 인접 계단(n−1, n+1)만 언급. 5단계면 4·6만, 7·9 등 먼 단계는 넣지 않음.
- */
-export function plus243AdjacentStageHints(stage: Plus243Stage): string[] {
-  const lines: string[] = [];
-  const prev = (stage - 1) as Plus243Stage;
-  const next = (stage + 1) as Plus243Stage;
-
-  if (isPlus243RecommendedStage(stage)) {
-    if (prev === 3) {
-      lines.push('한 단계 아래 3단계(19~23점)는 부족 구간입니다.');
-    } else if (isPlus243RecommendedStage(prev)) {
-      lines.push(`한 단계 아래 ${prev}단계도 권장 구간(4~6단계) 안입니다.`);
-    }
-    if (next === 7) {
-      lines.push('한 단계 위 7단계(37점~)는 과잉 구간입니다.');
-    } else if (next <= 6) {
-      lines.push(`한 단계 위 ${next}단계도 권장 구간(4~6단계) 안입니다.`);
-    }
-    return lines;
-  }
-
-  if (stage <= 3 && next >= 1 && next <= 9) {
-    lines.push(`인접 ${next}단계를 향해 한 단계씩 에너지를 키우는 것을 목표로 합니다.`);
-    return lines;
-  }
-
-  if (stage >= 7 && prev >= 1 && prev <= 9) {
-    lines.push(`인접 ${prev}단계를 향해 한 단계씩 에너지를 낮추는 것을 목표로 합니다.`);
-    if (next <= 9 && stage < 9) {
-      lines.push(`한 단계 위 ${next}단계도 과잉 구간(7~9단계)입니다.`);
-    }
-    return lines.slice(0, 2);
-  }
-
-  return lines;
+  return `현재 ${tier.stage}단계(과잉 7~9단계)${tag}`;
 }
