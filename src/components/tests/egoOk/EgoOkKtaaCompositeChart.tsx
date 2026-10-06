@@ -48,8 +48,10 @@ function isClientGenderProvided(genderInput: string | undefined): boolean {
 }
 
 const CHART_PLOT_HEIGHT_PX = Math.round(680 * (2 / 3) * 1.2);
+const CHART_PLOT_HEIGHT_COMPACT_PX = 168;
 
 const Y_TICKS = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50];
+const Y_TICKS_COMPACT = [0, 10, 20, 30, 40, 50];
 
 const COLUMN_ORDER = ['CP', 'NP', 'A', 'FC', 'AC'] as const;
 
@@ -706,11 +708,22 @@ function createKtaaEgoSegmentLabels(chartData: ChartRow[]) {
 export default function EgoOkKtaaCompositeChart({
   columns,
   gender: genderInput,
+  compact = false,
 }: {
   columns: EgoOkCompositeColumn[];
   /** 내담자 성별 — 배경 구간 높이(C/B/A 컷); 색상은 남/여 동일 */
   gender?: string;
+  /** 종합 요약 등 — 축소 KTAA 종합 그래프 */
+  compact?: boolean;
 }) {
+  const plotHeightPx = compact ? CHART_PLOT_HEIGHT_COMPACT_PX : CHART_PLOT_HEIGHT_PX;
+  const yAxisWidth = compact ? 22 : Y_AXIS_WIDTH;
+  const chartMargin = compact
+    ? { top: 4, right: 6, left: yAxisWidth, bottom: 4 }
+    : CHART_MARGIN;
+  const barSize = compact ? 20 : 52;
+  const yTicks = compact ? Y_TICKS_COMPACT : Y_TICKS;
+  const columnDividerClass = compact ? 'border-r border-slate-400/70' : COLUMN_DIVIDER_CLASS;
   const genderProvided = isClientGenderProvided(genderInput);
   const backgroundGender: EgoOkGender = genderProvided
     ? normalizeEgoOkGender(genderInput)
@@ -745,27 +758,37 @@ export default function EgoOkKtaaCompositeChart({
   }, []);
 
   return (
-    <div className="overflow-hidden rounded-xl border border-sky-200 bg-white text-gray-900 shadow-inner">
-      <div className="border-b border-sky-100 bg-gradient-to-r from-sky-50 to-white px-4 py-3">
-        <p className="text-sm font-bold text-sky-900">
-          ◈ 이고-오케이 그램 (Ego-Ok Gram) 의 종합 결과 그래프
-        </p>
-      </div>
+    <div
+      className={
+        compact
+          ? 'overflow-hidden rounded-lg bg-white text-gray-900 ring-1 ring-slate-200/80'
+          : 'overflow-hidden rounded-xl border border-sky-200 bg-white text-gray-900 shadow-inner'
+      }
+    >
+      {!compact ? (
+        <div className="border-b border-sky-100 bg-gradient-to-r from-sky-50 to-white px-4 py-3">
+          <p className="text-sm font-bold text-sky-900">
+            ◈ 이고-오케이 그램 (Ego-Ok Gram) 의 종합 결과 그래프
+          </p>
+        </div>
+      ) : null}
 
-      <KtaaPlotLabelColumns plotBox={plotBox} style={TRAIT_LABEL_PLOT_GAP_TOP}>
-        {columns.map((col, index) => (
-          <div
-            key={col.id}
-            className={`${COLUMN_TRAIT_TITLE_CLASS} ${index < columns.length - 1 ? COLUMN_DIVIDER_CLASS : ''}`}
-          >
-            {col.topLabel}
-          </div>
-        ))}
-      </KtaaPlotLabelColumns>
+      {!compact ? (
+        <KtaaPlotLabelColumns plotBox={plotBox} style={TRAIT_LABEL_PLOT_GAP_TOP}>
+          {columns.map((col, index) => (
+            <div
+              key={col.id}
+              className={`${COLUMN_TRAIT_TITLE_CLASS} ${index < columns.length - 1 ? COLUMN_DIVIDER_CLASS : ''}`}
+            >
+              {col.topLabel}
+            </div>
+          ))}
+        </KtaaPlotLabelColumns>
+      ) : null}
 
-      <div className="relative w-full leading-none" style={{ height: CHART_PLOT_HEIGHT_PX }}>
+      <div className="relative w-full leading-none" style={{ height: plotHeightPx }}>
         <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart data={data} margin={CHART_MARGIN} style={{ background: 'transparent' }}>
+          <ComposedChart data={data} margin={chartMargin} style={{ background: 'transparent' }}>
             <Customized component={PlotBackgroundLayer} />
             <ReferenceLine
               y={12.5}
@@ -779,10 +802,10 @@ export default function EgoOkKtaaCompositeChart({
               domain={[0, 50]}
               allowDataOverflow
               padding={{ top: 0, bottom: 0 }}
-              ticks={Y_TICKS}
-              tick={{ fill: '#64748b', fontSize: 10 }}
+              ticks={yTicks}
+              tick={{ fill: '#64748b', fontSize: compact ? 8 : 10 }}
               axisLine={{ stroke: '#94a3b8' }}
-              width={Y_AXIS_WIDTH}
+              width={yAxisWidth}
             />
             <XAxis
               dataKey="xLabel"
@@ -790,13 +813,13 @@ export default function EgoOkKtaaCompositeChart({
               height={0}
               padding={{ left: 0, right: 0 }}
             />
-            <Bar dataKey="egoNegative" stackId="ego" fill={EGO_NEG_COLOR} barSize={52} radius={[0, 0, 0, 0]} />
-            <Bar dataKey="egoPositive" stackId="ego" fill={EGO_POS_COLOR} barSize={52} radius={[2, 2, 0, 0]} />
+            <Bar dataKey="egoNegative" stackId="ego" fill={EGO_NEG_COLOR} barSize={barSize} radius={[0, 0, 0, 0]} />
+            <Bar dataKey="egoPositive" stackId="ego" fill={EGO_POS_COLOR} barSize={barSize} radius={[2, 2, 0, 0]} />
             <Line
               type="linear"
               dataKey="okLineCpNp"
               stroke={OK_LINE_COLOR}
-              strokeWidth={3}
+              strokeWidth={compact ? 2 : 3}
               dot={<OkLineDot />}
               activeDot={false}
               connectNulls={false}
@@ -806,7 +829,7 @@ export default function EgoOkKtaaCompositeChart({
               type="linear"
               dataKey="okLineFcAc"
               stroke={OK_LINE_COLOR}
-              strokeWidth={3}
+              strokeWidth={compact ? 2 : 3}
               dot={<OkLineDot />}
               activeDot={false}
               connectNulls={false}
@@ -824,33 +847,44 @@ export default function EgoOkKtaaCompositeChart({
         </ResponsiveContainer>
       </div>
 
-      <KtaaPlotLabelColumns plotBox={plotBox} style={TRAIT_LABEL_PLOT_GAP_BOTTOM}>
-        {columns.map((col, index) => (
-          <div
-            key={`${col.id}-bottom`}
-            className={`${COLUMN_TRAIT_TITLE_CLASS} ${index < columns.length - 1 ? COLUMN_DIVIDER_CLASS : ''}`}
-          >
-            {col.bottomLabel}
-          </div>
-        ))}
-      </KtaaPlotLabelColumns>
+      {!compact ? (
+        <KtaaPlotLabelColumns plotBox={plotBox} style={TRAIT_LABEL_PLOT_GAP_BOTTOM}>
+          {columns.map((col, index) => (
+            <div
+              key={`${col.id}-bottom`}
+              className={`${COLUMN_TRAIT_TITLE_CLASS} ${index < columns.length - 1 ? COLUMN_DIVIDER_CLASS : ''}`}
+            >
+              {col.bottomLabel}
+            </div>
+          ))}
+        </KtaaPlotLabelColumns>
+      ) : null}
 
-      <KtaaPlotLabelColumns plotBox={plotBox} className={`pb-2 ${BOTTOM_TRAIT_TO_CODE_GAP}`}>
+      <KtaaPlotLabelColumns
+        plotBox={plotBox}
+        className={compact ? 'px-0.5 pb-1 pt-0.5' : `pb-2 ${BOTTOM_TRAIT_TO_CODE_GAP}`}
+      >
         {columns.map((col, index) => {
           const isA = col.id === 'A';
           return (
             <div
               key={`${col.id}-code`}
               className={`flex items-center justify-center ${
-                index < columns.length - 1 ? COLUMN_DIVIDER_CLASS : ''
+                index < columns.length - 1 ? columnDividerClass : ''
               }`}
             >
               <span
-                className={`rounded border px-2 py-0.5 text-xs font-bold ${isA ? 'border-sky-500 text-sky-700' : 'border-red-400 text-red-600'}`}
+                className={`rounded border font-bold ${
+                  compact
+                    ? `px-1 py-px text-[9px] ${isA ? 'border-sky-500 text-sky-700' : 'border-red-400 text-red-600'}`
+                    : `px-2 py-0.5 text-xs ${isA ? 'border-sky-500 text-sky-700' : 'border-red-400 text-red-600'}`
+                }`}
               >
                 {col.codeLabel}
                 {col.okTag ? (
-                  <span className="ml-0.5 text-[10px] font-semibold">({col.okTag})</span>
+                  <span className={`ml-0.5 font-semibold ${compact ? 'text-[8px]' : 'text-[10px]'}`}>
+                    ({col.okTag})
+                  </span>
                 ) : null}
               </span>
             </div>
@@ -858,6 +892,7 @@ export default function EgoOkKtaaCompositeChart({
         })}
       </KtaaPlotLabelColumns>
 
+      {!compact ? (
       <div className="mx-3 mb-4 space-y-3 rounded border border-sky-300 bg-sky-50/80 px-4 py-3 text-[11px] leading-relaxed text-gray-800 sm:text-xs">
         <p className="font-bold text-sky-900">점수가 그래프에 표시되는 방식</p>
         <ol className="list-decimal space-y-2 pl-4 text-gray-800">
@@ -902,6 +937,7 @@ export default function EgoOkKtaaCompositeChart({
           <span className="font-bold text-red-600">AC</span> (자기비하·의존적 / 독단적)
         </p>
       </div>
+      ) : null}
     </div>
   );
 }

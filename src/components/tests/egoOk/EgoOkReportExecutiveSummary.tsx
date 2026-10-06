@@ -2,13 +2,13 @@
 
 import type { ReactNode } from 'react';
 import type {
-  EgoOkCompositeColumn,
   EgoOkGender,
   EgoOkReport,
   EgoOkScaleScore,
   EgoScaleId,
   LifePositionKind,
 } from '@/lib/egoOkScoring';
+import EgoOkKtaaCompositeChart from '@/components/tests/egoOk/EgoOkKtaaCompositeChart';
 import {
   EGO_SCALE_PATTERN_ORDER,
   plus243StageDigitColor,
@@ -308,33 +308,6 @@ function MiniEgogramRadar({ egogram, peakIds }: { egogram: EgoOkScaleScore[]; pe
   );
 }
 
-function MiniKtaaColumns({ columns }: { columns: EgoOkCompositeColumn[] }) {
-  return (
-    <div className="space-y-2">
-      <div className="flex items-end justify-between gap-1.5" style={{ height: '5.5rem' }}>
-        {columns.map((col) => {
-          const total = Math.max(col.egoTotal, 1);
-          const posH = (col.egoPositive / total) * 100;
-          const negH = (col.egoNegative / total) * 100;
-          return (
-            <div key={col.id} className="flex min-w-0 flex-1 flex-col items-center gap-1">
-              <div className="flex h-full w-full flex-col-reverse overflow-hidden rounded-lg bg-slate-100 ring-1 ring-slate-200/80">
-                <div className="w-full bg-gradient-to-t from-sky-500 to-sky-300" style={{ height: `${posH}%` }} />
-                <div className="w-full bg-gradient-to-t from-rose-400 to-rose-200" style={{ height: `${negH}%` }} />
-              </div>
-              <span className="text-[10px] font-bold text-slate-600">{col.id}</span>
-            </div>
-          );
-        })}
-      </div>
-      <p className="text-center text-[10px] text-slate-500">
-        <span className="inline-block h-2 w-2 rounded-sm bg-sky-400 align-middle" /> 긍정 ·{' '}
-        <span className="inline-block h-2 w-2 rounded-sm bg-rose-300 align-middle" /> 부정 (척도 내 비율)
-      </p>
-    </div>
-  );
-}
-
 function MiniOkBars({ rows, kind }: { rows: OkBarRow[]; kind: LifePositionKind }) {
   const max = 50;
   return (
@@ -511,9 +484,15 @@ export default function EgoOkReportExecutiveSummary({
         </SummaryShell>
 
         <SummaryShell title="KTAA 종합" tabHint="KTAA 탭">
-          <MiniKtaaColumns columns={report.compositeChart} />
-          <p className="mt-2 text-xs leading-relaxed text-slate-600">
-            다섯 척도의 긍·부정 비율을 한 줄로 비교합니다. 세부 막대·오케이 선은 KTAA 탭 그래프에서 확인합니다.
+          <div className="-mx-1 overflow-hidden">
+            <EgoOkKtaaCompositeChart
+              columns={report.compositeChart}
+              gender={chartGender}
+              compact
+            />
+          </div>
+          <p className="mt-1.5 text-[11px] leading-snug text-slate-600">
+            KTAA 탭과 동일 그래프(243 구간·이고 막대·오케이 선)를 축소해 표시합니다.
           </p>
         </SummaryShell>
 
