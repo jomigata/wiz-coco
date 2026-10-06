@@ -29,18 +29,14 @@ const CHEVRON_PATH: Record<Side, string> = {
 
 const TONE_STYLES: Record<
   HintTone,
-  { chevron: string; bubbleIdle: string; bubbleActive: string; scrimSide: string }
+  { bubbleIdle: string; bubbleActive: string; scrimSide: string }
 > = {
   'on-dark': {
-    chevron:
-      'text-white drop-shadow-[0_0_6px_rgba(0,0,0,0.75),0_1px_0_rgba(255,255,255,0.25)]',
     bubbleIdle: 'border-white/30 ring-1 ring-black/25',
     bubbleActive: 'border-white/60 shadow-[0_0_14px_rgba(255,255,255,0.18)] ring-1 ring-white/10',
     scrimSide: 'from-black/18 via-black/5',
   },
   'on-light': {
-    chevron:
-      'text-slate-800 drop-shadow-[0_0_6px_rgba(255,255,255,0.85),0_0_1px_rgba(15,23,42,0.35)]',
     bubbleIdle: 'border-slate-500/45 ring-1 ring-white/70 bg-white/35',
     bubbleActive:
       'border-slate-700/70 shadow-[0_0_12px_rgba(15,23,42,0.12)] ring-1 ring-white/80 bg-white/50',
@@ -56,9 +52,6 @@ const SCROLL_TRACK_UNIVERSAL = {
     'shadow-[0_0_14px_rgba(251,146,60,0.32),inset_0_0_0_1px_rgba(255,255,255,0.12)]',
   glowActive:
     'shadow-[0_0_20px_rgba(251,191,36,0.45),inset_0_0_0_1px_rgba(255,255,255,0.22)]',
-  chevron: 'text-amber-50',
-  chevronShadow:
-    'drop-shadow-[0_1px_2px_rgba(15,23,42,0.9),0_0_8px_rgba(251,146,60,0.85)]',
   fillTop:
     'bg-gradient-to-b from-orange-400/50 via-amber-500/30 to-orange-950/5',
   fillBottom:
@@ -69,24 +62,34 @@ const SCROLL_TRACK_UNIVERSAL = {
 export const VIEWPORT_EDGE_HINT_WIDTH_CLASS =
   'left-1/2 w-[min(calc(100vw-2rem),calc(100%-1rem))] -translate-x-1/2';
 
-function ScrollChevron({ side, active, tone }: { side: Side; active: boolean; tone: HintTone }) {
-  const styles = TONE_STYLES[tone];
+function DualStrokeChevron({ side, sizeClass = 'h-6 w-6' }: { side: Side; sizeClass?: string }) {
+  const d = CHEVRON_PATH[side];
+  return (
+    <svg className={sizeClass} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d={d}
+        stroke="#ffffff"
+        strokeWidth="5.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d={d}
+        stroke="#0f172a"
+        strokeWidth="2.85"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function ScrollChevron({ side, active }: { side: Side; active: boolean }) {
   return (
     <span
       className={`inline-flex ${NUDGE_CLASS[side]} ${active ? 'scale-110' : 'scale-100'} transition-transform duration-150`}
     >
-      <svg
-        className={`h-5 w-5 ${styles.chevron} ${active ? 'opacity-100' : 'opacity-95'}`}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="3"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden
-      >
-        <path d={CHEVRON_PATH[side]} />
-      </svg>
+      <DualStrokeChevron side={side} sizeClass="h-5 w-5" />
     </span>
   );
 }
@@ -120,18 +123,7 @@ function TopBottomScrollTrack({
       <span
         className={`relative inline-flex ${TRACK_NUDGE_CLASS[side]} ${active ? 'scale-110' : 'scale-100'} transition-transform duration-150`}
       >
-        <svg
-          className={`h-5 w-5 ${track.chevron} ${track.chevronShadow}`}
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="3"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden
-        >
-          <path d={CHEVRON_PATH[side]} />
-        </svg>
+        <DualStrokeChevron side={side} />
       </span>
     </div>
   );
@@ -246,7 +238,7 @@ function EdgeHint({
       }`}
       title={label}
     >
-      <ScrollChevron side={side} active={active} tone={tone} />
+      <ScrollChevron side={side} active={active} />
     </span>
   );
 
