@@ -3,7 +3,7 @@
 import { createContext, useContext } from 'react';
 
 export type EgoOkReportTabNav = {
-  selectTab: (id: string, anchor?: string) => void;
+  selectTab: (id: string) => void;
 };
 
 export const EgoOkReportTabNavContext = createContext<EgoOkReportTabNav | null>(null);
@@ -23,9 +23,6 @@ export const EGO_OK_REPORT_TAB_IDS = [
   'ok-life',
   'inner',
   'polarity',
-  'stroke',
-  'time-structuring',
-  'ta-overview',
 ] as const;
 
 export type EgoOkReportTabId = (typeof EGO_OK_REPORT_TAB_IDS)[number];

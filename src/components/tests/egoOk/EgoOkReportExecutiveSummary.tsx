@@ -15,6 +15,7 @@ import type {
   LifePositionKind,
 } from '@/lib/egoOkScoring';
 import EgoOkKtaaCompositeChart from '@/components/tests/egoOk/EgoOkKtaaCompositeChart';
+import EgoOkReportScaleBreakdownSection from '@/components/tests/egoOk/EgoOkReportScaleBreakdownSection';
 import {
   EGO_SCALE_PATTERN_ORDER,
   plus243StageDigitColor,
@@ -40,13 +41,6 @@ import {
   PolarAngleAxis,
   ResponsiveContainer,
 } from 'recharts';
-import {
-  EGO_OK_STROKE_THEORY_SUMMARY,
-  EGO_OK_TIME_STRUCTURING_SUMMARY,
-  TA_OVERVIEW_CHAPTERS,
-  formatTaOverviewChapterLabel,
-  taOverviewChapterAnchor,
-} from '@/lib/egoOkTaOverviewChapters';
 
 const RADAR_AXIS = ['A', 'FC', 'AC', 'CP', 'NP'] as const;
 
@@ -61,13 +55,11 @@ type OkBarRow = {
 function SummaryShell({
   title,
   targetTabId,
-  anchor,
   children,
   className,
 }: {
   title: string;
   targetTabId: EgoOkReportTabId;
-  anchor?: string;
   children: ReactNode;
   className?: string;
 }) {
@@ -75,7 +67,7 @@ function SummaryShell({
   const sectionNo = egoOkReportSectionNumber(targetTabId);
   const displayTitle = formatEgoOkSectionTitle(sectionNo, title);
 
-  const goToTab = () => nav?.selectTab(targetTabId, anchor);
+  const goToTab = () => nav?.selectTab(targetTabId);
 
   const onKeyDown = (e: KeyboardEvent<HTMLElement>) => {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -463,8 +455,7 @@ export default function EgoOkReportExecutiveSummary({
         <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-indigo-500">종합 요약</p>
         <h2 className="mt-1 text-xl font-bold text-slate-900 sm:text-2xl">TA 이고-오케이그램 · 한눈에 보기</h2>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-600">
-          타당도부터 이고그램·243+·오케이·속마음·부정성, 스트로크·시간구조화, TA 요약정리(29장)까지 핵심만 모았습니다.
-          자세한 해석은 각 탭에서 이어집니다.
+          타당도부터 이고그램·243+·오케이·속마음·부정성까지 핵심만 모았습니다. 자세한 해석은 각 탭에서 이어집니다.
         </p>
         <div className="mt-4 flex flex-wrap items-center gap-4 border-t border-slate-100 pt-4">
           <div>
@@ -592,56 +583,9 @@ export default function EgoOkReportExecutiveSummary({
               : `${polarityAlert}개 척도에서 부정 41% 이상 — 부정성 탭에서 구간별 대책을 확인하세요.`}
           </p>
         </SummaryShell>
-
-        <SummaryShell title="스트로크" targetTabId="stroke">
-          <p className="text-xs font-semibold text-violet-800">{EGO_OK_STROKE_THEORY_SUMMARY.heading}</p>
-          <p className="mt-1 text-[11px] leading-snug text-slate-600">
-            {EGO_OK_STROKE_THEORY_SUMMARY.lines[0]}
-          </p>
-        </SummaryShell>
-
-        <SummaryShell title="시간의 구조화" targetTabId="time-structuring">
-          <div className="flex flex-wrap gap-1">
-            {EGO_OK_TIME_STRUCTURING_SUMMARY.scales.map((name) => (
-              <span
-                key={name}
-                className="rounded-md bg-teal-50 px-1.5 py-0.5 text-[10px] font-semibold text-teal-800 ring-1 ring-teal-100"
-              >
-                {name}
-              </span>
-            ))}
-          </div>
-          <p className="mt-2 text-[11px] leading-snug text-slate-600">
-            {EGO_OK_TIME_STRUCTURING_SUMMARY.lines[0]}
-          </p>
-        </SummaryShell>
       </div>
 
-      <section className="rounded-2xl border border-slate-200/90 bg-white/90 p-4 shadow-sm ring-1 ring-slate-100">
-        <header className="mb-3 border-b border-slate-100 pb-2">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">교류분석 요약정리</p>
-          <h3 className="text-sm font-bold text-slate-800">제1장 ~ 제29장 · 이론 참고</h3>
-          <p className="mt-1 text-[11px] text-slate-500">
-            xls 원문에 있는 장 표기를 포함합니다. 클릭 시 TA 요약 탭 해당 장으로 이동합니다.
-          </p>
-        </header>
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {TA_OVERVIEW_CHAPTERS.map((ch) => (
-            <SummaryShell
-              key={ch.no}
-              title={formatTaOverviewChapterLabel(ch)}
-              targetTabId="ta-overview"
-              anchor={taOverviewChapterAnchor(ch.no)}
-              className="p-3 shadow-none hover:ring-indigo-200/80"
-            >
-              <p className="line-clamp-2 text-[10px] leading-snug text-slate-600">{ch.teaser}</p>
-              {ch.xlsExplicit ? (
-                <span className="mt-1 inline-block text-[9px] font-semibold text-emerald-600">xls 장 제목</span>
-              ) : null}
-            </SummaryShell>
-          ))}
-        </div>
-      </section>
+      <EgoOkReportScaleBreakdownSection report={report} />
 
       <p className="text-center text-[10px] text-slate-500">
         성별 기준 그래프: {chartGender ?? '미입력'} · 블록을 클릭하면 해당 번호 탭으로 이동

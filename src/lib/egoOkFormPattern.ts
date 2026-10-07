@@ -1,7 +1,7 @@
 import type { EgoOkScaleScore, EgoScaleId } from '@/lib/egoOkScoring';
 import { plus243StageBand, rawScoreToPlus243Tier } from '@/lib/egogram243Plus';
 
-export function bandForScale(egogram: EgoOkScaleScore[], id: EgoScaleId) {
+function bandFor(egogram: EgoOkScaleScore[], id: EgoScaleId) {
   const s = egogram.find((x) => x.id === id);
   if (!s) return 'normal' as const;
   return plus243StageBand(rawScoreToPlus243Tier(s.raw).stage);
@@ -13,10 +13,10 @@ export function resolveEgogramFormLabel(
   peakScale: EgoOkScaleScore,
   bankBasicPattern: string,
 ): string {
-  const cpExcess = bandForScale(egogram, 'CP') === 'excess';
-  const npNotDeficit = bandForScale(egogram, 'NP') !== 'deficit';
-  const fcNotDeficit = bandForScale(egogram, 'FC') !== 'deficit';
-  const acNotExcess = bandForScale(egogram, 'AC') !== 'excess';
+  const cpExcess = bandFor(egogram, 'CP') === 'excess';
+  const npNotDeficit = bandFor(egogram, 'NP') !== 'deficit';
+  const fcNotDeficit = bandFor(egogram, 'FC') !== 'deficit';
+  const acNotExcess = bandFor(egogram, 'AC') !== 'excess';
 
   if (cpExcess && npNotDeficit && fcNotDeficit && acNotExcess) {
     return '잔소리형';
