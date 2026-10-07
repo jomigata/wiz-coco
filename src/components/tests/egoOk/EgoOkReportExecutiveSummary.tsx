@@ -396,7 +396,7 @@ export default function EgoOkReportExecutiveSummary({
   onTestGenderChange,
   peakEgograms,
   lowEgograms,
-  formLabel,
+  formDisplayLine,
   okBarData,
   okLifeHeading,
   okLifeBullets,
@@ -412,7 +412,7 @@ export default function EgoOkReportExecutiveSummary({
   onTestGenderChange?: (gender: EgoOkGender) => void;
   peakEgograms: EgoOkScaleScore[];
   lowEgograms: EgoOkScaleScore[];
-  formLabel: string;
+  formDisplayLine: string;
   okBarData: OkBarRow[];
   okLifeHeading: string;
   okLifeBullets: string[];
@@ -503,8 +503,10 @@ export default function EgoOkReportExecutiveSummary({
             <span className="font-semibold text-slate-600">최저</span>{' '}
             {lowEgograms.map((s) => formatEgogramEnergyHeadline(s)).join(' · ')}
           </p>
-          {formLabel && formLabel !== '—' ? (
-            <p className="mt-2 rounded-lg bg-indigo-50/80 px-2 py-1 text-[11px] text-indigo-900">{formLabel}</p>
+          {formDisplayLine && formDisplayLine !== '—' ? (
+            <p className="mt-2 rounded-lg bg-indigo-50/80 px-2 py-1 text-[11px] text-indigo-900">
+              {formDisplayLine}
+            </p>
           ) : null}
         </SummaryShell>
 

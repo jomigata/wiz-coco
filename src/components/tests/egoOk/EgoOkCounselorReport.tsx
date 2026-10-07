@@ -32,13 +32,16 @@ import {
   type InnerMindPair,
 } from '@/lib/egoOkInnerMind';
 import { buildPlus243InterpretationSections } from '@/lib/egoOkPlus243Interpretation';
-import { EgoOkClinicalModulesPanel } from '@/components/tests/egoOk/EgoOkClinicalModulesPanel';
 import { EgoOkSelfHelpTherapyPanel } from '@/components/tests/egoOk/EgoOkSelfHelpTherapyPanel';
 import {
   buildOkLifeOverviewBlock,
   OK_BAR_DISPLAY_ORDER,
   OK_BAR_POLE_LABEL,
 } from '@/lib/egoOkOkLifePosition';
+import {
+  formatEgogramFormWithArchetype23,
+  resolveEgogramArchetype23Pattern,
+} from '@/lib/egoOkArchetype23';
 import { resolveEgogramFormLabel } from '@/lib/egoOkFormPattern';
 import EgoOkValiditySection from '@/components/tests/egoOk/EgoOkValiditySection';
 import { KTAA_GRAPH_ZONES, OK_LABELS, normalizeEgoOkGender } from '@/lib/egoOkScoring';
@@ -225,13 +228,13 @@ function EgogramRadarSummarySubtitle({
   peakScales,
   patternCode,
   pattern243Plus,
-  formLabel,
+  formDisplayLine,
   missing,
 }: {
   peakScales: EgoOkScaleScore[];
   patternCode: string;
   pattern243Plus: Pattern243Plus;
-  formLabel: string;
+  formDisplayLine: string;
   missing: boolean;
 }) {
   return (
@@ -246,7 +249,9 @@ function EgogramRadarSummarySubtitle({
         <Pattern243PlusCode plus={pattern243Plus} className="inline-flex align-middle" />
         <span className="text-slate-500"> (243+ 플러스)</span>
       </p>
-      {formLabel && formLabel !== '—' ? <p className="text-slate-300">{formLabel}</p> : null}
+      {formDisplayLine && formDisplayLine !== '—' ? (
+        <p className="text-slate-300">{formDisplayLine}</p>
+      ) : null}
       {missing ? <p className="text-amber-200/80">기준 보고서 문장 없음</p> : null}
     </div>
   );
@@ -1132,6 +1137,12 @@ export default function EgoOkCounselorReport({
     peakEgogram,
     report.pattern243.basicPattern,
   );
+  const archetype23 = resolveEgogramArchetype23Pattern(
+    report.egogram,
+    peakEgogram,
+    report.pattern243.basicPattern,
+  );
+  const formDisplayLine = formatEgogramFormWithArchetype23(formLabel, archetype23);
 
   const OK_BAR_U = '#6366f1';
   const OK_BAR_I = '#0d9488';
@@ -1152,10 +1163,10 @@ export default function EgoOkCounselorReport({
     [report.egogram, report.okgram],
   );
   const plus243Sections = useMemo(
-    () => buildPlus243InterpretationSections(report.pattern243Plus, report.egogram, chartGender, report),
-    [report, chartGender],
+    () => buildPlus243InterpretationSections(report.pattern243Plus, report.egogram, chartGender),
+    [report.pattern243Plus, report.egogram, chartGender],
   );
-  const plus243SectionOrder = ['1', '2', '3', '4', '5', '6', '7'] as const;
+  const plus243SectionOrder = ['1', '2', '3', '4', '5', '6'] as const;
   const reportTabs = useMemo((): CounselorReportTab[] => {
     const tabs: CounselorReportTab[] = [
       {
@@ -1174,7 +1185,7 @@ export default function EgoOkCounselorReport({
             onTestGenderChange={onTestGenderChange}
             peakEgograms={peakEgograms}
             lowEgograms={lowEgograms}
-            formLabel={formLabel}
+            formDisplayLine={formDisplayLine}
             okBarData={okBarData}
             okLifeHeading={okLifeOverview.heading}
             okLifeBullets={okLifeOverview.bullets}
@@ -1216,7 +1227,7 @@ export default function EgoOkCounselorReport({
                 peakScales={peakEgograms}
                 patternCode={report.patternCode}
                 pattern243Plus={report.pattern243Plus}
-                formLabel={formLabel}
+                formDisplayLine={formDisplayLine}
                 missing={report.pattern243.missing}
               />
             }
@@ -1232,6 +1243,11 @@ export default function EgoOkCounselorReport({
                 </div>
               </div>
               <div className="order-1 space-y-3 xl:order-2">
+                {formDisplayLine && formDisplayLine !== '—' ? (
+                  <p className="rounded-lg bg-indigo-500/15 px-3 py-2 text-sm font-semibold leading-snug text-indigo-100 ring-1 ring-indigo-400/25 xl:hidden">
+                    {formDisplayLine}
+                  </p>
+                ) : null}
                 <EgogramEnergyInsightPanel
                   highScales={peakEgograms}
                   lowScales={lowEgograms}
@@ -1272,7 +1288,6 @@ export default function EgoOkCounselorReport({
               sections={plus243Sections.sections}
               sectionLabels={plus243Sections.sectionLabels}
             />
-            <EgoOkClinicalModulesPanel report={report} />
           </SectionCard>
         ),
       },
@@ -1371,7 +1386,7 @@ export default function EgoOkCounselorReport({
     chartGender,
     clientInfo,
     displayGenderLine,
-    formLabel,
+    formDisplayLine,
     innerMindPairs,
     localTestMode,
     lowEgograms,
