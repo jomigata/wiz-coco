@@ -44,12 +44,12 @@ const TONE_STYLES: Record<
   },
 };
 
-/** 상·하 스크롤 트랙 — 빨간 테두리, 배경 없음 */
+/** 상·하 스크롤 트랙 — 회색 테두리, 배경 없음 */
 const SCROLL_TRACK_UNIVERSAL = {
-  border: 'border-red-500/90',
-  borderActive: 'border-red-400',
-  glow: 'shadow-[0_0_12px_rgba(239,68,68,0.28)]',
-  glowActive: 'shadow-[0_0_18px_rgba(248,113,113,0.4)]',
+  border: 'border-slate-400/85',
+  borderActive: 'border-slate-300',
+  glow: 'shadow-[0_0_10px_rgba(100,116,139,0.22)]',
+  glowActive: 'shadow-[0_0_14px_rgba(148,163,184,0.32)]',
 };
 
 /** 상·하 트랙 — 화면보다 좁게 좌우 여백 */

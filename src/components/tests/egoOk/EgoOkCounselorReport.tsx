@@ -38,10 +38,6 @@ import {
   OK_BAR_DISPLAY_ORDER,
   OK_BAR_POLE_LABEL,
 } from '@/lib/egoOkOkLifePosition';
-import {
-  formatEgogramFormWithArchetype23,
-  resolveEgogramArchetype23Pattern,
-} from '@/lib/egoOkArchetype23';
 import { resolveEgogramFormLabel } from '@/lib/egoOkFormPattern';
 import EgoOkValiditySection from '@/components/tests/egoOk/EgoOkValiditySection';
 import { KTAA_GRAPH_ZONES, OK_LABELS, normalizeEgoOkGender } from '@/lib/egoOkScoring';
@@ -62,6 +58,7 @@ import EgoOkKtaaCompositeChart from '@/components/tests/egoOk/EgoOkKtaaComposite
 import EgoOkCounselorReportTabShell, {
   type CounselorReportTab,
 } from '@/components/tests/egoOk/EgoOkCounselorReportTabShell';
+import { egoOkReportSectionNumber } from '@/components/tests/egoOk/egoOkReportTabNav';
 import EgoOkReportExecutiveSummary from '@/components/tests/egoOk/EgoOkReportExecutiveSummary';
 import EgoOkEgogramPolarityPanel from '@/components/tests/egoOk/EgoOkEgogramPolarityPanel';
 import {
@@ -228,13 +225,13 @@ function EgogramRadarSummarySubtitle({
   peakScales,
   patternCode,
   pattern243Plus,
-  formDisplayLine,
+  formLabel,
   missing,
 }: {
   peakScales: EgoOkScaleScore[];
   patternCode: string;
   pattern243Plus: Pattern243Plus;
-  formDisplayLine: string;
+  formLabel: string;
   missing: boolean;
 }) {
   return (
@@ -249,9 +246,7 @@ function EgogramRadarSummarySubtitle({
         <Pattern243PlusCode plus={pattern243Plus} className="inline-flex align-middle" />
         <span className="text-slate-500"> (243+ 플러스)</span>
       </p>
-      {formDisplayLine && formDisplayLine !== '—' ? (
-        <p className="text-slate-300">{formDisplayLine}</p>
-      ) : null}
+      {formLabel && formLabel !== '—' ? <p className="text-slate-300">{formLabel}</p> : null}
       {missing ? <p className="text-amber-200/80">기준 보고서 문장 없음</p> : null}
     </div>
   );
@@ -1137,12 +1132,6 @@ export default function EgoOkCounselorReport({
     peakEgogram,
     report.pattern243.basicPattern,
   );
-  const archetype23 = resolveEgogramArchetype23Pattern(
-    report.egogram,
-    peakEgogram,
-    report.pattern243.basicPattern,
-  );
-  const formDisplayLine = formatEgogramFormWithArchetype23(formLabel, archetype23);
 
   const OK_BAR_U = '#6366f1';
   const OK_BAR_I = '#0d9488';
@@ -1185,7 +1174,7 @@ export default function EgoOkCounselorReport({
             onTestGenderChange={onTestGenderChange}
             peakEgograms={peakEgograms}
             lowEgograms={lowEgograms}
-            formDisplayLine={formDisplayLine}
+            formLabel={formLabel}
             okBarData={okBarData}
             okLifeHeading={okLifeOverview.heading}
             okLifeBullets={okLifeOverview.bullets}
@@ -1227,18 +1216,13 @@ export default function EgoOkCounselorReport({
                 peakScales={peakEgograms}
                 patternCode={report.patternCode}
                 pattern243Plus={report.pattern243Plus}
-                formDisplayLine={formDisplayLine}
+                formLabel={formLabel}
                 missing={report.pattern243.missing}
               />
             }
           >
             <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(18rem,0.9fr)] xl:items-start">
               <div className="order-2 flex w-full flex-col max-xl:static max-xl:min-h-0 max-xl:h-auto xl:order-1 xl:sticky xl:top-0 xl:z-10 xl:h-[calc(100svh-19.5rem)] xl:min-h-[24rem]">
-                {formDisplayLine && formDisplayLine !== '—' ? (
-                  <p className="mb-2 hidden text-sm font-semibold leading-snug text-indigo-100 xl:block">
-                    {formDisplayLine}
-                  </p>
-                ) : null}
                 <div className="h-full w-full min-h-[18rem] max-xl:min-h-[16rem] xl:min-h-0">
                   <EgogramFiveScaleRadarChart
                     data={radarData}
@@ -1248,11 +1232,6 @@ export default function EgoOkCounselorReport({
                 </div>
               </div>
               <div className="order-1 space-y-3 xl:order-2">
-                {formDisplayLine && formDisplayLine !== '—' ? (
-                  <p className="rounded-lg bg-indigo-500/15 px-3 py-2 text-sm font-semibold leading-snug text-indigo-100 ring-1 ring-indigo-400/25 xl:hidden">
-                    {formDisplayLine}
-                  </p>
-                ) : null}
                 <EgogramEnergyInsightPanel
                   highScales={peakEgograms}
                   lowScales={lowEgograms}
@@ -1386,12 +1365,15 @@ export default function EgoOkCounselorReport({
         ),
       },
     ];
-    return tabs;
+    return tabs.map((tab) => ({
+      ...tab,
+      sectionNo: egoOkReportSectionNumber(tab.id),
+    }));
   }, [
     chartGender,
     clientInfo,
     displayGenderLine,
-    formDisplayLine,
+    formLabel,
     innerMindPairs,
     localTestMode,
     lowEgograms,

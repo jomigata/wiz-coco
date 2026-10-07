@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   EGO_OK_REPORT_PANEL_OUTER,
   EGO_OK_REPORT_PANEL_SCROLL,
@@ -10,6 +10,10 @@ import {
   EGO_OK_REPORT_TAB_PREVIEW,
 } from '@/components/tests/egoOk/egoOkReportChrome';
 import EdgeScrollHintOverlay from '@/components/tests/egoOk/EdgeScrollHintOverlay';
+import {
+  EgoOkReportTabNavContext,
+  formatEgoOkSectionTitle,
+} from '@/components/tests/egoOk/egoOkReportTabNav';
 import { useMouseEdgeAutoScroll, useScrollEdgeHints } from '@/lib/useMouseEdgeAutoScroll';
 
 export type CounselorReportTab = {
@@ -17,6 +21,8 @@ export type CounselorReportTab = {
   label: string;
   short?: string;
   description?: string;
+  /** cover(종합 요약) 제외 일련번호 */
+  sectionNo?: number;
   panel: ReactNode;
 };
 
@@ -87,7 +93,10 @@ export default function EgoOkCounselorReportTabShell({
 
   const panelHeight = `calc(100dvh - ${navBottomPx}px - 0.5rem)`;
 
+  const tabNav = useMemo(() => ({ selectTab }), [selectTab]);
+
   return (
+    <EgoOkReportTabNavContext.Provider value={tabNav}>
     <div className="w-full">
       <nav
         ref={navRef}
@@ -129,7 +138,7 @@ export default function EgoOkCounselorReportTabShell({
                     isActive ? 'text-white' : isPreview ? 'text-white/95' : 'text-slate-500 group-hover:text-slate-300'
                   }`}
                 >
-                  {tab.label}
+                  {formatEgoOkSectionTitle(tab.sectionNo, tab.label)}
                 </span>
               </button>
             );
@@ -159,5 +168,6 @@ export default function EgoOkCounselorReportTabShell({
 
       <div className="pointer-events-none invisible" style={{ height: panelHeight }} aria-hidden />
     </div>
+    </EgoOkReportTabNavContext.Provider>
   );
 }

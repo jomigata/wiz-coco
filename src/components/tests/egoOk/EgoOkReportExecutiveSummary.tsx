@@ -1,6 +1,12 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import type { KeyboardEvent, ReactNode } from 'react';
+import {
+  egoOkReportSectionNumber,
+  formatEgoOkSectionTitle,
+  useEgoOkReportTabNav,
+  type EgoOkReportTabId,
+} from '@/components/tests/egoOk/egoOkReportTabNav';
 import type {
   EgoOkGender,
   EgoOkReport,
@@ -47,26 +53,44 @@ type OkBarRow = {
 
 function SummaryShell({
   title,
-  tabHint,
+  targetTabId,
   children,
   className,
 }: {
   title: string;
-  tabHint: string;
+  targetTabId: EgoOkReportTabId;
   children: ReactNode;
   className?: string;
 }) {
+  const nav = useEgoOkReportTabNav();
+  const sectionNo = egoOkReportSectionNumber(targetTabId);
+  const displayTitle = formatEgoOkSectionTitle(sectionNo, title);
+
+  const goToTab = () => nav?.selectTab(targetTabId);
+
+  const onKeyDown = (e: KeyboardEvent<HTMLElement>) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      goToTab();
+    }
+  };
+
   return (
     <article
-      className={`flex flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-gradient-to-br from-white via-white to-slate-50/90 p-4 shadow-[0_8px_30px_rgba(15,23,42,0.06)] ring-1 ring-slate-100 ${className ?? ''}`}
+      role="button"
+      tabIndex={0}
+      onClick={goToTab}
+      onKeyDown={onKeyDown}
+      title={`${displayTitle} — 상세 탭으로 이동`}
+      className={`flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-gradient-to-br from-white via-white to-slate-50/90 p-4 shadow-[0_8px_30px_rgba(15,23,42,0.06)] ring-1 ring-slate-100 transition-[box-shadow,ring-color,border-color] hover:border-indigo-200/90 hover:ring-2 hover:ring-indigo-200/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 ${className ?? ''}`}
     >
       <header className="mb-3 flex flex-wrap items-baseline justify-between gap-2 border-b border-slate-100 pb-2">
-        <h3 className="text-sm font-bold tracking-tight text-slate-800">{title}</h3>
+        <h3 className="text-sm font-bold tracking-tight text-slate-800">{displayTitle}</h3>
         <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-semibold text-indigo-600 ring-1 ring-indigo-100">
-          {tabHint}
+          탭 이동 →
         </span>
       </header>
-      {children}
+      <div className="pointer-events-none min-h-0 flex-1">{children}</div>
     </article>
   );
 }
@@ -396,7 +420,7 @@ export default function EgoOkReportExecutiveSummary({
   onTestGenderChange,
   peakEgograms,
   lowEgograms,
-  formDisplayLine,
+  formLabel,
   okBarData,
   okLifeHeading,
   okLifeBullets,
@@ -412,7 +436,7 @@ export default function EgoOkReportExecutiveSummary({
   onTestGenderChange?: (gender: EgoOkGender) => void;
   peakEgograms: EgoOkScaleScore[];
   lowEgograms: EgoOkScaleScore[];
-  formDisplayLine: string;
+  formLabel: string;
   okBarData: OkBarRow[];
   okLifeHeading: string;
   okLifeBullets: string[];
@@ -470,7 +494,7 @@ export default function EgoOkReportExecutiveSummary({
       </header>
 
       <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
-        <SummaryShell title="타당도" tabHint="타당도 탭">
+        <SummaryShell title="타당도" targetTabId="validity">
           <ValidityTrafficBadge overall={report.validity?.overall} />
           <p className="mt-1.5 text-sm font-semibold leading-snug text-slate-800">
             {report.validity?.overallTitle ?? '—'}
@@ -483,7 +507,7 @@ export default function EgoOkReportExecutiveSummary({
           {report.validity ? <ValiditySummaryDonuts validity={report.validity} /> : null}
         </SummaryShell>
 
-        <SummaryShell title="KTAA 종합 그래프" tabHint="KTAA 탭">
+        <SummaryShell title="KTAA 종합 그래프" targetTabId="ktaa">
           <div className="-mx-1 overflow-hidden">
             <EgoOkKtaaCompositeChart
               columns={report.compositeChart}
@@ -493,7 +517,7 @@ export default function EgoOkReportExecutiveSummary({
           </div>
         </SummaryShell>
 
-        <SummaryShell title="이고그램" tabHint="이고 탭">
+        <SummaryShell title="이고그램" targetTabId="egogram">
           <MiniEgogramRadar egogram={report.egogram} peakIds={peakIds} />
           <p className="text-xs text-slate-600">
             <span className="font-semibold text-pink-600">최고</span>{' '}
@@ -503,14 +527,12 @@ export default function EgoOkReportExecutiveSummary({
             <span className="font-semibold text-slate-600">최저</span>{' '}
             {lowEgograms.map((s) => formatEgogramEnergyHeadline(s)).join(' · ')}
           </p>
-          {formDisplayLine && formDisplayLine !== '—' ? (
-            <p className="mt-2 rounded-lg bg-indigo-50/80 px-2 py-1 text-[11px] text-indigo-900">
-              {formDisplayLine}
-            </p>
+          {formLabel && formLabel !== '—' ? (
+            <p className="mt-2 rounded-lg bg-indigo-50/80 px-2 py-1 text-[11px] text-indigo-900">{formLabel}</p>
           ) : null}
         </SummaryShell>
 
-        <SummaryShell title="243+ Plus 해석" tabHint="243+ 탭" className="lg:col-span-2 xl:col-span-1">
+        <SummaryShell title="243+ Plus 해석" targetTabId="plus243" className="lg:col-span-2 xl:col-span-1">
           <p className="text-xs leading-relaxed text-slate-600">{firstParagraph(plus243Section6)}</p>
           <ul className="mt-3 space-y-1">
             {report.egogram.map((s) => (
@@ -524,7 +546,7 @@ export default function EgoOkReportExecutiveSummary({
           </ul>
         </SummaryShell>
 
-        <SummaryShell title="자율치료 · 대책" tabHint="대책 탭">
+        <SummaryShell title="자율치료 · 대책" targetTabId="self-help">
           <p className="text-xs leading-relaxed text-slate-600">
             CP↔NP · FC↔AC 관계와 성인(A) 조율을 중심으로 상담합니다. 아래는 핵심 한 줄 요약입니다.
           </p>
@@ -535,7 +557,7 @@ export default function EgoOkReportExecutiveSummary({
           </ul>
         </SummaryShell>
 
-        <SummaryShell title="오케이그램 · 인생태도" tabHint="오케이 탭">
+        <SummaryShell title="오케이그램 · 인생태도" targetTabId="ok-life">
           <MiniOkBars rows={okBarData} kind={report.lifePosition.kind} />
           <p className="mt-2 text-xs font-semibold text-slate-700">{okLifeHeading}</p>
           <ul className="mt-1 list-inside list-disc space-y-1 text-[11px] text-slate-600">
@@ -545,14 +567,14 @@ export default function EgoOkReportExecutiveSummary({
           </ul>
         </SummaryShell>
 
-        <SummaryShell title="나의 속마음" tabHint="속마음 탭">
+        <SummaryShell title="나의 속마음" targetTabId="inner">
           <MiniInnerMindStrip pairs={innerMindPairs} />
           <p className="mt-2 text-[11px] leading-relaxed text-slate-600">
             겉(이고)과 속(오케이) 차이 |4| 이하면 잘 맞음 · 5 이상이면 해당 탭에서 상세 해석
           </p>
         </SummaryShell>
 
-        <SummaryShell title="이고그램-부정성" tabHint="부정성 탭">
+        <SummaryShell title="이고그램-부정성" targetTabId="polarity">
           <MiniPolarityStrip egogram={report.egogram} />
           <p className="mt-2 text-[11px] text-slate-600">
             {polarityAlert === 0
@@ -563,7 +585,7 @@ export default function EgoOkReportExecutiveSummary({
       </div>
 
       <p className="text-center text-[10px] text-slate-500">
-        성별 기준 그래프: {chartGender ?? '미입력'} · 상단 탭에서 전체 보고서로 이동
+        성별 기준 그래프: {chartGender ?? '미입력'} · 블록을 클릭하면 해당 번호 탭으로 이동
       </p>
     </div>
   );
