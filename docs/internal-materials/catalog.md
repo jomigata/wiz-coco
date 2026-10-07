@@ -166,3 +166,9 @@
 | 원본 | 정리 위치 | 처리 |
 |---|---|---|
 | 결과 견본 46개, 243 수정 엑셀, 그림 파일 | [hakjisa-samples/](./hakjisa-samples/) | 참조. 검사 이름과 결과지 목차만. 243 문장·견본 점수·이름·연락처는 두지 않음. 빈 41개 코드 유지 |
+
+## 2026-10-07 — TA 30 임상·상담 모듈 · 100영역 참고
+
+| 정리 | 위치 | 처리 |
+|---|---|---|
+| 30가지 임상·상담 보고서 진단 모듈, Quick Tip, 100영역 요약 | [ta-clinical-modules/](./ta-clinical-modules/) | 참조. WizCoCo **96문항** 기준. 앱 카탈로그: `src/lib/egoOkClinicalModulesCatalog.ts` |

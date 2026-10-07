@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "title": "TA Ego-OK 30 clinical counseling modules",
+  "canonicalTypeScript": "src/lib/egoOkClinicalModulesCatalog.ts",
+  "itemBank": {
+    "egogramPerScale": 10,
+    "egogramTotal": 50,
+    "okPerScale": 10,
+    "okTotal": 40,
+    "validity": 6,
+    "total": 96
+  },
+  "accuracyDisclaimer": "Percent values are reference conversions of Cronbach alpha and field behavior alignment; not a clinical diagnosis.",
+  "quickTip": {
+    "screening": "Vitality (3) → Core profile (1) + Life position (2) → Drivers (25–27)",
+    "resistance": "High Yes-But (22) or ulterior (15) → prioritize Adult (A) contract work"
+  },
+  "modules": "See CLINICAL_MODULES_30 in src/lib/egoOkClinicalModulesCatalog.ts (30 entries with weights, pros, cons, itemNote)."
+}

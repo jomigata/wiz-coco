@@ -1,4 +1,5 @@
-import type { EgoOkScaleScore } from '@/lib/egoOkScoring';
+import type { EgoOkReport, EgoOkScaleScore } from '@/lib/egoOkScoring';
+import { buildClinicalModulesOverviewSection } from '@/lib/egoOkClinicalModules';
 import { normalizeEgoOkGender } from '@/lib/egoOkScoring';
 import {
   formatCurrentStageLeadIn,
@@ -19,6 +20,7 @@ const SECTION_LABELS: Record<string, string> = {
   '4': 'FC (자유로운 아이)',
   '5': 'AC (순응하는 아이)',
   '6': '9단계 기준 종합 평가',
+  '7': '임상·상담 진단 모듈 (30)',
 };
 
 function pickTiedExtremeScales(scales: EgoOkScaleScore[], mode: 'max' | 'min'): EgoOkScaleScore[] {
@@ -124,6 +126,10 @@ export function buildPlus243InterpretationSections(
   pattern243Plus: Pattern243Plus,
   egogram: EgoOkScaleScore[],
   genderInput: string | undefined,
+  reportForClinicalModules?: Pick<
+    EgoOkReport,
+    'egogram' | 'okgram' | 'lifePosition' | 'pattern243Plus' | 'patternCode'
+  >,
 ): { sectionLabels: Record<string, string>; sections: Record<string, string> } {
   void normalizeEgoOkGender(genderInput);
   void pattern243Plus;
@@ -138,6 +144,9 @@ export function buildPlus243InterpretationSections(
     sections[mapScaleToSection[id]] = scaleBlock(s, stage);
   }
   sections['6'] = comprehensive(egogram);
+  if (reportForClinicalModules) {
+    sections['7'] = buildClinicalModulesOverviewSection(reportForClinicalModules as EgoOkReport);
+  }
 
   return { sectionLabels: SECTION_LABELS, sections };
 }

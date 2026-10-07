@@ -32,6 +32,7 @@ import {
   type InnerMindPair,
 } from '@/lib/egoOkInnerMind';
 import { buildPlus243InterpretationSections } from '@/lib/egoOkPlus243Interpretation';
+import { EgoOkClinicalModulesPanel } from '@/components/tests/egoOk/EgoOkClinicalModulesPanel';
 import { EgoOkSelfHelpTherapyPanel } from '@/components/tests/egoOk/EgoOkSelfHelpTherapyPanel';
 import {
   buildOkLifeOverviewBlock,
@@ -1151,10 +1152,10 @@ export default function EgoOkCounselorReport({
     [report.egogram, report.okgram],
   );
   const plus243Sections = useMemo(
-    () => buildPlus243InterpretationSections(report.pattern243Plus, report.egogram, chartGender),
-    [report.pattern243Plus, report.egogram, chartGender],
+    () => buildPlus243InterpretationSections(report.pattern243Plus, report.egogram, chartGender, report),
+    [report, chartGender],
   );
-  const plus243SectionOrder = ['1', '2', '3', '4', '5', '6'] as const;
+  const plus243SectionOrder = ['1', '2', '3', '4', '5', '6', '7'] as const;
   const reportTabs = useMemo((): CounselorReportTab[] => {
     const tabs: CounselorReportTab[] = [
       {
@@ -1271,6 +1272,7 @@ export default function EgoOkCounselorReport({
               sections={plus243Sections.sections}
               sectionLabels={plus243Sections.sectionLabels}
             />
+            <EgoOkClinicalModulesPanel report={report} />
           </SectionCard>
         ),
       },
