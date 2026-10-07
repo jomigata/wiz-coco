@@ -15,8 +15,6 @@ import type {
   LifePositionKind,
 } from '@/lib/egoOkScoring';
 import EgoOkKtaaCompositeChart from '@/components/tests/egoOk/EgoOkKtaaCompositeChart';
-import EgoOkReportScaleBreakdownSummary from '@/components/tests/egoOk/EgoOkReportScaleBreakdownSummary';
-import EgoOkReportTabTopicCards from '@/components/tests/egoOk/EgoOkReportTabTopicCards';
 import {
   EGO_SCALE_PATTERN_ORDER,
   plus243StageDigitColor,
@@ -29,6 +27,7 @@ import { buildEgogramPolarityRows } from '@/lib/egoOkEgogramPolarity';
 import { buildCounselorPairAndAdultGuidance } from '@/lib/egogramManualNineStage';
 import { INNER_MIND_ALIGNED_MAX, type InnerMindPair } from '@/lib/egoOkInnerMind';
 import { formatEgogramEnergyHeadline } from '@/lib/egogramEnergyStageComments';
+import EgoOkReportCstBridgeSection from '@/components/tests/egoOk/EgoOkReportCstBridgeSection';
 import type { ClientInfo } from '@/components/tests/MbtiProClientInfo';
 import { egoOkGenderToLabel } from '@/lib/egoOkTestGender';
 import type { EgoOkValidityProfile, ValidityScaleStatus } from '@/lib/egoOkValidity';
@@ -496,23 +495,6 @@ export default function EgoOkReportExecutiveSummary({
       </header>
 
       <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
-        <SummaryShell title="기본정보 · 종합 점수" targetTabId="basic">
-          <p className="text-xs text-slate-600">
-            성명 · 243 · 이고 5척도 · 오케이 U±/I± 종합 표
-          </p>
-          <p className="mt-1 font-mono text-sm font-bold text-indigo-700">{report.patternCode}</p>
-        </SummaryShell>
-
-        <SummaryShell title="90문항 척도별 분석" targetTabId="scale-90" className="lg:col-span-2 xl:col-span-2">
-          <EgoOkReportScaleBreakdownSummary report={report} />
-        </SummaryShell>
-
-        <SummaryShell title="전체적인 성격특성" targetTabId="trait-overview">
-          <p className="line-clamp-3 text-xs leading-relaxed text-slate-600">
-            {formLabel && formLabel !== '—' ? formLabel : report.lifePosition.summary}
-          </p>
-        </SummaryShell>
-
         <SummaryShell title="타당도" targetTabId="validity">
           <ValidityTrafficBadge overall={report.validity?.overall} />
           <p className="mt-1.5 text-sm font-semibold leading-snug text-slate-800">
@@ -603,13 +585,7 @@ export default function EgoOkReportExecutiveSummary({
         </SummaryShell>
       </div>
 
-      <EgoOkReportTabTopicCards
-        report={report}
-        peakEgograms={peakEgograms}
-        lowEgograms={lowEgograms}
-        innerMindPairs={innerMindPairs}
-        formLabel={formLabel}
-      />
+      <EgoOkReportCstBridgeSection report={report} />
 
       <p className="text-center text-[10px] text-slate-500">
         성별 기준 그래프: {chartGender ?? '미입력'} · 블록을 클릭하면 해당 번호 탭으로 이동

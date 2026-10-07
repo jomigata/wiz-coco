@@ -60,10 +60,8 @@ import EgoOkCounselorReportTabShell, {
 } from '@/components/tests/egoOk/EgoOkCounselorReportTabShell';
 import { egoOkReportSectionNumber } from '@/components/tests/egoOk/egoOkReportTabNav';
 import EgoOkReportExecutiveSummary from '@/components/tests/egoOk/EgoOkReportExecutiveSummary';
-import EgoOkReportBasicInfoSection from '@/components/tests/egoOk/EgoOkReportBasicInfoSection';
-import EgoOkReportTraitOverviewSection from '@/components/tests/egoOk/EgoOkReportTraitOverviewSection';
 import EgoOkReportScaleBreakdownSection from '@/components/tests/egoOk/EgoOkReportScaleBreakdownSection';
-import EgoOkReportLegacyPlaceholderSection from '@/components/tests/egoOk/EgoOkReportLegacyPlaceholderSection';
+import EgoOkReportTraitOverviewSection from '@/components/tests/egoOk/EgoOkReportTraitOverviewSection';
 import EgoOkEgogramPolarityPanel from '@/components/tests/egoOk/EgoOkEgogramPolarityPanel';
 import {
   ReportInsightBlock,
@@ -1188,32 +1186,6 @@ export default function EgoOkCounselorReport({
         ),
       },
       {
-        id: 'basic',
-        label: '기본정보 · 종합 점수',
-        short: '기본',
-        description: '성명 · 243 · 이고/오케이 종합 표',
-        panel: (
-          <SectionCard compact title="기본정보 · 종합 결과">
-            <EgoOkReportBasicInfoSection
-              report={report}
-              clientInfo={clientInfo}
-              displayGenderLine={displayGenderLine}
-            />
-          </SectionCard>
-        ),
-      },
-      {
-        id: 'scale-90',
-        label: '90문항 척도별 분석',
-        short: '90문항',
-        description: '14척도 · 점수 · % · 문항 형태(CP·긍, U+ …)',
-        panel: (
-          <SectionCard compact title="90문항 척도별 분석">
-            <EgoOkReportScaleBreakdownSection report={report} />
-          </SectionCard>
-        ),
-      },
-      {
         id: 'validity',
         label: '타당도',
         short: '타당도',
@@ -1234,24 +1206,29 @@ export default function EgoOkCounselorReport({
         ),
       },
       {
+        id: 'scale-90',
+        label: '90문항 척도별 분석',
+        short: '90문항',
+        description: '대·중·소분류 · CP~I± 점수 · 문항 번호',
+        panel: <EgoOkReportScaleBreakdownSection report={report} />,
+      },
+      {
         id: 'trait-overview',
         label: '전체적인 성격특성',
-        short: '성격특성',
-        description: '243 · 형태 · 에너지 · 인생태도 요약',
+        short: '성격',
+        description: '243 패턴 · 에너지 · CST 2차원 참고',
         panel: (
-          <SectionCard compact title="개인의 전체적인 성격특성">
-            <EgoOkReportTraitOverviewSection
-              report={report}
-              peakEgograms={peakEgograms}
-              lowEgograms={lowEgograms}
-              formLabel={formLabel}
-            />
-          </SectionCard>
+          <EgoOkReportTraitOverviewSection
+            report={report}
+            peakEgograms={peakEgograms}
+            lowEgograms={lowEgograms}
+            formLabel={formLabel}
+          />
         ),
       },
       {
         id: 'egogram',
-        label: '이고그램 · 243 유형',
+        label: '이고그램',
         short: '이고',
         panel: (
           <SectionCard
@@ -1408,32 +1385,6 @@ export default function EgoOkCounselorReport({
           <SectionCard compact title="이고그램-부정성" subtitle="5척도 긍정·부정 합계 · 부정 40% 기준 · 6단계 구간 해석">
             <EgoOkEgogramPolarityPanel egogram={report.egogram} />
           </SectionCard>
-        ),
-      },
-      {
-        id: 'career',
-        label: '직업',
-        short: '직업',
-        description: '학지사 결과지 · 직업 항목',
-        panel: (
-          <EgoOkReportLegacyPlaceholderSection
-            legacyNo={5}
-            title="직업"
-            description="학지사 HTML 결과지 「직업」 항목입니다. 내담자 직업·적성 연계 해석은 추후 243 패턴·KTAA 데이터와 연동할 예정입니다."
-          />
-        ),
-      },
-      {
-        id: 'marriage',
-        label: '결혼생활',
-        short: '결혼',
-        description: '학지사 결과지 · 결혼생활 항목',
-        panel: (
-          <EgoOkReportLegacyPlaceholderSection
-            legacyNo={6}
-            title="결혼생활"
-            description="학지사 HTML 결과지 「결혼생활」 항목입니다. 오케이그램·관계 태도와 연계한 서술형 해석은 추후 제공 예정입니다."
-          />
         ),
       },
     ];

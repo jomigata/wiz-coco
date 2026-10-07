@@ -13,22 +13,18 @@ export function useEgoOkReportTabNav(): EgoOkReportTabNav | null {
 }
 
 /** cover(종합 요약) 제외 — 탭 순서와 동일한 일련번호 */
-/** 학지사 결과지(첨부) 흐름 + WizCoCo 해석 탭 */
 export const EGO_OK_REPORT_TAB_IDS = [
   'cover',
-  'basic',
-  'scale-90',
   'validity',
   'ktaa',
+  'scale-90',
   'trait-overview',
   'egogram',
   'plus243',
+  'self-help',
   'ok-life',
   'inner',
   'polarity',
-  'self-help',
-  'career',
-  'marriage',
 ] as const;
 
 export type EgoOkReportTabId = (typeof EGO_OK_REPORT_TAB_IDS)[number];
