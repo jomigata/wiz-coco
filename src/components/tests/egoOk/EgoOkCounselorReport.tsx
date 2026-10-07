@@ -62,6 +62,11 @@ import { egoOkReportSectionNumber } from '@/components/tests/egoOk/egoOkReportTa
 import EgoOkReportExecutiveSummary from '@/components/tests/egoOk/EgoOkReportExecutiveSummary';
 import EgoOkEgogramPolarityPanel from '@/components/tests/egoOk/EgoOkEgogramPolarityPanel';
 import {
+  EgoOkStrokeReferencePanel,
+  EgoOkTaOverviewChaptersPanel,
+  EgoOkTimeStructuringReferencePanel,
+} from '@/components/tests/egoOk/EgoOkTaReferencePanels';
+import {
   ReportInsightBlock,
   type ReportInsightTone,
 } from '@/components/tests/egoOk/egoOkReportInsight';
@@ -1361,6 +1366,43 @@ export default function EgoOkCounselorReport({
         panel: (
           <SectionCard compact title="이고그램-부정성" subtitle="5척도 긍정·부정 합계 · 부정 40% 기준 · 6단계 구간 해석">
             <EgoOkEgogramPolarityPanel egogram={report.egogram} />
+          </SectionCard>
+        ),
+      },
+      {
+        id: 'stroke',
+        label: '스트로크',
+        short: '스트로크',
+        description: '인정자극 이론 · KTAA 25문항은 별도 검사',
+        panel: (
+          <SectionCard compact title="스트로크 (인정자극)" subtitle="교류분석 요약정리 4부 · 채점과 무관한 참고">
+            <EgoOkStrokeReferencePanel />
+          </SectionCard>
+        ),
+      },
+      {
+        id: 'time-structuring',
+        label: '시간의 구조화',
+        short: '시간',
+        description: '6척도 이론 · 60문항 검사는 별도',
+        panel: (
+          <SectionCard
+            compact
+            title="시간의 구조화"
+            subtitle="폐쇄·의식·잡담·활동·게임·친교 — 60문항 배정은 time-structuring 기준"
+          >
+            <EgoOkTimeStructuringReferencePanel />
+          </SectionCard>
+        ),
+      },
+      {
+        id: 'ta-overview',
+        label: 'TA 요약 (1~29장)',
+        short: 'TA요약',
+        description: '교류분석 요약정리.xls 장별 개요',
+        panel: (
+          <SectionCard compact title="교류분석 요약정리" subtitle="제1~29장 · reference">
+            <EgoOkTaOverviewChaptersPanel />
           </SectionCard>
         ),
       },

@@ -23,6 +23,8 @@
 
 원문 추출: [source-outline.txt](./source-outline.txt). 앞 숫자는 엑셀 행 번호다.
 
+종합 요약·TA 참고 탭용 장 제목(1~29): [chapter-titles.json](./chapter-titles.json). xls에 `제N장`으로 있는 19·21·22·23·29만 explicit 표기다.
+
 ## 구성
 
 | 부분 | 내용 |

@@ -73,10 +73,25 @@ export default function EgoOkCounselorReportTabShell({
   const activePanel =
     tabs.find((t) => t.id === displayId)?.panel ?? tabs.find((t) => t.id === activeId)?.panel;
 
-  const selectTab = useCallback((id: string) => {
+  const pendingAnchorRef = useRef<string | null>(null);
+
+  const selectTab = useCallback((id: string, anchor?: string) => {
+    pendingAnchorRef.current = anchor ?? null;
     setActiveId(id);
     setPreviewId(null);
   }, []);
+
+  useLayoutEffect(() => {
+    const anchor = pendingAnchorRef.current;
+    if (!anchor) return;
+    pendingAnchorRef.current = null;
+    const root = scrollRef.current;
+    if (!root) return;
+    const target = root.querySelector(`#${CSS.escape(anchor)}`);
+    if (target instanceof HTMLElement) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [activeId, activePanel]);
 
   const onTabEnter = useCallback((id: string) => {
     setPreviewId(id);
