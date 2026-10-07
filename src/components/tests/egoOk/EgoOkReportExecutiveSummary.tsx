@@ -31,6 +31,11 @@ import type { ClientInfo } from '@/components/tests/MbtiProClientInfo';
 import { egoOkGenderToLabel } from '@/lib/egoOkTestGender';
 import type { EgoOkValidityProfile, ValidityScaleStatus } from '@/lib/egoOkValidity';
 import {
+  buildExecutiveExtraSummaries,
+  type ExecutiveExtraAudience,
+  type ExecutiveExtraSummary,
+} from '@/lib/egoOkExecutiveExtraSummaries';
+import {
   Cell,
   Pie,
   PieChart,
@@ -50,6 +55,60 @@ type OkBarRow = {
   fill: string;
   poleTag: string;
 };
+
+const AUDIENCE_LABEL: Record<ExecutiveExtraAudience, string> = {
+  counselor: '상담사',
+  client: '내담자',
+  both: '공통',
+};
+
+function ExtraInsightShell({ item }: { item: ExecutiveExtraSummary }) {
+  const nav = useEgoOkReportTabNav();
+  const tabId = item.relatedTabId as EgoOkReportTabId | undefined;
+  const canNav = tabId && nav;
+
+  const go = () => {
+    if (tabId && nav) nav.selectTab(tabId);
+  };
+
+  const onKeyDown = (e: KeyboardEvent<HTMLElement>) => {
+    if (!canNav) return;
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      go();
+    }
+  };
+
+  return (
+    <article
+      role={canNav ? 'button' : undefined}
+      tabIndex={canNav ? 0 : undefined}
+      onClick={canNav ? go : undefined}
+      onKeyDown={onKeyDown}
+      className={`flex flex-col rounded-xl border border-slate-200/80 bg-white/90 p-3 shadow-sm ring-1 ring-slate-100 ${
+        canNav
+          ? 'cursor-pointer transition hover:border-violet-200 hover:ring-2 hover:ring-violet-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500'
+          : ''
+      }`}
+    >
+      <header className="mb-2 flex flex-wrap items-center gap-2">
+        <h4 className="text-[13px] font-bold text-slate-800">{item.title}</h4>
+        <span
+          className={`rounded-full px-2 py-px text-[9px] font-semibold ring-1 ${
+            item.audience === 'counselor'
+              ? 'bg-violet-50 text-violet-700 ring-violet-100'
+              : item.audience === 'client'
+                ? 'bg-emerald-50 text-emerald-800 ring-emerald-100'
+                : 'bg-sky-50 text-sky-800 ring-sky-100'
+          }`}
+        >
+          {AUDIENCE_LABEL[item.audience]}
+        </span>
+      </header>
+      <p className="text-[11px] leading-relaxed text-slate-600">{item.body}</p>
+    </article>
+  );
+}
 
 function SummaryShell({
   title,
@@ -447,6 +506,13 @@ export default function EgoOkReportExecutiveSummary({
   const pairGuidance = buildCounselorPairAndAdultGuidance(report.egogram);
   const polarityRows = buildEgogramPolarityRows(report.egogram);
   const polarityAlert = polarityRows.filter((r) => r.band !== 'within40').length;
+  const extraSummaries = buildExecutiveExtraSummaries(
+    report,
+    peakEgograms,
+    lowEgograms,
+    innerMindPairs,
+    formLabel,
+  );
 
   return (
     <div className="flex flex-col gap-4 rounded-2xl bg-gradient-to-b from-slate-50/95 to-indigo-50/40 p-3 ring-1 ring-white/80 sm:p-4">
@@ -583,6 +649,19 @@ export default function EgoOkReportExecutiveSummary({
           </p>
         </SummaryShell>
       </div>
+
+      <section className="rounded-2xl border border-violet-100/80 bg-white/70 p-4 ring-1 ring-violet-50">
+        <h3 className="text-sm font-bold text-slate-900">추가 인사이트 (10)</h3>
+        <p className="mt-1 text-[11px] leading-relaxed text-slate-600">
+          내담자·상담사가 면담 전후에 참고할 수 있는 짧은 요약입니다. 카드를 클릭하면 관련 탭으로 이동할 수
+          있습니다.
+        </p>
+        <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+          {extraSummaries.map((item) => (
+            <ExtraInsightShell key={item.id} item={item} />
+          ))}
+        </div>
+      </section>
 
       <p className="text-center text-[10px] text-slate-500">
         성별 기준 그래프: {chartGender ?? '미입력'} · 블록을 클릭하면 해당 번호 탭으로 이동
