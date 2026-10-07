@@ -193,12 +193,17 @@ export const EGO_OK_TAB_TO_LEGACY_AND_SCALES: {
   majorGroup: string;
 }[] = [
   { tabId: 'cover', tabTitle: '종합 요약', legacySections: ['표지(앞)', '표지(뒤)'], majorGroup: '개요' },
+  { tabId: 'basic', tabTitle: '기본정보 · 종합 점수', legacySections: ['표지(앞)'], majorGroup: '기본·종합표' },
+  { tabId: 'scale-90', tabTitle: '90문항 척도별 분석', legacySections: ['(90문항 산출 척도)'], majorGroup: '90문항' },
   { tabId: 'validity', tabTitle: '타당도', legacySections: ['(검사 반응 — 96문항 중 6)'], majorGroup: '검사 반응 품질' },
   { tabId: 'ktaa', tabTitle: 'KTAA 종합 그래프', legacySections: ['종합적/개별적인 성격진단결과'], majorGroup: '통합 그래프' },
-  { tabId: 'egogram', tabTitle: '이고그램', legacySections: ['243 이고그램 유형', '개인의 전체적인 성격특성'], majorGroup: '이고그램 50문항' },
+  { tabId: 'trait-overview', tabTitle: '전체적인 성격특성', legacySections: ['개인의 전체적인 성격특성'], majorGroup: '성격 요약' },
+  { tabId: 'egogram', tabTitle: '이고그램 · 243 유형', legacySections: ['243 이고그램 유형'], majorGroup: '이고그램 50문항' },
   { tabId: 'plus243', tabTitle: '243+ Plus 해석', legacySections: ['243 이고그램 유형', '종합적/개별적인 성격진단결과'], majorGroup: '243+ 9단계' },
-  { tabId: 'self-help', tabTitle: '자율치료 및 대책', legacySections: ['개선방안'], majorGroup: '상담·자율치료' },
   { tabId: 'ok-life', tabTitle: '오케이그램 · 인생태도', legacySections: ['기본적인생태도'], majorGroup: '오케이그램 40문항' },
   { tabId: 'inner', tabTitle: '나의 속마음', legacySections: ['겉마음과 속마음의 비교'], majorGroup: '겉·속 마음' },
   { tabId: 'polarity', tabTitle: '이고그램-부정성', legacySections: ['부정성분석(CP~AC)'], majorGroup: '이고 부정성 비율' },
+  { tabId: 'self-help', tabTitle: '자율치료 및 대책', legacySections: ['개선방안'], majorGroup: '상담·자율치료' },
+  { tabId: 'career', tabTitle: '직업', legacySections: ['직업'], majorGroup: '생활 적용' },
+  { tabId: 'marriage', tabTitle: '결혼생활', legacySections: ['결혼생활'], majorGroup: '생활 적용' },
 ];
