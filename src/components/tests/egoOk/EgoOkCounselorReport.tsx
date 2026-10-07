@@ -1234,6 +1234,11 @@ export default function EgoOkCounselorReport({
           >
             <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(18rem,0.9fr)] xl:items-start">
               <div className="order-2 flex w-full flex-col max-xl:static max-xl:min-h-0 max-xl:h-auto xl:order-1 xl:sticky xl:top-0 xl:z-10 xl:h-[calc(100svh-19.5rem)] xl:min-h-[24rem]">
+                {formDisplayLine && formDisplayLine !== '—' ? (
+                  <p className="mb-2 hidden text-sm font-semibold leading-snug text-indigo-100 xl:block">
+                    {formDisplayLine}
+                  </p>
+                ) : null}
                 <div className="h-full w-full min-h-[18rem] max-xl:min-h-[16rem] xl:min-h-0">
                   <EgogramFiveScaleRadarChart
                     data={radarData}
