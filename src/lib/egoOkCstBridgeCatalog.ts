@@ -15,6 +15,10 @@ export type CstMiddleDef = {
   kind: CstMiddleKind;
   /** kind=scale-map: 이고-오케이 90문항 척도 */
   scaleTypes?: EgoOkPersonalityScaleType[];
+  /** 원래 검사 하위척도 권장 문항 수(적합도·충분성 산출) */
+  targetItemCount?: number;
+  /** scaleType별 내용 적합도 0~1 */
+  contentFit?: Partial<Record<EgoOkPersonalityScaleType, number>>;
   /** kind=composite-refs: 다른 중분류 id 평균 */
   refMiddleIds?: string[];
   /** kind=derived: 계산 키 */
@@ -40,13 +44,19 @@ function scaleMiddle(
   labelEn: string,
   scaleTypes: EgoOkPersonalityScaleType[],
   minorLabels: [string, string, string],
+  targetItemCount = 5,
+  contentFit = 0.76,
 ): CstMiddleDef {
+  const fitMap: Partial<Record<EgoOkPersonalityScaleType, number>> = {};
+  for (const st of scaleTypes) fitMap[st] = contentFit;
   return {
     id,
     label,
     labelEn,
     kind: 'scale-map',
     scaleTypes,
+    targetItemCount,
+    contentFit: fitMap,
     minors: minors(id, minorLabels),
   };
 }
@@ -334,3 +344,8 @@ export const CST_DOMAIN_WELLBEING_MIDDLE_IDS = ['3.4', '6.3', '6.2', '6.1', '6.4
 export const CST_VIA_MIDDLE_IDS = EGO_OK_CST_MAJORS.filter((m) => m.id >= '1' && m.id <= '6').flatMap((m) =>
   m.middles.map((mid) => mid.id),
 );
+
+import { EGO_OK_INTEGRATED_EXTRA_MAJORS } from '@/lib/egoOkIntegratedScaleCatalog';
+
+/** CST(1~9) + 통합 임상·성격 척도(10~19) */
+export const EGO_OK_ALL_SCALE_MAJORS: CstMajorDef[] = [...EGO_OK_CST_MAJORS, ...EGO_OK_INTEGRATED_EXTRA_MAJORS];

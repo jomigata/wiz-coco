@@ -1,5 +1,5 @@
 import { buildCstBridgeScores } from '@/lib/egoOkCstBridgeScoring';
-import { EGO_OK_CST_MAJORS } from '@/lib/egoOkCstBridgeCatalog';
+import { EGO_OK_ALL_SCALE_MAJORS } from '@/lib/egoOkCstBridgeCatalog';
 import type { EgoOkReport } from '@/lib/egoOkScoring';
 
 function mockReport(): EgoOkReport {
@@ -29,7 +29,9 @@ function mockReport(): EgoOkReport {
 describe('egoOkCstBridgeScoring', () => {
   it('returns 9 CST major blocks with middle scores', () => {
     const majors = buildCstBridgeScores(mockReport());
-    expect(majors).toHaveLength(EGO_OK_CST_MAJORS.length);
+    expect(majors).toHaveLength(EGO_OK_ALL_SCALE_MAJORS.length);
+    expect(majors[0]?.middles[0]?.energy.stage).toBeGreaterThanOrEqual(1);
+    expect(majors[0]?.middles[0]?.overallSuitabilityPct).toBeGreaterThan(0);
     expect(majors[0]?.majorId).toBe('1');
     expect(majors[0]?.middles.length).toBe(5);
     expect(majors[0]?.pct).toBeGreaterThan(0);
