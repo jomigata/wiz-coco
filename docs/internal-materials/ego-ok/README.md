@@ -1,8 +1,16 @@
 # 이고그램 · 오케이그램
 
-## 기준본 — 96문항 (타당도 분산, 2026)
+## 기준본 — 100문항 (타당도 10, 2026-10)
 
-[items-96.json](./items-96.json) — **앱·채점 기준**. 90 성격 문항 + 타당도 6문항(15·30·47·63·77·90). 타당도 문항은 척도 합산에서 제외.
+[items-100.json](./items-100.json) — **앱·채점 기준**. 90 성격 + 타당도 **10**문항(15·30·47·63·77·90·**97·98·99·100**). 변경 요약: [validity-100-changelog-ko.md](./validity-100-changelog-ko.md)
+
+생성: `node scripts/build-items-100.mjs`(최초) → `node scripts/sync-ego-ok-questions.mjs`
+
+**보고서·상담 문구 규칙:** [ok-egogram-report-rules-ko.md](./ok-egogram-report-rules-ko.md)
+
+## 이전 기준 — 96문항 (아카이브)
+
+[items-96.json](./items-96.json) — 90 + 타당도 6. `ego-ok-96` 은행.
 
 생성: `node scripts/build-ego-ok-items-96.mjs` → `npm run sync:ego-ok-questions`
 

@@ -195,7 +195,7 @@ export const EGO_OK_TAB_TO_LEGACY_AND_SCALES: {
   { tabId: 'cover', tabTitle: '종합 요약', legacySections: ['표지(앞)', '표지(뒤)'], majorGroup: '개요' },
   { tabId: 'basic', tabTitle: '기본정보 · 종합 점수', legacySections: ['표지(앞)'], majorGroup: '기본·종합표' },
   { tabId: 'scale-90', tabTitle: '90문항 척도별 분석', legacySections: ['(90문항 산출 척도)'], majorGroup: '90문항' },
-  { tabId: 'validity', tabTitle: '타당도', legacySections: ['(검사 반응 — 96문항 중 6)'], majorGroup: '검사 반응 품질' },
+  { tabId: 'validity', tabTitle: '타당도', legacySections: ['(검사 반응 — 100문항 중 10)'], majorGroup: '검사 반응 품질' },
   { tabId: 'ktaa', tabTitle: 'KTAA 종합 그래프', legacySections: ['종합적/개별적인 성격진단결과'], majorGroup: '통합 그래프' },
   { tabId: 'trait-overview', tabTitle: '전체적인 성격특성', legacySections: ['개인의 전체적인 성격특성'], majorGroup: '성격 요약' },
   { tabId: 'egogram', tabTitle: '이고그램 · 243 유형', legacySections: ['243 이고그램 유형'], majorGroup: '이고그램 50문항' },

@@ -254,7 +254,7 @@ function scoreMajor9(
   const v = report.validity;
   if (middle.derivedKey === 'response-validity') {
     if (!v) {
-      return syntheticMiddle(middle, 0, 0, 0, 6, 6, '타당도 6문항', '타당도 프로파일 없음 — validity 탭을 확인하세요.');
+      return syntheticMiddle(middle, 0, 0, 0, 10, 10, '타당도 10문항', '타당도 프로파일 없음 — validity 탭을 확인하세요.');
     }
     const liePct = v.lie.max > 0 ? Math.round((v.lie.raw / v.lie.max) * 1000) / 10 : 0;
     const vrinPct =
@@ -266,8 +266,8 @@ function scoreMajor9(
       avg,
       liePct + vrinPct + imcPct,
       300,
-      6,
-      6,
+      10,
+      10,
       'IMC·L·F·VRIN',
       `전체 ${v.overallTitle}. L ${v.lie.raw}/${v.lie.max}, VRIN 불일치 ${v.vrin.mismatchPairs}/${v.vrin.maxPairs}, IMC 실패 ${v.imc.failCount} — ${v.overallSummary.slice(0, 120)}`,
     );

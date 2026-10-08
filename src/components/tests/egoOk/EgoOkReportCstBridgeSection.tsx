@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import type { EgoOkReport } from '@/lib/egoOkScoring';
 import { buildCstBridgeScores, type CstMajorScore, type CstMiddleScore } from '@/lib/egoOkCstBridgeScoring';
 import { formatEnergyStageLine } from '@/lib/egoOkCstBridgeEnergy';
+import { plus243StageDigitColor } from '@/lib/egogram243Plus';
 import {
   egoOkReportSectionNumber,
   formatEgoOkSectionTitle,
@@ -23,8 +24,15 @@ function ScoreHeadline({
     <p className="font-mono text-sm font-bold tabular-nums text-indigo-700">
       {uniqueItemCount > 0 ? `${uniqueItemCount}문항 / ` : ''}
       {pct}%
-      <span className="ml-1 text-xs font-semibold text-violet-700">
-        · {energy.stage}단계({energy.tierAscii})
+      <span className="ml-1 inline-flex items-baseline text-xs font-semibold text-violet-700">
+        ·{' '}
+        <span className="font-mono">
+          {energy.tierAscii.slice(0, 1)}
+          <span className="font-extrabold" style={{ color: plus243StageDigitColor(energy.stage) }}>
+            {energy.stage}
+          </span>
+        </span>
+        단계
       </span>
     </p>
   );
@@ -147,7 +155,7 @@ export default function EgoOkReportCstBridgeSection({
     >
       <header className="mb-4 border-b border-violet-100/80 pb-3">
         <h2 className="text-base font-bold text-slate-900">
-          CST·통합 성격·임상 척도 (이고-오케이 90~96문항 근사)
+          CST·통합 성격·임상 척도 (이고-오케이 90+타당도 10 ≈ 100문항)
         </h2>
         <p className="mt-1 text-xs leading-relaxed text-slate-600">
           긍정심리학 CST(1~9)와 IIP·MPD·NEO·Station·KDS·IESS·SRI·SCI-II·MindFit·SAED(10~19)를 한

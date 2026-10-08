@@ -67,6 +67,7 @@ import {
   ReportInsightBlock,
   type ReportInsightTone,
 } from '@/components/tests/egoOk/egoOkReportInsight';
+import { Pattern243PlusCode } from '@/components/tests/egoOk/Plus243Display';
 
 const THREE_LEVEL_STYLE: Record<string, string> = {
   A: 'bg-emerald-500/20 text-emerald-200 ring-emerald-400/40',
@@ -168,29 +169,6 @@ function pickTiedEgogramScales(scales: EgoOkScaleScore[], mode: 'max' | 'min'): 
     const scale = scales.find((s) => s.id === id);
     return scale && tied.has(id) ? [scale] : [];
   });
-}
-
-function Plus243PlusGlyph({ entry, className }: { entry: Plus243ScaleEntry; className?: string }) {
-  const { tier } = entry;
-  const label = plus243TierToAscii(tier);
-  return (
-    <span
-      className={`font-mono text-sm font-bold tabular-nums ${className ?? ''}`}
-      style={{ color: plus243StageDigitColor(tier.stage) }}
-    >
-      {label}
-    </span>
-  );
-}
-
-function Pattern243PlusCode({ plus, className }: { plus: Pattern243Plus; className?: string }) {
-  return (
-    <span className={`inline-flex flex-wrap items-baseline gap-0.5 font-mono tracking-wide ${className ?? ''}`}>
-      {EGO_SCALE_PATTERN_ORDER.map((id) => (
-        <Plus243PlusGlyph key={id} entry={plus.byScale[id]} />
-      ))}
-    </span>
-  );
 }
 
 function Pattern243AndPlusCode({

@@ -28,6 +28,7 @@ import { buildCounselorPairAndAdultGuidance } from '@/lib/egogramManualNineStage
 import { INNER_MIND_ALIGNED_MAX, type InnerMindPair } from '@/lib/egoOkInnerMind';
 import { formatEgogramEnergyHeadline } from '@/lib/egogramEnergyStageComments';
 import EgoOkReportCstBridgeSection from '@/components/tests/egoOk/EgoOkReportCstBridgeSection';
+import { Pattern243PlusCode } from '@/components/tests/egoOk/Plus243Display';
 import type { ClientInfo } from '@/components/tests/MbtiProClientInfo';
 import { egoOkGenderToLabel } from '@/lib/egoOkTestGender';
 import type { EgoOkValidityProfile, ValidityScaleStatus } from '@/lib/egoOkValidity';
@@ -96,18 +97,6 @@ function SummaryShell({
   );
 }
 
-function Plus243PlusGlyph({ entry }: { entry: Plus243ScaleEntry }) {
-  const label = plus243TierToAscii(entry.tier);
-  return (
-    <span
-      className="font-mono text-sm font-bold tabular-nums"
-      style={{ color: plus243StageDigitColor(entry.tier.stage) }}
-    >
-      {label}
-    </span>
-  );
-}
-
 function Pattern243Block({ patternCode, plus }: { patternCode: string; plus: Pattern243Plus }) {
   return (
     <div className="flex flex-wrap items-center gap-4">
@@ -118,9 +107,7 @@ function Pattern243Block({ patternCode, plus }: { patternCode: string; plus: Pat
       <div className="rounded-xl bg-violet-50 px-4 py-2 ring-1 ring-violet-100">
         <p className="text-[10px] font-semibold uppercase tracking-wider text-violet-500">243+ 플러스</p>
         <p className="mt-0.5 flex flex-wrap gap-0.5">
-          {EGO_SCALE_PATTERN_ORDER.map((id) => (
-            <Plus243PlusGlyph key={id} entry={plus.byScale[id]} />
-          ))}
+          <Pattern243PlusCode plus={plus} />
         </p>
       </div>
     </div>

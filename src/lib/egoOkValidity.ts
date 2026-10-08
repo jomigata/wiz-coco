@@ -5,12 +5,10 @@ export type ValidityTraffic = 'normal' | 'caution' | 'invalid';
 export type ValidityScaleStatus = 'normal' | 'caution' | 'invalid';
 
 export type ValidityCounselorNote = {
-  /** 타당도 표 「구분」과 같은 이름 */
   label: string;
   body: string;
 };
 
-/** 표지 세부 내역 · 타당도 지표 · 상담 가이드가 함께 쓰는 구분명 */
 export const VALIDITY_SCALE_LABELS = {
   imc: '1. 반응 성실도 (IMC)',
   lie: '2. 사회적 바람직성 (L)',
@@ -23,20 +21,20 @@ export type EgoOkValidityProfile = {
   overallTitle: string;
   overallSummary: string;
   imc: {
-    itemNos: [number, number];
+    itemNos: number[];
     failCount: number;
     status: ValidityScaleStatus;
     detail: string;
   };
   lie: {
-    itemNos: [number, number];
+    itemNos: number[];
     raw: number;
     max: number;
     status: ValidityScaleStatus;
     detail: string;
   };
   infreq: {
-    itemNos: [number, number];
+    itemNos: number[];
     raw: number;
     max: number;
     status: ValidityScaleStatus;
@@ -52,9 +50,28 @@ export type EgoOkValidityProfile = {
   counselorNotes: ValidityCounselorNote[];
 };
 
-function answerByNo(answers: Record<string, number>, no: number): number {
+const IMC_CHECKS: { no: number; expected: number }[] = [
+  { no: 30, expected: 1 },
+  { no: 77, expected: 5 },
+  { no: 97, expected: 2 },
+  { no: 100, expected: 3 },
+];
+
+const LIE_ITEMS = [15, 63, 98] as const;
+const INFREQ_ITEMS = [47, 90, 99] as const;
+
+/** 대립 문항쌍: 둘 다 4점 이상이면 1불일치 */
+const VRIN_PAIRS: [number, number][] = [
+  [3, 39],
+  [5, 65],
+  [23, 60],
+  [53, 78],
+];
+
+function answerByNo(answers: Record<string, number>, no: number): number | undefined {
   const index = no - 1;
-  return answers[String(index)] ?? answers[index]!;
+  const v = answers[String(index)] ?? answers[index];
+  return v === undefined ? undefined : v;
 }
 
 function statusRank(s: ValidityScaleStatus): number {
@@ -67,42 +84,60 @@ function worst(a: ValidityScaleStatus, b: ValidityScaleStatus): ValidityScaleSta
   return statusRank(a) >= statusRank(b) ? a : b;
 }
 
-/** 대립 문항쌍: 둘 다 4점 이상(5점 척도 · 그렇다 이상)이면 1불일치 */
-const VRIN_PAIRS: [number, number][] = [
-  [3, 39],
-  [5, 65],
-  [23, 60],
-  [53, 78],
-];
-
 function pairMismatch(answers: Record<string, number>, aNo: number, bNo: number): boolean {
   const a = answerByNo(answers, aNo);
   const b = answerByNo(answers, bNo);
+  if (a === undefined || b === undefined) return false;
   return a >= 4 && b >= 4;
 }
 
+function sumLikertPoints(answers: Record<string, number>, itemNos: readonly number[]): { raw: number; max: number } {
+  let raw = 0;
+  let max = 0;
+  for (const no of itemNos) {
+    const a = answerByNo(answers, no);
+    if (a === undefined) continue;
+    raw += likertToItemPoints(a);
+    max += 5;
+  }
+  return { raw, max };
+}
+
 export function computeEgoOkValidityProfile(answers: Record<string, number>): EgoOkValidityProfile {
-  const imcFails =
-    (answerByNo(answers, 30) !== 1 ? 1 : 0) + (answerByNo(answers, 77) !== 5 ? 1 : 0);
+  let imcFails = 0;
+  let imcAnswered = 0;
+  for (const { no, expected } of IMC_CHECKS) {
+    const a = answerByNo(answers, no);
+    if (a === undefined) continue;
+    imcAnswered += 1;
+    if (a !== expected) imcFails += 1;
+  }
   const imcStatus: ValidityScaleStatus =
-    imcFails >= 2 ? 'invalid' : imcFails >= 1 ? 'caution' : 'normal';
+    imcFails >= 2 ? 'invalid' : imcFails >= 1 ? 'caution' : imcAnswered === 0 ? 'caution' : 'normal';
 
-  const lieRaw =
-    likertToItemPoints(answerByNo(answers, 15)) + likertToItemPoints(answerByNo(answers, 63));
+  const lie = sumLikertPoints(answers, LIE_ITEMS);
+  const lieMax = lie.max || 15;
+  const lieRatio = lieMax > 0 ? lie.raw / lieMax : 0;
   const lieStatus: ValidityScaleStatus =
-    lieRaw >= 8 ? 'invalid' : lieRaw >= 6 ? 'caution' : 'normal';
+    lieRatio >= 0.8 ? 'invalid' : lieRatio >= 0.6 ? 'caution' : 'normal';
 
-  const infreqRaw =
-    likertToItemPoints(answerByNo(answers, 47)) + likertToItemPoints(answerByNo(answers, 90));
+  const infreq = sumLikertPoints(answers, INFREQ_ITEMS);
+  const infreqMax = infreq.max || 15;
+  const infreqRatio = infreqMax > 0 ? infreq.raw / infreqMax : 0;
   const infreqStatus: ValidityScaleStatus =
-    infreqRaw >= 6 ? 'invalid' : infreqRaw >= 4 ? 'caution' : 'normal';
+    infreqRatio >= 0.6 ? 'invalid' : infreqRatio >= 0.4 ? 'caution' : 'normal';
 
   let vrinMismatch = 0;
+  let vrinChecked = 0;
   for (const [a, b] of VRIN_PAIRS) {
+    const av = answerByNo(answers, a);
+    const bv = answerByNo(answers, b);
+    if (av === undefined || bv === undefined) continue;
+    vrinChecked += 1;
     if (pairMismatch(answers, a, b)) vrinMismatch += 1;
   }
   const vrinStatus: ValidityScaleStatus =
-    vrinMismatch >= 2 ? 'invalid' : vrinMismatch >= 1 ? 'caution' : 'normal';
+    vrinMismatch >= 2 ? 'invalid' : vrinMismatch >= 1 ? 'caution' : vrinChecked === 0 ? 'caution' : 'normal';
 
   let overall: ValidityTraffic = 'normal';
   const worstScale = [imcStatus, lieStatus, infreqStatus, vrinStatus].reduce(worst, 'normal');
@@ -128,7 +163,7 @@ export function computeEgoOkValidityProfile(answers: Record<string, number>): Eg
       label: VALIDITY_SCALE_LABELS.imc,
       body:
         imcStatus === 'normal'
-          ? '반응 성실도 (IMC)는 정상입니다. 지시된 답을 고르도록 한 문항을 읽고 응답한 것으로 볼 수 있습니다.'
+          ? '반응 성실도 (IMC)는 정상입니다. 지시 문항(30·77·97·100)을 읽고 응답한 것으로 볼 수 있습니다.'
           : '반응 성실도 (IMC)가 주의 또는 무효입니다. 피로·집중력 저하로 지문을 제대로 읽지 않았을 가능성이 있습니다. 수검 당시 컨디션을 점검한 뒤 재검사를 권장합니다.',
     },
     {
@@ -136,21 +171,21 @@ export function computeEgoOkValidityProfile(answers: Record<string, number>): Eg
       body:
         lieStatus === 'normal'
           ? '사회적 바람직성 (L)은 정상입니다. 자신을 지나치게 좋게 포장한 응답으로 보기는 어렵습니다.'
-          : '사회적 바람직성 (L)이 높게 나온 경우, 평가에 대한 불안으로 자신을 도덕적·완벽한 사람으로 위장하려 했을 가능성이 큽니다. 상담에서는 정답이 없음을 다시 알려 주고, 취약성을 말해도 비난받지 않는 자리를 만들어 주십시오.',
+          : '사회적 바람직성 (L)이 높게 나온 경우, 평가 불안으로 자신을 과도하게 긍정적으로 그렸을 수 있습니다. 정답이 없음을 안내하고 솔직한 응답을 장려하세요.',
     },
     {
       label: VALIDITY_SCALE_LABELS.infreq,
       body:
         infreqStatus === 'normal'
-          ? '비전형 왜곡 (F)은 정상입니다. 흔하지 않은 반응을 과도하게 고른 양상은 두드러지지 않습니다.'
-          : '비전형 왜곡 (F)이 높게 나온 경우, 실제 증상이 아니라면 도움 요청 신호일 수 있습니다. 점수보다 지금 느끼는 불안·우울의 버거움을 먼저 공감해 주십시오.',
+          ? '비전형 왜곡 (F)은 정상입니다. 비현실적·비전형 반응이 두드러지지 않습니다.'
+          : '비전형 왜곡 (F)이 높게 나온 경우, 무작위 응답·과장된 신체/경험 진술 또는 도움 요청 신호일 수 있습니다. 점수보다 현재 부담감을 먼저 공감하세요.',
     },
     {
       label: VALIDITY_SCALE_LABELS.vrin,
       body:
         vrinStatus === 'normal'
-          ? '일관성 (VRIN)은 정상입니다. 뜻이 반대인 문항에 동시에 동의한 불일치는 없습니다.'
-          : '일관성 (VRIN)이 주의 또는 무효입니다. 서로 맞지 않는 답을 함께 골랐을 수 있습니다. 피로·집중력 저하로 지문을 제대로 읽지 않았을 가능성이 있으니, 수검 당시 컨디션을 점검한 뒤 재검사를 권장합니다.',
+          ? '일관성 (VRIN)은 정상입니다. 대립 문항에 동시에 강하게 동의한 불일치는 없습니다.'
+          : '일관성 (VRIN)이 주의 또는 무효입니다. 서로 맞지 않는 답을 함께 골랐을 수 있습니다. 컨디션·속도를 점검한 뒤 재검사를 고려하세요.',
     },
   ];
 
@@ -159,31 +194,31 @@ export function computeEgoOkValidityProfile(answers: Record<string, number>): Eg
     overallTitle,
     overallSummary,
     imc: {
-      itemNos: [30, 77],
+      itemNos: IMC_CHECKS.map((c) => c.no),
       failCount: imcFails,
       status: imcStatus,
-      detail: '지정 번호 미선택 1개 이상 시 주의/무효',
+      detail: '지시 응답 실패 2개 이상 무효 · 1개 주의 (4문항 IMC)',
     },
     lie: {
-      itemNos: [15, 63],
-      raw: lieRaw,
-      max: 10,
+      itemNos: [...LIE_ITEMS],
+      raw: lie.raw,
+      max: lieMax,
       status: lieStatus,
-      detail: '8점 이상 시 과도한 방어 및 위선',
+      detail: '원점수 비율 60% 이상 주의 · 80% 이상 무효 (3문항 L)',
     },
     infreq: {
-      itemNos: [47, 90],
-      raw: infreqRaw,
-      max: 10,
+      itemNos: [...INFREQ_ITEMS],
+      raw: infreq.raw,
+      max: infreqMax,
       status: infreqStatus,
-      detail: '6점 이상 시 꾀병 또는 무작위 응답',
+      detail: '원점수 비율 40% 이상 주의 · 60% 이상 무효 (3문항 F)',
     },
     vrin: {
       pairCount: VRIN_PAIRS.length,
       mismatchPairs: vrinMismatch,
       maxPairs: VRIN_PAIRS.length,
       status: vrinStatus,
-      detail: '불일치 쌍 2개 이상 시 비일관적',
+      detail: '불일치 쌍 2개 이상 무효 · 1개 주의 (5쌍 VRIN)',
     },
     counselorNotes,
   };

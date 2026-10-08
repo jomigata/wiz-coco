@@ -1,10 +1,10 @@
 /**
- * TA 이고-오케이그램 검사 문항 (96, 타당도 6문항 분산).
- * Generated from docs/internal-materials/ego-ok/items-96.json
- * Bank id: ego-ok-96 — do not edit by hand; run: npm run sync:ego-ok-questions
+ * TA 이고-오케이그램 검사 문항 (100, 타당도 10문항 분산).
+ * Generated from docs/internal-materials/ego-ok/items-100.json
+ * Bank id: ego-ok-100 — do not edit by hand; run: npm run sync:ego-ok-questions
  */
 
-export const EGO_OK_ITEM_BANK_ID = 'ego-ok-96' as const;
+export const EGO_OK_ITEM_BANK_ID = 'ego-ok-100' as const;
 
 export type EgoOkScaleKind = 'egogram' | 'okgram' | 'validity';
 
@@ -117,6 +117,10 @@ export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 94, text: "매사에 경솔하게 행동하지 않고, \n신중하게 처신하는 편이다.", readingText: "매사에 경솔하게 행동하지 않고, \n신중하게 처신하는 편이다.", code: "EA", egoIndex: 42, okIndex: null, scaleType: "ac_positive", scaleKind: 'egogram' },
   { no: 95, text: "다른 사람의 부탁을 받으면, \n거절하기가 몹시 어렵다.", readingText: "다른 사람의 부탁을 받으면, \n거절하기가 몹시 어렵다.", code: "BB", egoIndex: 45, okIndex: null, scaleType: "np_negative", scaleKind: 'egogram' },
   { no: 96, text: "일이 잘못되어 실패하더라도, \n낙담하지 않고 꿋꿋하게 다시 시작한다.", readingText: "일이 잘못되어 실패하더라도, \n낙담하지 않고 꿋꿋하게 다시 시작한다.", code: "DC", egoIndex: null, okIndex: 40, scaleType: "i_plus", scaleKind: 'okgram' },
+  { no: 97, text: "검사 질문을 꼼꼼히 읽고 있는지 확인합니다. \n‘B. 그렇지 않다’를 선택해 주세요.", readingText: "검사 질문을 꼼꼼히 읽고 있는지 확인합니다. \n‘B. 그렇지 않다’를 선택해 주세요.", code: "VX", egoIndex: null, okIndex: null, scaleType: "validity_imc", scaleKind: 'validity' },
+  { no: 98, text: "나는 한 번도 다른 사람에게 화를 낸 적이 없다.", readingText: "나는 한 번도 다른 사람에게 화를 낸 적이 없다.", code: "VX", egoIndex: null, okIndex: null, scaleType: "validity_lie", scaleKind: 'validity' },
+  { no: 99, text: "지난 1년 동안 단 하루도 잠을 잔 적이 없다.", readingText: "지난 1년 동안 단 하루도 잠을 잔 적이 없다.", code: "VX", egoIndex: null, okIndex: null, scaleType: "validity_infreq", scaleKind: 'validity' },
+  { no: 100, text: "응답 주의력 확인: 이 문항만 \n‘C. 보통이다’를 선택해 주세요.", readingText: "응답 주의력 확인: 이 문항만 \n‘C. 보통이다’를 선택해 주세요.", code: "VX", egoIndex: null, okIndex: null, scaleType: "validity_imc", scaleKind: 'validity' },
 ];
 
 export const EGO_OK_QUESTION_COUNT = EGO_OK_QUESTIONS.length;

@@ -299,7 +299,7 @@ export function computeEgoOkReport(
       incomplete.length <= 5
         ? incomplete.join(', ')
         : `${incomplete.slice(0, 5).join(', ')} 외 ${incomplete.length - 5}문항`;
-    throw new Error(`96문항 모두 응답해야 합니다. 미응답 또는 잘못된 응답: ${preview}`);
+    throw new Error(`100문항 모두 응답해야 합니다. 미응답 또는 잘못된 응답: ${preview}`);
   }
 
   const gender = normalizeEgoOkGender(genderInput);
