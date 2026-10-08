@@ -50,23 +50,26 @@ export type EgoOkValidityProfile = {
   counselorNotes: ValidityCounselorNote[];
 };
 
+/** items-100.json 분산 배치 (reorder-items-100.mjs) — 구 96번 기준 삽입: after 25·50·75 */
 const IMC_CHECKS: { no: number; expected: number }[] = [
-  { no: 30, expected: 1 },
-  { no: 77, expected: 5 },
-  { no: 97, expected: 2 },
-  { no: 100, expected: 3 },
+  { no: 31, expected: 1 },
+  { no: 80, expected: 5 },
+  { no: 26, expected: 2 },
 ];
 
-const LIE_ITEMS = [15, 63, 98] as const;
-const INFREQ_ITEMS = [47, 90, 99] as const;
+const LIE_ITEMS = [15, 65, 52] as const;
+const INFREQ_ITEMS = [48, 93, 78] as const;
 
-/** 대립 문항쌍: 둘 다 4점 이상이면 1불일치 */
-const VRIN_PAIRS: [number, number][] = [
-  [3, 39],
-  [5, 65],
-  [23, 60],
-  [53, 78],
+/** 대립 문항쌍: 둘 다 4점 이상(5점 척도)이면 1불일치 — 5쌍 */
+export const EGO_OK_VRIN_PAIRS: [number, number][] = [
+  [3, 40],
+  [5, 67],
+  [23, 62],
+  [55, 81],
+  [34, 100],
 ];
+
+const VRIN_PAIRS = EGO_OK_VRIN_PAIRS;
 
 function answerByNo(answers: Record<string, number>, no: number): number | undefined {
   const index = no - 1;
@@ -163,7 +166,7 @@ export function computeEgoOkValidityProfile(answers: Record<string, number>): Eg
       label: VALIDITY_SCALE_LABELS.imc,
       body:
         imcStatus === 'normal'
-          ? '반응 성실도 (IMC)는 정상입니다. 지시 문항(30·77·97·100)을 읽고 응답한 것으로 볼 수 있습니다.'
+          ? '반응 성실도 (IMC)는 정상입니다. 지시 문항(26·31·80)을 읽고 응답한 것으로 볼 수 있습니다.'
           : '반응 성실도 (IMC)가 주의 또는 무효입니다. 피로·집중력 저하로 지문을 제대로 읽지 않았을 가능성이 있습니다. 수검 당시 컨디션을 점검한 뒤 재검사를 권장합니다.',
     },
     {
@@ -197,28 +200,28 @@ export function computeEgoOkValidityProfile(answers: Record<string, number>): Eg
       itemNos: IMC_CHECKS.map((c) => c.no),
       failCount: imcFails,
       status: imcStatus,
-      detail: '지시 응답 실패 2개 이상 무효 · 1개 주의 (4문항 IMC)',
+      detail: '지시 응답 실패 2개 이상 무효 · 1개 주의 (3문항 IMC: 26·31·80)',
     },
     lie: {
       itemNos: [...LIE_ITEMS],
       raw: lie.raw,
       max: lieMax,
       status: lieStatus,
-      detail: '원점수 비율 60% 이상 주의 · 80% 이상 무효 (3문항 L)',
+      detail: '원점수 비율 60% 이상 주의 · 80% 이상 무효 (3문항 L: 15·52·65)',
     },
     infreq: {
       itemNos: [...INFREQ_ITEMS],
       raw: infreq.raw,
       max: infreqMax,
       status: infreqStatus,
-      detail: '원점수 비율 40% 이상 주의 · 60% 이상 무효 (3문항 F)',
+      detail: '원점수 비율 40% 이상 주의 · 60% 이상 무효 (3문항 F: 48·78·93)',
     },
     vrin: {
       pairCount: VRIN_PAIRS.length,
       mismatchPairs: vrinMismatch,
       maxPairs: VRIN_PAIRS.length,
       status: vrinStatus,
-      detail: '불일치 쌍 2개 이상 무효 · 1개 주의 (5쌍 VRIN)',
+      detail: '불일치 쌍 2개 이상 무효 · 1개 주의 (5쌍 VRIN: 3-40, 5-67, 23-62, 55-81, 34-100)',
     },
     counselorNotes,
   };
