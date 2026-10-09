@@ -16,7 +16,7 @@ export type ReadyTestId = (typeof READY_TEST_IDS)[number];
 const READY_TEST_ID_SET = new Set<string>(READY_TEST_IDS);
 
 /** 레거시 페이지: 포털로 보내거나, 자체 안내가 있어 레이아웃에서 막지 않음 */
-const PASSTHROUGH_TEST_IDS = new Set(['ego-ok', 'group_mbti']);
+const PASSTHROUGH_TEST_IDS = new Set(['ego-ok', 'group_mbti', 'local-archive']);
 
 export function testIdFromHref(href: string): string {
   const match = (href || '').trim().match(/\/tests\/([^/?#]+)/);

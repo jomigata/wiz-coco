@@ -9,7 +9,8 @@ import {
   getVisibleTestMenuItems,
   TEST_CATEGORY_SLUGS,
 } from '@/data/psychologyTestMenu';
-import { psychologyTestMenuHref } from '@/lib/localPsychTestDirectStart';
+import { isLocalPsychTestServer, psychologyTestMenuHref } from '@/lib/localPsychTestDirectStart';
+import LocalPsychTestArchivePanel from '@/components/tests/LocalPsychTestArchivePanel';
 
 function TestsContent() {
   const searchParams = useSearchParams();
@@ -79,6 +80,12 @@ function TestsContent() {
             <p className="text-white text-xl font-bold">{tests.length}개</p>
           </div>
         </div>
+
+        {isLocalPsychTestServer() ? (
+          <div className="mb-8">
+            <LocalPsychTestArchivePanel compact />
+          </div>
+        ) : null}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredTests.map((test) => (

@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
+import { saveLocalPsychTestArchive } from '@/lib/localPsychTestArchive';
 import { LoadingMessage } from '@/components/ui/LoadingMessage';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
@@ -387,6 +388,22 @@ function IntegratedAssessmentPageContent() {
     
     return areas;
   };
+
+  const localArchiveSavedRef = useRef(false);
+  useEffect(() => {
+    if (!localDirect || !isCompleted || localArchiveSavedRef.current) return;
+    localArchiveSavedRef.current = true;
+    const comprehensive = generateComprehensiveReport();
+    saveLocalPsychTestArchive({
+      kind: 'integrated-assessment',
+      title: '신입생 통합 심리검사 (로컬)',
+      payload: {
+        studentInfo,
+        answers,
+        report: comprehensive as Record<string, unknown>,
+      },
+    });
+  }, [localDirect, isCompleted, studentInfo, answers]);
 
   const currentStepData = assessmentSteps[currentStep];
   const report = showResult ? generateComprehensiveReport() : null;

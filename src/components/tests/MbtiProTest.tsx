@@ -9,6 +9,11 @@ import {
   isLocalPsychTestDirectActive,
 } from '@/lib/localPsychTestDirectStart';
 import { saveEgoOkReportDraft } from '@/lib/egoOkReportSession';
+import {
+  localArchiveEgoOkResultHref,
+  localArchiveListHref,
+  saveLocalPsychTestArchive,
+} from '@/lib/localPsychTestArchive';
 import { EGO_OK_LIKERT_HEIGHT_BY_LETTER, EGO_OK_LIKERT_OPTIONS } from '@/lib/egoOkLikert';
 import { EgoOkQuestionReading } from '@/lib/egoOkQuestionReading';
 import { findEgoOkIncompleteQuestionNumbers } from '@/lib/egoOkScoring';
@@ -446,15 +451,27 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
       if (localDirect && isEgoOkFlow) {
         clearTestProgress(testId);
         saveEgoOkReportDraft({ answers, clientInfo });
-        router.push('/tests/ego-ok-pro/result?localDirect=1');
+        const archiveId = saveLocalPsychTestArchive({
+          kind: 'ego-ok-pro',
+          title: flow.displayName,
+          payload: { answers, clientInfo },
+        });
+        router.push(
+          archiveId ? localArchiveEgoOkResultHref(archiveId) : '/tests/ego-ok-pro/result?localDirect=1',
+        );
         setIsLoading(false);
         return;
       }
 
       if (localDirect) {
         clearTestProgress(testId);
-        window.alert('로컬 테스트 모드: 검사가 완료되었습니다. (결과는 저장하지 않습니다)');
-        router.push('/tests');
+        const mbtiType = calculateMbtiType(answers);
+        const archiveId = saveLocalPsychTestArchive({
+          kind: 'mbti-pro',
+          title: flow.displayName,
+          payload: { answers, clientInfo, mbtiType },
+        });
+        router.push(archiveId ? localArchiveListHref(archiveId) : '/tests/local-archive?localDirect=1');
         setIsLoading(false);
         return;
       }
@@ -784,7 +801,9 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
       <div className="max-w-2xl mx-auto relative z-10" onMouseMove={handleMouseMove}>
           <div className="text-center mb-2">
             {localDirect ? (
-              <p className="mb-2 text-xs font-medium text-amber-200/90">로컬 테스트 모드 — 상담코드·저장 생략</p>
+              <p className="mb-2 text-xs font-medium text-amber-200/90">
+                로컬 테스트 모드 — 상담코드·서버 저장 생략 · 완료 시 브라우저 보관함에 임시 저장
+              </p>
             ) : null}
             <h1 className="text-2xl font-bold text-white mb-1">{screenTitle}</h1>
             <p className={`${v.subtitle} max-w-lg mx-auto`}>
