@@ -9,7 +9,7 @@ import {
   isLocalPsychTestDirectActive,
 } from '@/lib/localPsychTestDirectStart';
 import { saveEgoOkReportDraft } from '@/lib/egoOkReportSession';
-import { EGO_OK_LIKERT_HEIGHT, EGO_OK_LIKERT_OPTIONS } from '@/lib/egoOkLikert';
+import { EGO_OK_LIKERT_HEIGHT_BY_LETTER, EGO_OK_LIKERT_OPTIONS } from '@/lib/egoOkLikert';
 import { EgoOkQuestionReading } from '@/lib/egoOkQuestionReading';
 import { findEgoOkIncompleteQuestionNumbers } from '@/lib/egoOkScoring';
 import Link from 'next/link';
@@ -870,7 +870,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
                               'py-0',
                               isCenterLikert ? cDualBottomGlow : '',
                               isCenterLikert ? '' : glow,
-                            )} ${EGO_OK_LIKERT_HEIGHT[opt.heightTier]} flex min-w-0 flex-col justify-center !px-1`}
+                            )} ${EGO_OK_LIKERT_HEIGHT_BY_LETTER[opt.letter] ?? 'h-[9rem]'} flex min-w-0 flex-col justify-center !px-1`}
                           >
                             {answers[currentQuestion] === opt.value && (
                               <div
