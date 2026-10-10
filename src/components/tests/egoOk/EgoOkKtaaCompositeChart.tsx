@@ -34,13 +34,26 @@ const EGO_TOTAL_BOX_STROKE = '#0284c7';
 const OK_LINE_COLOR = '#d32f2f';
 /** 243+ 4~6단계 권장 구간 (합계 0~50 눈금) */
 const PLUS243_RECOMMENDED_Y = plus243RecommendedRawRange();
+const RECOMMENDED_LINE_COLOR = '#f472b6';
 const RECOMMENDED_REFERENCE_LINE = {
-  stroke: '#f472b6',
+  stroke: RECOMMENDED_LINE_COLOR,
   strokeDasharray: '7 5',
   strokeWidth: 1.5,
   strokeOpacity: 0.88,
   ifOverflow: 'extendDomain' as const,
 };
+
+function CompositeChartTitleRecommendedLegend() {
+  return (
+    <span className="ml-2 font-normal text-gray-500">
+      ( 243+ 권장구간 :{' '}
+      <span className="tracking-tight" style={{ color: RECOMMENDED_LINE_COLOR }}>
+        ──────
+      </span>{' '}
+      )
+    </span>
+  );
+}
 /** KTAA C(하)·B(중)·A(상) — 남/여 동일: 하단 하늘 · 중간 흰 · 상단 분홍 */
 const ZONE_WHITE = '#ffffff';
 const ZONE_SKY = '#d6e8f5';
@@ -785,6 +798,7 @@ export default function EgoOkKtaaCompositeChart({
         <div className="border-b border-sky-100 bg-gradient-to-r from-sky-50 to-white px-4 py-3">
           <p className="text-sm font-bold text-sky-900">
             ◈ 이고-오케이 그램 (Ego-Ok Gram) 의 종합 결과 그래프
+            <CompositeChartTitleRecommendedLegend />
           </p>
         </div>
       ) : null}
