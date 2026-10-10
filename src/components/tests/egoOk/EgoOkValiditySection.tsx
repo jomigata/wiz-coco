@@ -146,9 +146,10 @@ export function ValidityTable({
             }
             status={validity.imc.status}
             role={
-              isEgoOk99Bank
+              validity.imc.issueBrief ??
+              (isEgoOk99Bank
                 ? '현실·주의·생활 상식 문항에 무성의하게 부정 응답했는지 봅니다.'
-                : '지시된 답을 골랐는지 확인해, 문항을 읽지 않고 응답했는지 봅니다.'
+                : '지시된 답을 골랐는지 확인해, 문항을 읽지 않고 응답했는지 봅니다.')
             }
             bands={
               showScoreBands
@@ -169,9 +170,10 @@ export function ValidityTable({
             }
             status={validity.lie.status}
             role={
-              isEgoOk99Bank
+              validity.lie.issueBrief ??
+              (isEgoOk99Bank
                 ? '평범한 짜증·게으름·섭섭함까지 부인하는 도덕적 포장(위선) 경향을 봅니다.'
-                : '자신을 사회적으로 좋아 보이게 답하는 경향을 봅니다.'
+                : '자신을 사회적으로 좋아 보이게 답하는 경향을 봅니다.')
             }
             bands={
               showScoreBands
@@ -192,9 +194,10 @@ export function ValidityTable({
             }
             status={validity.infreq.status}
             role={
-              isEgoOk99Bank
+              validity.infreq.issueBrief ??
+              (isEgoOk99Bank
                 ? '비현실·과장 진술(감정 부재, 무수면 완벽, 감기 0회 등)에 동의했는지 봅니다.'
-                : '흔하지 않은 반응을 골라, 과장이나 무작위 응답 가능성을 봅니다.'
+                : '흔하지 않은 반응을 골라, 과장이나 무작위 응답 가능성을 봅니다.')
             }
             bands={
               showScoreBands
@@ -210,7 +213,10 @@ export function ValidityTable({
             measured={`대립 ${validity.vrin.pairCount}개 문항쌍`}
             score={`${validity.vrin.mismatchPairs} / ${validity.vrin.maxPairs}점`}
             status={validity.vrin.status}
-            role="뜻이 반대인 문항에 함께 동의하는지 봐서, 답이 서로 맞는지 확인합니다."
+            role={
+              validity.vrin.issueBrief ??
+              '뜻이 반대인 문항에 함께 동의하는지 봐서, 답이 서로 맞는지 확인합니다.'
+            }
             bands={
               showScoreBands
                 ? ['정상: 불일치 없음', '주의: 불일치 1쌍', '무효: 불일치 2쌍 이상 (비일관적)']

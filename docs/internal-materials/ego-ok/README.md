@@ -2,7 +2,7 @@
 
 ## 기준본 — 99문항 (타당도 9, 블록 인터리빙, 2026-10)
 
-[items-99.json](./items-99.json) — **앱·채점 기준**. 90 성격 + 타당도 **9**문항 (**9·15·26·38·48·58·68·78·88**, VRIN 없음). 원문 TSV: [items-99-source.tsv](./items-99-source.tsv)
+[items-99.json](./items-99.json) — **앱·채점 기준**. 90 성격 + 타당도 **9** + **VRIN 5쌍**. 원문 TSV: [items-99-source.tsv](./items-99-source.tsv)
 
 생성: `node scripts/build-items-99-final.mjs` → `npm run sync:ego-ok-questions` · 엑셀 TSV: `node scripts/export-items-99-excel.mjs`
 

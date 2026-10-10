@@ -263,10 +263,12 @@ function scoreMajor9(
     const liePct = v.lie.status === 'caution' ? 50 : is99 ? 0 : v.lie.max > 0 ? Math.round((v.lie.raw / v.lie.max) * 1000) / 10 : 0;
     const vrinPct =
       v.vrin.maxPairs > 0 ? Math.round((v.vrin.mismatchPairs / v.vrin.maxPairs) * 1000) / 10 : 0;
-    const parts = is99 ? [imcPct, infreqPct, liePct] : [liePct, vrinPct, imcPct];
+    const vrinFlagPct =
+      v.vrin.status === 'invalid' ? 100 : v.vrin.status === 'caution' ? 50 : 0;
+    const parts = is99 ? [imcPct, infreqPct, liePct, vrinFlagPct] : [liePct, vrinPct, imcPct];
     const avg = Math.round((parts.reduce((a, b) => a + b, 0) / parts.length) * 10) / 10;
     const summary = is99
-      ? `전체 ${v.overallTitle}. IMC 3↓ ${v.imc.failCount}, F 3↑ ${v.infreq.raw}/${v.infreq.max}, L 2↓ ${v.lie.raw}/${v.lie.max} — ${v.overallSummary.slice(0, 100)}`
+      ? `전체 ${v.overallTitle}. IMC 3↓ ${v.imc.failCount}, F 3↑ ${v.infreq.raw}/${v.infreq.max}, L 2↓ ${v.lie.raw}/${v.lie.max}, VRIN ${v.vrin.mismatchPairs}/${v.vrin.maxPairs} — ${v.overallSummary.slice(0, 90)}`
       : `전체 ${v.overallTitle}. L ${v.lie.raw}/${v.lie.max}, VRIN 불일치 ${v.vrin.mismatchPairs}/${v.vrin.maxPairs}, IMC 실패 ${v.imc.failCount} — ${v.overallSummary.slice(0, 120)}`;
     return syntheticMiddle(
       middle,
@@ -275,7 +277,7 @@ function scoreMajor9(
       300,
       10,
       10,
-      is99 ? 'IMC·F·L' : 'IMC·L·F·VRIN',
+      'IMC·F·L·VRIN',
       summary,
     );
   }

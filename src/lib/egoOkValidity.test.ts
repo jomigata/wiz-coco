@@ -45,6 +45,25 @@ describe('computeEgoOkValidityProfile (99-item bank)', () => {
     expect(v.infreq.status).toBe('invalid');
   });
 
+  it('includes keyword issueBrief when IMC fails', () => {
+    if (!is99) return;
+    const v = computeEgoOkValidityProfile(answersForNos([[9, 2]]));
+    expect(v.imc.issueBrief).toMatch(/24시간/);
+    expect(v.imc.issueBrief).toMatch(/9번/);
+  });
+
+  it('VRIN: both ends 4+ on pair 3-49 → mismatch', () => {
+    if (!is99) return;
+    const v = computeEgoOkValidityProfile(
+      answersForNos([
+        [3, 5],
+        [49, 5],
+      ]),
+    );
+    expect(v.vrin.mismatchPairs).toBeGreaterThanOrEqual(1);
+    expect(v.vrin.issueBrief).toMatch(/3번/);
+  });
+
   it('Lie: two items at 2 or below → caution only (not invalid)', () => {
     if (!is99) return;
     const v = computeEgoOkValidityProfile(

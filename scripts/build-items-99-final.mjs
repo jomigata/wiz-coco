@@ -116,14 +116,20 @@ const bank = {
   title: '이고-OK그램 체크리스트 (99문항, 타당도 9문항 블록 인터리빙)',
   status: 'canonical',
   sourceFile: 'items-99-source.tsv + build-items-99-final.mjs',
-  note: '90 성격 + 타당도 9 (VRIN 없음). Validity: 9·15·26·38·48·58·68·78·88',
+  note: '90 성격 + 타당도 9 + VRIN 5쌍. Validity: 9·15·26·38·48·58·68·78·88',
   itemCount: 99,
   validityItemNos,
   validityConfig: {
     imc: { itemNos: [9, 38, 68], failIfLikertAtMost: 3, invalidIfFailCountAtLeast: 2 },
     infreq: { itemNos: [26, 58, 78], hitIfLikertAtLeast: 3, invalidIfHitCountAtLeast: 2 },
     lie: { itemNos: [15, 48, 88], hitIfLikertAtMost: 2, cautionIfHitCountAtLeast: 2 },
-    vrinPairs: [],
+    vrinPairs: [
+      [3, 49],
+      [5, 60],
+      [11, 46],
+      [34, 56],
+      [33, 26],
+    ],
   },
   items,
 };
