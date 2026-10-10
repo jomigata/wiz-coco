@@ -1,12 +1,15 @@
 'use client';
 
 import { ReportInsightBlock } from '@/components/tests/egoOk/egoOkReportInsight';
+import { EGO_OK_ITEM_BANK_ID } from '@/data/egoOkQuestions';
 import {
   VALIDITY_SCALE_LABELS,
   type EgoOkValidityProfile,
   type ValidityScaleStatus,
   type ValidityTraffic,
 } from '@/lib/egoOkValidity';
+
+const isEgoOk99Bank = EGO_OK_ITEM_BANK_ID === 'ego-ok-99';
 
 function trafficDot(overall: ValidityTraffic): string {
   if (overall === 'normal') return '●';
@@ -136,12 +139,22 @@ export function ValidityTable({
           <ScaleMetricRow
             label={VALIDITY_SCALE_LABELS.imc}
             measured={`${validity.imc.itemNos.join('번, ')}번`}
-            score={`${validity.imc.failCount} / 2개`}
+            score={
+              isEgoOk99Bank
+                ? `${validity.imc.failCount} / ${validity.imc.itemNos.length}개 (3점↓)`
+                : `${validity.imc.failCount} / 2개`
+            }
             status={validity.imc.status}
-            role="지시된 답을 골랐는지 확인해, 문항을 읽지 않고 응답했는지 봅니다."
+            role={
+              isEgoOk99Bank
+                ? '현실·주의·생활 상식 문항에 무성의하게 부정 응답했는지 봅니다.'
+                : '지시된 답을 골랐는지 확인해, 문항을 읽지 않고 응답했는지 봅니다.'
+            }
             bands={
               showScoreBands
-                ? ['정상: 두 문항 모두 지정 응답', '주의: 지정 응답 실패 1개', '무효: 지정 응답 실패 2개']
+                ? isEgoOk99Bank
+                  ? ['정상: 3점 이하 0개', '주의: 3점 이하 1개', '무효: 3점 이하 2개 이상']
+                  : ['정상: 두 문항 모두 지정 응답', '주의: 지정 응답 실패 1개', '무효: 지정 응답 실패 2개']
                 : undefined
             }
             guide={guideOf(VALIDITY_SCALE_LABELS.imc)}
@@ -149,23 +162,45 @@ export function ValidityTable({
           <ScaleMetricRow
             label={VALIDITY_SCALE_LABELS.lie}
             measured={`${validity.lie.itemNos.join('번, ')}번`}
-            score={`${validity.lie.raw} / ${validity.lie.max}점`}
+            score={
+              isEgoOk99Bank
+                ? `${validity.lie.raw} / ${validity.lie.max}개 (2점↓)`
+                : `${validity.lie.raw} / ${validity.lie.max}점`
+            }
             status={validity.lie.status}
-            role="자신을 사회적으로 좋아 보이게 답하는 경향을 봅니다."
+            role={
+              isEgoOk99Bank
+                ? '평범한 짜증·게으름·섭섭함까지 부인하는 도덕적 포장(위선) 경향을 봅니다.'
+                : '자신을 사회적으로 좋아 보이게 답하는 경향을 봅니다.'
+            }
             bands={
-              showScoreBands ? ['정상: 5점 이하', '주의: 6–7점', '무효: 8점 이상 (과도한 방어·위선)'] : undefined
+              showScoreBands
+                ? isEgoOk99Bank
+                  ? ['정상: 2점 이하 0–1개', '주의: 2점 이하 2개 (도덕적 포장)', '— (L 단독 무효 없음)']
+                  : ['정상: 5점 이하', '주의: 6–7점', '무효: 8점 이상 (과도한 방어·위선)']
+                : undefined
             }
             guide={guideOf(VALIDITY_SCALE_LABELS.lie)}
           />
           <ScaleMetricRow
             label={VALIDITY_SCALE_LABELS.infreq}
             measured={`${validity.infreq.itemNos.join('번, ')}번`}
-            score={`${validity.infreq.raw} / ${validity.infreq.max}점`}
+            score={
+              isEgoOk99Bank
+                ? `${validity.infreq.raw} / ${validity.infreq.max}개 (3점↑)`
+                : `${validity.infreq.raw} / ${validity.infreq.max}점`
+            }
             status={validity.infreq.status}
-            role="흔하지 않은 반응을 골라, 과장이나 무작위 응답 가능성을 봅니다."
+            role={
+              isEgoOk99Bank
+                ? '비현실·과장 진술(감정 부재, 무수면 완벽, 감기 0회 등)에 동의했는지 봅니다.'
+                : '흔하지 않은 반응을 골라, 과장이나 무작위 응답 가능성을 봅니다.'
+            }
             bands={
               showScoreBands
-                ? ['정상: 3점 이하', '주의: 4–5점', '무효: 6점 이상 (꾀병 또는 무작위 응답)']
+                ? isEgoOk99Bank
+                  ? ['정상: 3점 이상 0–1개', '주의: 3점 이상 1개', '무효: 3점 이상 2개 이상']
+                  : ['정상: 3점 이하', '주의: 4–5점', '무효: 6점 이상 (꾀병 또는 무작위 응답)']
                 : undefined
             }
             guide={guideOf(VALIDITY_SCALE_LABELS.infreq)}

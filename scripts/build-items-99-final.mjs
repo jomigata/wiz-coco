@@ -120,13 +120,9 @@ const bank = {
   itemCount: 99,
   validityItemNos,
   validityConfig: {
-    imc: [
-      { no: 9, minAccept: 4 },
-      { no: 38, minAccept: 4 },
-      { no: 68, minAccept: 4 },
-    ],
-    lieAdmissive: [15, 48, 88],
-    infreq: [26, 58, 78],
+    imc: { itemNos: [9, 38, 68], failIfLikertAtMost: 3, invalidIfFailCountAtLeast: 2 },
+    infreq: { itemNos: [26, 58, 78], hitIfLikertAtLeast: 3, invalidIfHitCountAtLeast: 2 },
+    lie: { itemNos: [15, 48, 88], hitIfLikertAtMost: 2, cautionIfHitCountAtLeast: 2 },
     vrinPairs: [],
   },
   items,

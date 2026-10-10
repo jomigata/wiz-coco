@@ -256,20 +256,27 @@ function scoreMajor9(
     if (!v) {
       return syntheticMiddle(middle, 0, 0, 0, 9, 9, '타당도 9문항', '타당도 프로파일 없음 — validity 탭을 확인하세요.');
     }
-    const liePct = v.lie.max > 0 ? Math.round((v.lie.raw / v.lie.max) * 1000) / 10 : 0;
+    const is99 = report.itemBankId === 'ego-ok-99';
+    const imcPct = v.imc.failCount >= 2 ? 100 : v.imc.failCount >= 1 ? 50 : 0;
+    const infreqPct =
+      v.infreq.status === 'invalid' ? 100 : v.infreq.status === 'caution' ? 50 : 0;
+    const liePct = v.lie.status === 'caution' ? 50 : is99 ? 0 : v.lie.max > 0 ? Math.round((v.lie.raw / v.lie.max) * 1000) / 10 : 0;
     const vrinPct =
       v.vrin.maxPairs > 0 ? Math.round((v.vrin.mismatchPairs / v.vrin.maxPairs) * 1000) / 10 : 0;
-    const imcPct = v.imc.failCount >= 2 ? 100 : v.imc.failCount >= 1 ? 50 : 0;
-    const avg = Math.round(((liePct + vrinPct + imcPct) / 3) * 10) / 10;
+    const parts = is99 ? [imcPct, infreqPct, liePct] : [liePct, vrinPct, imcPct];
+    const avg = Math.round((parts.reduce((a, b) => a + b, 0) / parts.length) * 10) / 10;
+    const summary = is99
+      ? `전체 ${v.overallTitle}. IMC 3↓ ${v.imc.failCount}, F 3↑ ${v.infreq.raw}/${v.infreq.max}, L 2↓ ${v.lie.raw}/${v.lie.max} — ${v.overallSummary.slice(0, 100)}`
+      : `전체 ${v.overallTitle}. L ${v.lie.raw}/${v.lie.max}, VRIN 불일치 ${v.vrin.mismatchPairs}/${v.vrin.maxPairs}, IMC 실패 ${v.imc.failCount} — ${v.overallSummary.slice(0, 120)}`;
     return syntheticMiddle(
       middle,
       avg,
-      liePct + vrinPct + imcPct,
+      parts.reduce((a, b) => a + b, 0),
       300,
       10,
       10,
-      'IMC·L·F·VRIN',
-      `전체 ${v.overallTitle}. L ${v.lie.raw}/${v.lie.max}, VRIN 불일치 ${v.vrin.mismatchPairs}/${v.vrin.maxPairs}, IMC 실패 ${v.imc.failCount} — ${v.overallSummary.slice(0, 120)}`,
+      is99 ? 'IMC·F·L' : 'IMC·L·F·VRIN',
+      summary,
     );
   }
 

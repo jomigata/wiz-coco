@@ -61,15 +61,15 @@ const IMC_CHECKS_100: { no: number; expected: number }[] = [
 const LIE_ITEMS_100 = [44, 64, 69] as const;
 const INFREQ_ITEMS_100 = [72, 80, 93] as const;
 
-/** ego-ok-99: 현실 검증형 IMC (최소 동의) · L은 솔직 인정 문항(역채점) */
-const IMC_MIN_ACCEPT_99: { no: number; minAccept: number }[] = [
-  { no: 9, minAccept: 4 },
-  { no: 38, minAccept: 4 },
-  { no: 68, minAccept: 4 },
-];
-
-const LIE_ADMISSIVE_99 = [15, 48, 88] as const;
+/** ego-ok-99: 첨부 채점 공식 — IMC 3점 이하, F 3점 이상, L 2점 이하 (2문항↑) */
+const IMC_ITEMS_99 = [9, 38, 68] as const;
+const LIE_ITEMS_99 = [15, 48, 88] as const;
 const INFREQ_ITEMS_99 = [26, 58, 78] as const;
+
+const IMC_LOW_MAX_99 = 3;
+const INFREQ_HIGH_MIN_99 = 3;
+const LIE_LOW_MAX_99 = 2;
+const VALIDITY_HIT_INVALID_MIN_99 = 2;
 
 /** 대립 문항쌍 (100문항 은행만) */
 export const EGO_OK_VRIN_PAIRS: [number, number][] =
@@ -118,17 +118,18 @@ function sumLikertPoints(answers: Record<string, number>, itemNos: readonly numb
   return { raw, max };
 }
 
-/** L(99): 평범한 인간 경험 부인 — 낮은 동의일수록 L 점수 상승 */
-function sumLieAdmissivePoints(answers: Record<string, number>, itemNos: readonly number[]): { raw: number; max: number } {
-  let raw = 0;
-  let max = 0;
+function countAnswerHits(
+  answers: Record<string, number>,
+  itemNos: readonly number[],
+  hit: (likert: number) => boolean,
+): number {
+  let hits = 0;
   for (const no of itemNos) {
     const a = answerByNo(answers, no);
     if (a === undefined || a < 1 || a > 5) continue;
-    raw += 6 - a;
-    max += 5;
+    if (hit(a)) hits += 1;
   }
-  return { raw, max };
+  return hits;
 }
 
 function computeImcFor100(answers: Record<string, number>) {
@@ -151,21 +152,44 @@ function computeImcFor100(answers: Record<string, number>) {
 }
 
 function computeImcFor99(answers: Record<string, number>) {
-  let imcFails = 0;
-  let imcAnswered = 0;
-  for (const { no, minAccept } of IMC_MIN_ACCEPT_99) {
-    const a = answerByNo(answers, no);
-    if (a === undefined) continue;
-    imcAnswered += 1;
-    if (a < minAccept) imcFails += 1;
-  }
+  const imcFails = countAnswerHits(answers, IMC_ITEMS_99, (a) => a <= IMC_LOW_MAX_99);
   const status: ValidityScaleStatus =
-    imcFails >= 2 ? 'invalid' : imcFails >= 1 ? 'caution' : imcAnswered === 0 ? 'caution' : 'normal';
+    imcFails >= VALIDITY_HIT_INVALID_MIN_99
+      ? 'invalid'
+      : imcFails >= 1
+        ? 'caution'
+        : 'normal';
   return {
-    itemNos: IMC_MIN_ACCEPT_99.map((c) => c.no),
+    itemNos: [...IMC_ITEMS_99],
     failCount: imcFails,
     status,
-    detail: `현실·주의 검증 실패 2개 이상 무효 · 1개 주의 (3문항 IMC: ${IMC_MIN_ACCEPT_99.map((c) => c.no).join('·')})`,
+    detail: `3점 이하 ${VALIDITY_HIT_INVALID_MIN_99}개 이상 무효 · 1개 주의 (IMC: ${IMC_ITEMS_99.join('·')})`,
+  };
+}
+
+function computeInfreqFor99(answers: Record<string, number>) {
+  const hits = countAnswerHits(answers, INFREQ_ITEMS_99, (a) => a >= INFREQ_HIGH_MIN_99);
+  const status: ValidityScaleStatus =
+    hits >= VALIDITY_HIT_INVALID_MIN_99 ? 'invalid' : hits >= 1 ? 'caution' : 'normal';
+  return {
+    itemNos: [...INFREQ_ITEMS_99],
+    raw: hits,
+    max: VALIDITY_HIT_INVALID_MIN_99,
+    status,
+    detail: `3점 이상 ${VALIDITY_HIT_INVALID_MIN_99}개 이상 무효 · 1개 주의 (F: ${INFREQ_ITEMS_99.join('·')})`,
+  };
+}
+
+function computeLieFor99(answers: Record<string, number>) {
+  const hits = countAnswerHits(answers, LIE_ITEMS_99, (a) => a <= LIE_LOW_MAX_99);
+  const status: ValidityScaleStatus =
+    hits >= VALIDITY_HIT_INVALID_MIN_99 ? 'caution' : 'normal';
+  return {
+    itemNos: [...LIE_ITEMS_99],
+    raw: hits,
+    max: VALIDITY_HIT_INVALID_MIN_99,
+    status,
+    detail: `2점 이하 ${VALIDITY_HIT_INVALID_MIN_99}개 이상 도덕적 포장 주의 (L: ${LIE_ITEMS_99.join('·')})`,
   };
 }
 
@@ -174,21 +198,42 @@ export function computeEgoOkValidityProfile(answers: Record<string, number>): Eg
 
   const imc = is99 ? computeImcFor99(answers) : computeImcFor100(answers);
 
-  const lie = is99
-    ? sumLieAdmissivePoints(answers, LIE_ADMISSIVE_99)
-    : sumLikertPoints(answers, LIE_ITEMS_100);
-  const lieItemNos = is99 ? [...LIE_ADMISSIVE_99] : [...LIE_ITEMS_100];
-  const lieMax = lie.max || 15;
-  const lieRatio = lieMax > 0 ? lie.raw / lieMax : 0;
-  const lieStatus: ValidityScaleStatus =
-    lieRatio >= 0.8 ? 'invalid' : lieRatio >= 0.6 ? 'caution' : 'normal';
+  const lieBlock = is99
+    ? computeLieFor99(answers)
+    : (() => {
+        const summed = sumLikertPoints(answers, LIE_ITEMS_100);
+        const lieMax = summed.max || 15;
+        const lieRatio = lieMax > 0 ? summed.raw / lieMax : 0;
+        const status: ValidityScaleStatus =
+          lieRatio >= 0.8 ? 'invalid' : lieRatio >= 0.6 ? 'caution' : 'normal';
+        return {
+          itemNos: [...LIE_ITEMS_100],
+          raw: summed.raw,
+          max: lieMax,
+          status,
+          detail: `원점수 비율 60% 이상 주의 · 80% 이상 무효 (3문항 L: ${LIE_ITEMS_100.join('·')})`,
+        };
+      })();
 
-  const infreqItems = is99 ? INFREQ_ITEMS_99 : INFREQ_ITEMS_100;
-  const infreq = sumLikertPoints(answers, infreqItems);
-  const infreqMax = infreq.max || 15;
-  const infreqRatio = infreqMax > 0 ? infreq.raw / infreqMax : 0;
-  const infreqStatus: ValidityScaleStatus =
-    infreqRatio >= 0.6 ? 'invalid' : infreqRatio >= 0.4 ? 'caution' : 'normal';
+  const infreqBlock = is99
+    ? computeInfreqFor99(answers)
+    : (() => {
+        const summed = sumLikertPoints(answers, INFREQ_ITEMS_100);
+        const infreqMax = summed.max || 15;
+        const infreqRatio = infreqMax > 0 ? summed.raw / infreqMax : 0;
+        const status: ValidityScaleStatus =
+          infreqRatio >= 0.6 ? 'invalid' : infreqRatio >= 0.4 ? 'caution' : 'normal';
+        return {
+          itemNos: [...INFREQ_ITEMS_100],
+          raw: summed.raw,
+          max: infreqMax,
+          status,
+          detail: `원점수 비율 40% 이상 주의 · 60% 이상 무효 (3문항 F: ${INFREQ_ITEMS_100.join('·')})`,
+        };
+      })();
+
+  const lieStatus = lieBlock.status;
+  const infreqStatus = infreqBlock.status;
 
   const vrinPairs = EGO_OK_VRIN_PAIRS;
   let vrinMismatch = 0;
@@ -247,7 +292,9 @@ export function computeEgoOkValidityProfile(answers: Record<string, number>): Eg
       body:
         lieStatus === 'normal'
           ? '사회적 바람직성 (L)은 정상입니다. 자신을 지나치게 좋게 포장한 응답으로 보기는 어렵습니다.'
-          : '사회적 바람직성 (L)이 높게 나온 경우, 평가 불안으로 자신을 과도하게 긍정적으로 그렸을 수 있습니다. 정답이 없음을 안내하고 솔직한 응답을 장려하세요.',
+          : is99
+            ? '도덕적 포장(위선) 주의: 평범한 짜증·게으름·섭섭함까지 부인하는 응답이 두드러집니다. 프로파일은 조건부 해석하고, 정답이 없음을 안내하며 솔직한 응답을 장려하세요.'
+            : '사회적 바람직성 (L)이 높게 나온 경우, 평가 불안으로 자신을 과도하게 긍정적으로 그렸을 수 있습니다. 정답이 없음을 안내하고 솔직한 응답을 장려하세요.',
     },
     {
       label: VALIDITY_SCALE_LABELS.infreq,
@@ -266,10 +313,6 @@ export function computeEgoOkValidityProfile(answers: Record<string, number>): Eg
     },
   ];
 
-  const lieDetail = is99
-    ? `평범한 경험 부인 비율 60% 이상 주의 · 80% 이상 무효 (3문항 L: ${lieItemNos.join('·')})`
-    : `원점수 비율 60% 이상 주의 · 80% 이상 무효 (3문항 L: ${lieItemNos.join('·')})`;
-
   const vrinDetail = is99
     ? '99문항 은행: VRIN 미사용'
     : `불일치 쌍 2개 이상 무효 · 1개 주의 (5쌍 VRIN: ${vrinPairs.map(([a, b]) => `${a}-${b}`).join(', ')})`;
@@ -280,18 +323,18 @@ export function computeEgoOkValidityProfile(answers: Record<string, number>): Eg
     overallSummary,
     imc,
     lie: {
-      itemNos: lieItemNos,
-      raw: lie.raw,
-      max: lieMax,
-      status: lieStatus,
-      detail: lieDetail,
+      itemNos: lieBlock.itemNos,
+      raw: lieBlock.raw,
+      max: lieBlock.max,
+      status: lieBlock.status,
+      detail: lieBlock.detail,
     },
     infreq: {
-      itemNos: [...infreqItems],
-      raw: infreq.raw,
-      max: infreqMax,
-      status: infreqStatus,
-      detail: `원점수 비율 40% 이상 주의 · 60% 이상 무효 (3문항 F: ${infreqItems.join('·')})`,
+      itemNos: infreqBlock.itemNos,
+      raw: infreqBlock.raw,
+      max: infreqBlock.max,
+      status: infreqBlock.status,
+      detail: infreqBlock.detail,
     },
     vrin: {
       pairCount: vrinPairs.length,
