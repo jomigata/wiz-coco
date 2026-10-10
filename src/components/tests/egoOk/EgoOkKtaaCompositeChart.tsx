@@ -8,6 +8,7 @@ import {
   type CSSProperties,
   type ReactNode,
 } from 'react';
+import { plus243RecommendedRawRange } from '@/lib/egogram243Plus';
 import {
   KTAA_GRAPH_ZONES,
   normalizeEgoOkGender,
@@ -31,6 +32,15 @@ const EGO_NEG_COLOR = '#e8954a';
 const EGO_POS_COLOR = '#9cc9e8';
 const EGO_TOTAL_BOX_STROKE = '#0284c7';
 const OK_LINE_COLOR = '#d32f2f';
+/** 243+ 4~6단계 권장 구간 (합계 0~50 눈금) */
+const PLUS243_RECOMMENDED_Y = plus243RecommendedRawRange();
+const RECOMMENDED_REFERENCE_LINE = {
+  stroke: '#dc2626',
+  strokeDasharray: '7 5',
+  strokeWidth: 2.5,
+  strokeOpacity: 0.92,
+  ifOverflow: 'extendDomain' as const,
+};
 /** KTAA C(하)·B(중)·A(상) — 남/여 동일: 하단 하늘 · 중간 흰 · 상단 분홍 */
 const ZONE_WHITE = '#ffffff';
 const ZONE_SKY = '#d6e8f5';
@@ -794,13 +804,8 @@ export default function EgoOkKtaaCompositeChart({
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={data} margin={chartMargin} style={{ background: 'transparent' }}>
             <Customized component={PlotBackgroundLayer} />
-            <ReferenceLine
-              y={12.5}
-              stroke="#e57373"
-              strokeDasharray="4 4"
-              strokeOpacity={0.55}
-              ifOverflow="extendDomain"
-            />
+            <ReferenceLine y={PLUS243_RECOMMENDED_Y.min} {...RECOMMENDED_REFERENCE_LINE} />
+            <ReferenceLine y={PLUS243_RECOMMENDED_Y.max} {...RECOMMENDED_REFERENCE_LINE} />
             <CartesianGrid stroke="#cbd5e1" strokeDasharray="0" vertical horizontal fillOpacity={0} />
             <YAxis
               domain={[0, 50]}
@@ -925,7 +930,8 @@ export default function EgoOkKtaaCompositeChart({
               style={{ background: ZONE_PINK }}
             />
             . 배경색은 243패턴을 기준으로 각 에너지 사용을 A (높음), B (보통), C (낮음) 3단계로 구분하였다.
-            빨간점선(12.5)은 부정성의 참고 (중간)기준선입니다.
+            빨간 점선은 243+ 플러스 <strong>권장 구간(4~6단계)</strong> 하한·상한(
+            {PLUS243_RECOMMENDED_Y.min}~{PLUS243_RECOMMENDED_Y.max}점)입니다.
             {!genderProvided ? (
               <span className="text-gray-600"> 테스트 성별: 새로고침 시 남/여 구간 높이 교대.</span>
             ) : null}
