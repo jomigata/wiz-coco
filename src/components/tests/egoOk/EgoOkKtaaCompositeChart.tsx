@@ -47,9 +47,15 @@ function CompositeChartTitleRecommendedLegend() {
   return (
     <span className="ml-2 font-normal text-gray-500">
       ( 243+ 권장구간 :{' '}
-      <span className="tracking-tight" style={{ color: RECOMMENDED_LINE_COLOR }}>
-        ──────
-      </span>{' '}
+      <span
+        className="inline-block align-middle"
+        style={{
+          width: '1.75rem',
+          borderBottom: `2.5px dashed ${RECOMMENDED_LINE_COLOR}`,
+          marginBottom: '0.2em',
+        }}
+        aria-hidden
+      />{' '}
       )
     </span>
   );
