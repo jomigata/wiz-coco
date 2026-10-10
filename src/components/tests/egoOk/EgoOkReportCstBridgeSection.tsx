@@ -155,7 +155,7 @@ export default function EgoOkReportCstBridgeSection({
     >
       <header className="mb-4 border-b border-violet-100/80 pb-3">
         <h2 className="text-base font-bold text-slate-900">
-          CST·통합 성격·임상 척도 (이고-오케이 90+타당도 10 ≈ 100문항)
+          CST·통합 성격·임상 척도 (이고-오케이 90+타당도 9 = 99문항)
         </h2>
         <p className="mt-1 text-xs leading-relaxed text-slate-600">
           긍정심리학 CST(1~9)와 IIP·MPD·NEO·Station·KDS·IESS·SRI·SCI-II·MindFit·SAED(10~19)를 한

@@ -1,3 +1,4 @@
+import { EGO_OK_ITEM_BANK_ID } from '@/data/egoOkQuestions';
 import { likertToItemPoints } from '@/lib/egoOkScoring';
 
 export type ValidityTraffic = 'normal' | 'caution' | 'invalid';
@@ -50,26 +51,37 @@ export type EgoOkValidityProfile = {
   counselorNotes: ValidityCounselorNote[];
 };
 
-/** items-100.json 분산 배치 (reorder-items-100.mjs) — 구 96번 기준 삽입: after 25·50·75 */
-const IMC_CHECKS: { no: number; expected: number }[] = [
+/** ego-ok-100: 지시형 IMC (정확 응답) */
+const IMC_CHECKS_100: { no: number; expected: number }[] = [
   { no: 26, expected: 1 },
   { no: 18, expected: 5 },
   { no: 34, expected: 2 },
 ];
 
-const LIE_ITEMS = [44, 64, 69] as const;
-const INFREQ_ITEMS = [72, 80, 93] as const;
+const LIE_ITEMS_100 = [44, 64, 69] as const;
+const INFREQ_ITEMS_100 = [72, 80, 93] as const;
 
-/** 대립 문항쌍: 둘 다 4점 이상(5점 척도)이면 1불일치 — 5쌍 */
-export const EGO_OK_VRIN_PAIRS: [number, number][] = [
-  [3, 40],
-  [5, 67],
-  [23, 62],
-  [55, 81],
-  [33, 100],
+/** ego-ok-99: 현실 검증형 IMC (최소 동의) · L은 솔직 인정 문항(역채점) */
+const IMC_MIN_ACCEPT_99: { no: number; minAccept: number }[] = [
+  { no: 9, minAccept: 4 },
+  { no: 38, minAccept: 4 },
+  { no: 68, minAccept: 4 },
 ];
 
-const VRIN_PAIRS = EGO_OK_VRIN_PAIRS;
+const LIE_ADMISSIVE_99 = [15, 48, 88] as const;
+const INFREQ_ITEMS_99 = [26, 58, 78] as const;
+
+/** 대립 문항쌍 (100문항 은행만) */
+export const EGO_OK_VRIN_PAIRS: [number, number][] =
+  EGO_OK_ITEM_BANK_ID === 'ego-ok-99'
+    ? []
+    : [
+        [3, 40],
+        [5, 67],
+        [23, 62],
+        [55, 81],
+        [33, 100],
+      ];
 
 function answerByNo(answers: Record<string, number>, no: number): number | undefined {
   const index = no - 1;
@@ -106,44 +118,104 @@ function sumLikertPoints(answers: Record<string, number>, itemNos: readonly numb
   return { raw, max };
 }
 
-export function computeEgoOkValidityProfile(answers: Record<string, number>): EgoOkValidityProfile {
+/** L(99): 평범한 인간 경험 부인 — 낮은 동의일수록 L 점수 상승 */
+function sumLieAdmissivePoints(answers: Record<string, number>, itemNos: readonly number[]): { raw: number; max: number } {
+  let raw = 0;
+  let max = 0;
+  for (const no of itemNos) {
+    const a = answerByNo(answers, no);
+    if (a === undefined || a < 1 || a > 5) continue;
+    raw += 6 - a;
+    max += 5;
+  }
+  return { raw, max };
+}
+
+function computeImcFor100(answers: Record<string, number>) {
   let imcFails = 0;
   let imcAnswered = 0;
-  for (const { no, expected } of IMC_CHECKS) {
+  for (const { no, expected } of IMC_CHECKS_100) {
     const a = answerByNo(answers, no);
     if (a === undefined) continue;
     imcAnswered += 1;
     if (a !== expected) imcFails += 1;
   }
-  const imcStatus: ValidityScaleStatus =
+  const status: ValidityScaleStatus =
     imcFails >= 2 ? 'invalid' : imcFails >= 1 ? 'caution' : imcAnswered === 0 ? 'caution' : 'normal';
+  return {
+    itemNos: IMC_CHECKS_100.map((c) => c.no),
+    failCount: imcFails,
+    status,
+    detail: `지시 응답 실패 2개 이상 무효 · 1개 주의 (3문항 IMC: ${IMC_CHECKS_100.map((c) => c.no).join('·')})`,
+  };
+}
 
-  const lie = sumLikertPoints(answers, LIE_ITEMS);
+function computeImcFor99(answers: Record<string, number>) {
+  let imcFails = 0;
+  let imcAnswered = 0;
+  for (const { no, minAccept } of IMC_MIN_ACCEPT_99) {
+    const a = answerByNo(answers, no);
+    if (a === undefined) continue;
+    imcAnswered += 1;
+    if (a < minAccept) imcFails += 1;
+  }
+  const status: ValidityScaleStatus =
+    imcFails >= 2 ? 'invalid' : imcFails >= 1 ? 'caution' : imcAnswered === 0 ? 'caution' : 'normal';
+  return {
+    itemNos: IMC_MIN_ACCEPT_99.map((c) => c.no),
+    failCount: imcFails,
+    status,
+    detail: `현실·주의 검증 실패 2개 이상 무효 · 1개 주의 (3문항 IMC: ${IMC_MIN_ACCEPT_99.map((c) => c.no).join('·')})`,
+  };
+}
+
+export function computeEgoOkValidityProfile(answers: Record<string, number>): EgoOkValidityProfile {
+  const is99 = EGO_OK_ITEM_BANK_ID === 'ego-ok-99';
+
+  const imc = is99 ? computeImcFor99(answers) : computeImcFor100(answers);
+
+  const lie = is99
+    ? sumLieAdmissivePoints(answers, LIE_ADMISSIVE_99)
+    : sumLikertPoints(answers, LIE_ITEMS_100);
+  const lieItemNos = is99 ? [...LIE_ADMISSIVE_99] : [...LIE_ITEMS_100];
   const lieMax = lie.max || 15;
   const lieRatio = lieMax > 0 ? lie.raw / lieMax : 0;
   const lieStatus: ValidityScaleStatus =
     lieRatio >= 0.8 ? 'invalid' : lieRatio >= 0.6 ? 'caution' : 'normal';
 
-  const infreq = sumLikertPoints(answers, INFREQ_ITEMS);
+  const infreqItems = is99 ? INFREQ_ITEMS_99 : INFREQ_ITEMS_100;
+  const infreq = sumLikertPoints(answers, infreqItems);
   const infreqMax = infreq.max || 15;
   const infreqRatio = infreqMax > 0 ? infreq.raw / infreqMax : 0;
   const infreqStatus: ValidityScaleStatus =
     infreqRatio >= 0.6 ? 'invalid' : infreqRatio >= 0.4 ? 'caution' : 'normal';
 
+  const vrinPairs = EGO_OK_VRIN_PAIRS;
   let vrinMismatch = 0;
   let vrinChecked = 0;
-  for (const [a, b] of VRIN_PAIRS) {
+  for (const [a, b] of vrinPairs) {
     const av = answerByNo(answers, a);
     const bv = answerByNo(answers, b);
     if (av === undefined || bv === undefined) continue;
     vrinChecked += 1;
     if (pairMismatch(answers, a, b)) vrinMismatch += 1;
   }
-  const vrinStatus: ValidityScaleStatus =
-    vrinMismatch >= 2 ? 'invalid' : vrinMismatch >= 1 ? 'caution' : vrinChecked === 0 ? 'caution' : 'normal';
+  const vrinStatus: ValidityScaleStatus = is99
+    ? 'normal'
+    : vrinMismatch >= 2
+      ? 'invalid'
+      : vrinMismatch >= 1
+        ? 'caution'
+        : vrinChecked === 0
+          ? 'caution'
+          : 'normal';
+
+  const scalesForOverall = is99
+    ? [imc.status, lieStatus, infreqStatus]
+    : [imc.status, lieStatus, infreqStatus, vrinStatus];
 
   let overall: ValidityTraffic = 'normal';
-  const worstScale = [imcStatus, lieStatus, infreqStatus, vrinStatus].reduce(worst, 'normal');
+  const worstScale = scalesForOverall.reduce(worst, 'normal');
   if (worstScale === 'invalid') overall = 'invalid';
   else if (worstScale === 'caution') overall = 'caution';
 
@@ -161,14 +233,15 @@ export function computeEgoOkValidityProfile(answers: Record<string, number>): Eg
         ? '일부 타당도 지표가 주의 구간입니다. 아래 세부 지표를 확인한 뒤 조건부로 해석하세요.'
         : '타당도 지표가 무효 구간입니다. 이고그램·오케이그램 프로파일 해석을 보류하고 재검사·면담을 권장합니다.';
 
+  const imcNoteBody =
+    imc.status === 'normal'
+      ? is99
+        ? `반응 성실도 (IMC)는 정상입니다. 현실·주의 문항(${imc.itemNos.join('·')})에 타당하게 응답한 것으로 볼 수 있습니다.`
+        : `반응 성실도 (IMC)는 정상입니다. 지시 문항(${imc.itemNos.join('·')})을 읽고 응답한 것으로 볼 수 있습니다.`
+      : '반응 성실도 (IMC)가 주의 또는 무효입니다. 피로·집중력 저하로 지문을 제대로 읽지 않았을 가능성이 있습니다. 수검 당시 컨디션을 점검한 뒤 재검사를 권장합니다.';
+
   const counselorNotes: ValidityCounselorNote[] = [
-    {
-      label: VALIDITY_SCALE_LABELS.imc,
-      body:
-        imcStatus === 'normal'
-          ? `반응 성실도 (IMC)는 정상입니다. 지시 문항(${IMC_CHECKS.map((c) => c.no).join('·')})을 읽고 응답한 것으로 볼 수 있습니다.`
-          : '반응 성실도 (IMC)가 주의 또는 무효입니다. 피로·집중력 저하로 지문을 제대로 읽지 않았을 가능성이 있습니다. 수검 당시 컨디션을 점검한 뒤 재검사를 권장합니다.',
-    },
+    { label: VALIDITY_SCALE_LABELS.imc, body: imcNoteBody },
     {
       label: VALIDITY_SCALE_LABELS.lie,
       body:
@@ -185,43 +258,47 @@ export function computeEgoOkValidityProfile(answers: Record<string, number>): Eg
     },
     {
       label: VALIDITY_SCALE_LABELS.vrin,
-      body:
-        vrinStatus === 'normal'
+      body: is99
+        ? '99문항 은행에서는 VRIN(대립 문항) 일관성 검사를 사용하지 않습니다.'
+        : vrinStatus === 'normal'
           ? '일관성 (VRIN)은 정상입니다. 대립 문항에 동시에 강하게 동의한 불일치는 없습니다.'
           : '일관성 (VRIN)이 주의 또는 무효입니다. 서로 맞지 않는 답을 함께 골랐을 수 있습니다. 컨디션·속도를 점검한 뒤 재검사를 고려하세요.',
     },
   ];
 
+  const lieDetail = is99
+    ? `평범한 경험 부인 비율 60% 이상 주의 · 80% 이상 무효 (3문항 L: ${lieItemNos.join('·')})`
+    : `원점수 비율 60% 이상 주의 · 80% 이상 무효 (3문항 L: ${lieItemNos.join('·')})`;
+
+  const vrinDetail = is99
+    ? '99문항 은행: VRIN 미사용'
+    : `불일치 쌍 2개 이상 무효 · 1개 주의 (5쌍 VRIN: ${vrinPairs.map(([a, b]) => `${a}-${b}`).join(', ')})`;
+
   return {
     overall,
     overallTitle,
     overallSummary,
-    imc: {
-      itemNos: IMC_CHECKS.map((c) => c.no),
-      failCount: imcFails,
-      status: imcStatus,
-      detail: `지시 응답 실패 2개 이상 무효 · 1개 주의 (3문항 IMC: ${IMC_CHECKS.map((c) => c.no).join('·')})`,
-    },
+    imc,
     lie: {
-      itemNos: [...LIE_ITEMS],
+      itemNos: lieItemNos,
       raw: lie.raw,
       max: lieMax,
       status: lieStatus,
-      detail: `원점수 비율 60% 이상 주의 · 80% 이상 무효 (3문항 L: ${LIE_ITEMS.join('·')})`,
+      detail: lieDetail,
     },
     infreq: {
-      itemNos: [...INFREQ_ITEMS],
+      itemNos: [...infreqItems],
       raw: infreq.raw,
       max: infreqMax,
       status: infreqStatus,
-      detail: `원점수 비율 40% 이상 주의 · 60% 이상 무효 (3문항 F: ${INFREQ_ITEMS.join('·')})`,
+      detail: `원점수 비율 40% 이상 주의 · 60% 이상 무효 (3문항 F: ${infreqItems.join('·')})`,
     },
     vrin: {
-      pairCount: VRIN_PAIRS.length,
+      pairCount: vrinPairs.length,
       mismatchPairs: vrinMismatch,
-      maxPairs: VRIN_PAIRS.length,
+      maxPairs: vrinPairs.length,
       status: vrinStatus,
-      detail: `불일치 쌍 2개 이상 무효 · 1개 주의 (5쌍 VRIN: ${VRIN_PAIRS.map(([a, b]) => `${a}-${b}`).join(', ')})`,
+      detail: vrinDetail,
     },
     counselorNotes,
   };

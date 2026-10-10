@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useLayoutEffect, useMemo } from 'react';
 import { questions } from '@/data/mbtiProQuestions';
-import { EGO_OK_QUESTIONS, type EgoOkScaleKind } from '@/data/egoOkQuestions';
+import { EGO_OK_QUESTION_COUNT, EGO_OK_QUESTIONS, type EgoOkScaleKind } from '@/data/egoOkQuestions';
 import { buildEgoOkJoinResponses } from '@/lib/egoOkJoinResponses';
 import {
   createLocalPsychTestClientInfo,
@@ -437,7 +437,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
         const incomplete = findEgoOkIncompleteQuestionNumbers(answers);
         if (incomplete.length > 0) {
           window.alert(
-            `100문항 모두 응답해야 결과를 볼 수 있습니다.\n미응답·오류 문항: ${
+            `${EGO_OK_QUESTION_COUNT}문항 모두 응답해야 결과를 볼 수 있습니다.\n미응답·오류 문항: ${
               incomplete.length <= 8
                 ? incomplete.join(', ')
                 : `${incomplete.slice(0, 8).join(', ')} … (${incomplete.length}개)`

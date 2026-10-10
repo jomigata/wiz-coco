@@ -1,4 +1,8 @@
-import { EGO_OK_ITEM_BANK_ID, EGO_OK_QUESTIONS } from '@/data/egoOkQuestions';
+import {
+  EGO_OK_ITEM_BANK_ID,
+  EGO_OK_QUESTION_COUNT,
+  EGO_OK_QUESTIONS,
+} from '@/data/egoOkQuestions';
 import { buildPattern243Plus, type Pattern243Plus } from '@/lib/egogram243Plus';
 import { classifyOkLifePosition } from '@/lib/egoOkOkLifePosition';
 import { computeEgoOkValidityProfile, type EgoOkValidityProfile } from '@/lib/egoOkValidity';
@@ -299,7 +303,7 @@ export function computeEgoOkReport(
       incomplete.length <= 5
         ? incomplete.join(', ')
         : `${incomplete.slice(0, 5).join(', ')} 외 ${incomplete.length - 5}문항`;
-    throw new Error(`100문항 모두 응답해야 합니다. 미응답 또는 잘못된 응답: ${preview}`);
+    throw new Error(`${EGO_OK_QUESTION_COUNT}문항 모두 응답해야 합니다. 미응답 또는 잘못된 응답: ${preview}`);
   }
 
   const gender = normalizeEgoOkGender(genderInput);

@@ -1,6 +1,6 @@
 /**
  * Canonical ego-ok items → src/data/egoOkQuestions.ts
- * Source: docs/internal-materials/ego-ok/items-100.json
+ * Source: docs/internal-materials/ego-ok/items-99.json (or EGO_OK_ITEMS_JSON=items-100.json)
  */
 import fs from 'fs';
 import path from 'path';
@@ -8,13 +8,16 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, '..');
-const sourcePath = path.join(root, 'docs/internal-materials/ego-ok/items-100.json');
+const sourceRel =
+  process.env.EGO_OK_ITEMS_JSON?.trim() || 'docs/internal-materials/ego-ok/items-99.json';
+const sourcePath = path.join(root, sourceRel);
 const outPath = path.join(root, 'src/data/egoOkQuestions.ts');
 
 const bank = JSON.parse(fs.readFileSync(sourcePath, 'utf8'));
+const expectedCount = bank.itemCount ?? bank.items?.length;
 
-if (!Array.isArray(bank.items) || bank.items.length !== 100) {
-  console.error(`Expected 100 items, got ${bank.items?.length ?? 0}`);
+if (!Array.isArray(bank.items) || bank.items.length !== expectedCount) {
+  console.error(`Expected ${expectedCount} items, got ${bank.items?.length ?? 0}`);
   process.exit(1);
 }
 
@@ -27,7 +30,7 @@ function scaleKindFromItem(item) {
 
 const lines = [];
 lines.push('/**');
-lines.push(' * TA 이고-오케이그램 검사 문항 (100, 타당도 10문항 분산).');
+lines.push(` * TA 이고-오케이그램 검사 문항 (${expectedCount}, 타당도 ${bank.validityItemNos?.length ?? '?'}문항).`);
 lines.push(` * Generated from ${path.relative(root, sourcePath).replace(/\\/g, '/')}`);
 lines.push(` * Bank id: ${bank.id} — do not edit by hand; run: npm run sync:ego-ok-questions`);
 lines.push(' */');

@@ -65,4 +65,5 @@ WizCoCo 상담사·내담자 보고서, CST/통합 척도, 자율치료·243+ �
 
 ## 5. 검사 은행
 
-- **100문항** (90 + 타당도 10): [items-100.json](./items-100.json), [validity-100-changelog-ko.md](./validity-100-changelog-ko.md)
+- **99문항** (90 + 타당도 9): [items-99.json](./items-99.json), [validity-99-changelog-ko.md](./validity-99-changelog-ko.md)
+- **100문항** (아카이브): [items-100.json](./items-100.json), [validity-100-changelog-ko.md](./validity-100-changelog-ko.md)

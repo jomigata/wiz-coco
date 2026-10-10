@@ -1,10 +1,14 @@
 # 이고그램 · 오케이그램
 
-## 기준본 — 100문항 (타당도 10, 2026-10)
+## 기준본 — 99문항 (타당도 9, 블록 인터리빙, 2026-10)
 
-[items-100.json](./items-100.json) — **앱·채점 기준**. 90 성격 + 타당도 **10**문항(15·30·47·63·77·90·**97·98·99·100**). 변경 요약: [validity-100-changelog-ko.md](./validity-100-changelog-ko.md)
+[items-99.json](./items-99.json) — **앱·채점 기준**. 90 성격 + 타당도 **9**문항 (**9·15·26·38·48·58·68·78·88**, VRIN 없음). 원문 TSV: [items-99-source.tsv](./items-99-source.tsv)
 
-생성: `node scripts/build-items-100.mjs`(최초) → `node scripts/sync-ego-ok-questions.mjs`
+생성: `node scripts/build-items-99-final.mjs` → `npm run sync:ego-ok-questions` · 엑셀 TSV: `node scripts/export-items-99-excel.mjs`
+
+## 이전 기준 — 100문항 (아카이브)
+
+[items-100.json](./items-100.json) — 90 + 타당도 10. 변경 요약: [validity-100-changelog-ko.md](./validity-100-changelog-ko.md). 100문항 동기화: `EGO_OK_ITEMS_JSON=docs/internal-materials/ego-ok/items-100.json npm run sync:ego-ok-questions`
 
 **보고서·상담 문구 규칙:** [ok-egogram-report-rules-ko.md](./ok-egogram-report-rules-ko.md)
 

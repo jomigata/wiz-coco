@@ -26,6 +26,16 @@ function statusKo(status: ValidityScaleStatus): string {
   return '무효';
 }
 
+function validitySpreadLabel(validity: EgoOkValidityProfile): string {
+  const nos = [
+    ...validity.imc.itemNos,
+    ...validity.lie.itemNos,
+    ...validity.infreq.itemNos,
+  ].sort((a, b) => a - b);
+  const count = nos.length;
+  return `Test Validity Profile · 타당도 ${count}문항 분산 (${nos.join('·')})`;
+}
+
 function statusClass(status: ValidityScaleStatus): string {
   if (status === 'normal') return 'text-emerald-300';
   if (status === 'caution') return 'text-amber-300';
@@ -193,7 +203,7 @@ export default function EgoOkValiditySection({
           tone="indigo"
           title="검사 타당도 및 반응 태도 분석"
         >
-          <p className="text-xs text-slate-500">Test Validity Profile · 타당도 10문항 분산 (18·26·34·44·64·69·72·80·93·100)</p>
+          <p className="text-xs text-slate-500">{validitySpreadLabel(validity)}</p>
         </ReportInsightBlock>
         <ReportInsightBlock tone="amber" title="종합 판정">
           <p className="text-sm font-semibold text-slate-200">
@@ -217,7 +227,7 @@ export default function EgoOkValiditySection({
     <section className="rounded-2xl border-2 border-white bg-slate-900/50 p-5 shadow-xl sm:p-6">
       <header className="border-b border-white pb-4">
         <h2 className="text-lg font-semibold text-white">검사 타당도 및 반응 태도 분석</h2>
-        <p className="mt-1 text-xs text-slate-500">Test Validity Profile · 타당도 10문항 분산 (18·26·34·44·64·69·72·80·93·100)</p>
+        <p className="mt-1 text-xs text-slate-500">{validitySpreadLabel(validity)}</p>
       </header>
       <div className="mt-4 rounded-lg border border-white bg-black/25 p-4">
         <p className="text-sm font-semibold text-slate-200">
