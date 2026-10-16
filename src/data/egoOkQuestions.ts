@@ -113,13 +113,13 @@ export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 90, text: "남에게 온전히 맡기기가 불안해서, 중요한 일일수록 내가 직접 챙기는 편이다.", readingText: "남에게 온전히 맡기기가 불안해서, 중요한 일일수록 내가 직접 챙기는 편이다.", code: "AC", egoIndex: null, okIndex: 5, scaleType: "u_minus", scaleKind: 'okgram' },
   { no: 91, text: "대체로 감정에 치우치기보다, 상황을 객관적이고\n합리적으로 판단하여 일을 처리하는 편이다.", readingText: "대체로 감정에 치우치기보다, 상황을 객관적이고\n합리적으로 판단하여 일을 처리하는 편이다.", code: "CA", egoIndex: 37, okIndex: null, scaleType: "a_positive", scaleKind: 'egogram' },
   { no: 92, text: "상대가 딱해 보이면 마음이 약해져서, 조금\n무리가 되더라도 부탁을 들어주곤 한다.", readingText: "상대가 딱해 보이면 마음이 약해져서, 조금\n무리가 되더라도 부탁을 들어주곤 한다.", code: "BB", egoIndex: 45, okIndex: null, scaleType: "np_negative", scaleKind: 'egogram' },
-  { no: 93, text: "호기심과 상상력이 풍부해서, 엉뚱하거나\n새로운 아이디어를 잘 떠올리는 편이다.", readingText: "호기심과 상상력이 풍부해서, 엉뚱하거나\n새로운 아이디어를 잘 떠올리는 편이다.", code: "DA", egoIndex: 49, okIndex: null, scaleType: "fc_positive", scaleKind: 'egogram' },
+  { no: 93, text: "화가 나면 순간적으로 감정을 조절하지 못하고, 거친 말을 표현하는 편이다.", readingText: "화가 나면 순간적으로 감정을 조절하지 못하고, 거친 말을 표현하는 편이다.", code: "AC", egoIndex: null, okIndex: 13, scaleType: "u_minus", scaleKind: 'okgram' },
   { no: 94, text: "모임이나 조직의 방침에 잘 맞추며, 무리 없이 조화롭게 행동하는 편이다.", readingText: "모임이나 조직의 방침에 잘 맞추며, 무리 없이 조화롭게 행동하는 편이다.", code: "EA", egoIndex: 42, okIndex: null, scaleType: "ac_positive", scaleKind: 'egogram' },
   { no: 95, text: "나에게 맡겨진 일에 대해서는, 끝까지 책임을 다해 마무리하는 편이다.", readingText: "나에게 맡겨진 일에 대해서는, 끝까지 책임을 다해 마무리하는 편이다.", code: "AA", egoIndex: 48, okIndex: null, scaleType: "cp_positive", scaleKind: 'egogram' },
   { no: 96, text: "누구를 만나더라도 그 사람의 장점이나 배울 점을 먼저 보려는 편이다.", readingText: "누구를 만나더라도 그 사람의 장점이나 배울 점을 먼저 보려는 편이다.", code: "BC", egoIndex: null, okIndex: 31, scaleType: "u_plus", scaleKind: 'okgram' },
-  { no: 97, text: "일이 잘 풀리지 않더라도 금방 낙담하지 않고, 다시 시도해 보려는 편이다.", readingText: "일이 잘 풀리지 않더라도 금방 낙담하지 않고, 다시 시도해 보려는 편이다.", code: "DC", egoIndex: null, okIndex: 40, scaleType: "i_plus", scaleKind: 'okgram' },
-  { no: 98, text: "내가 내린 판단과 결정을 확신하기 어려워, 일을\n처리하는 동안 자주 불안감을 느끼는 편이다.", readingText: "내가 내린 판단과 결정을 확신하기 어려워, 일을\n처리하는 동안 자주 불안감을 느끼는 편이다.", code: "EC", egoIndex: null, okIndex: 19, scaleType: "i_minus", scaleKind: 'okgram' },
-  { no: 99, text: "화가 나면 순간적으로 감정을 조절하지 못하고, 거친 말을 표현하는 편이다.", readingText: "화가 나면 순간적으로 감정을 조절하지 못하고, 거친 말을 표현하는 편이다.", code: "AC", egoIndex: null, okIndex: 13, scaleType: "u_minus", scaleKind: 'okgram' },
+  { no: 97, text: "내가 내린 판단과 결정을 확신하기 어려워, 일을\n처리하는 동안 자주 불안감을 느끼는 편이다.", readingText: "내가 내린 판단과 결정을 확신하기 어려워, 일을\n처리하는 동안 자주 불안감을 느끼는 편이다.", code: "EC", egoIndex: null, okIndex: 19, scaleType: "i_minus", scaleKind: 'okgram' },
+  { no: 98, text: "일이 잘 풀리지 않더라도 금방 낙담하지 않고, 다시 시도해 보려는 편이다.", readingText: "일이 잘 풀리지 않더라도 금방 낙담하지 않고, 다시 시도해 보려는 편이다.", code: "DC", egoIndex: null, okIndex: 40, scaleType: "i_plus", scaleKind: 'okgram' },
+  { no: 99, text: "호기심과 상상력이 풍부해서, 엉뚱하거나\n새로운 아이디어를 잘 떠올리는 편이다.", readingText: "호기심과 상상력이 풍부해서, 엉뚱하거나\n새로운 아이디어를 잘 떠올리는 편이다.", code: "DA", egoIndex: 49, okIndex: null, scaleType: "fc_positive", scaleKind: 'egogram' },
 ];
 
 export const EGO_OK_QUESTION_COUNT = EGO_OK_QUESTIONS.length;

@@ -1058,7 +1058,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
                   const canGoNext =
                     currentQuestion < totalQuestions - 1 && currentAnswered;
                   const egoNavBright =
-                    'bg-gray-700/45 text-slate-200 hover:bg-gray-700/65 hover:text-slate-100';
+                    'bg-gray-700/45 text-gray-400 hover:bg-gray-700/65 hover:text-gray-300';
                   const egoNavDim =
                     'bg-gray-800/30 text-gray-600 cursor-not-allowed';
                   const prevClass = isEgoOkFlow
