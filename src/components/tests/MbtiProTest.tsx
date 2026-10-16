@@ -1053,24 +1053,56 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
               </div>
 
               <div className="flex justify-between mt-3">
-                <button
-                  onClick={handlePrevQuestion}
-                  className="px-5 py-2 text-sm rounded-lg font-medium transition-all duration-300 bg-gray-800/25 text-gray-500 hover:bg-gray-800/40 hover:text-gray-400"
-                >
-                  {currentQuestion === 0 ? '이전 페이지' : '이전 문항'}
-                </button>
+                {(() => {
+                  const egoOkNavReady =
+                    isEgoOkFlow && answers[currentQuestion] !== undefined;
+                  const egoOkNavActive =
+                    'bg-gray-700/50 text-slate-100 hover:bg-gray-700/70 hover:text-white';
+                  const egoOkNavMuted =
+                    'bg-gray-800/25 text-gray-500 hover:bg-gray-800/40 hover:text-gray-400';
+                  const defaultNavActive =
+                    'bg-gray-700/50 text-gray-300 hover:bg-gray-700/70';
+                  const defaultNavMuted =
+                    'bg-gray-800/25 text-gray-500 hover:bg-gray-800/40 hover:text-gray-400';
+                  const prevClass = isEgoOkFlow
+                    ? egoOkNavReady
+                      ? egoOkNavActive
+                      : egoOkNavMuted
+                    : defaultNavMuted;
+                  const nextEnabled =
+                    currentQuestion < totalQuestions - 1 &&
+                    answers[currentQuestion] !== undefined;
+                  const nextClass = isEgoOkFlow
+                    ? nextEnabled
+                      ? egoOkNavActive
+                      : 'bg-gray-800/30 text-gray-600 cursor-not-allowed'
+                    : nextEnabled
+                      ? defaultNavActive
+                      : 'bg-gray-800/30 text-gray-600 cursor-not-allowed';
+                  return (
+                    <>
+                      <button
+                        onClick={handlePrevQuestion}
+                        className={`px-5 py-2 text-sm rounded-lg font-medium transition-all duration-300 ${prevClass}`}
+                      >
+                        {currentQuestion === 0 ? '이전 페이지' : '이전 문항'}
+                      </button>
 
-                <button
-                  onClick={handleNextQuestion}
-                  className={`px-5 py-2 text-sm rounded-lg font-medium transition-all duration-300 ${
-                    currentQuestion < totalQuestions - 1 && answers[currentQuestion] !== undefined
-                    ? 'bg-gray-700/50 text-gray-300 hover:bg-gray-700/70'
-                    : 'bg-gray-800/30 text-gray-600 cursor-not-allowed'
-                  }`}
-                  disabled={currentQuestion >= totalQuestions - 1 || answers[currentQuestion] === undefined}
-                >
-                  {currentQuestion === totalQuestions - 1 ? '결과 확인' : '다음 문항'}
-                </button>
+                      <button
+                        onClick={handleNextQuestion}
+                        className={`px-5 py-2 text-sm rounded-lg font-medium transition-all duration-300 ${nextClass}`}
+                        disabled={
+                          currentQuestion >= totalQuestions - 1 ||
+                          answers[currentQuestion] === undefined
+                        }
+                      >
+                        {currentQuestion === totalQuestions - 1
+                          ? '결과 확인'
+                          : '다음 문항'}
+                      </button>
+                    </>
+                  );
+                })()}
               </div>
 
               {editResultId.trim() ? (

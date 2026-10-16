@@ -4,13 +4,13 @@ import { EGO_OK_QUESTIONS } from '@/data/egoOkQuestions';
 const VALIDITY_KEYWORDS_BY_NO: Record<number, string> = {
   9: '24시간·하루·내일',
   38: '깜짝 놀람·위험·굉음',
-  68: '피로·휴식·과로',
+  68: '무리·피로·쉬고 싶',
   26: '기쁨·슬픔·분노·감정',
   58: '무수면·완벽 집중',
   78: '감기·피로·신체 불편',
-  15: '짜증·투정',
-  48: '게으름·미루기',
-  88: '섭섭함·서운함',
+  15: '피곤·예민·짜증·투정',
+  48: '피곤·늘어지고·미루기',
+  88: '서운함·가까운 사람',
 };
 
 function plainItemText(no: number): string {
