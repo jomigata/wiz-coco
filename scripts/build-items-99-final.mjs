@@ -30,8 +30,8 @@ const EXPECTED_COUNTS = {
 
 const VALIDITY_NOS = [9, 15, 26, 38, 48, 58, 68, 78, 88];
 
-/** 한 줄로 두기 위한 최대 글자 수 (초과 시 2줄) */
-const READING_SINGLE_LINE_MAX = 42;
+/** 한 줄로 두기 위한 최대 글자 수 (초과 시 2줄, 41자부터 2줄) */
+const READING_SINGLE_LINE_MAX = 40;
 /** 2줄일 때 줄당 최대 글자 수 (초과 시 화면에서 3줄로 보일 수 있음) */
 const READING_LINE_MAX = 42;
 
@@ -59,22 +59,47 @@ function splitTwoBalancedAtSpace(text) {
   return `${text.slice(0, bestAt)}\n${text.slice(bestAt + 1)}`;
 }
 
+function commaSpacePositions(text) {
+  const positions = [];
+  for (let i = 0; i < text.length - 1; i += 1) {
+    if (text[i] === ',' && text[i + 1] === ' ') positions.push(i);
+  }
+  return positions;
+}
+
+function breakAtCommaSpace(text, commaAt) {
+  return `${text.slice(0, commaAt + 1)}\n${text.slice(commaAt + 2)}`;
+}
+
+function commaSplitFitsTwoLines(text, commaAt) {
+  const line1 = text.slice(0, commaAt + 1);
+  const line2 = text.slice(commaAt + 2);
+  return line1.length <= READING_LINE_MAX && line2.length <= READING_LINE_MAX;
+}
+
 function wrapReadingText(text) {
   const withBreaks = text.replace(/@/g, '\n');
   if (withBreaks.includes('\n')) return withBreaks;
+
+  const commas = commaSpacePositions(withBreaks);
+  const singleComma = commas.length === 1;
+
   if (withBreaks.length <= READING_SINGLE_LINE_MAX) return withBreaks;
 
-  const commaPositions = [];
-  for (let i = 0; i < withBreaks.length - 1; i += 1) {
-    if (withBreaks[i] === ',' && withBreaks[i + 1] === ' ') commaPositions.push(i);
+  if (singleComma) {
+    const commaAt = commas[0];
+    if (commaSplitFitsTwoLines(withBreaks, commaAt)) {
+      return breakAtCommaSpace(withBreaks, commaAt);
+    }
+    return splitTwoBalancedAtSpace(withBreaks);
   }
 
   let bestComma = -1;
   let bestCommaDiff = Infinity;
-  for (const commaAt of commaPositions) {
+  for (const commaAt of commas) {
+    if (!commaSplitFitsTwoLines(withBreaks, commaAt)) continue;
     const line1 = withBreaks.slice(0, commaAt + 1);
     const line2 = withBreaks.slice(commaAt + 2);
-    if (line1.length > READING_LINE_MAX || line2.length > READING_LINE_MAX) continue;
     const diff = Math.abs(line1.length - line2.length);
     if (diff < bestCommaDiff) {
       bestCommaDiff = diff;
@@ -82,9 +107,7 @@ function wrapReadingText(text) {
     }
   }
 
-  if (bestComma >= 0) {
-    return `${withBreaks.slice(0, bestComma + 1)}\n${withBreaks.slice(bestComma + 2)}`;
-  }
+  if (bestComma >= 0) return breakAtCommaSpace(withBreaks, bestComma);
 
   return splitTwoBalancedAtSpace(withBreaks);
 }
@@ -180,6 +203,19 @@ const bank = {
   },
   items,
 };
+
+for (const it of items) {
+  const plain = it.readingText.replace(/\n/g, ' ');
+  let commas = 0;
+  for (let i = 0; i < plain.length - 1; i += 1) {
+    if (plain[i] === ',' && plain[i + 1] === ' ') commas += 1;
+  }
+  const lines = it.readingText.split('\n');
+  if (lines.length === 2 && commas === 1 && !lines[0].endsWith(',')) {
+    console.error(`Item ${it.no}: single comma but line break not after comma`);
+    process.exit(1);
+  }
+}
 
 fs.writeFileSync(outPath, `${JSON.stringify(bank, null, 2)}\n`, 'utf8');
 console.log(`Wrote ${outPath} (${items.length} items)`);
