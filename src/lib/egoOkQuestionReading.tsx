@@ -2,6 +2,7 @@
 
 import { useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import {
+  applyCommaBreakForTwoLines,
   applyOptionalLineBreaks,
   collapseOptionalLineBreaks,
   hasOptionalLineBreak,
@@ -33,7 +34,7 @@ function countTextNodeLines(textNode: Text): number {
 }
 
 /** 화면과 같은 블록 줄 구조로만 줄 수 측정 (표시 상태와 되먹임 없음) */
-function measureLineCountOffscreen(widthPx: number, textWithBreaks: string): number {
+export function measureLineCountOffscreen(widthPx: number, textWithBreaks: string): number {
   if (widthPx <= 0) return 1;
 
   const host = document.createElement('div');
@@ -80,6 +81,30 @@ function measureLineCountOffscreen(widthPx: number, textWithBreaks: string): num
   return Math.max(1, lines);
 }
 
+function resolveReadingDisplayText(widthPx: number, readingText: string): string {
+  const withBreaks = applyOptionalLineBreaks(readingText);
+  const flowText = collapseOptionalLineBreaks(readingText);
+  const hasBreak = hasOptionalLineBreak(readingText);
+
+  let text = hasBreak ? withBreaks : flowText;
+  if (hasBreak && measureLineCountOffscreen(widthPx, withBreaks) >= MIN_LINES_TO_STRIP) {
+    text = flowText;
+  }
+
+  const lines = measureLineCountOffscreen(widthPx, text);
+  if (lines >= 2) {
+    const commaBreak = applyCommaBreakForTwoLines(flowText);
+    if (commaBreak) {
+      const commaLines = measureLineCountOffscreen(widthPx, commaBreak);
+      if (commaLines === 2 || commaLines < lines) {
+        return commaBreak;
+      }
+    }
+  }
+
+  return text;
+}
+
 function LineBlocks({ text }: { text: string }) {
   const lines = formatCommaSpacing(text).split('\n');
   return (
@@ -95,21 +120,16 @@ function LineBlocks({ text }: { text: string }) {
 
 /** 엑셀 체크리스트와 유사한 고딕 · 구절 쉼표(,) · @ 선택 줄바꿈 */
 export function EgoOkQuestionReading({ readingText }: { readingText: string }) {
-  const [stripFixedBreaks, setStripFixedBreaks] = useState(false);
+  const [displayText, setDisplayText] = useState(() => applyOptionalLineBreaks(readingText));
   const rootRef = useRef<HTMLDivElement>(null);
   const widthRef = useRef(0);
-  const hasBreak = hasOptionalLineBreak(readingText);
-  const withBreaks = applyOptionalLineBreaks(readingText);
-  const displayText = hasBreak && stripFixedBreaks ? collapseOptionalLineBreaks(readingText) : withBreaks;
 
   useLayoutEffect(() => {
-    setStripFixedBreaks(false);
+    setDisplayText(applyOptionalLineBreaks(readingText));
     widthRef.current = 0;
   }, [readingText]);
 
   useLayoutEffect(() => {
-    if (!hasBreak) return;
-
     const el = rootRef.current;
     if (!el) return;
 
@@ -118,16 +138,15 @@ export function EgoOkQuestionReading({ readingText }: { readingText: string }) {
       if (width <= 0) return;
       if (widthRef.current === width) return;
       widthRef.current = width;
-      const linesWithBreak = measureLineCountOffscreen(width, withBreaks);
-      const shouldStrip = linesWithBreak >= MIN_LINES_TO_STRIP;
-      setStripFixedBreaks((prev) => (prev === shouldStrip ? prev : shouldStrip));
+      const next = resolveReadingDisplayText(width, readingText);
+      setDisplayText((prev) => (prev === next ? prev : next));
     };
 
     decide();
     const ro = new ResizeObserver(decide);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [readingText, hasBreak, withBreaks]);
+  }, [readingText]);
 
   return (
     <div ref={rootRef} className={`${WRAPPER_CLASS} text-center`} style={TEXT_STYLE}>
