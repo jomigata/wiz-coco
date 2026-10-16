@@ -1054,51 +1054,37 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
 
               <div className="flex justify-between mt-3">
                 {(() => {
-                  const egoOkNavReady =
-                    isEgoOkFlow && answers[currentQuestion] !== undefined;
-                  const egoOkNavActive =
-                    'bg-gray-700/50 text-slate-100 hover:bg-gray-700/70 hover:text-white';
-                  const egoOkNavMuted =
-                    'bg-gray-800/25 text-gray-500 hover:bg-gray-800/40 hover:text-gray-400';
-                  const defaultNavActive =
-                    'bg-gray-700/50 text-gray-300 hover:bg-gray-700/70';
-                  const defaultNavMuted =
-                    'bg-gray-800/25 text-gray-500 hover:bg-gray-800/40 hover:text-gray-400';
+                  const currentAnswered = answers[currentQuestion] !== undefined;
+                  const canGoNext =
+                    currentQuestion < totalQuestions - 1 && currentAnswered;
+                  const egoNavBright =
+                    'bg-gray-700/45 text-slate-200 hover:bg-gray-700/65 hover:text-slate-100';
+                  const egoNavDim =
+                    'bg-gray-800/30 text-gray-600 cursor-not-allowed';
                   const prevClass = isEgoOkFlow
-                    ? egoOkNavReady
-                      ? egoOkNavActive
-                      : egoOkNavMuted
-                    : defaultNavMuted;
-                  const nextEnabled =
-                    currentQuestion < totalQuestions - 1 &&
-                    answers[currentQuestion] !== undefined;
+                    ? `px-5 py-2 text-sm rounded-lg font-medium transition-all duration-300 ${egoNavBright}`
+                    : 'px-5 py-2 text-sm rounded-lg font-medium transition-all duration-300 bg-gray-800/25 text-gray-500 hover:bg-gray-800/40 hover:text-gray-400';
                   const nextClass = isEgoOkFlow
-                    ? nextEnabled
-                      ? egoOkNavActive
-                      : 'bg-gray-800/30 text-gray-600 cursor-not-allowed'
-                    : nextEnabled
-                      ? defaultNavActive
-                      : 'bg-gray-800/30 text-gray-600 cursor-not-allowed';
+                    ? `px-5 py-2 text-sm rounded-lg font-medium transition-all duration-300 ${
+                        canGoNext ? egoNavBright : egoNavDim
+                      }`
+                    : `px-5 py-2 text-sm rounded-lg font-medium transition-all duration-300 ${
+                        canGoNext
+                          ? 'bg-gray-700/50 text-gray-300 hover:bg-gray-700/70'
+                          : egoNavDim
+                      }`;
                   return (
                     <>
-                      <button
-                        onClick={handlePrevQuestion}
-                        className={`px-5 py-2 text-sm rounded-lg font-medium transition-all duration-300 ${prevClass}`}
-                      >
+                      <button onClick={handlePrevQuestion} className={prevClass}>
                         {currentQuestion === 0 ? '이전 페이지' : '이전 문항'}
                       </button>
 
                       <button
                         onClick={handleNextQuestion}
-                        className={`px-5 py-2 text-sm rounded-lg font-medium transition-all duration-300 ${nextClass}`}
-                        disabled={
-                          currentQuestion >= totalQuestions - 1 ||
-                          answers[currentQuestion] === undefined
-                        }
+                        className={nextClass}
+                        disabled={!canGoNext}
                       >
-                        {currentQuestion === totalQuestions - 1
-                          ? '결과 확인'
-                          : '다음 문항'}
+                        {currentQuestion === totalQuestions - 1 ? '결과 확인' : '다음 문항'}
                       </button>
                     </>
                   );
