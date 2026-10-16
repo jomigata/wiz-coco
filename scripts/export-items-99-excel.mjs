@@ -11,11 +11,31 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, '..');
 const jsonPath = path.join(root, 'docs/internal-materials/ego-ok/items-99.json');
+const sourcePath = path.join(root, 'docs/internal-materials/ego-ok/items-99-source.tsv');
 const labelsPath = path.join(root, 'docs/internal-materials/ego-ok/item-subscale-diagnosis-ko.json');
 const outPath = path.join(root, 'docs/internal-materials/ego-ok/items-99-excel-export.tsv');
+const outMdPath = path.join(root, 'docs/internal-materials/ego-ok/items-99-excel-export.md');
 
 const bank = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
 const labelBank = JSON.parse(fs.readFileSync(labelsPath, 'utf8'));
+
+const sourceLines = fs.readFileSync(sourcePath, 'utf8').trim().split(/\r?\n/);
+const sourceTextByNo = {};
+for (let i = 0; i < sourceLines.length; i += 1) {
+  const line = sourceLines[i];
+  const tab = line.indexOf('\t');
+  const raw = tab >= 0 ? line.slice(tab + 1) : line;
+  const text = raw
+    .replace(/,\s*@/g, ', ')
+    .replace(/@/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  sourceTextByNo[i + 1] = text;
+}
+
+function plainWording(item) {
+  return sourceTextByNo[item.no] ?? item.text.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
+}
 
 const BRACKET = {
   cp_positive: '[CP 긍정]',
@@ -72,7 +92,7 @@ const rows = bank.items.map((item) => {
   const index = item.egoIndex ?? item.okIndex ?? '';
   return [
     item.no,
-    item.text.replace(/\n/g, ' '),
+    plainWording(item),
     index,
     item.scaleType,
     '리커트 5점',
@@ -81,4 +101,26 @@ const rows = bank.items.map((item) => {
 });
 
 fs.writeFileSync(outPath, `${header}\n${rows.join('\n')}\n`, 'utf8');
+
+const mdLines = [
+  '# 이고-오케이 99문항 — 엑셀 붙여넣기 (6열)',
+  '',
+  '**사용:** [`items-99-excel-export.tsv`](./items-99-excel-export.tsv) 파일 전체 선택 → 복사 → 엑셀 A1에 붙여넣기.',
+  '',
+  '**열:** 번호 | 문항(최종 한 줄) | 인덱스(ego/ok) | 척도코드 | 리커트 5점 | 진단·타당도 설명',
+  '',
+  '**재생성:** `npm run export:ego-ok-items-99-excel`',
+  '',
+  '| 번호 | 문항 | 인덱스 | 척도코드 | 리커트 | 진단·타당도 |',
+  '| ---: | --- | ---: | --- | --- | --- |',
+];
+for (const item of bank.items) {
+  const index = item.egoIndex ?? item.okIndex ?? '';
+  const wording = plainWording(item).replace(/\|/g, '\\|');
+  const diag = diagnosisCol(item).replace(/\|/g, '\\|');
+  mdLines.push(`| ${item.no} | ${wording} | ${index} | ${item.scaleType} | 리커트 5점 | ${diag} |`);
+}
+fs.writeFileSync(outMdPath, `${mdLines.join('\n')}\n`, 'utf8');
+
 console.log(`Wrote ${outPath} (${rows.length} rows)`);
+console.log(`Wrote ${outMdPath}`);
