@@ -30,18 +30,63 @@ const EXPECTED_COUNTS = {
 
 const VALIDITY_NOS = [9, 15, 26, 38, 48, 58, 68, 78, 88];
 
+/** 한 줄로 두기 위한 최대 글자 수 (초과 시 2줄) */
+const READING_SINGLE_LINE_MAX = 42;
+/** 2줄일 때 줄당 최대 글자 수 (초과 시 화면에서 3줄로 보일 수 있음) */
+const READING_LINE_MAX = 42;
+
+function splitTwoBalancedAtSpace(text) {
+  let bestAt = -1;
+  let bestDiff = Infinity;
+  for (let i = 0; i < text.length; i += 1) {
+    if (text[i] !== ' ') continue;
+    const line1 = text.slice(0, i);
+    const line2 = text.slice(i + 1);
+    if (!line1 || !line2) continue;
+    if (line1.length > READING_LINE_MAX || line2.length > READING_LINE_MAX) continue;
+    const diff = Math.abs(line1.length - line2.length);
+    if (diff < bestDiff) {
+      bestDiff = diff;
+      bestAt = i;
+    }
+  }
+  if (bestAt < 0) {
+    const mid = Math.floor(text.length / 2);
+    const space = text.indexOf(' ', mid);
+    if (space > 0) return `${text.slice(0, space)}\n${text.slice(space + 1)}`;
+    return text;
+  }
+  return `${text.slice(0, bestAt)}\n${text.slice(bestAt + 1)}`;
+}
+
 function wrapReadingText(text) {
   const withBreaks = text.replace(/@/g, '\n');
   if (withBreaks.includes('\n')) return withBreaks;
-  if (withBreaks.length <= 42) return withBreaks;
-  const mid = Math.floor(withBreaks.length / 2);
-  const breakAt = withBreaks.indexOf(', ', mid);
-  if (breakAt > 0 && breakAt < withBreaks.length - 8) {
-    return `${withBreaks.slice(0, breakAt + 1)}\n${withBreaks.slice(breakAt + 2)}`;
+  if (withBreaks.length <= READING_SINGLE_LINE_MAX) return withBreaks;
+
+  const commaPositions = [];
+  for (let i = 0; i < withBreaks.length - 1; i += 1) {
+    if (withBreaks[i] === ',' && withBreaks[i + 1] === ' ') commaPositions.push(i);
   }
-  const space = withBreaks.indexOf(' ', mid);
-  if (space > 0) return `${withBreaks.slice(0, space)}\n${withBreaks.slice(space + 1)}`;
-  return withBreaks;
+
+  let bestComma = -1;
+  let bestCommaDiff = Infinity;
+  for (const commaAt of commaPositions) {
+    const line1 = withBreaks.slice(0, commaAt + 1);
+    const line2 = withBreaks.slice(commaAt + 2);
+    if (line1.length > READING_LINE_MAX || line2.length > READING_LINE_MAX) continue;
+    const diff = Math.abs(line1.length - line2.length);
+    if (diff < bestCommaDiff) {
+      bestCommaDiff = diff;
+      bestComma = commaAt;
+    }
+  }
+
+  if (bestComma >= 0) {
+    return `${withBreaks.slice(0, bestComma + 1)}\n${withBreaks.slice(bestComma + 2)}`;
+  }
+
+  return splitTwoBalancedAtSpace(withBreaks);
 }
 
 const lines = fs.readFileSync(tsvPath, 'utf8').trim().split(/\r?\n/);
