@@ -31,15 +31,17 @@ const EXPECTED_COUNTS = {
 const VALIDITY_NOS = [9, 15, 26, 38, 48, 58, 68, 78, 88];
 
 function wrapReadingText(text) {
-  if (text.length <= 42) return text;
-  const mid = Math.floor(text.length / 2);
-  const breakAt = text.indexOf(', ', mid);
-  if (breakAt > 0 && breakAt < text.length - 8) {
-    return `${text.slice(0, breakAt + 1)}\n${text.slice(breakAt + 2)}`;
+  const withBreaks = text.replace(/@/g, '\n');
+  if (withBreaks.includes('\n')) return withBreaks;
+  if (withBreaks.length <= 42) return withBreaks;
+  const mid = Math.floor(withBreaks.length / 2);
+  const breakAt = withBreaks.indexOf(', ', mid);
+  if (breakAt > 0 && breakAt < withBreaks.length - 8) {
+    return `${withBreaks.slice(0, breakAt + 1)}\n${withBreaks.slice(breakAt + 2)}`;
   }
-  const space = text.indexOf(' ', mid);
-  if (space > 0) return `${text.slice(0, space)}\n${text.slice(space + 1)}`;
-  return text;
+  const space = withBreaks.indexOf(' ', mid);
+  if (space > 0) return `${withBreaks.slice(0, space)}\n${withBreaks.slice(space + 1)}`;
+  return withBreaks;
 }
 
 const lines = fs.readFileSync(tsvPath, 'utf8').trim().split(/\r?\n/);
