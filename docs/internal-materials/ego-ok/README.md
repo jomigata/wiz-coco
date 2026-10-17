@@ -4,7 +4,7 @@
 
 [items-99.json](./items-99.json) — **앱·채점 기준**. 90 성격 + 타당도 **9** + **VRIN 5쌍**. 원문 TSV: [items-99-source.tsv](./items-99-source.tsv)
 
-생성: `node scripts/build-items-99-final.mjs` → `npm run sync:ego-ok-questions` · 엑셀(5열): `npm run export:ego-ok-items-99-excel` → [items-99-excel-export.xlsx](./items-99-excel-export.xlsx) · [items-99-excel-export.tsv](./items-99-excel-export.tsv)
+생성: `node scripts/build-items-99-final.mjs` → `npm run sync:ego-ok-questions` · 엑셀(5열): `npm run export:ego-ok-items-99-excel` → [items-99-excel-export.xlsx](./items-99-excel-export.xlsx) · [items-99-excel-export.tsv](./items-99-excel-export.tsv) · **90↔99 비교:** `npm run export:ego-ok-items-90-vs-99-compare` → [items-90-vs-99-compare.xlsx](./items-90-vs-99-compare.xlsx)
 
 ## 이전 기준 — 100문항 (아카이브)
 
