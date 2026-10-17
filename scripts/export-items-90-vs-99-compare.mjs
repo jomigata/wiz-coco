@@ -123,11 +123,22 @@ for (const old of items90) {
   const candidates = map99.get(k) ?? [];
   if (candidates.length) {
     const sameScale = candidates.filter((c) => c.scaleType === old.scaleType);
-    const pool = sameScale.length ? sameScale : candidates;
+    const pool = (sameScale.length ? sameScale : candidates).slice().sort((a, b) => a.no - b.no);
     if (candidates.length > 1) {
-      note = `인덱스 ${candidates.map((c) => c.no).join('·')}번`;
+      note = `동일인덱스 ${pool.map((c) => c.no).join('·')} → ${pool[0].no}번 대표`;
     }
-    neu = pickBest(pool, ref100?.text ?? '', old.text);
+    if (pool.length > 1 && ref100) {
+      neu = pickBest(pool, ref100.text, old.text);
+      const best = similarity(neu.text, ref100.text);
+      const tied = pool.filter(
+        (c) => Math.abs(similarity(c.text, ref100.text) - best) < 0.02,
+      );
+      if (tied.length > 1) neu = tied.sort((a, b) => a.no - b.no)[0];
+    } else if (pool.length > 1) {
+      neu = pool[0];
+    } else {
+      neu = pool[0];
+    }
   } else {
     note = '인덱스 미배정';
     const ord = ordinalWithinScale(items90, old);
