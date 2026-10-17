@@ -1,12 +1,13 @@
 /**
- * 99문항 엑셀 붙여넣기용 TSV (6열)
+ * 99문항 엑셀용 TSV + XLSX (5열, 검사 제시 순서 1–99)
  * node scripts/export-items-99-excel.mjs
  *
- * 열: 번호 | 문항 | 인덱스(ego/ok) | 척도코드 | 리커트 5점 | [척도] 진단·타당도 설명
+ * 열: 번호 | 문항 | 척도코드 | 리커트 5점 | 진단.타당도 설명
  */
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import XLSX from 'xlsx';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, '..');
@@ -14,7 +15,15 @@ const jsonPath = path.join(root, 'docs/internal-materials/ego-ok/items-99.json')
 const sourcePath = path.join(root, 'docs/internal-materials/ego-ok/items-99-source.tsv');
 const labelsPath = path.join(root, 'docs/internal-materials/ego-ok/item-subscale-diagnosis-ko.json');
 const outPath = path.join(root, 'docs/internal-materials/ego-ok/items-99-excel-export.tsv');
+const outXlsxPath = path.join(root, 'docs/internal-materials/ego-ok/items-99-excel-export.xlsx');
 const outMdPath = path.join(root, 'docs/internal-materials/ego-ok/items-99-excel-export.md');
+
+const COL_NO = '번호';
+const COL_TEXT = '문항';
+const COL_SCALE = '척도코드';
+const COL_LIKERT = '리커트 5점';
+const COL_DIAG = '진단.타당도 설명';
+const HEADERS = [COL_NO, COL_TEXT, COL_SCALE, COL_LIKERT, COL_DIAG];
 
 const bank = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
 const labelBank = JSON.parse(fs.readFileSync(labelsPath, 'utf8'));
@@ -87,40 +96,49 @@ function diagnosisCol(item) {
   return br;
 }
 
-const header = ['번호', '문항', '인덱스', '척도코드', '리커트 5점', '진단·타당도 설명'].join('\t');
-const rows = bank.items.map((item) => {
-  const index = item.egoIndex ?? item.okIndex ?? '';
-  return [
-    item.no,
-    plainWording(item),
-    index,
-    item.scaleType,
-    '리커트 5점',
-    diagnosisCol(item),
-  ].join('\t');
-});
+const rowObjects = bank.items.map((item) => ({
+  [COL_NO]: item.no,
+  [COL_TEXT]: plainWording(item),
+  [COL_SCALE]: item.scaleType,
+  [COL_LIKERT]: '리커트 5점',
+  [COL_DIAG]: diagnosisCol(item),
+}));
 
-fs.writeFileSync(outPath, `${header}\n${rows.join('\n')}\n`, 'utf8');
+const tsvLines = [
+  HEADERS.join('\t'),
+  ...rowObjects.map((row) => HEADERS.map((h) => row[h]).join('\t')),
+];
+fs.writeFileSync(outPath, `${tsvLines.join('\n')}\n`, 'utf8');
+
+const ws = XLSX.utils.json_to_sheet(rowObjects, { header: HEADERS });
+ws['!cols'] = [{ wch: 5 }, { wch: 72 }, { wch: 16 }, { wch: 12 }, { wch: 48 }];
+const wb = XLSX.utils.book_new();
+XLSX.utils.book_append_sheet(wb, ws, '99문항');
+XLSX.writeFile(wb, outXlsxPath);
 
 const mdLines = [
-  '# 이고-오케이 99문항 — 엑셀 붙여넣기 (6열)',
+  '# 이고-오케이 99문항 — 엑셀 (5열, 검사 순서)',
   '',
-  '**사용:** [`items-99-excel-export.tsv`](./items-99-excel-export.tsv) 파일 전체 선택 → 복사 → 엑셀 A1에 붙여넣기.',
+  '**파일:**',
+  '- [`items-99-excel-export.xlsx`](./items-99-excel-export.xlsx) — 엑셀에서 바로 열기',
+  '- [`items-99-excel-export.tsv`](./items-99-excel-export.tsv) — TSV 복사·붙여넣기',
   '',
-  '**열:** 번호 | 문항(최종 한 줄) | 인덱스(ego/ok) | 척도코드 | 리커트 5점 | 진단·타당도 설명',
+  `**열:** ${HEADERS.join(' | ')}`,
   '',
   '**재생성:** `npm run export:ego-ok-items-99-excel`',
   '',
-  '| 번호 | 문항 | 인덱스 | 척도코드 | 리커트 | 진단·타당도 |',
-  '| ---: | --- | ---: | --- | --- | --- |',
+  `| ${HEADERS.join(' | ')} |`,
+  '| ---: | --- | --- | --- | --- |',
 ];
-for (const item of bank.items) {
-  const index = item.egoIndex ?? item.okIndex ?? '';
-  const wording = plainWording(item).replace(/\|/g, '\\|');
-  const diag = diagnosisCol(item).replace(/\|/g, '\\|');
-  mdLines.push(`| ${item.no} | ${wording} | ${index} | ${item.scaleType} | 리커트 5점 | ${diag} |`);
+for (const row of rowObjects) {
+  const wording = row[COL_TEXT].replace(/\|/g, '\\|');
+  const diag = row[COL_DIAG].replace(/\|/g, '\\|');
+  mdLines.push(
+    `| ${row[COL_NO]} | ${wording} | ${row[COL_SCALE]} | ${row[COL_LIKERT]} | ${diag} |`,
+  );
 }
 fs.writeFileSync(outMdPath, `${mdLines.join('\n')}\n`, 'utf8');
 
-console.log(`Wrote ${outPath} (${rows.length} rows)`);
+console.log(`Wrote ${outPath} (${rowObjects.length} rows)`);
+console.log(`Wrote ${outXlsxPath}`);
 console.log(`Wrote ${outMdPath}`);
