@@ -2,6 +2,9 @@ import { EGO_OK_QUESTIONS } from '@/data/egoOkQuestions';
 
 /** 타당도·VRIN 문항 — 지문 핵심어 요약 (99문항 은행) */
 const VALIDITY_KEYWORDS_BY_NO: Record<number, string> = {
+  4: '내 방식·밀어붙임',
+  7: '순수·천진난만',
+  81: '타인 의견·유연',
   9: '24시간·하루·내일',
   38: '깜짝 놀람·위험·굉음',
   68: '피로·휴식·과로',

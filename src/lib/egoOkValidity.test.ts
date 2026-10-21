@@ -64,6 +64,30 @@ describe('computeEgoOkValidityProfile (99-item bank)', () => {
     expect(v.vrin.issueBrief).toMatch(/3번/);
   });
 
+  it('VRIN: pair 4-81 (CP− vs AC+) both 4+ → mismatch', () => {
+    if (!is99) return;
+    const v = computeEgoOkValidityProfile(
+      answersForNos([
+        [4, 5],
+        [81, 5],
+      ]),
+    );
+    expect(v.vrin.mismatchPairs).toBeGreaterThanOrEqual(1);
+    expect(v.vrin.issueBrief).toMatch(/4번/);
+  });
+
+  it('VRIN: pair 7-26 (FC+ vs F) both 4+ → mismatch', () => {
+    if (!is99) return;
+    const v = computeEgoOkValidityProfile(
+      answersForNos([
+        [7, 5],
+        [26, 5],
+      ]),
+    );
+    expect(v.vrin.mismatchPairs).toBeGreaterThanOrEqual(1);
+    expect(v.vrin.issueBrief).toMatch(/7번/);
+  });
+
   it('Lie: two items at 2 or below → caution only (not invalid)', () => {
     if (!is99) return;
     const v = computeEgoOkValidityProfile(

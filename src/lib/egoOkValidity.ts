@@ -77,13 +77,25 @@ const INFREQ_HIGH_MIN_99 = 3;
 const LIE_LOW_MAX_99 = 2;
 const VALIDITY_HIT_INVALID_MIN_99 = 2;
 
-/** 99문항: 성격·타당도 대립 5쌍 (100문항 VRIN 논리를 신번호에 재매핑) */
+/**
+ * 99문항 VRIN 5쌍 — 두 문항 모두 4점 이상이면 불일치 1쌍.
+ * 2026-10-22 개정 90문항 후: 34↔56(맥락 분리)·33↔26(정서 대립 약) → 4↔81, 7↔26.
+ */
 export const EGO_OK_VRIN_PAIRS_99: [number, number][] = [
   [3, 49],
   [5, 60],
   [11, 46],
-  [34, 56],
-  [33, 26],
+  [4, 81],
+  [7, 26],
+];
+
+/** 상담·문서용 대립 요지 (쌍 순서는 EGO_OK_VRIN_PAIRS_99 와 동일) */
+export const EGO_OK_VRIN_PAIR_RATIONALE_99: readonly string[] = [
+  '자기 긍정(I+) vs 무가치감(I−)',
+  '타인 수용(U+) vs 반감·거부(U−)',
+  '침착·냉정(A+) vs 충동·즉흥(FC−)',
+  '내 방식 고집(CP−) vs 타인 의견 수용(AC+)',
+  '순수·정서 개방(FC+) vs 감정 경험 부인(F)',
 ];
 
 export const EGO_OK_VRIN_PAIRS: [number, number][] =
