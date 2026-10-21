@@ -1,5 +1,6 @@
 # 99문항 문장 확정 (2026-10)
 
+- **2026-10-22:** 개정 90문항 일괄 반영 — `npm run apply:ego-ok-90-revised-to-99` → [`items-90-revised-review.tsv`](./items-90-revised-review.tsv) + [`items-90-revised-confirmed-overrides.json`](./items-90-revised-confirmed-overrides.json) → `items-99-source.tsv` (타당도 9·제시순서 유지). 매핑 로그: [`items-90-apply-to-99-log.tsv`](./items-90-apply-to-99-log.tsv)
 - **원본 TSV:** `items-99-source.tsv` — 검사 화면 순서 1~99와 동일
 - **반영:** `npm run build:ego-ok-items-99` → `items-99.json`, `src/data/egoOkQuestions.ts`
 - **엑셀 6열:** `npm run export:ego-ok-items-99-excel` → [items-99-excel-export.tsv](./items-99-excel-export.tsv) · [items-99-excel-export.md](./items-99-excel-export.md)

@@ -76,6 +76,7 @@
     "export:ego-ok-items-99-excel": "node scripts/export-items-99-excel.mjs",
     "export:ego-ok-items-90-vs-99-compare": "node scripts/export-items-90-vs-99-compare.mjs",
     "review:ego-ok-90-revised": "node scripts/review-ego-ok-90-revised.mjs",
+    "apply:ego-ok-90-revised-to-99": "node scripts/apply-ego-ok-90-revised-to-99-source.mjs",
     "sync:ego-ok-questions": "node scripts/sync-ego-ok-questions.mjs",
     "sync:ego-ok-pattern-reports": "node scripts/sync-ego-ok-pattern-reports.mjs",
     "sync:ego-ok": "npm run sync:ego-ok-questions"
