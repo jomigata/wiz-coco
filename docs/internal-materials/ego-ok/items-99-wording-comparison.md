@@ -9,5 +9,7 @@
 
 **엑셀:** [`items-99-wording-comparison.tsv`](./items-99-wording-comparison.tsv)
 
-**재생성:** `npm run export:ego-ok-items-99-wording-comparison`
+**열:** 번호 · 척도 · 최초 · 중간 · 최종 · 비고 · **측정주제·기준점**
+
+**재생성:** `npm run generate:ego-ok-items-99-measurement-focus` 후 `npm run export:ego-ok-items-99-wording-comparison`
 

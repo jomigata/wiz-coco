@@ -18,6 +18,10 @@ const INITIAL_COMMIT = '9ce0f9c9';
 const INTERMEDIATE_COMMIT = '00232c9c';
 const SOURCE_PATH = path.join(root, 'docs/internal-materials/ego-ok/items-99-source.tsv');
 const NOTES_PATH = path.join(root, 'docs/internal-materials/ego-ok/items-99-notes-plain-ko.json');
+const MEASUREMENT_PATH = path.join(
+  root,
+  'docs/internal-materials/ego-ok/items-99-measurement-focus-ko.json',
+);
 const JSON_PATH = path.join(root, 'docs/internal-materials/ego-ok/items-99.json');
 const OUT_PATH = path.join(root, 'docs/internal-materials/ego-ok/items-99-wording-comparison.tsv');
 const OUT_MD = path.join(root, 'docs/internal-materials/ego-ok/items-99-wording-comparison.md');
@@ -29,6 +33,7 @@ const HEADERS = [
   '중간문항(직전)',
   '최종문항',
   '비고',
+  '측정주제·기준점',
 ];
 
 function gitSourceAt(commit) {
@@ -61,6 +66,8 @@ function normalizeForCompare(s) {
 
 const bank = JSON.parse(fs.readFileSync(JSON_PATH, 'utf8'));
 const notes = JSON.parse(fs.readFileSync(NOTES_PATH, 'utf8')).byNo ?? {};
+const measurement =
+  JSON.parse(fs.readFileSync(MEASUREMENT_PATH, 'utf8')).byNo ?? {};
 
 const initial = gitSourceAt(INITIAL_COMMIT);
 const intermediate = gitSourceAt(INTERMEDIATE_COMMIT);
@@ -73,13 +80,14 @@ const rows = bank.items.map((item) => {
   const t1 = intermediate[no]?.text ?? '';
   const t2 = finalMap[no]?.text ?? '';
   const note = notes[String(no)] ?? '';
-  return { no, scale, t0, t1, t2, note };
+  const measure = measurement[String(no)] ?? '';
+  return { no, scale, t0, t1, t2, note, measure };
 });
 
 const tsvLines = [
   HEADERS.join('\t'),
   ...rows.map((r) =>
-    [r.no, r.scale, r.t0, r.t1, r.t2, r.note].join('\t'),
+    [r.no, r.scale, r.t0, r.t1, r.t2, r.note, r.measure].join('\t'),
   ),
 ];
 fs.writeFileSync(OUT_PATH, `${tsvLines.join('\n')}\n`, 'utf8');
@@ -103,7 +111,9 @@ const md = [
   '',
   '**엑셀:** [`items-99-wording-comparison.tsv`](./items-99-wording-comparison.tsv)',
   '',
-  '**재생성:** `npm run export:ego-ok-items-99-wording-comparison`',
+  '**열:** 번호 · 척도 · 최초 · 중간 · 최종 · 비고 · **측정주제·기준점**',
+  '',
+  '**재생성:** `npm run generate:ego-ok-items-99-measurement-focus` 후 `npm run export:ego-ok-items-99-wording-comparison`',
   '',
 ].join('\n');
 fs.writeFileSync(OUT_MD, `${md}\n`, 'utf8');

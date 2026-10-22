@@ -26,7 +26,7 @@
 ### TA 생활형 문장 전면 정렬 (2026-10-22)
 
 - 원칙: 평서문·일상어·주제 명확·리커트 5점에 맞는 강도, 문장당 쉼표 1개 권장.
-- **최초 / 중간 / 최종** 비교 TSV: `items-99-wording-comparison.tsv` — `npm run export:ego-ok-items-99-wording-comparison`
+- **최초 / 중간 / 최종** 비교 TSV(7열, 끝 **측정주제·기준점**): `items-99-wording-comparison.tsv` — `npm run export:ego-ok-items-99-wording-comparison` (선행: `npm run generate:ego-ok-items-99-measurement-focus`)
   - 최초: `9ce0f9c9`, 중간: `00232c9c`, 최종: `items-99-source.tsv`
 - 비고(일상어): `items-99-notes-plain-ko.json`
 

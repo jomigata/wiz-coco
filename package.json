@@ -77,6 +77,7 @@
     "export:ego-ok-items-99-excel": "node scripts/export-items-99-excel.mjs",
     "export:ego-ok-items-99-review-list": "node scripts/export-items-99-review-list.mjs",
     "export:ego-ok-items-99-wording-comparison": "node scripts/export-items-99-wording-comparison.mjs",
+    "generate:ego-ok-items-99-measurement-focus": "node scripts/generate-items-99-measurement-focus.mjs",
     "export:ego-ok-items-90-vs-99-compare": "node scripts/export-items-90-vs-99-compare.mjs",
     "review:ego-ok-90-revised": "node scripts/review-ego-ok-90-revised.mjs",
     "apply:ego-ok-90-revised-to-99": "node scripts/apply-ego-ok-90-revised-to-99-source.mjs",
