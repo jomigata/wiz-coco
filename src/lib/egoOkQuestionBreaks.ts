@@ -34,24 +34,47 @@ export function breakAfterCommaAt(text: string, commaAt: number): string {
   return `${text.slice(0, commaAt + 1)}\n${text.slice(commaAt + 2)}`;
 }
 
-/** 쉼표 1개면 그 뒤; 여러 개면 2줄·줄당 maxLen 이내 후보 중 균형 */
-export function applyCommaBreakForTwoLines(text: string, lineMax = 42): string | null {
+/** 쉼표(, ) 1개일 때만 그 뒤 줄바꿈 (문항 규칙: 문장당 쉼표 1개) */
+export function applyCommaBreakForTwoLines(text: string): string | null {
   const indices = commaSpaceIndices(text);
-  if (indices.length === 0) return null;
-  if (indices.length === 1) return breakAfterCommaAt(text, indices[0]);
+  if (indices.length !== 1) return null;
+  return breakAfterCommaAt(text, indices[0]);
+}
 
-  let bestAt: number | null = null;
+/** 2줄·단어(공백) 경계 — 쉼표 줄바꿈이 3줄 이상일 때 대체 */
+export function applyBalancedTwoLineBreak(text: string, lineMax: number): string | null {
+  const collapsed = collapseOptionalLineBreaks(text);
+  if (lineMax < 8 || collapsed.length <= lineMax) return collapsed;
+
+  const spaces: number[] = [];
+  for (let i = 0; i < collapsed.length; i += 1) {
+    if (collapsed[i] === ' ') spaces.push(i);
+  }
+  if (spaces.length === 0) return null;
+
+  let bestAt = -1;
   let bestDiff = Infinity;
-  for (const commaAt of indices) {
-    const line1Len = commaAt + 1;
-    const line2Len = text.length - commaAt - 2;
+  for (const sp of spaces) {
+    const line1Len = sp;
+    const line2Len = collapsed.length - sp - 1;
     if (line1Len > lineMax || line2Len > lineMax) continue;
     const diff = Math.abs(line1Len - line2Len);
     if (diff < bestDiff) {
       bestDiff = diff;
-      bestAt = commaAt;
+      bestAt = sp;
     }
   }
-  if (bestAt == null) return null;
-  return breakAfterCommaAt(text, bestAt);
+  if (bestAt < 0) {
+    const mid = Math.floor(collapsed.length / 2);
+    let fallback = spaces.find((s) => s >= mid - 4 && s <= mid + 8);
+    if (fallback == null) fallback = spaces[Math.floor(spaces.length / 2)];
+    bestAt = fallback;
+  }
+  return `${collapsed.slice(0, bestAt)}\n${collapsed.slice(bestAt + 1)}`;
+}
+
+/** 뷰포트 너비(17px 고딕) 기준 대략적 한 줄 글자 수 */
+export function estimateCharsPerLine(widthPx: number): number {
+  if (widthPx <= 0) return 42;
+  return Math.max(14, Math.floor(widthPx / 19));
 }

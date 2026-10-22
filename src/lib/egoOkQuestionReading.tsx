@@ -2,9 +2,11 @@
 
 import { useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import {
+  applyBalancedTwoLineBreak,
   applyCommaBreakForTwoLines,
   applyOptionalLineBreaks,
   collapseOptionalLineBreaks,
+  estimateCharsPerLine,
   hasOptionalLineBreak,
 } from '@/lib/egoOkQuestionBreaks';
 
@@ -81,6 +83,26 @@ export function measureLineCountOffscreen(widthPx: number, textWithBreaks: strin
   return Math.max(1, lines);
 }
 
+function resolveTwoLineDisplay(widthPx: number, flowText: string): string {
+  const lineMax = estimateCharsPerLine(widthPx);
+  const commaBreak = applyCommaBreakForTwoLines(flowText);
+  if (commaBreak) {
+    const commaLines = measureLineCountOffscreen(widthPx, commaBreak);
+    if (commaLines < MIN_LINES_TO_STRIP) {
+      return commaBreak;
+    }
+  }
+  const balanced = applyBalancedTwoLineBreak(flowText, lineMax);
+  if (balanced) {
+    const balancedLines = measureLineCountOffscreen(widthPx, balanced);
+    if (balancedLines < MIN_LINES_TO_STRIP) {
+      return balanced;
+    }
+  }
+  return flowText;
+}
+
+/** 쉼표 뒤 줄바꿈 우선; 화면상 3줄 이상이면 쉼표 줄바꿈 없이 2줄(단어 경계) */
 function resolveReadingDisplayText(widthPx: number, readingText: string): string {
   const withBreaks = applyOptionalLineBreaks(readingText);
   const flowText = collapseOptionalLineBreaks(readingText);
@@ -92,14 +114,8 @@ function resolveReadingDisplayText(widthPx: number, readingText: string): string
   }
 
   const lines = measureLineCountOffscreen(widthPx, text);
-  if (lines >= 2) {
-    const commaBreak = applyCommaBreakForTwoLines(flowText);
-    if (commaBreak) {
-      const commaLines = measureLineCountOffscreen(widthPx, commaBreak);
-      if (commaLines === 2 || commaLines < lines) {
-        return commaBreak;
-      }
-    }
+  if (lines >= MIN_LINES_TO_STRIP || lines >= 2) {
+    return resolveTwoLineDisplay(widthPx, flowText);
   }
 
   return text;
