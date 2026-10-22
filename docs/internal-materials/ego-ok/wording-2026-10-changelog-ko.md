@@ -23,6 +23,13 @@
 2. **쉼표 뒤 줄바꿈** — 화면에서 **3줄 이상**이 되면 쉼표 줄바꿈을 쓰지 않고 **2줄·단어(공백) 경계**로 나눔. 코드: `egoOkQuestionReading.tsx`, `egoOkQuestionBreaks.ts`.
 3. 문항 원문·검토 비고 4열 TSV: `items-99-review-list.tsv` (`npm run export:ego-ok-items-99-review-list`).
 
+### TA 생활형 문장 전면 정렬 (2026-10-22)
+
+- 원칙: 평서문·일상어·주제 명확·리커트 5점에 맞는 강도, 문장당 쉼표 1개 권장.
+- **최초 / 중간 / 최종** 비교 TSV: `items-99-wording-comparison.tsv` — `npm run export:ego-ok-items-99-wording-comparison`
+  - 최초: `9ce0f9c9`, 중간: `00232c9c`, 최종: `items-99-source.tsv`
+- 비고(일상어): `items-99-notes-plain-ko.json`
+
 ## 검사 화면 줄바꿈 (2줄 가독성)
 
 | 단계 | 규칙 |

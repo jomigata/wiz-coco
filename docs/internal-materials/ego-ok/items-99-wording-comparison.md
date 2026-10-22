@@ -1,0 +1,13 @@
+# 이고-오케이 99문항 — 문구 이력 비교
+
+- **최초** 커밋: `9ce0f9c9` (99문항 뱅크 도입)
+- **중간** 커밋: `00232c9c` (TA 1차 검토·VRIN 직전)
+- **최종**: `items-99-source.tsv` (생활형·리커트 정렬 개정)
+
+- 최초→중간 문항 변경: **98** / 99
+- 중간→최종 문항 변경: **99** / 99
+
+**엑셀:** [`items-99-wording-comparison.tsv`](./items-99-wording-comparison.tsv)
+
+**재생성:** `npm run export:ego-ok-items-99-wording-comparison`
+
