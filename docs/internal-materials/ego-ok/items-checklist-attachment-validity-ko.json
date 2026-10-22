@@ -1,0 +1,17 @@
+{
+  "note": "첨부 스프레드시트 하단(노란) 타당도·주의 문항. 90 성격 본문(items-90.json)과 별도.",
+  "items": [
+    {
+      "scaleType": "validity_lie",
+      "text": "나는 한 번도 다른 사람에게 화를 낸 적이 없다."
+    },
+    {
+      "scaleType": "validity_lie",
+      "text": "약속 시간에 단 1분이라도 늦거나 어겨본 적이 평생 한 번도 없다."
+    },
+    {
+      "scaleType": "validity_infreq",
+      "text": "지난 1년 동안 단 하루도 잠을 잔 적이 없다."
+    }
+  ]
+}

@@ -10,6 +10,7 @@ import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
 import { fileURLToPath } from 'url';
+import { buildLegacy90AttachmentTextBy99No } from './lib/legacy-90-text-for-99.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, '..');
@@ -26,9 +27,12 @@ const JSON_PATH = path.join(root, 'docs/internal-materials/ego-ok/items-99.json'
 const OUT_PATH = path.join(root, 'docs/internal-materials/ego-ok/items-99-wording-comparison.tsv');
 const OUT_MD = path.join(root, 'docs/internal-materials/ego-ok/items-99-wording-comparison.md');
 
+const LABELS_PATH = path.join(root, 'docs/internal-materials/ego-ok/item-subscale-diagnosis-ko.json');
+
 const HEADERS = [
   '현검사번호(99)',
   '현척도코드',
+  '구90·첨부문항',
   '최초문항',
   '중간문항(직전)',
   '최종문항',
@@ -68,26 +72,29 @@ const bank = JSON.parse(fs.readFileSync(JSON_PATH, 'utf8'));
 const notes = JSON.parse(fs.readFileSync(NOTES_PATH, 'utf8')).byNo ?? {};
 const measurement =
   JSON.parse(fs.readFileSync(MEASUREMENT_PATH, 'utf8')).byNo ?? {};
+const labels = JSON.parse(fs.readFileSync(LABELS_PATH, 'utf8'));
 
 const initial = gitSourceAt(INITIAL_COMMIT);
 const intermediate = gitSourceAt(INTERMEDIATE_COMMIT);
 const finalMap = loadFinal();
+const legacy90 = buildLegacy90AttachmentTextBy99No(bank.items, labels, measurement);
 
 const rows = bank.items.map((item) => {
   const no = item.no;
   const scale = finalMap[no]?.scale ?? item.scaleType;
+  const tLegacy = legacy90[no] ?? '';
   const t0 = initial[no]?.text ?? '';
   const t1 = intermediate[no]?.text ?? '';
   const t2 = finalMap[no]?.text ?? '';
   const note = notes[String(no)] ?? '';
   const measure = measurement[String(no)] ?? '';
-  return { no, scale, t0, t1, t2, note, measure };
+  return { no, scale, tLegacy, t0, t1, t2, note, measure };
 });
 
 const tsvLines = [
   HEADERS.join('\t'),
   ...rows.map((r) =>
-    [r.no, r.scale, r.t0, r.t1, r.t2, r.note, r.measure].join('\t'),
+    [r.no, r.scale, r.tLegacy, r.t0, r.t1, r.t2, r.note, r.measure].join('\t'),
   ),
 ];
 fs.writeFileSync(OUT_PATH, `${tsvLines.join('\n')}\n`, 'utf8');
@@ -111,7 +118,9 @@ const md = [
   '',
   '**엑셀:** [`items-99-wording-comparison.tsv`](./items-99-wording-comparison.tsv)',
   '',
-  '**열:** 번호 · 척도 · 최초 · 중간 · 최종 · 비고 · **측정주제·기준점**',
+  '**열:** 번호 · 척도 · **구90·첨부** · 최초 · 중간 · 최종 · 비고 · **측정주제·기준점**',
+  '',
+  '**구90·첨부:** `items-90.json`(2020 체크리스트 90) + 시트 하단 타당도(`items-checklist-attachment-validity-ko.json`·96/100 풀). 매칭: **척도코드** + **ego/ok 측정 주제**(또는 타당도는 주제 유사도).',
   '',
   '**재생성:** `npm run generate:ego-ok-items-99-measurement-focus` 후 `npm run export:ego-ok-items-99-wording-comparison`',
   '',
