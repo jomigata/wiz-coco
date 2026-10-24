@@ -32,14 +32,14 @@ export const EGO_OK_LIKERT_OPTIONS: EgoOkLikertOption[] = [
   {
     letter: 'A',
     value: 5,
-    labelLines: ['매우', '그렇다'],
+    labelLines: ['거의 항상', '그렇다'],
     circle: 'lg',
     rounded: 'rounded-xl',
   },
   {
     letter: 'B',
     value: 4,
-    labelLines: ['대체로', '그런 편이다'],
+    labelLines: ['자주', '그런 편이다'],
     circle: 'md',
     rounded: 'rounded-[20px]',
   },
@@ -53,7 +53,7 @@ export const EGO_OK_LIKERT_OPTIONS: EgoOkLikertOption[] = [
   {
     letter: 'D',
     value: 2,
-    labelLines: ['별로', '그렇지 않다'],
+    labelLines: ['가끔만', '그렇다'],
     circle: 'md',
     rounded: 'rounded-[20px]',
     glowPink: true,
@@ -61,7 +61,7 @@ export const EGO_OK_LIKERT_OPTIONS: EgoOkLikertOption[] = [
   {
     letter: 'E',
     value: 1,
-    labelLines: ['전혀', '그렇지 않다'],
+    labelLines: ['거의', '그렇지 않다'],
     circle: 'lg',
     rounded: 'rounded-[20px]',
     glowPink: true,
