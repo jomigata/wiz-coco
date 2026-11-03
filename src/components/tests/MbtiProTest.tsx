@@ -907,7 +907,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
                                 <span className="text-white font-bold">{opt.letter}</span>
                               </div>
                               <span
-                                className={`block w-full text-center font-bold leading-tight ${v.answerLabel} transform transition-all duration-500 ${isMouseMoved ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}
+                                className={`flex w-full flex-col items-center gap-1 text-center font-bold leading-snug ${v.answerLabel} transform transition-all duration-500 ${isMouseMoved ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}
                                 style={{ fontSize: 'clamp(8px, 2.55vw, 12px)' }}
                               >
                                 {opt.labelLines.map((line, i) => (
