@@ -1360,7 +1360,11 @@ export default function EgoOkCounselorReport({
         short: '부정성',
         description: '긍정·부정 사용 비율 · 구간별 주의·대책',
         panel: (
-          <SectionCard compact title="이고그램-부정성" subtitle="5척도 긍정·부정 합계 · 부정 40% 기준 · 6단계 구간 해석">
+          <SectionCard
+            compact
+            title="이고그램-부정성"
+            subtitle="5지선다 동의 합 → 긍정/부정 % · 부정 40% 기준 · 6단계 구간 해석"
+          >
             <EgoOkEgogramPolarityPanel egogram={report.egogram} />
           </SectionCard>
         ),

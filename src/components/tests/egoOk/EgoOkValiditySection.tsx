@@ -3,6 +3,10 @@
 import { ReportInsightBlock } from '@/components/tests/egoOk/egoOkReportInsight';
 import { EGO_OK_ITEM_BANK_ID } from '@/data/egoOkQuestions';
 import {
+  EGO_OK_LIKERT_SCALE_ONE_LINER,
+  EGO_OK_VALIDITY_BANDS_99,
+} from '@/lib/egoOkLikertInterpretation';
+import {
   VALIDITY_SCALE_LABELS,
   type EgoOkValidityProfile,
   type ValidityScaleStatus,
@@ -154,7 +158,7 @@ export function ValidityTable({
             bands={
               showScoreBands
                 ? isEgoOk99Bank
-                  ? ['정상: 3점 이하 0개', '주의: 3점 이하 1개', '무효: 3점 이하 2개 이상']
+                  ? [...EGO_OK_VALIDITY_BANDS_99.imc]
                   : ['정상: 두 문항 모두 지정 응답', '주의: 지정 응답 실패 1개', '무효: 지정 응답 실패 2개']
                 : undefined
             }
@@ -178,7 +182,7 @@ export function ValidityTable({
             bands={
               showScoreBands
                 ? isEgoOk99Bank
-                  ? ['정상: 2점 이하 0–1개', '주의: 2점 이하 2개 (도덕적 포장)', '— (L 단독 무효 없음)']
+                  ? [...EGO_OK_VALIDITY_BANDS_99.lie]
                   : ['정상: 5점 이하', '주의: 6–7점', '무효: 8점 이상 (과도한 방어·위선)']
                 : undefined
             }
@@ -202,7 +206,7 @@ export function ValidityTable({
             bands={
               showScoreBands
                 ? isEgoOk99Bank
-                  ? ['정상: 3점 이상 0–1개', '주의: 3점 이상 1개', '무효: 3점 이상 2개 이상']
+                  ? [...EGO_OK_VALIDITY_BANDS_99.infreq]
                   : ['정상: 3점 이하', '주의: 4–5점', '무효: 6점 이상 (꾀병 또는 무작위 응답)']
                 : undefined
             }
@@ -245,6 +249,11 @@ export default function EgoOkValiditySection({
           title="검사 타당도 및 반응 태도 분석"
         >
           <p className="text-xs text-slate-500">{validitySpreadLabel(validity)}</p>
+          {isEgoOk99Bank ? (
+            <p className="mt-2 text-[11px] leading-relaxed text-slate-400">
+              타당도 문항도 동일 척도: {EGO_OK_LIKERT_SCALE_ONE_LINER}. 임계점은 C(3)·D(2) 기준입니다.
+            </p>
+          ) : null}
         </ReportInsightBlock>
         <ReportInsightBlock tone="amber" title="종합 판정">
           <p className="text-sm font-semibold text-slate-200">

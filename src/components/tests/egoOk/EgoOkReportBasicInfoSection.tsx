@@ -1,7 +1,13 @@
 'use client';
 
-import type { EgoOkReport } from '@/lib/egoOkScoring';
 import type { ClientInfo } from '@/components/tests/MbtiProClientInfo';
+import {
+  EGO_OK_ITEM_SCORING_NOTE,
+  EGO_OK_LIKERT_SCALE_ONE_LINER,
+  EGO_OK_OKGRAM_SCORING_NOTE,
+  EGO_OK_POLARITY_FORMULA,
+} from '@/lib/egoOkLikertInterpretation';
+import type { EgoOkReport } from '@/lib/egoOkScoring';
 
 function pct(raw: number, max: number): string {
   if (max <= 0) return '—';
@@ -43,6 +49,10 @@ export default function EgoOkReportBasicInfoSection({
 
       <div className="rounded-xl border border-slate-200/90 bg-white p-4 ring-1 ring-slate-100">
         <h3 className="text-sm font-bold text-slate-800">이고그램 · 5척도 종합 (50문항)</h3>
+        <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
+          {EGO_OK_LIKERT_SCALE_ONE_LINER}. {EGO_OK_ITEM_SCORING_NOTE} 긍정·부정 열은 각 5문항 동의
+          점수 합(5~25). {EGO_OK_POLARITY_FORMULA}
+        </p>
         <div className="mt-3 overflow-x-auto">
           <table className="w-full min-w-[28rem] text-left text-xs text-slate-700">
             <thead>
@@ -71,6 +81,7 @@ export default function EgoOkReportBasicInfoSection({
 
       <div className="rounded-xl border border-slate-200/90 bg-white p-4 ring-1 ring-slate-100">
         <h3 className="text-sm font-bold text-slate-800">오케이그램 · 4척도 (40문항)</h3>
+        <p className="mt-1 text-[11px] leading-relaxed text-slate-500">{EGO_OK_OKGRAM_SCORING_NOTE}</p>
         <div className="mt-3 overflow-x-auto">
           <table className="w-full min-w-[20rem] text-left text-xs text-slate-700">
             <thead>

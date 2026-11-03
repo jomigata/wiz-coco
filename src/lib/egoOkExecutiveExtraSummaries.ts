@@ -113,9 +113,9 @@ export function buildExecutiveExtraSummaries(
         const rows = buildEgogramPolarityRows(report.egogram);
         const worst = [...rows].sort((x, y) => y.negativePct - x.negativePct)[0];
         if (!worst || worst.band === 'within40') {
-          return '다섯 척도 모두 부정 표현 비율이 40% 이하입니다. 지금의 긍정 사용 리듬을 유지하는 것이 좋습니다.';
+          return '다섯 척도 모두 부정 진술 동의 비율(5지선다 점수 합 기준)이 40% 이하입니다. 긍정 %가 우세한 편이므로 건설적 CP~AC 사용 리듬을 유지하는 것이 좋습니다.';
         }
-        return `부정 비율이 가장 높은 척도는 ${worst.id}(${worst.negativePct}%, ${worst.bandLabel}). 말하기·자기대화에서 부정 표현을 한 단계 줄이는 연습을 함께 정합니다.`;
+        return `부정 %가 가장 높은 척도는 ${worst.id}(부정 ${worst.negativePct}% · 긍정 ${worst.positivePct}%, ${worst.bandLabel}). ${worst.negativePctExplain} 상담에서는 부정 5문항에 해당하는 행동·자기대화를 한 단계 낮추는 연습을 함께 정합니다.`;
       })(),
     },
     {

@@ -1,3 +1,4 @@
+import { explainEgogramPolarityLikert } from '@/lib/egoOkLikertInterpretation';
 import type { EgoOkScaleScore, EgoScaleId } from '@/lib/egoOkScoring';
 
 /** 부정성 비율(긍정+부정 합 대비) 구간 */
@@ -23,6 +24,10 @@ export type EgogramPolarityRow = {
   strengths: string[];
   cautions: string[];
   remedies: string[];
+  /** 5지선다 동의 척도 기준 긍·부정 % 설명 */
+  positivePctExplain: string;
+  negativePctExplain: string;
+  scaleLikertContext: string;
 };
 
 const BAND_LABEL: Record<EgogramNegativeBand, string> = {
@@ -206,12 +211,25 @@ export function buildEgogramPolarityRows(egogram: EgoOkScaleScore[]): EgogramPol
     const strengths = copy.strengths;
     let cautions: string[] = [];
     let remedies: string[] = [];
+    const likert = explainEgogramPolarityLikert(
+      s.id,
+      s.positiveRaw,
+      s.negativeRaw,
+      positivePct,
+      negativePct,
+    );
+
     if (band === 'within40') {
-      cautions = ['부정 사용 비율이 비교적 낮습니다. 긍정 기능을 강화·유지하는 방향이 유리합니다.'];
+      cautions = [
+        `부정 ${negativePct}% — 5지선다 기준 부정 진술 동의 비중이 40% 이하입니다. 긍정 ${positivePct}%와 함께 건설적 ${s.id} 사용이 상대적으로 많습니다.`,
+      ];
       remedies = ['강점을 구체적 행동으로 유지(칭찬, 경계, 휴식, 계획)하세요.'];
     } else {
       const tier = copy.byBand[band];
-      cautions = tier.cautions;
+      cautions = [
+        likert.negativePctExplain,
+        ...tier.cautions,
+      ];
       remedies = tier.remedies;
     }
     return {
@@ -227,6 +245,9 @@ export function buildEgogramPolarityRows(egogram: EgoOkScaleScore[]): EgogramPol
       strengths,
       cautions,
       remedies,
+      positivePctExplain: likert.positivePctExplain,
+      negativePctExplain: likert.negativePctExplain,
+      scaleLikertContext: likert.scaleContext,
     };
   });
 }

@@ -924,17 +924,17 @@ export default function EgoOkKtaaCompositeChart({
         <p className="font-bold text-sky-900">점수가 그래프에 표시되는 방식</p>
         <ol className="list-decimal space-y-2 pl-4 text-gray-800">
           <li>
-            <strong>응답 → 문항 점수</strong>: 각 문항은 5점 척도(1=거의 그렇지 않다 ~ 5=거의 항상 그렇다 · 보통 그렇다=3)로
-            답하고, 채점 시 문항 <strong>1~5점</strong>으로 환산합니다(6→5, 5→4, 4→3.25, 3→2.75, 2→2,
-            1→1). 척도 10문항 합은 <strong>10~50</strong>이며, 소수 합산 후 <strong>0.5 이상 반올림</strong>합니다.
+            <strong>응답 → 문항 점수</strong>: 전 문항 동일 5지선다(A 거의 항상 그렇다=5 … E 거의 그렇지
+            않다=1, C 보통 그렇다=3). 선택값을 그대로 1~5점으로 합산(과거 6점 저장만 5점 환산). 이고
+            10문항 합 <strong>10~50</strong>, 소수 합산 후 <strong>0.5 이상 반올림</strong>.
           </li>
           <li>
-            <strong>막대 = 이고그램(CP·NP·A·FC·AC)</strong>: 척도마다 긍정 문항 5개·부정 문항 5개(합 10문항,
-            만점 50).{' '}
+            <strong>막대 = 이고그램(CP·NP·A·FC·AC)</strong>: 척도마다 긍정 진술 5문항·부정 진술 5문항.{' '}
             <span className="inline-block h-2 w-3 rounded-sm align-middle" style={{ background: EGO_NEG_COLOR }} />{' '}
-            <strong>주황(아래)</strong>은 부정 문항 합(0~25),{' '}
+            <strong>주황(아래)</strong> = 부정 5문항 동의 점수 합(5~25),{' '}
             <span className="inline-block h-2 w-3 rounded-sm align-middle" style={{ background: EGO_POS_COLOR }} />{' '}
-            <strong>하늘(위)</strong>은 긍정 문항 합(0~25).
+            <strong>하늘(위)</strong> = 긍정 5문항 동의 점수 합(5~25).{' '}
+            <strong>긍정 %</strong> = 하늘 ÷ (하늘+주황)×100, <strong>부정 %</strong> = 100−긍정 %.
           </li>
           <li>
             <strong>배경색:</strong>{' '}

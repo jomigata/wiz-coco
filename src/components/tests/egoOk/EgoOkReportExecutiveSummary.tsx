@@ -24,6 +24,7 @@ import {
   type Plus243ScaleEntry,
 } from '@/lib/egogram243Plus';
 import { buildEgogramPolarityRows } from '@/lib/egoOkEgogramPolarity';
+import { EGO_OK_LIKERT_SCALE_ONE_LINER, EGO_OK_POLARITY_FORMULA } from '@/lib/egoOkLikertInterpretation';
 import { buildCounselorPairAndAdultGuidance } from '@/lib/egogramManualNineStage';
 import { INNER_MIND_ALIGNED_MAX, type InnerMindPair } from '@/lib/egoOkInnerMind';
 import { formatEgogramEnergyHeadline } from '@/lib/egogramEnergyStageComments';
@@ -444,6 +445,9 @@ export default function EgoOkReportExecutiveSummary({
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-600">
           타당도부터 이고그램·243+·오케이·속마음·부정성까지 핵심만 모았습니다. 자세한 해석은 각 탭에서 이어집니다.
         </p>
+        <p className="mt-2 max-w-3xl text-[11px] leading-relaxed text-slate-500">
+          점수·% 해석: {EGO_OK_LIKERT_SCALE_ONE_LINER}. {EGO_OK_POLARITY_FORMULA}
+        </p>
         <div className="mt-4 flex flex-wrap items-center gap-4 border-t border-slate-100 pt-4">
           <div>
             <p className="text-[10px] font-semibold uppercase text-slate-400">내담자</p>
@@ -564,10 +568,10 @@ export default function EgoOkReportExecutiveSummary({
 
         <SummaryShell title="이고그램-부정성" targetTabId="polarity">
           <MiniPolarityStrip egogram={report.egogram} />
-          <p className="mt-2 text-[11px] text-slate-600">
+          <p className="mt-2 text-[11px] leading-relaxed text-slate-600">
             {polarityAlert === 0
-              ? '다섯 척도 모두 부정 40% 이하 — 권장 구간입니다.'
-              : `${polarityAlert}개 척도에서 부정 41% 이상 — 부정성 탭에서 구간별 대책을 확인하세요.`}
+              ? '부정 % = 부정 5문항 동의 합 비중. 전 척도 40% 이하(권장).'
+              : `${polarityAlert}개 척도에서 부정 41% 이상 — 5지선다「그렇다」쪽 부정 진술 동의가 많음. 부정성 탭 참고.`}
           </p>
         </SummaryShell>
       </div>

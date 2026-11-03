@@ -9,6 +9,7 @@ import {
   type PersonalityScaleBreakdownRow,
 } from '@/lib/egoOkPersonalityScaleBreakdown';
 import { aggregateScaleCriteria } from '@/lib/egoOkItemScaleCriteria';
+import { EGO_OK_ITEM_SCORING_NOTE, EGO_OK_LIKERT_SCALE_ONE_LINER } from '@/lib/egoOkLikertInterpretation';
 import {
   egoOkReportSectionNumber,
   formatEgoOkSectionTitle,
@@ -88,9 +89,10 @@ export default function EgoOkReportScaleBreakdownSection({ report }: { report: E
       <header className="mb-4 border-b border-indigo-100/80 pb-3">
         <h2 className="text-base font-bold text-slate-900">90문항 척도별 점수 · 문항 구성</h2>
         <p className="mt-1 text-xs leading-relaxed text-slate-600">
-          타당도 9문항을 제외한 <strong className="font-semibold text-slate-800">90문항</strong> 기준입니다. 점수는
-          문항별 1~5점 합산(척도당 최대 25점 또는 50점)이며, 카드 하단 <strong className="font-semibold">척도기준점</strong>
-          · 활용팁은 2026 설문지(99문항 Excel)와 동일합니다.
+          타당도 9문항 제외 <strong className="font-semibold text-slate-800">90문항</strong>. 응답:{' '}
+          {EGO_OK_LIKERT_SCALE_ONE_LINER}. {EGO_OK_ITEM_SCORING_NOTE} 이고 소분류(긍/부)는 각 5문항 합{' '}
+          <strong className="font-semibold">5~25점</strong>, 오케이(U±·I±)는 10문항 합{' '}
+          <strong className="font-semibold">10~50점</strong>. 부정성 %는 이고 탭과 동일한 긍·부 합 비율입니다.
         </p>
       </header>
 

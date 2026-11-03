@@ -1,6 +1,7 @@
 'use client';
 
 import { ReportInsightBlock, type ReportInsightTone } from '@/components/tests/egoOk/egoOkReportInsight';
+import EgoOkLikertMethodologyPanel from '@/components/tests/egoOk/EgoOkLikertMethodologyPanel';
 import {
   buildEgogramPolarityRows,
   type EgogramNegativeBand,
@@ -45,11 +46,12 @@ export default function EgoOkEgogramPolarityPanel({ egogram }: { egogram: EgoOkS
 
   return (
     <div className="space-y-3">
-      <ReportInsightBlock tone="indigo" compact title="긍정·부정 사용 비율 안내">
+      <EgoOkLikertMethodologyPanel compact />
+      <ReportInsightBlock tone="indigo" compact title="긍정·부정 % 해석 기준">
         <p className="text-xs leading-relaxed text-slate-300 sm:text-sm">
-          각 이고 척도의 긍정·부정 사용 합계와 비율입니다.{' '}
-          <strong className="font-normal text-slate-100">부정 40% 이하</strong>를 유지하는 것이 바람직하며, 41%부터
-          구간별 주의·대책 강도가 높아집니다.
+          아래 %는 5지선다 동의 점수 합의 비율입니다.{' '}
+          <strong className="font-normal text-slate-100">부정 40% 이하</strong>면 부정 진술 동의가 상대적으로
+          적은 편(권장)이며, 41%부터 구간별 주의·대책 강도가 높아집니다.
         </p>
       </ReportInsightBlock>
       <div className="grid gap-3 lg:grid-cols-2">
@@ -113,6 +115,11 @@ export default function EgoOkEgogramPolarityPanel({ egogram }: { egogram: EgoOkS
             }
           >
             <div className="space-y-2 text-xs leading-relaxed sm:text-sm">
+              <p className="text-[11px] text-slate-400">{row.scaleLikertContext}</p>
+              <p className="text-[11px] text-sky-200/90">{row.positivePctExplain}</p>
+              {row.band !== 'within40' ? (
+                <p className="text-[11px] text-amber-200/80">{row.negativePctExplain}</p>
+              ) : null}
               <div>
                 <p className="font-semibold text-emerald-200/90">긍정 기능 · 장점</p>
                 <ul className="mt-1 list-inside list-disc text-slate-300">
