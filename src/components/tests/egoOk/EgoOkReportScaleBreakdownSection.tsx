@@ -8,6 +8,7 @@ import {
   groupBreakdownByMiddle,
   type PersonalityScaleBreakdownRow,
 } from '@/lib/egoOkPersonalityScaleBreakdown';
+import { aggregateScaleCriteria } from '@/lib/egoOkItemScaleCriteria';
 import {
   egoOkReportSectionNumber,
   formatEgoOkSectionTitle,
@@ -18,6 +19,10 @@ function ScaleRowCard({ row }: { row: PersonalityScaleBreakdownRow }) {
   const nav = useEgoOkReportTabNav();
   const tabNo = egoOkReportSectionNumber(row.relatedTabId);
   const barPct = Math.min(100, row.pct);
+  const { criteriaLines, tipLines } = useMemo(
+    () => aggregateScaleCriteria(row.itemNos),
+    [row.itemNos],
+  );
 
   return (
     <button
@@ -50,6 +55,21 @@ function ScaleRowCard({ row }: { row: PersonalityScaleBreakdownRow }) {
       <p className="text-[10px] leading-snug text-slate-500">
         문항 {row.itemCount}개 · No. {row.itemNos.join(', ')}
       </p>
+      {criteriaLines.length > 0 ? (
+        <div className="space-y-1 border-t border-slate-100 pt-2">
+          {criteriaLines.slice(0, 3).map((line) => (
+            <p key={line} className="text-[10px] leading-snug text-slate-600">
+              {line}
+            </p>
+          ))}
+          {criteriaLines.length > 3 ? (
+            <p className="text-[10px] text-slate-400">외 {criteriaLines.length - 3}개 척도기준점</p>
+          ) : null}
+          {tipLines[0] ? (
+            <p className="text-[10px] leading-snug text-indigo-700/90">{tipLines[0]}</p>
+          ) : null}
+        </div>
+      ) : null}
       {tabNo != null ? (
         <p className="text-[10px] font-medium text-indigo-600">
           → {formatEgoOkSectionTitle(tabNo, '상세 탭')} 이동
@@ -68,8 +88,9 @@ export default function EgoOkReportScaleBreakdownSection({ report }: { report: E
       <header className="mb-4 border-b border-indigo-100/80 pb-3">
         <h2 className="text-base font-bold text-slate-900">90문항 척도별 점수 · 문항 구성</h2>
         <p className="mt-1 text-xs leading-relaxed text-slate-600">
-          타당도 6문항을 제외한 <strong className="font-semibold text-slate-800">90문항</strong> 기준입니다. 대분류
-          · 중분류 · 소분류로 정리했으며, 카드를 누르면 연결된 상세 탭으로 이동합니다.
+          타당도 9문항을 제외한 <strong className="font-semibold text-slate-800">90문항</strong> 기준입니다. 점수는
+          문항별 1~5점 합산(척도당 최대 25점 또는 50점)이며, 카드 하단 <strong className="font-semibold">척도기준점</strong>
+          · 활용팁은 2026 설문지(99문항 Excel)와 동일합니다.
         </p>
       </header>
 

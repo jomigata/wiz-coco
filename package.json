@@ -72,6 +72,8 @@
     "build:ego-ok-items-96": "node scripts/build-ego-ok-items-96.mjs",
     "merge:ego-ok-batch2-at-breaks": "node scripts/merge-ego-ok-batch2-at-breaks.mjs",
     "apply:ego-ok-canonical-text": "node scripts/apply-ego-ok-canonical-text.mjs",
+    "import:ego-ok-99-xlsx": "node scripts/import-ego-ok-99-xlsx.mjs",
+    "refresh:ego-ok-items-99-from-xlsx": "npm run import:ego-ok-99-xlsx && node scripts/build-items-99-final.mjs && npm run sync:ego-ok-questions && npm run generate:ego-ok-items-99-measurement-focus",
     "build:ego-ok-items-99": "node scripts/build-items-99-final.mjs && npm run sync:ego-ok-questions",
     "audit:ego-ok-vrin-pairs": "node scripts/audit-ego-ok-vrin-pairs.mjs",
     "export:ego-ok-items-99-excel": "node scripts/export-items-99-excel.mjs",

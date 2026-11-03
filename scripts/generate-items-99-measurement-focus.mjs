@@ -18,6 +18,11 @@ const labels = JSON.parse(
   ),
 );
 
+const criteriaPath = path.join(root, 'docs/internal-materials/ego-ok/items-99-scale-criteria-ko.json');
+const criteriaByNo = fs.existsSync(criteriaPath)
+  ? JSON.parse(fs.readFileSync(criteriaPath, 'utf8')).byNo ?? {}
+  : {};
+
 const VALIDITY = {
   9: {
     topic: '시간·하루의 길이',
@@ -70,6 +75,13 @@ function lifeArea(item) {
 }
 
 function focusLine(item) {
+  const excel = criteriaByNo[String(item.no)];
+  if (excel?.criterion) {
+    const parts = [`척도기준: ${excel.criterion}`];
+    if (excel.tip) parts.push(`활용: ${excel.tip}`);
+    if (excel.extraTip) parts.push(`추가: ${excel.extraTip}`);
+    return parts.join(' · ');
+  }
   const v = VALIDITY[item.no];
   if (v) {
     return `측정 주제: ${v.topic}. 기준점: ${v.criterion}`;
@@ -85,7 +97,10 @@ for (const item of bank.items) {
 }
 
 const out = {
-  note: '비교 TSV 7열(측정주제·기준점). 전문 척도명 대신 일상어 주제·기준.',
+  note: 'Excel 99문항 시트(척도기준점·활용팁) + items-99.json 문항 번호.',
+  sourceCriteria: fs.existsSync(criteriaPath)
+    ? path.relative(root, criteriaPath).replace(/\\/g, '/')
+    : null,
   byNo,
 };
 
