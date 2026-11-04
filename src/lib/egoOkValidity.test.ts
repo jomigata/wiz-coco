@@ -48,7 +48,7 @@ describe('computeEgoOkValidityProfile (99-item bank)', () => {
   it('includes keyword issueBrief when IMC fails', () => {
     if (!is99) return;
     const v = computeEgoOkValidityProfile(answersForNos([[9, 2]]));
-    expect(v.imc.issueBrief).toMatch(/주의력/);
+    expect(v.imc.issueBrief).toMatch(/평정심/);
     expect(v.imc.issueBrief).toMatch(/9번/);
   });
 
