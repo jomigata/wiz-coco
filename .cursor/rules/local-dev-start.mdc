@@ -1,0 +1,16 @@
+# 로컬시작 (dev + 브라우저)
+
+사용자가 **「로컬시작」**, **「로컬 시작」**, **로컬 개발 켜줘** 등을 요청하면 **`npm run dev`만 실행하지 말고** 아래를 실행한다.
+
+```bash
+npm run dev:local-start
+```
+
+(`dev:workspace:open`과 동일 — dev 기동·대기, Auth 시드, 브라우저 탭 3개)
+
+- **기본**: Cursor **Simple Browser** (`Cursor.exe --open-url` → vscode://simple-browser). `.vscode/settings.json`의 `terminal.integrated.env` + `scripts/resolve-cursor-cli.js`로 경로 자동 탐지
+- 브라우저 생략: `WIZCOCO_DEV_SKIP_BROWSER=1`
+- 항상 OS 브라우저만: `WIZCOCO_DEV_SYSTEM_BROWSER=1`
+- Simple Browser 실패 시에만 OS 폴백: `WIZCOCO_DEV_FALLBACK_SYSTEM_BROWSER=1`
+
+프로젝트 폴더 **첫 열기**는 `.vscode/tasks.json`의 `runOn: folderOpen`으로 같은 스크립트가 자동 실행된다 (`task.allowAutomaticTasks: on`).

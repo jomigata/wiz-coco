@@ -1,4 +1,10 @@
 {
+  "terminal.integrated.env.windows": {
+    "CURSOR_PATH": "${env:LOCALAPPDATA}\\Programs\\cursor\\Cursor.exe"
+  },
+  "terminal.integrated.env.osx": {
+    "CURSOR_PATH": "/Applications/Cursor.app/Contents/MacOS/Cursor"
+  },
   "task.allowAutomaticTasks": "on",
   "git.confirmSync": false,
   "git.confirmEmptyCommits": false,

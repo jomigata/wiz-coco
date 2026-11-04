@@ -22,6 +22,14 @@ npm run setup:local
 
 ## 실행 (한 번에)
 
+**개발 서버 + 브라우저 탭까지 (「로컬시작」 권장):**
+
+```powershell
+npm run dev:local-start
+```
+
+서버만 (브라우저는 수동):
+
 ```powershell
 npm run dev
 ```
@@ -41,13 +49,15 @@ npm run dev
 2. Emulator·Flask·Next 준비까지 대기 (최대 4분)  
 3. 터미널에 **로컬 스택 상태 표** 출력 (Emulator / `/api/health` / Next URL)  
 4. Auth Emulator **테스트 계정 시드** (`dev:seed-auth`, 이미 있으면 건너뜀)  
-5. **Simple Browser 탭 3개** (우측 내장 브라우저, `WIZCOCO_DEV_SKIP_BROWSER=1` 이면 생략):
+5. **Cursor Simple Browser 탭 3개** (우측 내장, `WIZCOCO_DEV_SKIP_BROWSER=1` 이면 생략):
    - http://localhost:3000/
    - http://localhost:3000/admin/counselor-management
    - http://127.0.0.1:4000/auth
 
+**「로컬시작」** = `npm run dev:local-start` (위와 동일 + 브라우저). Windows 통합 터미널에는 `.vscode/settings.json`의 `CURSOR_PATH`( `%LOCALAPPDATA%\Programs\cursor\Cursor.exe` )가 자동 주입됩니다. Chrome 등으로만 열려면 `WIZCOCO_DEV_SYSTEM_BROWSER=1`.
+
 처음 폴더를 열 때 Cursor가 **「Allow Automatic Tasks in Folder」** 를 물으면 **Allow** 를 선택하세요.  
-수동 실행: `npm run dev:workspace:open`
+수동 실행: `npm run dev:local-start` 또는 `npm run dev:workspace:open`
 
 **Emulator 데이터 유지 (회원·Firestore — 상담사 권한·포인트·내담자·검사 기록):**
 
