@@ -21,7 +21,7 @@ export interface EgoOkQuestion {
 }
 
 export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
-  { no: 1, text: "평소 주변 사람들의 좋은 면을 잘 발견하고, 자연스럽게 칭찬하곤 한다.", readingText: "평소 주변 사람들의 좋은 면을 잘 발견하고, 자연스럽게 칭찬하곤 한다.", code: "BA", egoIndex: 1, okIndex: null, scaleType: "np_positive", scaleKind: 'egogram' },
+  { no: 1, text: "주변 사람들의 좋은 모습을 금방 알아차리고,\n자연스럽게 칭찬하곤 한다.", readingText: "주변 사람들의 좋은 모습을 금방 알아차리고,\n자연스럽게 칭찬하곤 한다.", code: "BA", egoIndex: 1, okIndex: null, scaleType: "np_positive", scaleKind: 'egogram' },
   { no: 2, text: "사람들과의 관계나 일 처리에서,\n대체로 원칙과 규정을 잘 지키려 한다.", readingText: "사람들과의 관계나 일 처리에서,\n대체로 원칙과 규정을 잘 지키려 한다.", code: "CB", egoIndex: 20, okIndex: null, scaleType: "a_negative", scaleKind: 'egogram' },
   { no: 3, text: "남들과 비교하지 않고, 나만의 고유한 삶의 방식을 존중하는 편이다.", readingText: "남들과 비교하지 않고, 나만의 고유한 삶의 방식을 존중하는 편이다.", code: "DC", egoIndex: null, okIndex: 1, scaleType: "i_plus", scaleKind: 'okgram' },
   { no: 4, text: "모임이나 일을 진행할 때,\n남의 의견보다는 내 방식대로 이끌고자 한다.", readingText: "모임이나 일을 진행할 때,\n남의 의견보다는 내 방식대로 이끌고자 한다.", code: "AB", egoIndex: 2, okIndex: null, scaleType: "cp_negative", scaleKind: 'egogram' },
