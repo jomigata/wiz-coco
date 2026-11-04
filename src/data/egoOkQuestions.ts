@@ -25,7 +25,7 @@ export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 2, text: "사람들과의 관계나 일 처리에서,\n대체로 원칙과 규정을 잘 지키려 하는 편이다.", readingText: "사람들과의 관계나 일 처리에서,\n대체로 원칙과 규정을 잘 지키려 하는 편이다.", code: "CB", egoIndex: 20, okIndex: null, scaleType: "a_negative", scaleKind: 'egogram' },
   { no: 3, text: "남들과 비교하지 않고, 나만의 고유한 삶의 방식을 존중하는 편이다.", readingText: "남들과 비교하지 않고, 나만의 고유한 삶의 방식을 존중하는 편이다.", code: "DC", egoIndex: null, okIndex: 1, scaleType: "i_plus", scaleKind: 'okgram' },
   { no: 4, text: "모임이나 일을 진행할 때,\n남의 의견보다는 내 방식대로 이끌고자 한다.", readingText: "모임이나 일을 진행할 때,\n남의 의견보다는 내 방식대로 이끌고자 한다.", code: "AB", egoIndex: 2, okIndex: null, scaleType: "cp_negative", scaleKind: 'egogram' },
-  { no: 5, text: "사람들의 생각이나 방식이 달라도, 대체로 인정하고 받아들이는 편이다.", readingText: "사람들의 생각이나 방식이 달라도, 대체로 인정하고 받아들이는 편이다.", code: "BC", egoIndex: null, okIndex: 8, scaleType: "u_plus", scaleKind: 'okgram' },
+  { no: 5, text: "사람들의 생각이나 방식이 달라도, 인정하고 받아들이는 편이다.", readingText: "사람들의 생각이나 방식이 달라도, 인정하고 받아들이는 편이다.", code: "BC", egoIndex: null, okIndex: 8, scaleType: "u_plus", scaleKind: 'okgram' },
   { no: 6, text: "평소 남의 시선을 많이 의식하여, 편하게 행동하기 어려운 편이다.", readingText: "평소 남의 시선을 많이 의식하여, 편하게 행동하기 어려운 편이다.", code: "EB", egoIndex: 11, okIndex: null, scaleType: "ac_negative", scaleKind: 'egogram' },
   { no: 7, text: "사람들과 어울릴 때 득실을 따지기보다,\n대체로 순수한 마음으로 편하게 어울리곤 한다.", readingText: "사람들과 어울릴 때 득실을 따지기보다,\n대체로 순수한 마음으로 편하게 어울리곤 한다.", code: "DA", egoIndex: 4, okIndex: null, scaleType: "fc_positive", scaleKind: 'egogram' },
   { no: 8, text: "나는 다른 사람에게 호감을 주지 못하다고, 느낄 때가 많다.", readingText: "나는 다른 사람에게 호감을 주지 못하다고, 느낄 때가 많다.", code: "EC", egoIndex: null, okIndex: 2, scaleType: "i_minus", scaleKind: 'okgram' },
