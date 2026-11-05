@@ -6,7 +6,7 @@
 npm run dev:local-start
 ```
 
-(`dev:workspace:open`과 동일 — dev 기동·대기, Auth 시드, 브라우저 탭 3개)
+(`dev:workspace:open`과 동일 — **백그라운드 dev**, Auth 시드, Simple Browser 3탭. Windows에서 **별도 콘솔 창 없음** — `scripts/run-dev-detached.js`)
 
 - **기본**: Cursor **Simple Browser** (`Cursor.exe --open-url` → vscode://simple-browser). `.vscode/settings.json`의 `terminal.integrated.env` + `scripts/resolve-cursor-cli.js`로 경로 자동 탐지
 - 브라우저 생략: `WIZCOCO_DEV_SKIP_BROWSER=1`

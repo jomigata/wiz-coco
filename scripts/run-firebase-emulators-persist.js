@@ -6,6 +6,7 @@
  * - 실행 중: 주기 export + Flask API 변경 시 debounce export
  */
 const { spawn } = require('child_process');
+const { devStdio, spawnOptionsBase } = require('./lib/dev-headless');
 const fs = require('fs');
 const net = require('net');
 const path = require('path');
@@ -52,10 +53,9 @@ if (fs.existsSync(importDirAbs)) {
 }
 
 const child = spawn(process.execPath, [firebaseJs, ...args], {
-  stdio: 'inherit',
-  shell: false,
+  stdio: devStdio(),
   cwd: ROOT,
-  windowsHide: true,
+  ...spawnOptionsBase(),
 });
 
 let exportTimer = null;

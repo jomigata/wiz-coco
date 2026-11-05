@@ -45,7 +45,7 @@ npm run dev
 
 워크스페이스를 열면 **자동 작업**이 한 번 실행됩니다 (`.vscode/tasks.json`, `.vscode/settings.json`의 `task.allowAutomaticTasks: on`).
 
-1. **8080 / 4000 / 5000 / 3000** 이 모두 떠 있지 않으면 **`npm run dev`** 를 백그라운드로 시작 (로그: `.firebase/local-dev-server.log`)  
+1. **8080 / 4000 / 5000 / 3000** 이 모두 떠 있지 않으면 **`run-dev-detached.js`** 로 스택 시작 — **Windows 별도 CMD 창 없음** (로그: `.firebase/local-dev-server.log`). Cursor 터미널에서 직접 보려면 `npm run dev`.  
 2. Emulator·Flask·Next 준비까지 대기 (최대 4분)  
 3. 터미널에 **로컬 스택 상태 표** 출력 (Emulator / `/api/health` / Next URL)  
 4. Auth Emulator **테스트 계정 시드** (`dev:seed-auth`, 이미 있으면 건너뜀)  

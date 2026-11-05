@@ -84,22 +84,19 @@ async function ensureDevServer() {
       '[dev:workspace:open] 일부 포트만 사용 중입니다. 전체 스택을 위해 npm run dev 를 시작합니다.',
     );
   } else {
-    console.log('[dev:workspace:open] npm run dev 시작…');
+    console.log('[dev:workspace:open] 로컬 스택 백그라운드 시작 (콘솔 창 없음)…');
   }
 
   fs.mkdirSync(path.dirname(LOG_FILE), { recursive: true });
-  const logFd = fs.openSync(LOG_FILE, 'a');
-  fs.writeSync(logFd, `\n--- ${new Date().toISOString()} dev:workspace:open ---\n`);
+  fs.appendFileSync(LOG_FILE, `\n--- ${new Date().toISOString()} dev:workspace:open ---\n`);
 
-  const isWindows = isWin();
-  const child = spawn(isWindows ? 'npm.cmd' : 'npm', ['run', 'dev'], {
+  spawnSync(process.execPath, [path.join(__dirname, 'run-dev-detached.js')], {
     cwd: ROOT,
-    detached: true,
-    stdio: ['ignore', logFd, logFd],
-    shell: isWindows,
+    stdio: 'inherit',
+    shell: false,
+    windowsHide: true,
+    env: { ...process.env, WIZCOCO_DEV_LOG: LOG_FILE },
   });
-  child.unref();
-  fs.closeSync(logFd);
 }
 
 function waitForStack() {

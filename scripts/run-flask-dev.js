@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 const path = require('path');
 const { spawn } = require('child_process');
+const { devStdio, spawnOptionsBase } = require('./lib/dev-headless');
 const dotenv = require('dotenv');
 
 const root = path.join(__dirname, '..');
@@ -47,9 +48,8 @@ if (env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASSWORD) {
 const child = spawn(venvPython, ['app.py'], {
   cwd: backendDir,
   env,
-  stdio: 'inherit',
-  shell: false,
-  windowsHide: true,
+  stdio: devStdio(),
+  ...spawnOptionsBase(),
 });
 
 child.on('exit', (code) => process.exit(code ?? 0));
