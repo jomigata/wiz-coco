@@ -39,7 +39,7 @@ export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 16, text: "의견이 서로 다를 때, 상대방의 입장을 헤아리며 양보하고 타협한다.", readingText: "의견이 서로 다를 때, 상대방의 입장을 헤아리며 양보하고 타협한다.", code: "EA", egoIndex: 18, okIndex: null, scaleType: "ac_positive", scaleKind: 'egogram' },
   { no: 17, text: "해야 할 일이 있어도,\n그날의 기분이나 마음에 따라 미루거나 바꿔버리곤 한다.", readingText: "해야 할 일이 있어도,\n그날의 기분이나 마음에 따라 미루거나 바꿔버리곤 한다.", code: "DB", egoIndex: 8, okIndex: null, scaleType: "fc_negative", scaleKind: 'egogram' },
   { no: 18, text: "남들이 자신의 뜻을 당당히 말하는 모습은, 바람직하다고 본다.", readingText: "남들이 자신의 뜻을 당당히 말하는 모습은, 바람직하다고 본다.", code: "BC", egoIndex: null, okIndex: 25, scaleType: "u_plus", scaleKind: 'okgram' },
-  { no: 19, text: "어릴 때부터,\n주변에서 충분한 사랑이나 지지를 받지 못했다고 느끼는 편이다.", readingText: "어릴 때부터,\n주변에서 충분한 사랑이나 지지를 받지 못했다고 느끼는 편이다.", code: "EC", egoIndex: null, okIndex: 4, scaleType: "i_minus", scaleKind: 'okgram' },
+  { no: 19, text: "어릴 때부터, 충분한 사랑이나 지지를 받지 못했다고 느끼는 편이다.", readingText: "어릴 때부터, 충분한 사랑이나 지지를 받지 못했다고 느끼는 편이다.", code: "EC", egoIndex: null, okIndex: 4, scaleType: "i_minus", scaleKind: 'okgram' },
   { no: 20, text: "남의 뚜렷한 성과나 좋은 결과에,\n선뜻 인정하고 칭찬해 주기가 어려운 편이다.", readingText: "남의 뚜렷한 성과나 좋은 결과에,\n선뜻 인정하고 칭찬해 주기가 어려운 편이다.", code: "AC", egoIndex: null, okIndex: 37, scaleType: "u_minus", scaleKind: 'okgram' },
   { no: 21, text: "이야기할 때, 상대 말에 귀 기울이고 마음을 헤아려 주는 편이다.", readingText: "이야기할 때, 상대 말에 귀 기울이고 마음을 헤아려 주는 편이다.", code: "BA", egoIndex: 12, okIndex: null, scaleType: "np_positive", scaleKind: 'egogram' },
   { no: 22, text: "사람을 대하거나 일할 때, 손해와 이익을 철저히 계산하는 편이다.", readingText: "사람을 대하거나 일할 때, 손해와 이익을 철저히 계산하는 편이다.", code: "CB", egoIndex: 9, okIndex: null, scaleType: "a_negative", scaleKind: 'egogram' },
