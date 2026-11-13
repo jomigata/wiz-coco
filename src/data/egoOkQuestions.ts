@@ -45,7 +45,7 @@ export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 22, text: "사람을 대하거나 일할 때, 손해와 이익을 철저히 계산하는 편이다.", readingText: "사람을 대하거나 일할 때, 손해와 이익을 철저히 계산하는 편이다.", code: "CB", egoIndex: 9, okIndex: null, scaleType: "a_negative", scaleKind: 'egogram' },
   { no: 23, text: "현실에 안주하지 않고, 더 높은 목표와 이상을 향해 노력한다.", readingText: "현실에 안주하지 않고, 더 높은 목표와 이상을 향해 노력한다.", code: "AA", egoIndex: 6, okIndex: null, scaleType: "cp_positive", scaleKind: 'egogram' },
   { no: 24, text: "힘든 일이나 곤란한 상황을 마주하면,\n스스로 해결하기보다 누군가에게 의지하고 싶어진다.", readingText: "힘든 일이나 곤란한 상황을 마주하면,\n스스로 해결하기보다 누군가에게 의지하고 싶어진다.", code: "EB", egoIndex: 17, okIndex: null, scaleType: "ac_negative", scaleKind: 'egogram' },
-  { no: 25, text: "가까운 사람들에게, 나와 있으면 의지가 된다는 말을 듣는 편이다.", readingText: "가까운 사람들에게, 나와 있으면 의지가 된다는 말을 듣는 편이다.", code: "DC", egoIndex: null, okIndex: 10, scaleType: "i_plus", scaleKind: 'okgram' },
+  { no: 25, text: "가까운 사람들이, 나와 있으면 의지가 된다고 말하는 편이다.", readingText: "가까운 사람들이, 나와 있으면 의지가 된다고 말하는 편이다.", code: "DC", egoIndex: null, okIndex: 10, scaleType: "i_plus", scaleKind: 'okgram' },
   { no: 26, text: "살아오면서 기쁨이나 분노 같은 정서적 감정을,\n마음으로 진하게 느껴본 적이 전혀 없다.", readingText: "살아오면서 기쁨이나 분노 같은 정서적 감정을,\n마음으로 진하게 느껴본 적이 전혀 없다.", code: "VX", egoIndex: null, okIndex: null, scaleType: "validity_infreq", scaleKind: 'validity' },
   { no: 27, text: "남이 잘되면, 내 일처럼 기분이 좋아지는 편이다.", readingText: "남이 잘되면, 내 일처럼 기분이 좋아지는 편이다.", code: "BC", egoIndex: null, okIndex: 28, scaleType: "u_plus", scaleKind: 'okgram' },
   { no: 28, text: "주변의 눈치나 정해진 규칙에 얽매이지 않고,\n내가 하고 싶은 대로 행동해 버린다.", readingText: "주변의 눈치나 정해진 규칙에 얽매이지 않고,\n내가 하고 싶은 대로 행동해 버린다.", code: "DB", egoIndex: 16, okIndex: null, scaleType: "fc_negative", scaleKind: 'egogram' },
