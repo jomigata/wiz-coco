@@ -69,7 +69,7 @@ export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 46, text: "어떤 일에 마음이 꽂히면,\n뒷일은 생각하지 않고 일단 저질러 버리곤 한다.", readingText: "어떤 일에 마음이 꽂히면,\n뒷일은 생각하지 않고 일단 저질러 버리곤 한다.", code: "DB", egoIndex: 36, okIndex: null, scaleType: "fc_negative", scaleKind: 'egogram' },
   { no: 47, text: "동료가 실수해도, 탓하기보다 격려하는 편이다.", readingText: "동료가 실수해도, 탓하기보다 격려하는 편이다.", code: "BC", egoIndex: null, okIndex: 34, scaleType: "u_plus", scaleKind: 'okgram' },
   { no: 48, text: "살면서 남의 흉을 보거나, 사소한 거짓말조차 해본 적이 없다.", readingText: "살면서 남의 흉을 보거나, 사소한 거짓말조차 해본 적이 없다.", code: "VX", egoIndex: null, okIndex: null, scaleType: "validity_lie", scaleKind: 'validity' },
-  { no: 49, text: "가끔 나 자신이, 많이 부족하거나 무기력하게 느껴질 때가 있다.", readingText: "가끔 나 자신이, 많이 부족하거나 무기력하게 느껴질 때가 있다.", code: "EC", egoIndex: null, okIndex: 7, scaleType: "i_minus", scaleKind: 'okgram' },
+  { no: 49, text: "가끔은 나 자신이, 많이 부족하거나 무기력하게 느껴지는 편이다.", readingText: "가끔은 나 자신이, 많이 부족하거나 무기력하게 느껴지는 편이다.", code: "EC", egoIndex: null, okIndex: 7, scaleType: "i_minus", scaleKind: 'okgram' },
   { no: 50, text: "상대가 내 기대에 못 미치면, 답답하고 화가 치는 편이다.", readingText: "상대가 내 기대에 못 미치면, 답답하고 화가 치는 편이다.", code: "AC", egoIndex: null, okIndex: 15, scaleType: "u_minus", scaleKind: 'okgram' },
   { no: 51, text: "막연한 기대나 짐작에 기대기보다,\n눈앞의 냉정한 현실을 직시하며 대처하는 편이다.", readingText: "막연한 기대나 짐작에 기대기보다,\n눈앞의 냉정한 현실을 직시하며 대처하는 편이다.", code: "CA", egoIndex: 22, okIndex: null, scaleType: "a_positive", scaleKind: 'egogram' },
   { no: 52, text: "남의 고민이나 걱정을, 내 일처럼 끌어안고 신경 쓰는 편이다.", readingText: "남의 고민이나 걱정을, 내 일처럼 끌어안고 신경 쓰는 편이다.", code: "BB", egoIndex: 25, okIndex: null, scaleType: "np_negative", scaleKind: 'egogram' },
