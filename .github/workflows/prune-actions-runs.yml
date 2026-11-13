@@ -1,0 +1,52 @@
+# Actions 실행 기록 — 최신 N개만 남기고 나머지 삭제 (GCP 배포 없음, GitHub API만)
+name: 🧹 Prune Actions runs
+
+on:
+  schedule:
+    # 매일 03:15 KST (전일 18:15 UTC)
+    - cron: '15 18 * * *'
+  workflow_dispatch:
+    inputs:
+      keep:
+        description: '워크플로(또는 전체)당 보존 실행 수'
+        required: false
+        default: '2'
+      mode:
+        description: 'workflow=워크플로별, global=저장소 전체'
+        type: choice
+        options:
+          - workflow
+          - global
+        default: workflow
+      dry_run:
+        description: '삭제 없이 개수만 확인'
+        type: boolean
+        default: false
+
+concurrency:
+  group: prune-actions-runs
+  cancel-in-progress: false
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  prune:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: 🧹 Prune old workflow runs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          KEEP: ${{ github.event.inputs.keep || '2' }}
+          PRUNE_MODE: ${{ github.event.inputs.mode || 'workflow' }}
+          PRUNE_DELAY_MS: '250'
+        run: |
+          ARGS="--keep=${KEEP} --mode=${PRUNE_MODE}"
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            ARGS="$ARGS --dry-run"
+          fi
+          node scripts/prune-github-actions-runs.mjs $ARGS

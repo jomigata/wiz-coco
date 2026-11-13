@@ -61,6 +61,8 @@
     "deploy:prod:all": "node scripts/deploy-prod-manual.js all",
     "deploy:prod:status": "node scripts/deploy-prod-manual.js status",
     "git:push": "git push origin HEAD",
+    "gh:prune-runs": "node scripts/prune-github-actions-runs.mjs --keep=2 --mode=workflow",
+    "gh:prune-runs:dry": "node scripts/prune-github-actions-runs.mjs --keep=2 --mode=workflow --dry-run",
     "secrets:solapi": "node scripts/set-solapi-secrets.js",
     "secrets:solapi:partial": "node scripts/set-solapi-secrets.js --partial",
     "verify:solapi": "node scripts/verify-solapi-status.js",
