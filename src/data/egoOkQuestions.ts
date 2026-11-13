@@ -33,7 +33,7 @@ export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 10, text: "남의 사소한 실수나 약속 어김은,\n대충 넘기기 어렵고 용서하기 어려운 편이다.", readingText: "남의 사소한 실수나 약속 어김은,\n대충 넘기기 어렵고 용서하기 어려운 편이다.", code: "AC", egoIndex: null, okIndex: 36, scaleType: "u_minus", scaleKind: 'okgram' },
   { no: 11, text: "문제가 생겼을 때 감정을 앞세우기보다, 차분하고 이성적으로 대처한다.", readingText: "문제가 생겼을 때 감정을 앞세우기보다, 차분하고 이성적으로 대처한다.", code: "CB", egoIndex: 5, okIndex: null, scaleType: "a_positive", scaleKind: 'egogram' },
   { no: 12, text: "가까운 사람이 실수하지 않도록, 미리 챙겨 알려 주는 편이다.", readingText: "가까운 사람이 실수하지 않도록, 미리 챙겨 알려 주는 편이다.", code: "BB", egoIndex: 7, okIndex: null, scaleType: "np_negative", scaleKind: 'egogram' },
-  { no: 13, text: "내가 속한 곳에서, 제 역할을 다하며 기여하고 있다고 느끼는 편이다.", readingText: "내가 속한 곳에서, 제 역할을 다하며 기여하고 있다고 느끼는 편이다.", code: "DC", egoIndex: null, okIndex: 6, scaleType: "i_plus", scaleKind: 'okgram' },
+  { no: 13, text: "내가 속한 곳에서, 나의 역할을 다하며 기여하고 있다고 느끼는 편이다.", readingText: "내가 속한 곳에서, 나의 역할을 다하며 기여하고 있다고 느끼는 편이다.", code: "DC", egoIndex: null, okIndex: 6, scaleType: "i_plus", scaleKind: 'okgram' },
   { no: 14, text: "남의 행동이나 일 처리에 쓴소리와 지적을 자주 하는 편이다.", readingText: "남의 행동이나 일 처리에 쓴소리와 지적을 자주 하는 편이다.", code: "AB", egoIndex: 24, okIndex: null, scaleType: "cp_negative", scaleKind: 'egogram' },
   { no: 15, text: "누군가 잘나가는 모습을 볼 때,\n일순간이라도 부러움을 느낀 적이 단 한 번도 없다.", readingText: "누군가 잘나가는 모습을 볼 때,\n일순간이라도 부러움을 느낀 적이 단 한 번도 없다.", code: "VX", egoIndex: null, okIndex: null, scaleType: "validity_lie", scaleKind: 'validity' },
   { no: 16, text: "의견이 서로 다를 때, 상대방의 입장을 헤아리며 양보하고 타협한다.", readingText: "의견이 서로 다를 때, 상대방의 입장을 헤아리며 양보하고 타협한다.", code: "EA", egoIndex: 18, okIndex: null, scaleType: "ac_positive", scaleKind: 'egogram' },
