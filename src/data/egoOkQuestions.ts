@@ -105,7 +105,7 @@ export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 82, text: "사적인 대화에서도, 감정적인 공감보다 정보나 논리를 우선시하는 편이다.", readingText: "사적인 대화에서도, 감정적인 공감보다 정보나 논리를 우선시하는 편이다.", code: "CB", egoIndex: 20, okIndex: null, scaleType: "a_negative", scaleKind: 'egogram' },
   { no: 83, text: "누구에게나 차별 없이, 존중하며 따뜻하게 대하는 편이다.", readingText: "누구에게나 차별 없이, 존중하며 따뜻하게 대하는 편이다.", code: "BA", egoIndex: 40, okIndex: null, scaleType: "np_positive", scaleKind: 'egogram' },
   { no: 84, text: "아무리 바쁘거나 경황이 없어도,\n기본적인 예의와 매너는 꼭 지키려는 편이다.", readingText: "아무리 바쁘거나 경황이 없어도,\n기본적인 예의와 매너는 꼭 지키려는 편이다.", code: "AA", egoIndex: 34, okIndex: null, scaleType: "cp_positive", scaleKind: 'egogram' },
-  { no: 85, text: "누구를 만나도, 내 생각을 솔직하고 자연스럽게 말하는 편이다.", readingText: "누구를 만나도, 내 생각을 솔직하고 자연스럽게 말하는 편이다.", code: "DC", egoIndex: null, okIndex: 29, scaleType: "i_plus", scaleKind: 'okgram' },
+  { no: 85, text: "사람들 앞에서는 대체로 긴장하지 않고,\n내 생각을 자연스럽게 표현하는 편이다.", readingText: "사람들 앞에서는 대체로 긴장하지 않고,\n내 생각을 자연스럽게 표현하는 편이다.", code: "DC", egoIndex: null, okIndex: 29, scaleType: "i_plus", scaleKind: 'okgram' },
   { no: 86, text: "기분에 따라, 말이나 행동을 불쑥 내뱉곤 한다.", readingText: "기분에 따라, 말이나 행동을 불쑥 내뱉곤 한다.", code: "DB", egoIndex: 44, okIndex: null, scaleType: "fc_negative", scaleKind: 'egogram' },
   { no: 87, text: "개인적인 일들의 선택은, 본인이 스스로 정해야 한다고 생각한다.", readingText: "개인적인 일들의 선택은, 본인이 스스로 정해야 한다고 생각한다.", code: "BC", egoIndex: null, okIndex: 33, scaleType: "u_plus", scaleKind: 'okgram' },
   { no: 88, text: "다른 사람의 말이나 행동 때문에,\n마음속으로 섭섭함을 품어본 적이 단 한 번도 없다.", readingText: "다른 사람의 말이나 행동 때문에,\n마음속으로 섭섭함을 품어본 적이 단 한 번도 없다.", code: "VX", egoIndex: null, okIndex: null, scaleType: "validity_lie", scaleKind: 'validity' },
