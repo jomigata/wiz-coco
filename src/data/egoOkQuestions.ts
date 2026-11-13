@@ -75,7 +75,7 @@ export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 52, text: "남의 고민이나 걱정을, 내 일처럼 끌어안고 신경 쓰는 편이다.", readingText: "남의 고민이나 걱정을, 내 일처럼 끌어안고 신경 쓰는 편이다.", code: "BB", egoIndex: 25, okIndex: null, scaleType: "np_negative", scaleKind: 'egogram' },
   { no: 53, text: "복잡하게 따져보지 않아도,\n첫 느낌이나 직관으로 상황을 빠르게 알아채곤 한다.", readingText: "복잡하게 따져보지 않아도,\n첫 느낌이나 직관으로 상황을 빠르게 알아채곤 한다.", code: "DA", egoIndex: 27, okIndex: null, scaleType: "fc_positive", scaleKind: 'egogram' },
   { no: 54, text: "상식이나 기본 원칙에 어긋나는 행동을 보면,\n사정이 어찌 됐든 거부감부터 든다.", readingText: "상식이나 기본 원칙에 어긋나는 행동을 보면,\n사정이 어찌 됐든 거부감부터 든다.", code: "AB", egoIndex: 43, okIndex: null, scaleType: "cp_negative", scaleKind: 'egogram' },
-  { no: 55, text: "어릴 때부터, 사랑과 보살핌 속에서 자랐다고 느끼는 편이다.", readingText: "어릴 때부터, 사랑과 보살핌 속에서 자랐다고 느끼는 편이다.", code: "DC", egoIndex: null, okIndex: 3, scaleType: "i_plus", scaleKind: 'okgram' },
+  { no: 55, text: "나는 어릴 때부터, 사랑과 보살핌 속에서 자랐다고 생각한다.", readingText: "나는 어릴 때부터, 사랑과 보살핌 속에서 자랐다고 생각한다.", code: "DC", egoIndex: null, okIndex: 3, scaleType: "i_plus", scaleKind: 'okgram' },
   { no: 56, text: "중요한 일을 처리할 때는,\n주변 사람의 확인이나 동의를 구해야 마음이 편하다.", readingText: "중요한 일을 처리할 때는,\n주변 사람의 확인이나 동의를 구해야 마음이 편하다.", code: "EB", egoIndex: 39, okIndex: null, scaleType: "ac_negative", scaleKind: 'egogram' },
   { no: 57, text: "이야기할 때, 먼저 듣고 이해한 뒤 판단하는 편이다.", readingText: "이야기할 때, 먼저 듣고 이해한 뒤 판단하는 편이다.", code: "BC", egoIndex: null, okIndex: 9, scaleType: "u_plus", scaleKind: 'okgram' },
   { no: 58, text: "며칠 동안 잠을 자지 못하더라도,\n평소와 다름없이 완벽한 집중력을 유지할 수 있다.", readingText: "며칠 동안 잠을 자지 못하더라도,\n평소와 다름없이 완벽한 집중력을 유지할 수 있다.", code: "VX", egoIndex: null, okIndex: null, scaleType: "validity_infreq", scaleKind: 'validity' },
