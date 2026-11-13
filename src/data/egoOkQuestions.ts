@@ -40,7 +40,7 @@ export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 17, text: "해야 할 일이 있어도,\n그날의 기분이나 마음에 따라 미루거나 바꿔버리곤 한다.", readingText: "해야 할 일이 있어도,\n그날의 기분이나 마음에 따라 미루거나 바꿔버리곤 한다.", code: "DB", egoIndex: 8, okIndex: null, scaleType: "fc_negative", scaleKind: 'egogram' },
   { no: 18, text: "남들이 자신의 뜻을 당당히 말하는 모습은, 바람직하다고 본다.", readingText: "남들이 자신의 뜻을 당당히 말하는 모습은, 바람직하다고 본다.", code: "BC", egoIndex: null, okIndex: 25, scaleType: "u_plus", scaleKind: 'okgram' },
   { no: 19, text: "어릴 때부터 주변 사람들에게 충분한\n사랑이나 지지를 받지 못했다고 생각한다.", readingText: "어릴 때부터 주변 사람들에게 충분한\n사랑이나 지지를 받지 못했다고 생각한다.", code: "EC", egoIndex: null, okIndex: 4, scaleType: "i_minus", scaleKind: 'okgram' },
-  { no: 20, text: "남이 뚜렷한 성과를 거두거나 잘해 냈을 때,\n선뜻 인정하고 칭찬해 주기가 어려운 편이다.", readingText: "남이 뚜렷한 성과를 거두거나 잘해 냈을 때,\n선뜻 인정하고 칭찬해 주기가 어려운 편이다.", code: "AC", egoIndex: null, okIndex: 37, scaleType: "u_minus", scaleKind: 'okgram' },
+  { no: 20, text: "남의 뚜렷한 성과나 좋은 결과에,\n선뜻 인정하고 칭찬해 주기가 어려운 편이다.", readingText: "남의 뚜렷한 성과나 좋은 결과에,\n선뜻 인정하고 칭찬해 주기가 어려운 편이다.", code: "AC", egoIndex: null, okIndex: 37, scaleType: "u_minus", scaleKind: 'okgram' },
   { no: 21, text: "상대방의 말을 귀담아듣고, 그 마음을 따뜻하게 헤아려 주는 편이다.", readingText: "상대방의 말을 귀담아듣고, 그 마음을 따뜻하게 헤아려 주는 편이다.", code: "BA", egoIndex: 12, okIndex: null, scaleType: "np_positive", scaleKind: 'egogram' },
   { no: 22, text: "사람을 대하거나 일할 때, 손해와 이익을 철저히 계산하는 편이다.", readingText: "사람을 대하거나 일할 때, 손해와 이익을 철저히 계산하는 편이다.", code: "CB", egoIndex: 9, okIndex: null, scaleType: "a_negative", scaleKind: 'egogram' },
   { no: 23, text: "현실에 안주하지 않고, 더 높은 목표와 이상을 향해 노력한다.", readingText: "현실에 안주하지 않고, 더 높은 목표와 이상을 향해 노력한다.", code: "AA", egoIndex: 6, okIndex: null, scaleType: "cp_positive", scaleKind: 'egogram' },
