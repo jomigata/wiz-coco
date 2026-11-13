@@ -117,7 +117,7 @@ export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 94, text: "사소한 일이라도 가볍게 행동하지 않고, 주위를 살피며 신중하게 처리한다.", readingText: "사소한 일이라도 가볍게 행동하지 않고, 주위를 살피며 신중하게 처리한다.", code: "EA", egoIndex: 42, okIndex: null, scaleType: "ac_positive", scaleKind: 'egogram' },
   { no: 95, text: "맡은 일은 끝까지 책임지고 확실하게 마무리하는 편이다.", readingText: "맡은 일은 끝까지 책임지고 확실하게 마무리하는 편이다.", code: "AA", egoIndex: 48, okIndex: null, scaleType: "cp_positive", scaleKind: 'egogram' },
   { no: 96, text: "맞지 않는 사람과도, 맡은 일에서는 역할을 인정하며 협력할 수 있다.", readingText: "맞지 않는 사람과도, 맡은 일에서는 역할을 인정하며 협력할 수 있다.", code: "BC", egoIndex: null, okIndex: 31, scaleType: "u_plus", scaleKind: 'okgram' },
-  { no: 97, text: "중요한 일을 결정할 때, 혼자 결론 내리기 어렵고 오래 망설이는 편이다.", readingText: "중요한 일을 결정할 때, 혼자 결론 내리기 어렵고 오래 망설이는 편이다.", code: "EC", egoIndex: null, okIndex: 19, scaleType: "i_minus", scaleKind: 'okgram' },
+  { no: 97, text: "중요한 일을 결정할 때, 혼자 쉽게 결정하지 못하고 머뭇거리는 편이다.", readingText: "중요한 일을 결정할 때, 혼자 쉽게 결정하지 못하고 머뭇거리는 편이다.", code: "EC", egoIndex: null, okIndex: 19, scaleType: "i_minus", scaleKind: 'okgram' },
   { no: 98, text: "일이 잘 안 풀려도, 포기하지 않고 다시 시도하는 편이다.", readingText: "일이 잘 안 풀려도, 포기하지 않고 다시 시도하는 편이다.", code: "DC", egoIndex: null, okIndex: 40, scaleType: "i_plus", scaleKind: 'okgram' },
   { no: 99, text: "뻔하지 않은 색다른 아이디어나 생각을 자주 떠올린다.", readingText: "뻔하지 않은 색다른 아이디어나 생각을 자주 떠올린다.", code: "DA", egoIndex: 49, okIndex: null, scaleType: "fc_positive", scaleKind: 'egogram' },
 ];
