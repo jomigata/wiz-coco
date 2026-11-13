@@ -113,7 +113,7 @@ export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 90, text: "일을 같이할 때, 남에게 맡기기보다 내가 처음부터 끝까지 해내는 편이다.", readingText: "일을 같이할 때, 남에게 맡기기보다 내가 처음부터 끝까지 해내는 편이다.", code: "AC", egoIndex: null, okIndex: 5, scaleType: "u_minus", scaleKind: 'okgram' },
   { no: 91, text: "일을 할 때,\n즉흥적으로 하기보다 계획을 먼저 세우고 실행에 옮기는 편이다.", readingText: "일을 할 때,\n즉흥적으로 하기보다 계획을 먼저 세우고 실행에 옮기는 편이다.", code: "CA", egoIndex: 37, okIndex: null, scaleType: "a_positive", scaleKind: 'egogram' },
   { no: 92, text: "내 사정이 곤란하더라도, 남의 부탁을 쉽게 거절하지 못하는 편이다.", readingText: "내 사정이 곤란하더라도, 남의 부탁을 쉽게 거절하지 못하는 편이다.", code: "BB", egoIndex: 45, okIndex: null, scaleType: "np_negative", scaleKind: 'egogram' },
-  { no: 93, text: "화가 날 때, 상대가 따르거나 수긍할 때까지 밀어붙이는 편이다.", readingText: "화가 날 때, 상대가 따르거나 수긍할 때까지 밀어붙이는 편이다.", code: "AC", egoIndex: null, okIndex: 13, scaleType: "u_minus", scaleKind: 'okgram' },
+  { no: 93, text: "화가 나면, 상대가 내 말에 동의할 때까지 계속 밀어붙이는 편이다.", readingText: "화가 나면, 상대가 내 말에 동의할 때까지 계속 밀어붙이는 편이다.", code: "AC", egoIndex: null, okIndex: 13, scaleType: "u_minus", scaleKind: 'okgram' },
   { no: 94, text: "사소한 일이라도 가볍게 행동하지 않고, 주위를 살피며 신중하게 처리한다.", readingText: "사소한 일이라도 가볍게 행동하지 않고, 주위를 살피며 신중하게 처리한다.", code: "EA", egoIndex: 42, okIndex: null, scaleType: "ac_positive", scaleKind: 'egogram' },
   { no: 95, text: "맡은 일은 끝까지 책임지고 확실하게 마무리하는 편이다.", readingText: "맡은 일은 끝까지 책임지고 확실하게 마무리하는 편이다.", code: "AA", egoIndex: 48, okIndex: null, scaleType: "cp_positive", scaleKind: 'egogram' },
   { no: 96, text: "맞지 않는 사람과도, 맡은 일에서는 역할을 인정하며 협력할 수 있다.", readingText: "맞지 않는 사람과도, 맡은 일에서는 역할을 인정하며 협력할 수 있다.", code: "BC", egoIndex: null, okIndex: 31, scaleType: "u_plus", scaleKind: 'okgram' },
