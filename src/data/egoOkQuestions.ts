@@ -118,7 +118,7 @@ export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 95, text: "맡은 일은 끝까지 책임지고 확실하게 마무리하는 편이다.", readingText: "맡은 일은 끝까지 책임지고 확실하게 마무리하는 편이다.", code: "AA", egoIndex: 48, okIndex: null, scaleType: "cp_positive", scaleKind: 'egogram' },
   { no: 96, text: "맞지 않는 사람과도, 맡은 일에서는 역할을 인정하며 협력할 수 있다.", readingText: "맞지 않는 사람과도, 맡은 일에서는 역할을 인정하며 협력할 수 있다.", code: "BC", egoIndex: null, okIndex: 31, scaleType: "u_plus", scaleKind: 'okgram' },
   { no: 97, text: "우유부단한 성격 탓에, 무엇인가를 쉽게 결정하지 못하고 머뭇거린다.", readingText: "우유부단한 성격 탓에, 무엇인가를 쉽게 결정하지 못하고 머뭇거린다.", code: "EC", egoIndex: null, okIndex: 19, scaleType: "i_minus", scaleKind: 'okgram' },
-  { no: 98, text: "진행하던 일이 꼬이거나 잘못되어도, 주저앉지 않고 다시 시작하는 편이다.", readingText: "진행하던 일이 꼬이거나 잘못되어도, 주저앉지 않고 다시 시작하는 편이다.", code: "DC", egoIndex: null, okIndex: 40, scaleType: "i_plus", scaleKind: 'okgram' },
+  { no: 98, text: "일이 잘 안 풀려도, 포기하지 않고 다시 시도하는 편이다.", readingText: "일이 잘 안 풀려도, 포기하지 않고 다시 시도하는 편이다.", code: "DC", egoIndex: null, okIndex: 40, scaleType: "i_plus", scaleKind: 'okgram' },
   { no: 99, text: "뻔하지 않은 색다른 아이디어나 생각을 자주 떠올린다.", readingText: "뻔하지 않은 색다른 아이디어나 생각을 자주 떠올린다.", code: "DA", egoIndex: 49, okIndex: null, scaleType: "fc_positive", scaleKind: 'egogram' },
 ];
 
