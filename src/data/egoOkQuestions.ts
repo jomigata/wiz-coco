@@ -85,7 +85,7 @@ export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 62, text: "누군가의 말에 의문이 생기면,\n상대의 기분보다 사실 확인을 먼저 하는 편이다.", readingText: "누군가의 말에 의문이 생기면,\n상대의 기분보다 사실 확인을 먼저 하는 편이다.", code: "CB", egoIndex: 41, okIndex: null, scaleType: "a_negative", scaleKind: 'egogram' },
   { no: 63, text: "주변 사람들의 노력과 성장을, 따뜻하게 격려하고 응원하는 편이다.", readingText: "주변 사람들의 노력과 성장을, 따뜻하게 격려하고 응원하는 편이다.", code: "BA", egoIndex: 23, okIndex: null, scaleType: "np_positive", scaleKind: 'egogram' },
   { no: 64, text: "남이 보지 않더라도, 공공질서나 규칙을 철저히 지키는 편이다.", readingText: "남이 보지 않더라도, 공공질서나 규칙을 철저히 지키는 편이다.", code: "AA", egoIndex: 28, okIndex: null, scaleType: "cp_positive", scaleKind: 'egogram' },
-  { no: 65, text: "내가 잘하는 일·분야에서는, 스스로 자신 있는 편이다.", readingText: "내가 잘하는 일·분야에서는, 스스로 자신 있는 편이다.", code: "DC", egoIndex: null, okIndex: 24, scaleType: "i_plus", scaleKind: 'okgram' },
+  { no: 65, text: "내가 잘하는 분야에서는, 자신감이 있는 편이다.", readingText: "내가 잘하는 분야에서는, 자신감이 있는 편이다.", code: "DC", egoIndex: null, okIndex: 24, scaleType: "i_plus", scaleKind: 'okgram' },
   { no: 66, text: "상대방의 기분이나 입장을 배려하기보다,\n내 감정대로 행동해 주변을 당황하게 할 때도 있다.", readingText: "상대방의 기분이나 입장을 배려하기보다,\n내 감정대로 행동해 주변을 당황하게 할 때도 있다.", code: "DB", egoIndex: 32, okIndex: null, scaleType: "fc_negative", scaleKind: 'egogram' },
   { no: 67, text: "처음 만난 사람에게도, 열린 마음으로 대하는 편이다.", readingText: "처음 만난 사람에게도, 열린 마음으로 대하는 편이다.", code: "BC", egoIndex: null, okIndex: 17, scaleType: "u_plus", scaleKind: 'okgram' },
   { no: 68, text: "기분 좋은 칭찬이나 따뜻한 격려를 들으면,\n마음속에서 긍정적인 에너지가 샘솟곤 한다.", readingText: "기분 좋은 칭찬이나 따뜻한 격려를 들으면,\n마음속에서 긍정적인 에너지가 샘솟곤 한다.", code: "VX", egoIndex: null, okIndex: null, scaleType: "validity_imc", scaleKind: 'validity' },
