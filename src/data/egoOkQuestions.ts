@@ -28,7 +28,7 @@ export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 5, text: "의견이 달라도, 서로 생각이 다를 수 있다고 받아들이는 편이다.", readingText: "의견이 달라도, 서로 생각이 다를 수 있다고 받아들이는 편이다.", code: "BC", egoIndex: null, okIndex: 8, scaleType: "u_plus", scaleKind: 'okgram' },
   { no: 6, text: "주변 시선이 신경 쓰여, 사소한 행동도 지나치게 조심한다.", readingText: "주변 시선이 신경 쓰여, 사소한 행동도 지나치게 조심한다.", code: "EB", egoIndex: 11, okIndex: null, scaleType: "ac_negative", scaleKind: 'egogram' },
   { no: 7, text: "어린아이처럼 해맑고 순수한 면이 많다.", readingText: "어린아이처럼 해맑고 순수한 면이 많다.", code: "DA", egoIndex: 4, okIndex: null, scaleType: "fc_positive", scaleKind: 'egogram' },
-  { no: 8, text: "사람들에게 좋은 인상이나 호감을 주지 못한다고 생각한다.", readingText: "사람들에게 좋은 인상이나 호감을 주지 못한다고 생각한다.", code: "EC", egoIndex: null, okIndex: 2, scaleType: "i_minus", scaleKind: 'okgram' },
+  { no: 8, text: "사람들에게 호감이나 좋은 인상을 주지 못한다고 느끼는 편이다.", readingText: "사람들에게 호감이나 좋은 인상을 주지 못한다고 느끼는 편이다.", code: "EC", egoIndex: null, okIndex: 2, scaleType: "i_minus", scaleKind: 'okgram' },
   { no: 9, text: "어떤 사람을 만나든,\n나의 뛰어난 직관력이나 통찰력으로 그 사람의 속마음과 과거를 정확하게 꿰뚫어 볼 수 있다.", readingText: "어떤 사람을 만나든,\n나의 뛰어난 직관력이나 통찰력으로 그 사람의 속마음과 과거를 정확하게 꿰뚫어 볼 수 있다.", code: "VX", egoIndex: null, okIndex: null, scaleType: "validity_infreq", scaleKind: 'validity' },
   { no: 10, text: "남의 사소한 실수나 약속 어김은,\n대충 넘기기 어렵고 용서하기 어려운 편이다.", readingText: "남의 사소한 실수나 약속 어김은,\n대충 넘기기 어렵고 용서하기 어려운 편이다.", code: "AC", egoIndex: null, okIndex: 36, scaleType: "u_minus", scaleKind: 'okgram' },
   { no: 11, text: "문제가 생겼을 때 감정을 앞세우기보다, 차분하고 이성적으로 대처한다.", readingText: "문제가 생겼을 때 감정을 앞세우기보다, 차분하고 이성적으로 대처한다.", code: "CB", egoIndex: 5, okIndex: null, scaleType: "a_positive", scaleKind: 'egogram' },
