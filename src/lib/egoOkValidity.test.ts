@@ -22,9 +22,8 @@ describe('computeEgoOkValidityProfile (99-item bank)', () => {
     if (!is99) return;
     const v = computeEgoOkValidityProfile(
       answersForNos([
-        [9, 3],
-        [38, 2],
-        [68, 5],
+        [38, 3],
+        [68, 2],
       ]),
     );
     expect(v.imc.failCount).toBe(2);
@@ -47,9 +46,9 @@ describe('computeEgoOkValidityProfile (99-item bank)', () => {
 
   it('includes keyword issueBrief when IMC fails', () => {
     if (!is99) return;
-    const v = computeEgoOkValidityProfile(answersForNos([[9, 2]]));
-    expect(v.imc.issueBrief).toMatch(/긴장/);
-    expect(v.imc.issueBrief).toMatch(/9번/);
+    const v = computeEgoOkValidityProfile(answersForNos([[38, 2]]));
+    expect(v.imc.issueBrief).toMatch(/해결/);
+    expect(v.imc.issueBrief).toMatch(/38번/);
   });
 
   it('VRIN: both ends 4+ on pair 3-49 → mismatch', () => {

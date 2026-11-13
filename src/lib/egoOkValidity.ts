@@ -68,9 +68,9 @@ const LIE_ITEMS_100 = [44, 64, 69] as const;
 const INFREQ_ITEMS_100 = [72, 80, 93] as const;
 
 /** ego-ok-99: 첨부 채점 공식 — IMC 3점 이하, F 3점 이상, L 2점 이하 (2문항↑) */
-const IMC_ITEMS_99 = [9, 38, 68] as const;
+const IMC_ITEMS_99 = [38, 68] as const;
 const LIE_ITEMS_99 = [15, 48, 88] as const;
-const INFREQ_ITEMS_99 = [26, 58, 78] as const;
+const INFREQ_ITEMS_99 = [9, 26, 58, 78] as const;
 
 const IMC_LOW_MAX_99 = 3;
 const INFREQ_HIGH_MIN_99 = 3;
