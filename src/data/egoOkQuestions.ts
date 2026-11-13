@@ -60,7 +60,7 @@ export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 37, text: "어떤 일이든 망설이기보다, 주도적으로 판단하고 행동에 옮기는 편이다.", readingText: "어떤 일이든 망설이기보다, 주도적으로 판단하고 행동에 옮기는 편이다.", code: "DC", egoIndex: null, okIndex: 11, scaleType: "i_plus", scaleKind: 'okgram' },
   { no: 38, text: "오랫동안 걱정하던 문제가 시원하게 해결되면,\n마음이 한결 가벼워지고 후련해진다.", readingText: "오랫동안 걱정하던 문제가 시원하게 해결되면,\n마음이 한결 가벼워지고 후련해진다.", code: "VX", egoIndex: null, okIndex: null, scaleType: "validity_imc", scaleKind: 'validity' },
   { no: 39, text: "내 판단에 자신이 없어, 남들이 하는 결정을 그대로 따라가는 편이다.", readingText: "내 판단에 자신이 없어, 남들이 하는 결정을 그대로 따라가는 편이다.", code: "EC", egoIndex: null, okIndex: 22, scaleType: "i_minus", scaleKind: 'okgram' },
-  { no: 40, text: "의견을 나눌 때,\n서로 맞추려는 노력보다 내가 믿는 원칙을 먼저 내세우는 편이다.", readingText: "의견을 나눌 때,\n서로 맞추려는 노력보다 내가 믿는 원칙을 먼저 내세우는 편이다.", code: "AC", egoIndex: null, okIndex: 39, scaleType: "u_minus", scaleKind: 'okgram' },
+  { no: 40, text: "의견을 나눌 때, 맞추기보다 내 원칙을 먼저 내세우는 편이다.", readingText: "의견을 나눌 때, 맞추기보다 내 원칙을 먼저 내세우는 편이다.", code: "AC", egoIndex: null, okIndex: 39, scaleType: "u_minus", scaleKind: 'okgram' },
   { no: 41, text: "여럿이 함께 일할 때,\n내 주장보다 다른 사람들과의 조화를 더 중요하게 여긴다.", readingText: "여럿이 함께 일할 때,\n내 주장보다 다른 사람들과의 조화를 더 중요하게 여긴다.", code: "EA", egoIndex: 3, okIndex: null, scaleType: "ac_positive", scaleKind: 'egogram' },
   { no: 42, text: "대화할 때 감정이나 농담을 잘 섞지 않아,\n다소 건조하고 딱딱하다는 인상을 주곤 한다.", readingText: "대화할 때 감정이나 농담을 잘 섞지 않아,\n다소 건조하고 딱딱하다는 인상을 주곤 한다.", code: "CB", egoIndex: 33, okIndex: null, scaleType: "a_negative", scaleKind: 'egogram' },
   { no: 43, text: "주변에 힘들어하는 사람이 보이면, 자연스레 마음이 쓰여 챙겨주곤 한다.", readingText: "주변에 힘들어하는 사람이 보이면, 자연스레 마음이 쓰여 챙겨주곤 한다.", code: "BA", egoIndex: 26, okIndex: null, scaleType: "np_positive", scaleKind: 'egogram' },
