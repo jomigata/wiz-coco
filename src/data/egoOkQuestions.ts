@@ -50,7 +50,7 @@ export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 27, text: "남이 잘되면, 내 일처럼 기분이 좋아지는 편이다.", readingText: "남이 잘되면, 내 일처럼 기분이 좋아지는 편이다.", code: "BC", egoIndex: null, okIndex: 28, scaleType: "u_plus", scaleKind: 'okgram' },
   { no: 28, text: "주변의 눈치나 정해진 규칙에 얽매이지 않고,\n내가 하고 싶은 대로 행동해 버린다.", readingText: "주변의 눈치나 정해진 규칙에 얽매이지 않고,\n내가 하고 싶은 대로 행동해 버린다.", code: "DB", egoIndex: 16, okIndex: null, scaleType: "fc_negative", scaleKind: 'egogram' },
   { no: 29, text: "내 능력과 잠재력을 온전히 믿지 못해,\n스스로를 자주 의심하고 불안해한다.", readingText: "내 능력과 잠재력을 온전히 믿지 못해,\n스스로를 자주 의심하고 불안해한다.", code: "EC", egoIndex: null, okIndex: 35, scaleType: "i_minus", scaleKind: 'okgram' },
-  { no: 30, text: "누가 곤란해 보여도,\n대신 해 주기보다 스스로 해결하게 두려 하는 편이다.", readingText: "누가 곤란해 보여도,\n대신 해 주기보다 스스로 해결하게 두려 하는 편이다.", code: "AC", egoIndex: null, okIndex: 23, scaleType: "u_minus", scaleKind: 'okgram' },
+  { no: 30, text: "누가 곤란해 보여도, 나서 돕기보다 스스로 해결하게 두는 편이다.", readingText: "누가 곤란해 보여도, 나서 돕기보다 스스로 해결하게 두는 편이다.", code: "AC", egoIndex: null, okIndex: 23, scaleType: "u_minus", scaleKind: 'okgram' },
   { no: 31, text: "개인적인 편견을 내려놓고,\n명확한 사실과 근거를 바탕으로 일을 진행하는 편이다.", readingText: "개인적인 편견을 내려놓고,\n명확한 사실과 근거를 바탕으로 일을 진행하는 편이다.", code: "CA", egoIndex: 19, okIndex: null, scaleType: "a_positive", scaleKind: 'egogram' },
   { no: 32, text: "가정이나 일터에서, 남들의 일에 자주 끼어들어 참견하는 편이다.", readingText: "가정이나 일터에서, 남들의 일에 자주 끼어들어 참견하는 편이다.", code: "BB", egoIndex: 14, okIndex: null, scaleType: "np_negative", scaleKind: 'egogram' },
   { no: 33, text: "새로운 것을 보면 호기심이 생겨, 직접 시도해보고 싶어진다.", readingText: "새로운 것을 보면 호기심이 생겨, 직접 시도해보고 싶어진다.", code: "DA", egoIndex: 10, okIndex: null, scaleType: "fc_positive", scaleKind: 'egogram' },
