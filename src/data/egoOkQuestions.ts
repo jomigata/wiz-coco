@@ -90,7 +90,7 @@ export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 67, text: "처음 만난 사람에게도, 열린 마음으로 대하는 편이다.", readingText: "처음 만난 사람에게도, 열린 마음으로 대하는 편이다.", code: "BC", egoIndex: null, okIndex: 17, scaleType: "u_plus", scaleKind: 'okgram' },
   { no: 68, text: "기분 좋은 칭찬이나 따뜻한 격려를 들으면,\n마음속에서 긍정적인 에너지가 샘솟곤 한다.", readingText: "기분 좋은 칭찬이나 따뜻한 격려를 들으면,\n마음속에서 긍정적인 에너지가 샘솟곤 한다.", code: "VX", egoIndex: null, okIndex: null, scaleType: "validity_imc", scaleKind: 'validity' },
   { no: 69, text: "내가 한 말이나 행동을 되돌아보며, 자책하고 후회할 때가 많다.", readingText: "내가 한 말이나 행동을 되돌아보며, 자책하고 후회할 때가 많다.", code: "EC", egoIndex: null, okIndex: 14, scaleType: "i_minus", scaleKind: 'okgram' },
-  { no: 70, text: "사람과 이야기할 때,\n잘한 점보다 고쳐야 할 점을 먼저 꺼내 말하는 편이다.", readingText: "사람과 이야기할 때,\n잘한 점보다 고쳐야 할 점을 먼저 꺼내 말하는 편이다.", code: "AC", egoIndex: null, okIndex: 16, scaleType: "u_minus", scaleKind: 'okgram' },
+  { no: 70, text: "사람들과 이야기할 때, 잘한 점보다 고칠 점을 먼저 말하는 편이다.", readingText: "사람들과 이야기할 때, 잘한 점보다 고칠 점을 먼저 말하는 편이다.", code: "AC", egoIndex: null, okIndex: 16, scaleType: "u_minus", scaleKind: 'okgram' },
   { no: 71, text: "상황이 뜻대로 풀리지 않을 때,\n막연히 걱정하기보다 실행 가능한 대안부터 찾는다.", readingText: "상황이 뜻대로 풀리지 않을 때,\n막연히 걱정하기보다 실행 가능한 대안부터 찾는다.", code: "CA", egoIndex: 46, okIndex: null, scaleType: "a_positive", scaleKind: 'egogram' },
   { no: 72, text: "부탁받지 않아도, 남이 할 일까지 앞서서 대신해 버리곤 한다.", readingText: "부탁받지 않아도, 남이 할 일까지 앞서서 대신해 버리곤 한다.", code: "BB", egoIndex: 30, okIndex: null, scaleType: "np_negative", scaleKind: 'egogram' },
   { no: 73, text: "긍정적이고 활기찬 기운으로, 일상을 보내곤 한다.", readingText: "긍정적이고 활기찬 기운으로, 일상을 보내곤 한다.", code: "DA", egoIndex: 38, okIndex: null, scaleType: "fc_positive", scaleKind: 'egogram' },
