@@ -95,7 +95,7 @@ export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 72, text: "부탁받지 않아도, 남의 할 일을 내가 대신 해 버리는 편이다.", readingText: "부탁받지 않아도, 남의 할 일을 내가 대신 해 버리는 편이다.", code: "BB", egoIndex: 30, okIndex: null, scaleType: "np_negative", scaleKind: 'egogram' },
   { no: 73, text: "긍정적이고 활기찬 기운으로, 일상을 보내곤 한다.", readingText: "긍정적이고 활기찬 기운으로, 일상을 보내곤 한다.", code: "DA", egoIndex: 38, okIndex: null, scaleType: "fc_positive", scaleKind: 'egogram' },
   { no: 74, text: "성격이 급해서 작은 일에도 쉽게 욱하고 화를 내곤 한다.", readingText: "성격이 급해서 작은 일에도 쉽게 욱하고 화를 내곤 한다.", code: "AB", egoIndex: 50, okIndex: null, scaleType: "cp_negative", scaleKind: 'egogram' },
-  { no: 75, text: "일상이나 사회생활에서, 보통 사람들만큼 해낼 수 있다고 생각한다.", readingText: "일상이나 사회생활에서, 보통 사람들만큼 해낼 수 있다고 생각한다.", code: "DC", egoIndex: null, okIndex: 38, scaleType: "i_plus", scaleKind: 'okgram' },
+  { no: 75, text: "일상생활에서 보통 사람들만큼은, 나도 해낼 수 있다고 생각한다.", readingText: "일상생활에서 보통 사람들만큼은, 나도 해낼 수 있다고 생각한다.", code: "DC", egoIndex: null, okIndex: 38, scaleType: "i_plus", scaleKind: 'okgram' },
   { no: 76, text: "상대방이 몹시 밉거나 싫더라도,\n겉으로는 내색하지 않고 좋게 맞춰주곤 한다.", readingText: "상대방이 몹시 밉거나 싫더라도,\n겉으로는 내색하지 않고 좋게 맞춰주곤 한다.", code: "EB", egoIndex: 47, okIndex: null, scaleType: "ac_negative", scaleKind: 'egogram' },
   { no: 77, text: "가까운 사람들과 연락을 이어 가며, 관계를 유지하는 편이다.", readingText: "가까운 사람들과 연락을 이어 가며, 관계를 유지하는 편이다.", code: "BC", egoIndex: null, okIndex: 27, scaleType: "u_plus", scaleKind: 'okgram' },
   { no: 78, text: "지금껏 무언가를 깜빡하거나 착각하여 실수를 저지른 일 없이,\n언제나 완벽하게 처리해 왔다.", readingText: "지금껏 무언가를 깜빡하거나 착각하여 실수를 저지른 일 없이,\n언제나 완벽하게 처리해 왔다.", code: "VX", egoIndex: null, okIndex: null, scaleType: "validity_infreq", scaleKind: 'validity' },
