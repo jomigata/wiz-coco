@@ -86,7 +86,7 @@ export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 63, text: "주변 사람들의 노력과 성장을, 따뜻하게 격려하고 응원하는 편이다.", readingText: "주변 사람들의 노력과 성장을, 따뜻하게 격려하고 응원하는 편이다.", code: "BA", egoIndex: 23, okIndex: null, scaleType: "np_positive", scaleKind: 'egogram' },
   { no: 64, text: "남이 보지 않더라도, 공공질서나 규칙을 철저히 지키는 편이다.", readingText: "남이 보지 않더라도, 공공질서나 규칙을 철저히 지키는 편이다.", code: "AA", egoIndex: 28, okIndex: null, scaleType: "cp_positive", scaleKind: 'egogram' },
   { no: 65, text: "내가 잘하는 분야에서는, 자신감이 있는 편이다.", readingText: "내가 잘하는 분야에서는, 자신감이 있는 편이다.", code: "DC", egoIndex: null, okIndex: 24, scaleType: "i_plus", scaleKind: 'okgram' },
-  { no: 66, text: "상대 기분보다 내 감정을 앞세워 행동해, 주변을 당황하게 할 때가 있다.", readingText: "상대 기분보다 내 감정을 앞세워 행동해, 주변을 당황하게 할 때가 있다.", code: "DB", egoIndex: 32, okIndex: null, scaleType: "fc_negative", scaleKind: 'egogram' },
+  { no: 66, text: "상대의 기분보다 내 감정을 먼저 말하거나 행동할 때가 있다.", readingText: "상대의 기분보다 내 감정을 먼저 말하거나 행동할 때가 있다.", code: "DB", egoIndex: 32, okIndex: null, scaleType: "fc_negative", scaleKind: 'egogram' },
   { no: 67, text: "처음 만난 사람에게도, 열린 마음으로 대하는 편이다.", readingText: "처음 만난 사람에게도, 열린 마음으로 대하는 편이다.", code: "BC", egoIndex: null, okIndex: 17, scaleType: "u_plus", scaleKind: 'okgram' },
   { no: 68, text: "기분 좋은 칭찬이나 따뜻한 격려를 들으면,\n마음속에서 긍정적인 에너지가 샘솟곤 한다.", readingText: "기분 좋은 칭찬이나 따뜻한 격려를 들으면,\n마음속에서 긍정적인 에너지가 샘솟곤 한다.", code: "VX", egoIndex: null, okIndex: null, scaleType: "validity_imc", scaleKind: 'validity' },
   { no: 69, text: "지나간 말이나 행동을, 자책하며 되돌아볼 때가 많다.", readingText: "지나간 말이나 행동을, 자책하며 되돌아볼 때가 많다.", code: "EC", egoIndex: null, okIndex: 14, scaleType: "i_minus", scaleKind: 'okgram' },
