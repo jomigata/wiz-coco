@@ -66,7 +66,7 @@ export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 43, text: "힘들어하는 사람을 보면, 도움을 제안하거나 챙기는 편이다.", readingText: "힘들어하는 사람을 보면, 도움을 제안하거나 챙기는 편이다.", code: "BA", egoIndex: 26, okIndex: null, scaleType: "np_positive", scaleKind: 'egogram' },
   { no: 44, text: "조금 손해를 보더라도, 양심에 부끄럽지 않게 바르게 행동하려 한다.", readingText: "조금 손해를 보더라도, 양심에 부끄럽지 않게 바르게 행동하려 한다.", code: "AA", egoIndex: 13, okIndex: null, scaleType: "cp_positive", scaleKind: 'egogram' },
   { no: 45, text: "내 외모나 첫인상에, 대체로 만족하는 편이다.", readingText: "내 외모나 첫인상에, 대체로 만족하는 편이다.", code: "DC", egoIndex: null, okIndex: 21, scaleType: "i_plus", scaleKind: 'okgram' },
-  { no: 46, text: "마음이 꽂인 일은, 뒷일 생각 없이 일단 행동하는 편이다.", readingText: "마음이 꽂인 일은, 뒷일 생각 없이 일단 행동하는 편이다.", code: "DB", egoIndex: 36, okIndex: null, scaleType: "fc_negative", scaleKind: 'egogram' },
+  { no: 46, text: "어떤 일이 마음에 꽂히면, 뒷일 생각 없이 일단 행동하는 편이다.", readingText: "어떤 일이 마음에 꽂히면, 뒷일 생각 없이 일단 행동하는 편이다.", code: "DB", egoIndex: 36, okIndex: null, scaleType: "fc_negative", scaleKind: 'egogram' },
   { no: 47, text: "동료가 실수해도, 탓하기보다 격려하는 편이다.", readingText: "동료가 실수해도, 탓하기보다 격려하는 편이다.", code: "BC", egoIndex: null, okIndex: 34, scaleType: "u_plus", scaleKind: 'okgram' },
   { no: 48, text: "살면서 남의 흉을 보거나, 사소한 거짓말조차 해본 적이 없다.", readingText: "살면서 남의 흉을 보거나, 사소한 거짓말조차 해본 적이 없다.", code: "VX", egoIndex: null, okIndex: null, scaleType: "validity_lie", scaleKind: 'validity' },
   { no: 49, text: "가끔은 나 자신이, 많이 부족하거나 무기력하게 느껴지는 편이다.", readingText: "가끔은 나 자신이, 많이 부족하거나 무기력하게 느껴지는 편이다.", code: "EC", egoIndex: null, okIndex: 7, scaleType: "i_minus", scaleKind: 'okgram' },
