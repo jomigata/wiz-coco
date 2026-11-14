@@ -109,7 +109,7 @@ export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 86, text: "기분에 따라, 말이나 행동을 불쑥 내뱉곤 한다.", readingText: "기분에 따라, 말이나 행동을 불쑥 내뱉곤 한다.", code: "DB", egoIndex: 44, okIndex: null, scaleType: "fc_negative", scaleKind: 'egogram' },
   { no: 87, text: "개인적인 일들의 선택은, 본인이 스스로 정해야 한다고 생각한다.", readingText: "개인적인 일들의 선택은, 본인이 스스로 정해야 한다고 생각한다.", code: "BC", egoIndex: null, okIndex: 33, scaleType: "u_plus", scaleKind: 'okgram' },
   { no: 88, text: "다른 사람의 말이나 행동 때문에,\n마음속으로 섭섭함을 품어본 적이 단 한 번도 없다.", readingText: "다른 사람의 말이나 행동 때문에,\n마음속으로 섭섭함을 품어본 적이 단 한 번도 없다.", code: "VX", egoIndex: null, okIndex: null, scaleType: "validity_lie", scaleKind: 'validity' },
-  { no: 89, text: "내 생김새나 옷차림에, 스스로 만족하지 못해 자신 없는 편이다.", readingText: "내 생김새나 옷차림에, 스스로 만족하지 못해 자신 없는 편이다.", code: "EC", egoIndex: null, okIndex: 20, scaleType: "i_minus", scaleKind: 'okgram' },
+  { no: 89, text: "내 옷차림이나 스타일에, 만족하지 못해 자신 없는 편이다.", readingText: "내 옷차림이나 스타일에, 만족하지 못해 자신 없는 편이다.", code: "EC", egoIndex: null, okIndex: 20, scaleType: "i_minus", scaleKind: 'okgram' },
   { no: 90, text: "일을 같이할 때, 남에게 맡기기보다 내가 처음부터 끝까지 해내는 편이다.", readingText: "일을 같이할 때, 남에게 맡기기보다 내가 처음부터 끝까지 해내는 편이다.", code: "AC", egoIndex: null, okIndex: 5, scaleType: "u_minus", scaleKind: 'okgram' },
   { no: 91, text: "일을 할 때,\n즉흥적으로 하기보다 계획을 먼저 세우고 실행에 옮기는 편이다.", readingText: "일을 할 때,\n즉흥적으로 하기보다 계획을 먼저 세우고 실행에 옮기는 편이다.", code: "CA", egoIndex: 37, okIndex: null, scaleType: "a_positive", scaleKind: 'egogram' },
   { no: 92, text: "나는 힘들거나 바빠도, 남의 부탁을 쉽게 거절하지 못하는 편이다.", readingText: "나는 힘들거나 바빠도, 남의 부탁을 쉽게 거절하지 못하는 편이다.", code: "BB", egoIndex: 45, okIndex: null, scaleType: "np_negative", scaleKind: 'egogram' },
