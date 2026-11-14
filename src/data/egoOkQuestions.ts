@@ -54,7 +54,7 @@ export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 31, text: "개인적인 편견을 내려놓고,\n명확한 사실과 근거를 바탕으로 일을 진행하는 편이다.", readingText: "개인적인 편견을 내려놓고,\n명확한 사실과 근거를 바탕으로 일을 진행하는 편이다.", code: "CA", egoIndex: 19, okIndex: null, scaleType: "a_positive", scaleKind: 'egogram' },
   { no: 32, text: "가정이나 일터에서, 남들의 일에 자주 끼어들어 참견하는 편이다.", readingText: "가정이나 일터에서, 남들의 일에 자주 끼어들어 참견하는 편이다.", code: "BB", egoIndex: 14, okIndex: null, scaleType: "np_negative", scaleKind: 'egogram' },
   { no: 33, text: "새로운 것을 보면 호기심이 들어, 직접 시도해 보고 싶어지는 편이다.", readingText: "새로운 것을 보면 호기심이 들어, 직접 시도해 보고 싶어지는 편이다.", code: "DA", egoIndex: 10, okIndex: null, scaleType: "fc_positive", scaleKind: 'egogram' },
-  { no: 34, text: "모임이나 팀 일을 할 때,\n흐름을 내가 잡고 내 방식으로 맞춰 가는 편이다.", readingText: "모임이나 팀 일을 할 때,\n흐름을 내가 잡고 내 방식으로 맞춰 가는 편이다.", code: "AB", egoIndex: 31, okIndex: null, scaleType: "cp_negative", scaleKind: 'egogram' },
+  { no: 34, text: "여럿이 함께 일할 때, 내가 주도하고 내 기준에 맞추어 진행하는 편이다.", readingText: "여럿이 함께 일할 때, 내가 주도하고 내 기준에 맞추어 진행하는 편이다.", code: "AB", egoIndex: 31, okIndex: null, scaleType: "cp_negative", scaleKind: 'egogram' },
   { no: 35, text: "내 방식이 더 낫다고 느껴도, 억지로 따르게 하지 않는 편이다.", readingText: "내 방식이 더 낫다고 느껴도, 억지로 따르게 하지 않는 편이다.", code: "BC", egoIndex: null, okIndex: 18, scaleType: "u_plus", scaleKind: 'okgram' },
   { no: 36, text: "속으로 불만이 있어도,\n겉으로는 싫은 소리를 못 하고 혼자 삭이는 편이다.", readingText: "속으로 불만이 있어도,\n겉으로는 싫은 소리를 못 하고 혼자 삭이는 편이다.", code: "EB", egoIndex: 29, okIndex: null, scaleType: "ac_negative", scaleKind: 'egogram' },
   { no: 37, text: "새로운 일이 생기면, 망설이기보다 먼저 판단하고 행동하는 편이다.", readingText: "새로운 일이 생기면, 망설이기보다 먼저 판단하고 행동하는 편이다.", code: "DC", egoIndex: null, okIndex: 11, scaleType: "i_plus", scaleKind: 'okgram' },
