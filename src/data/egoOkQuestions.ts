@@ -74,7 +74,7 @@ export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 51, text: "막연한 기대나 짐작에 기대기보다,\n눈앞의 냉정한 현실을 직시하며 대처하는 편이다.", readingText: "막연한 기대나 짐작에 기대기보다,\n눈앞의 냉정한 현실을 직시하며 대처하는 편이다.", code: "CA", egoIndex: 22, okIndex: null, scaleType: "a_positive", scaleKind: 'egogram' },
   { no: 52, text: "남의 고민이나 걱정을, 내 일처럼 끌어안고 신경 쓰는 편이다.", readingText: "남의 고민이나 걱정을, 내 일처럼 끌어안고 신경 쓰는 편이다.", code: "BB", egoIndex: 25, okIndex: null, scaleType: "np_negative", scaleKind: 'egogram' },
   { no: 53, text: "복잡하게 따지지 않고, 첫 느낌으로 상황을 빠르게 파악하는 편이다.", readingText: "복잡하게 따지지 않고, 첫 느낌으로 상황을 빠르게 파악하는 편이다.", code: "DA", egoIndex: 27, okIndex: null, scaleType: "fc_positive", scaleKind: 'egogram' },
-  { no: 54, text: "상식이나 기본 매너에서 벗어난 행동을 보면,\n받아들이기 어렵다고 느끼는 편이다.", readingText: "상식이나 기본 매너에서 벗어난 행동을 보면,\n받아들이기 어렵다고 느끼는 편이다.", code: "AB", egoIndex: 43, okIndex: null, scaleType: "cp_negative", scaleKind: 'egogram' },
+  { no: 54, text: "상식이나 기본 매너에서 벗어난 행동을 보면, 받아들이기 어려운 편이다.", readingText: "상식이나 기본 매너에서 벗어난 행동을 보면, 받아들이기 어려운 편이다.", code: "AB", egoIndex: 43, okIndex: null, scaleType: "cp_negative", scaleKind: 'egogram' },
   { no: 55, text: "나는 어릴 때부터, 사랑과 보살핌 속에서 자랐다고 생각한다.", readingText: "나는 어릴 때부터, 사랑과 보살핌 속에서 자랐다고 생각한다.", code: "DC", egoIndex: null, okIndex: 3, scaleType: "i_plus", scaleKind: 'okgram' },
   { no: 56, text: "중요한 일을 처리할 때는,\n주변 사람의 확인이나 동의를 구해야 마음이 편하다.", readingText: "중요한 일을 처리할 때는,\n주변 사람의 확인이나 동의를 구해야 마음이 편하다.", code: "EB", egoIndex: 39, okIndex: null, scaleType: "ac_negative", scaleKind: 'egogram' },
   { no: 57, text: "이야기할 때, 먼저 듣고 이해한 뒤 판단하는 편이다.", readingText: "이야기할 때, 먼저 듣고 이해한 뒤 판단하는 편이다.", code: "BC", egoIndex: null, okIndex: 9, scaleType: "u_plus", scaleKind: 'okgram' },
