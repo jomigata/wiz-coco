@@ -58,7 +58,7 @@ export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 35, text: "내 방식이 더 낫다고 느껴도, 억지로 따르게 하지 않는 편이다.", readingText: "내 방식이 더 낫다고 느껴도, 억지로 따르게 하지 않는 편이다.", code: "BC", egoIndex: null, okIndex: 18, scaleType: "u_plus", scaleKind: 'okgram' },
   { no: 36, text: "속으로 불만이 생겨도, 겉으로 꺼내지 않고 혼자 삭이는 편이다.", readingText: "속으로 불만이 생겨도, 겉으로 꺼내지 않고 혼자 삭이는 편이다.", code: "EB", egoIndex: 29, okIndex: null, scaleType: "ac_negative", scaleKind: 'egogram' },
   { no: 37, text: "새로운 일이 생기면, 망설이기보다 먼저 판단하고 행동하는 편이다.", readingText: "새로운 일이 생기면, 망설이기보다 먼저 판단하고 행동하는 편이다.", code: "DC", egoIndex: null, okIndex: 11, scaleType: "i_plus", scaleKind: 'okgram' },
-  { no: 38, text: "오래 미뤄둔 일이나 맡은 책임을 끝내면,\n그동안 쌓였던 긴장이 꽤 풀리는 느낌이 든다.", readingText: "오래 미뤄둔 일이나 맡은 책임을 끝내면,\n그동안 쌓였던 긴장이 꽤 풀리는 느낌이 든다.", code: "VX", egoIndex: null, okIndex: null, scaleType: "validity_imc", scaleKind: 'validity' },
+  { no: 38, text: "갑작스러운 소리나,\n순간 위험하다고 느껴지는 상황이 생기면,\n그때는 마음이 먼저 꽂히고 잠시 뒤에야 정리되는 편이다.", readingText: "갑작스러운 소리나,\n순간 위험하다고 느껴지는 상황이 생기면,\n그때는 마음이 먼저 꽂히고 잠시 뒤에야 정리되는 편이다.", code: "VX", egoIndex: null, okIndex: null, scaleType: "validity_imc", scaleKind: 'validity' },
   { no: 39, text: "내 판단에 확신이 서지 않으면, 남이 정한 결정을 따르는 편이다.", readingText: "내 판단에 확신이 서지 않으면, 남이 정한 결정을 따르는 편이다.", code: "EC", egoIndex: null, okIndex: 22, scaleType: "i_minus", scaleKind: 'okgram' },
   { no: 40, text: "의견을 나눌 때, 맞추기보다 내 원칙을 먼저 내세우는 편이다.", readingText: "의견을 나눌 때, 맞추기보다 내 원칙을 먼저 내세우는 편이다.", code: "AC", egoIndex: null, okIndex: 39, scaleType: "u_minus", scaleKind: 'okgram' },
   { no: 41, text: "함께 일할 때, 내 주장보다 팀 조화를 더 중요하게 여기는 편이다.", readingText: "함께 일할 때, 내 주장보다 팀 조화를 더 중요하게 여기는 편이다.", code: "EA", egoIndex: 3, okIndex: null, scaleType: "ac_positive", scaleKind: 'egogram' },
