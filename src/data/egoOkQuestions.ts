@@ -56,7 +56,7 @@ export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 33, text: "새로운 것을 보면 호기심이 들어, 직접 시도해 보고 싶어지는 편이다.", readingText: "새로운 것을 보면 호기심이 들어, 직접 시도해 보고 싶어지는 편이다.", code: "DA", egoIndex: 10, okIndex: null, scaleType: "fc_positive", scaleKind: 'egogram' },
   { no: 34, text: "여럿이 함께 일할 때, 내가 주도하고 내 기준에 맞추어 진행하는 편이다.", readingText: "여럿이 함께 일할 때, 내가 주도하고 내 기준에 맞추어 진행하는 편이다.", code: "AB", egoIndex: 31, okIndex: null, scaleType: "cp_negative", scaleKind: 'egogram' },
   { no: 35, text: "내 방식이 더 낫다고 느껴도, 억지로 따르게 하지 않는 편이다.", readingText: "내 방식이 더 낫다고 느껴도, 억지로 따르게 하지 않는 편이다.", code: "BC", egoIndex: null, okIndex: 18, scaleType: "u_plus", scaleKind: 'okgram' },
-  { no: 36, text: "불만이 생겨도, 겉으로는 꺼내지 않고 혼자 삭이는 편이다.", readingText: "불만이 생겨도, 겉으로는 꺼내지 않고 혼자 삭이는 편이다.", code: "EB", egoIndex: 29, okIndex: null, scaleType: "ac_negative", scaleKind: 'egogram' },
+  { no: 36, text: "속으로 불만이 생겨도, 겉으로 꺼내지 않고 혼자 삭이는 편이다.", readingText: "속으로 불만이 생겨도, 겉으로 꺼내지 않고 혼자 삭이는 편이다.", code: "EB", egoIndex: 29, okIndex: null, scaleType: "ac_negative", scaleKind: 'egogram' },
   { no: 37, text: "새로운 일이 생기면, 망설이기보다 먼저 판단하고 행동하는 편이다.", readingText: "새로운 일이 생기면, 망설이기보다 먼저 판단하고 행동하는 편이다.", code: "DC", egoIndex: null, okIndex: 11, scaleType: "i_plus", scaleKind: 'okgram' },
   { no: 38, text: "오랫동안 걱정하던 문제가 시원하게 해결되면,\n마음이 한결 가벼워지고 후련해진다.", readingText: "오랫동안 걱정하던 문제가 시원하게 해결되면,\n마음이 한결 가벼워지고 후련해진다.", code: "VX", egoIndex: null, okIndex: null, scaleType: "validity_imc", scaleKind: 'validity' },
   { no: 39, text: "내 판단에 확신이 서지 않으면, 남이 정한 결정을 따르는 편이다.", readingText: "내 판단에 확신이 서지 않으면, 남이 정한 결정을 따르는 편이다.", code: "EC", egoIndex: null, okIndex: 22, scaleType: "i_minus", scaleKind: 'okgram' },
