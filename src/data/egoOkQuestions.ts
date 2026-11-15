@@ -62,7 +62,7 @@ export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 39, text: "내 판단에 확신이 서지 않으면, 남이 정한 결정을 따르는 편이다.", readingText: "내 판단에 확신이 서지 않으면, 남이 정한 결정을 따르는 편이다.", code: "EC", egoIndex: null, okIndex: 22, scaleType: "i_minus", scaleKind: 'okgram' },
   { no: 40, text: "의견을 나눌 때, 맞추기보다 내 원칙을 먼저 내세우는 편이다.", readingText: "의견을 나눌 때, 맞추기보다 내 원칙을 먼저 내세우는 편이다.", code: "AC", egoIndex: null, okIndex: 39, scaleType: "u_minus", scaleKind: 'okgram' },
   { no: 41, text: "함께 일할 때, 내 주장보다 팀 조화를 더 중요하게 여기는 편이다.", readingText: "함께 일할 때, 내 주장보다 팀 조화를 더 중요하게 여기는 편이다.", code: "EA", egoIndex: 3, okIndex: null, scaleType: "ac_positive", scaleKind: 'egogram' },
-  { no: 42, text: "말할 때 감정이나 농담을 잘 안 섞어, 건조하게 들리는 편이다.", readingText: "말할 때 감정이나 농담을 잘 안 섞어, 건조하게 들리는 편이다.", code: "CB", egoIndex: 33, okIndex: null, scaleType: "a_negative", scaleKind: 'egogram' },
+  { no: 42, text: "말할 때 농담이나 감정 표현을 잘 안 하고, 건조하게 들리는 편이다.", readingText: "말할 때 농담이나 감정 표현을 잘 안 하고, 건조하게 들리는 편이다.", code: "CB", egoIndex: 33, okIndex: null, scaleType: "a_negative", scaleKind: 'egogram' },
   { no: 43, text: "힘들어하는 사람을 보면, 도움을 제안하거나 챙기는 편이다.", readingText: "힘들어하는 사람을 보면, 도움을 제안하거나 챙기는 편이다.", code: "BA", egoIndex: 26, okIndex: null, scaleType: "np_positive", scaleKind: 'egogram' },
   { no: 44, text: "작은 이득보다, 양심에 부끄럽지 않게 바르게 행동하려는 편이다.", readingText: "작은 이득보다, 양심에 부끄럽지 않게 바르게 행동하려는 편이다.", code: "AA", egoIndex: 13, okIndex: null, scaleType: "cp_positive", scaleKind: 'egogram' },
   { no: 45, text: "내 외모나 첫인상에, 대체로 만족하는 편이다.", readingText: "내 외모나 첫인상에, 대체로 만족하는 편이다.", code: "DC", egoIndex: null, okIndex: 21, scaleType: "i_plus", scaleKind: 'okgram' },
