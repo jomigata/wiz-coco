@@ -94,7 +94,7 @@ export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 71, text: "상황이 뜻대로 풀리지 않을 때,\n막연히 걱정하기보다 실행 가능한 대안부터 찾는다.", readingText: "상황이 뜻대로 풀리지 않을 때,\n막연히 걱정하기보다 실행 가능한 대안부터 찾는다.", code: "CA", egoIndex: 46, okIndex: null, scaleType: "a_positive", scaleKind: 'egogram' },
   { no: 72, text: "부탁받지 않아도, 남의 할 일을 내가 대신 해 버리는 편이다.", readingText: "부탁받지 않아도, 남의 할 일을 내가 대신 해 버리는 편이다.", code: "BB", egoIndex: 30, okIndex: null, scaleType: "np_negative", scaleKind: 'egogram' },
   { no: 73, text: "긍정적이고 활기찬 기운으로, 일상을 보내는 편이다.", readingText: "긍정적이고 활기찬 기운으로, 일상을 보내는 편이다.", code: "DA", egoIndex: 38, okIndex: null, scaleType: "fc_positive", scaleKind: 'egogram' },
-  { no: 74, text: "사소한 일에도 쉽게 답답해져, 말이나 태도로 화를 내는 편이다.", readingText: "사소한 일에도 쉽게 답답해져, 말이나 태도로 화를 내는 편이다.", code: "AB", egoIndex: 50, okIndex: null, scaleType: "cp_negative", scaleKind: 'egogram' },
+  { no: 74, text: "사소한 일에도 답답해져, 쉽게 욱하며 화를 내는 편이다.", readingText: "사소한 일에도 답답해져, 쉽게 욱하며 화를 내는 편이다.", code: "AB", egoIndex: 50, okIndex: null, scaleType: "cp_negative", scaleKind: 'egogram' },
   { no: 75, text: "일상이나 사회생활에서, 보통 사람들만큼 해낼 수 있다고 생각한다.", readingText: "일상이나 사회생활에서, 보통 사람들만큼 해낼 수 있다고 생각한다.", code: "DC", egoIndex: null, okIndex: 38, scaleType: "i_plus", scaleKind: 'okgram' },
   { no: 76, text: "상대방이 몹시 밉거나 싫더라도,\n겉으로는 내색하지 않고 좋게 맞춰주곤 한다.", readingText: "상대방이 몹시 밉거나 싫더라도,\n겉으로는 내색하지 않고 좋게 맞춰주곤 한다.", code: "EB", egoIndex: 47, okIndex: null, scaleType: "ac_negative", scaleKind: 'egogram' },
   { no: 77, text: "가까운 사람들과 연락을 이어 가며, 관계를 유지하는 편이다.", readingText: "가까운 사람들과 연락을 이어 가며, 관계를 유지하는 편이다.", code: "BC", egoIndex: null, okIndex: 27, scaleType: "u_plus", scaleKind: 'okgram' },
