@@ -114,7 +114,7 @@ export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 91, text: "일을 할 때,\n즉흥적으로 하기보다 계획을 먼저 세우고 실행에 옮기는 편이다.", readingText: "일을 할 때,\n즉흥적으로 하기보다 계획을 먼저 세우고 실행에 옮기는 편이다.", code: "CA", egoIndex: 37, okIndex: null, scaleType: "a_positive", scaleKind: 'egogram' },
   { no: 92, text: "나는 힘들거나 바빠도, 남의 부탁을 쉽게 거절하지 못하는 편이다.", readingText: "나는 힘들거나 바빠도, 남의 부탁을 쉽게 거절하지 못하는 편이다.", code: "BB", egoIndex: 45, okIndex: null, scaleType: "np_negative", scaleKind: 'egogram' },
   { no: 93, text: "화가 나면, 상대가 내 말에 동의할 때까지 계속 밀어붙이는 편이다.", readingText: "화가 나면, 상대가 내 말에 동의할 때까지 계속 밀어붙이는 편이다.", code: "AC", egoIndex: null, okIndex: 13, scaleType: "u_minus", scaleKind: 'okgram' },
-  { no: 94, text: "사소한 일이라도, 주위를 살피며 신중하게 처리하는 편이다.", readingText: "사소한 일이라도, 주위를 살피며 신중하게 처리하는 편이다.", code: "EA", egoIndex: 42, okIndex: null, scaleType: "ac_positive", scaleKind: 'egogram' },
+  { no: 94, text: "사소한 일이라도, 주위를 살피며 가볍게 행동하지 않는 편이다.", readingText: "사소한 일이라도, 주위를 살피며 가볍게 행동하지 않는 편이다.", code: "EA", egoIndex: 42, okIndex: null, scaleType: "ac_positive", scaleKind: 'egogram' },
   { no: 95, text: "맡은 일은 끝까지 책임지고 마무리하는 편이다.", readingText: "맡은 일은 끝까지 책임지고 마무리하는 편이다.", code: "AA", egoIndex: 48, okIndex: null, scaleType: "cp_positive", scaleKind: 'egogram' },
   { no: 96, text: "맞지 않는 사람과도, 맡은 일에서는 역할을 인정하며 협력할 수 있다.", readingText: "맞지 않는 사람과도, 맡은 일에서는 역할을 인정하며 협력할 수 있다.", code: "BC", egoIndex: null, okIndex: 31, scaleType: "u_plus", scaleKind: 'okgram' },
   { no: 97, text: "중요한 일을 선택할 때, 혼자 쉽게 결정하지 못하고 머뭇거리는 편이다.", readingText: "중요한 일을 선택할 때, 혼자 쉽게 결정하지 못하고 머뭇거리는 편이다.", code: "EC", egoIndex: null, okIndex: 19, scaleType: "i_minus", scaleKind: 'okgram' },
