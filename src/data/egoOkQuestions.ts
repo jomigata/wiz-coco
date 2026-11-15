@@ -51,7 +51,7 @@ export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 28, text: "눈치나 규칙보다, 내가 하고 싶은 대로 행동하는 편이다.", readingText: "눈치나 규칙보다, 내가 하고 싶은 대로 행동하는 편이다.", code: "DB", egoIndex: 16, okIndex: null, scaleType: "fc_negative", scaleKind: 'egogram' },
   { no: 29, text: "내 능력이나 잠재력을, 잘 믿지 못해 자주 불안해하는 편이다.", readingText: "내 능력이나 잠재력을, 잘 믿지 못해 자주 불안해하는 편이다.", code: "EC", egoIndex: null, okIndex: 35, scaleType: "i_minus", scaleKind: 'okgram' },
   { no: 30, text: "누가 곤란해 보여도, 나서 돕기보다 스스로 해결하게 두는 편이다.", readingText: "누가 곤란해 보여도, 나서 돕기보다 스스로 해결하게 두는 편이다.", code: "AC", egoIndex: null, okIndex: 23, scaleType: "u_minus", scaleKind: 'okgram' },
-  { no: 31, text: "일이 애매하거나 꼬이면,\n내 뜻대로 해석하기보다 사실과 근거부터 따져보는 편이다. ", readingText: "일이 애매하거나 꼬이면,\n내 뜻대로 해석하기보다 사실과 근거부터 따져보는 편이다. ", code: "CA", egoIndex: 19, okIndex: null, scaleType: "a_positive", scaleKind: 'egogram' },
+  { no: 31, text: "일이 애매하거나 꼬이면,\n내 뜻대로 해석하기보다 사실과 근거부터 따져보는 편이다.", readingText: "일이 애매하거나 꼬이면,\n내 뜻대로 해석하기보다 사실과 근거부터 따져보는 편이다.", code: "CA", egoIndex: 19, okIndex: null, scaleType: "a_positive", scaleKind: 'egogram' },
   { no: 32, text: "가정이나 일터에서, 남들의 일에 자주 끼어들어 참견하는 편이다.", readingText: "가정이나 일터에서, 남들의 일에 자주 끼어들어 참견하는 편이다.", code: "BB", egoIndex: 14, okIndex: null, scaleType: "np_negative", scaleKind: 'egogram' },
   { no: 33, text: "새로운 것을 보면 호기심이 들어, 직접 시도해 보고 싶어지는 편이다.", readingText: "새로운 것을 보면 호기심이 들어, 직접 시도해 보고 싶어지는 편이다.", code: "DA", egoIndex: 10, okIndex: null, scaleType: "fc_positive", scaleKind: 'egogram' },
   { no: 34, text: "여럿이 함께 일할 때, 내가 주도하고 내 기준에 맞추어 진행하는 편이다.", readingText: "여럿이 함께 일할 때, 내가 주도하고 내 기준에 맞추어 진행하는 편이다.", code: "AB", egoIndex: 31, okIndex: null, scaleType: "cp_negative", scaleKind: 'egogram' },
