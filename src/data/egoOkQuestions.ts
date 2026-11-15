@@ -76,7 +76,7 @@ export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 53, text: "복잡하게 따지지 않고, 첫 느낌으로 상황을 빠르게 파악하는 편이다.", readingText: "복잡하게 따지지 않고, 첫 느낌으로 상황을 빠르게 파악하는 편이다.", code: "DA", egoIndex: 27, okIndex: null, scaleType: "fc_positive", scaleKind: 'egogram' },
   { no: 54, text: "상식이나 기본 매너에서 벗어난 행동을 보면, 받아들이기 어려운 편이다.", readingText: "상식이나 기본 매너에서 벗어난 행동을 보면, 받아들이기 어려운 편이다.", code: "AB", egoIndex: 43, okIndex: null, scaleType: "cp_negative", scaleKind: 'egogram' },
   { no: 55, text: "나는 어릴 때부터, 사랑과 보살핌 속에서 자랐다고 생각한다.", readingText: "나는 어릴 때부터, 사랑과 보살핌 속에서 자랐다고 생각한다.", code: "DC", egoIndex: null, okIndex: 3, scaleType: "i_plus", scaleKind: 'okgram' },
-  { no: 56, text: "중요한 일을 결정할 때, 혼자 정하기보다 주변의 동의를 구하는 편이다.", readingText: "중요한 일을 결정할 때, 혼자 정하기보다 주변의 동의를 구하는 편이다.", code: "EB", egoIndex: 39, okIndex: null, scaleType: "ac_negative", scaleKind: 'egogram' },
+  { no: 56, text: "중요한 일을 결정할 때, 혼자보다 주변 확인이나 동의를 구하는 편이다.", readingText: "중요한 일을 결정할 때, 혼자보다 주변 확인이나 동의를 구하는 편이다.", code: "EB", egoIndex: 39, okIndex: null, scaleType: "ac_negative", scaleKind: 'egogram' },
   { no: 57, text: "이야기할 때, 먼저 듣고 이해한 뒤 판단하는 편이다.", readingText: "이야기할 때, 먼저 듣고 이해한 뒤 판단하는 편이다.", code: "BC", egoIndex: null, okIndex: 9, scaleType: "u_plus", scaleKind: 'okgram' },
   { no: 58, text: "며칠 동안 잠을 자지 못하더라도,\n평소와 다름없이 완벽한 집중력을 유지할 수 있다.", readingText: "며칠 동안 잠을 자지 못하더라도,\n평소와 다름없이 완벽한 집중력을 유지할 수 있다.", code: "VX", egoIndex: null, okIndex: null, scaleType: "validity_infreq", scaleKind: 'validity' },
   { no: 59, text: "실패가 두려워, 새로운 일이나 도전에 선뜻 나서지 못하는 편이다.", readingText: "실패가 두려워, 새로운 일이나 도전에 선뜻 나서지 못하는 편이다.", code: "EC", egoIndex: null, okIndex: 12, scaleType: "i_minus", scaleKind: 'okgram' },
