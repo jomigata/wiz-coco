@@ -101,7 +101,7 @@ export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 78, text: "지금껏 무언가를 깜빡하거나 착각하여 실수를 저지른 일 없이,\n언제나 완벽하게 처리해 왔다.", readingText: "지금껏 무언가를 깜빡하거나 착각하여 실수를 저지른 일 없이,\n언제나 완벽하게 처리해 왔다.", code: "VX", egoIndex: null, okIndex: null, scaleType: "validity_infreq", scaleKind: 'validity' },
   { no: 79, text: "사람들과 어울리는 자리가 부담돼서, 혼자 있으려는 편이다.", readingText: "사람들과 어울리는 자리가 부담돼서, 혼자 있으려는 편이다.", code: "EC", egoIndex: null, okIndex: 30, scaleType: "i_minus", scaleKind: 'okgram' },
   { no: 80, text: "모임이나 일을 이끌 때,\n남들이 내 결정에 맞춰 주는 게 당연하다고 생각한다.", readingText: "모임이나 일을 이끌 때,\n남들이 내 결정에 맞춰 주는 게 당연하다고 생각한다.", code: "AC", egoIndex: null, okIndex: 32, scaleType: "u_minus", scaleKind: 'okgram' },
-  { no: 81, text: "의견을 나눌 때, 내 생각보다 상대 말을 먼저 듣고 따르는 편이다.", readingText: "의견을 나눌 때, 내 생각보다 상대 말을 먼저 듣고 따르는 편이다.", code: "EA", egoIndex: 35, okIndex: null, scaleType: "ac_positive", scaleKind: 'egogram' },
+  { no: 81, text: "의견을 나눌 때, 내 주장보다 상대 말을 먼저 듣고 따르는 편이다.", readingText: "의견을 나눌 때, 내 주장보다 상대 말을 먼저 듣고 따르는 편이다.", code: "EA", egoIndex: 35, okIndex: null, scaleType: "ac_positive", scaleKind: 'egogram' },
   { no: 82, text: "사적인 대화에서도, 감정적인 공감보다 정보나 논리를 우선시하는 편이다.", readingText: "사적인 대화에서도, 감정적인 공감보다 정보나 논리를 우선시하는 편이다.", code: "CB", egoIndex: 20, okIndex: null, scaleType: "a_negative", scaleKind: 'egogram' },
   { no: 83, text: "누구에게나 차별 없이, 존중하며 따뜻하게 대하는 편이다.", readingText: "누구에게나 차별 없이, 존중하며 따뜻하게 대하는 편이다.", code: "BA", egoIndex: 40, okIndex: null, scaleType: "np_positive", scaleKind: 'egogram' },
   { no: 84, text: "아무리 바빠도, 말과 행동에서 기본 예의를 지키려는 편이다.", readingText: "아무리 바빠도, 말과 행동에서 기본 예의를 지키려는 편이다.", code: "AA", egoIndex: 34, okIndex: null, scaleType: "cp_positive", scaleKind: 'egogram' },
