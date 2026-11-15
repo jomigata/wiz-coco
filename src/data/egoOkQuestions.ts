@@ -71,7 +71,7 @@ export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 48, text: "살면서 남의 흉을 보거나, 사소한 거짓말조차 해본 적이 없다.", readingText: "살면서 남의 흉을 보거나, 사소한 거짓말조차 해본 적이 없다.", code: "VX", egoIndex: null, okIndex: null, scaleType: "validity_lie", scaleKind: 'validity' },
   { no: 49, text: "가끔은 나 자신이, 많이 부족하거나 무기력하게 느껴지는 편이다.", readingText: "가끔은 나 자신이, 많이 부족하거나 무기력하게 느껴지는 편이다.", code: "EC", egoIndex: null, okIndex: 7, scaleType: "i_minus", scaleKind: 'okgram' },
   { no: 50, text: "상대가 내 기대에 못 미치면, 답답하고 화가 치는 편이다.", readingText: "상대가 내 기대에 못 미치면, 답답하고 화가 치는 편이다.", code: "AC", egoIndex: null, okIndex: 15, scaleType: "u_minus", scaleKind: 'okgram' },
-  { no: 51, text: "막연한 기대보다, 지금 확인할 수 있는 현실부터 보고 판단하는 편이다.", readingText: "막연한 기대보다, 지금 확인할 수 있는 현실부터 보고 판단하는 편이다.", code: "CA", egoIndex: 22, okIndex: null, scaleType: "a_positive", scaleKind: 'egogram' },
+  { no: 51, text: "일이나 상황을 볼 때,\n막연한 기대보다 지금 확인된 현실부터 보는 편이다.", readingText: "일이나 상황을 볼 때,\n막연한 기대보다 지금 확인된 현실부터 보는 편이다.", code: "CA", egoIndex: 22, okIndex: null, scaleType: "a_positive", scaleKind: 'egogram' },
   { no: 52, text: "남의 고민이나 걱정을, 내 일처럼 끌어안고 신경 쓰는 편이다.", readingText: "남의 고민이나 걱정을, 내 일처럼 끌어안고 신경 쓰는 편이다.", code: "BB", egoIndex: 25, okIndex: null, scaleType: "np_negative", scaleKind: 'egogram' },
   { no: 53, text: "복잡하게 따지지 않고, 첫 느낌으로 상황을 빠르게 파악하는 편이다.", readingText: "복잡하게 따지지 않고, 첫 느낌으로 상황을 빠르게 파악하는 편이다.", code: "DA", egoIndex: 27, okIndex: null, scaleType: "fc_positive", scaleKind: 'egogram' },
   { no: 54, text: "상식이나 기본 매너에서 벗어난 행동을 보면, 받아들이기 어려운 편이다.", readingText: "상식이나 기본 매너에서 벗어난 행동을 보면, 받아들이기 어려운 편이다.", code: "AB", egoIndex: 43, okIndex: null, scaleType: "cp_negative", scaleKind: 'egogram' },
