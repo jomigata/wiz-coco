@@ -42,7 +42,7 @@ export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 19, text: "어릴 때부터, 충분한 사랑이나 지지를 받지 못했다고 느끼는 편이다.", readingText: "어릴 때부터, 충분한 사랑이나 지지를 받지 못했다고 느끼는 편이다.", code: "EC", egoIndex: null, okIndex: 4, scaleType: "i_minus", scaleKind: 'okgram' },
   { no: 20, text: "남의 뚜렷한 성과나 좋은 결과에,\n선뜻 인정하고 칭찬해 주기가 어려운 편이다.", readingText: "남의 뚜렷한 성과나 좋은 결과에,\n선뜻 인정하고 칭찬해 주기가 어려운 편이다.", code: "AC", egoIndex: null, okIndex: 37, scaleType: "u_minus", scaleKind: 'okgram' },
   { no: 21, text: "이야기할 때, 상대 말에 귀 기울이고 마음을 헤아려 주는 편이다.", readingText: "이야기할 때, 상대 말에 귀 기울이고 마음을 헤아려 주는 편이다.", code: "BA", egoIndex: 12, okIndex: null, scaleType: "np_positive", scaleKind: 'egogram' },
-  { no: 22, text: "사람을 대하거나 일할 때, 손해와 이익을 철저히 계산하는 편이다.", readingText: "사람을 대하거나 일할 때, 손해와 이익을 철저히 계산하는 편이다.", code: "CB", egoIndex: 9, okIndex: null, scaleType: "a_negative", scaleKind: 'egogram' },
+  { no: 22, text: "사람을 대하거나 일할 때, 손해와 이익을 먼저 따져보는 편이다.", readingText: "사람을 대하거나 일할 때, 손해와 이익을 먼저 따져보는 편이다.", code: "CB", egoIndex: 9, okIndex: null, scaleType: "a_negative", scaleKind: 'egogram' },
   { no: 23, text: "현실에만 안주하지 않고, 더 높은 목표를 향해 꾸준히 노력하는 편이다.", readingText: "현실에만 안주하지 않고, 더 높은 목표를 향해 꾸준히 노력하는 편이다.", code: "AA", egoIndex: 6, okIndex: null, scaleType: "cp_positive", scaleKind: 'egogram' },
   { no: 24, text: "힘들거나 곤란할 때, 스스로보다 누군가에게 의지하고 싶어지는 편이다.", readingText: "힘들거나 곤란할 때, 스스로보다 누군가에게 의지하고 싶어지는 편이다.", code: "EB", egoIndex: 17, okIndex: null, scaleType: "ac_negative", scaleKind: 'egogram' },
   { no: 25, text: "가까운 사람들이, 나와 있으면 의지가 된다고 말하는 편이다.", readingText: "가까운 사람들이, 나와 있으면 의지가 된다고 말하는 편이다.", code: "DC", egoIndex: null, okIndex: 10, scaleType: "i_plus", scaleKind: 'okgram' },
