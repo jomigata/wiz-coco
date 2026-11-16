@@ -13,7 +13,7 @@ const VALIDITY_KEYWORDS_BY_NO: Record<number, string> = {
   78: '깜빡·착각·실수',
   15: '잘남·부러움',
   48: '밀림·피곤·쉼',
-  88: '서운함·마음속',
+  88: '사람들·서운함·마음속',
 };
 
 function plainItemText(no: number): string {
