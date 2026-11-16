@@ -27,7 +27,7 @@ export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 4, text: "맡은 일을 할 때,\n다른 사람 의견보다 내 방식대로 하라고 말하는 편이다.", readingText: "맡은 일을 할 때,\n다른 사람 의견보다 내 방식대로 하라고 말하는 편이다.", code: "AB", egoIndex: 2, okIndex: null, scaleType: "cp_negative", scaleKind: 'egogram' },
   { no: 5, text: "의견이 달라도, 서로 생각이 다를 수 있다고 받아들이는 편이다.", readingText: "의견이 달라도, 서로 생각이 다를 수 있다고 받아들이는 편이다.", code: "BC", egoIndex: null, okIndex: 8, scaleType: "u_plus", scaleKind: 'okgram' },
   { no: 6, text: "주변 시선이 신경 쓰여, 사소한 행동도 지나치게 조심하는 편이다.", readingText: "주변 시선이 신경 쓰여, 사소한 행동도 지나치게 조심하는 편이다.", code: "EB", egoIndex: 11, okIndex: null, scaleType: "ac_negative", scaleKind: 'egogram' },
-  { no: 7, text: "사람들과 함께할 때, 해맑고 순수하게 어울리는 편이다.", readingText: "사람들과 함께할 때, 해맑고 순수하게 어울리는 편이다.", code: "DA", egoIndex: 4, okIndex: null, scaleType: "fc_positive", scaleKind: 'egogram' },
+  { no: 7, text: "사람들과 어울릴 때, 속마음을 숨기기보다 편하게 웃고 즐기는 편이다.", readingText: "사람들과 어울릴 때, 속마음을 숨기기보다 편하게 웃고 즐기는 편이다.", code: "DA", egoIndex: 4, okIndex: null, scaleType: "fc_positive", scaleKind: 'egogram' },
   { no: 8, text: "사람들에게 호감이나 좋은 인상을 주지 못한다고 느끼는 편이다.", readingText: "사람들에게 호감이나 좋은 인상을 주지 못한다고 느끼는 편이다.", code: "EC", egoIndex: null, okIndex: 2, scaleType: "i_minus", scaleKind: 'okgram' },
   { no: 9, text: "처음 만난 사람이라도,\n그 사람의 성향이나 마음가짐을 꽤 빨리 짐작하는 편이다.", readingText: "처음 만난 사람이라도,\n그 사람의 성향이나 마음가짐을 꽤 빨리 짐작하는 편이다.", code: "VX", egoIndex: null, okIndex: null, scaleType: "validity_infreq", scaleKind: 'validity' },
   { no: 10, text: "남의 사소한 실수나 약속 어김은,\n대충 넘기기 어렵고 용서하기 어려운 편이다.", readingText: "남의 사소한 실수나 약속 어김은,\n대충 넘기기 어렵고 용서하기 어려운 편이다.", code: "AC", egoIndex: null, okIndex: 36, scaleType: "u_minus", scaleKind: 'okgram' },
