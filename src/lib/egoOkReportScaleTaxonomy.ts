@@ -29,7 +29,7 @@ export type EgoOkScaleTaxonomyNode = {
   itemCount: number;
   maxScore: number;
   relatedTabId: EgoOkReportTabId;
-  /** 학지사 xlsx · 자료입력조건 시트 결과 항목(해당 시) */
+  /** (사)한국교류분석협회 xlsx · 자료입력조건 시트 결과 항목(해당 시) */
   legacyReportSection?: string;
 };
 
@@ -185,7 +185,7 @@ export const EGO_OK_PERSONALITY_SCALE_TAXONOMY: EgoOkScaleTaxonomyNode[] = [
   },
 ];
 
-/** 상담사 보고서 탭 ↔ 학지사 결과 HTML 항목(자료입력조건) ↔ 90문항 척도 */
+/** 상담사 보고서 탭 ↔ (사)한국교류분석협회 결과 HTML 항목(자료입력조건) ↔ 90문항 척도 */
 export const EGO_OK_TAB_TO_LEGACY_AND_SCALES: {
   tabId: EgoOkReportTabId | 'basic' | 'career' | 'marriage';
   tabTitle: string;

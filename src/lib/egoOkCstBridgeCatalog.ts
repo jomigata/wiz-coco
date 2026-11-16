@@ -61,7 +61,7 @@ function scaleMiddle(
   };
 }
 
-/** CST(긍정심리학 성격강점) 대·중·소 — 이고-오케이 90문항 근사 매핑 (학지사 CST 시트 미연동) */
+/** CST(긍정심리학 성격강점) 대·중·소 — 이고-오케이 90문항 근사 매핑 ((사)한국교류분석협회 CST 시트 미연동) */
 export const EGO_OK_CST_MAJORS: CstMajorDef[] = [
   {
     id: '1',
