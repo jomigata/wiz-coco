@@ -54,6 +54,15 @@ const POLARITY = {
   validity_imc: '타당도 IMC',
 };
 
+/** NP− 5문항 소분류 (items-99-wording-comparison · scale-criteria) */
+const NP_NEGATIVE_FOCUS = {
+  12: '미리 알림·예방 챙김(NP−)',
+  32: '참견·간섭(NP−)',
+  52: '타인 고민 과몰입(NP−)',
+  72: '선의의 대신 해줌(NP−)',
+  92: '거절 불능·경계 부재(NP−)',
+};
+
 const FOCUS = {
   9: '과한 통찰(낯선 이 짐작); 성실→부정',
   15: '잘남·부러움 인정; 부정→L포장',
@@ -84,6 +93,7 @@ function focusLine(no, scaleType, text) {
   const t = text.replace(/\n/g, ' ');
   if (scaleType === 'a_positive') return '이성·계획·현실·대안(A+ 5문항)';
   if (scaleType === 'a_negative') return '규칙·실리·건조함·팩트(A− 5문항)';
+  if (scaleType === 'np_negative' && NP_NEGATIVE_FOCUS[no]) return NP_NEGATIVE_FOCUS[no];
   if (scaleType.startsWith('np_')) return scaleType.endsWith('positive') ? '돌봄·격려·공감(NP+)' : '과잉챙김·참견(NP−)';
   if (scaleType.startsWith('cp_')) return scaleType.endsWith('positive') ? '목표·양심·예의(CP+)' : '통제·비판·분노(CP−)';
   if (scaleType.startsWith('fc_')) return scaleType.endsWith('positive') ? '호기심·활력·직관(FC+)' : '충동·즉흥(FC−)';
