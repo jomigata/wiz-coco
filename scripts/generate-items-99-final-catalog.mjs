@@ -79,6 +79,12 @@ const A_NEGATIVE_TOPIC = {
   82: '위로보다 이유·해결',
 };
 
+/** NP+ 5문항 — 최종 문장과 wording TSV가 어긋난 항목 */
+const NP_POSITIVE_TOPIC = {
+  43: '도움 제안·함께 방법 찾기',
+  83: '실수 비난 대신 이해',
+};
+
 /** 최종 문장과 wording TSV가 어긋난 항목 */
 const TOPIC_OVERRIDE = {
   57: '상대 감정·동기 이해',
@@ -134,13 +140,14 @@ function focusLine(no, scaleType) {
 
   let topic =
     NP_NEGATIVE_FOCUS[no] ??
+    (scaleType === 'np_positive' ? NP_POSITIVE_TOPIC[no] : undefined) ??
     (scaleType === 'a_positive' ? A_POSITIVE_TOPIC[no] : undefined) ??
     (scaleType === 'a_negative' ? A_NEGATIVE_TOPIC[no] : undefined) ??
     TOPIC_OVERRIDE[no] ??
     WORDING_TOPIC[no];
 
   if (!topic) throw new Error(`Missing 측정요지 for item ${no}`);
-  if (/\([A-Za-z+\-]+\)$/.test(topic)) return topic;
+  if (/\([^)]+\)$/.test(topic)) return topic;
   return `${topic}(${lb})`;
 }
 
