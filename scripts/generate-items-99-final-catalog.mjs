@@ -60,7 +60,7 @@ const NP_NEGATIVE_FOCUS = {
   32: '참견·간섭(NP−)',
   52: '타인 고민 과몰입(NP−)',
   72: '선의의 대신 해줌(NP−)',
-  92: '거절 불능·경계 부재(NP−)',
+  92: '부탁 거절 시 내 불편·거절 곤란(NP−)',
 };
 
 /** A± 10문항 — items-99-a-scale-discriminant-ko.md */
