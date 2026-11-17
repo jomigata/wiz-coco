@@ -103,7 +103,7 @@ export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 80, text: "모임이나 일을 이끌 때,\n남들이 내 결정에 맞춰 주는 게 당연하다고 생각한다.", readingText: "모임이나 일을 이끌 때,\n남들이 내 결정에 맞춰 주는 게 당연하다고 생각한다.", code: "AC", egoIndex: null, okIndex: 32, scaleType: "u_minus", scaleKind: 'okgram' },
   { no: 81, text: "의견을 나눌 때, 내 주장보다 상대 말을 먼저 듣고 따르는 편이다.", readingText: "의견을 나눌 때, 내 주장보다 상대 말을 먼저 듣고 따르는 편이다.", code: "EA", egoIndex: 35, okIndex: null, scaleType: "ac_positive", scaleKind: 'egogram' },
   { no: 82, text: "친한 사람이 힘들다고 하면, 위로보다 이유와 해결을 먼저 말하는 편이다.", readingText: "친한 사람이 힘들다고 하면, 위로보다 이유와 해결을 먼저 말하는 편이다.", code: "CB", egoIndex: 20, okIndex: null, scaleType: "a_negative", scaleKind: 'egogram' },
-  { no: 83, text: "상대가 실수를 해도, 탓하는 말보다 상황을 이해하려는 편이다.", readingText: "상대가 실수를 해도, 탓하는 말보다 상황을 이해하려는 편이다.", code: "BA", egoIndex: 40, okIndex: null, scaleType: "np_positive", scaleKind: 'egogram' },
+  { no: 83, text: "상대가 실수를 해도, 탓하지 않고 상황을 이해하려는 편이다.", readingText: "상대가 실수를 해도, 탓하지 않고 상황을 이해하려는 편이다.", code: "BA", egoIndex: 40, okIndex: null, scaleType: "np_positive", scaleKind: 'egogram' },
   { no: 84, text: "아무리 바빠도, 말과 행동에서 기본 예의를 지키려는 편이다.", readingText: "아무리 바빠도, 말과 행동에서 기본 예의를 지키려는 편이다.", code: "AA", egoIndex: 34, okIndex: null, scaleType: "cp_positive", scaleKind: 'egogram' },
   { no: 85, text: "사람들 앞에서는 대체로 긴장하지 않고,\n내 생각을 자연스럽게 표현하는 편이다.", readingText: "사람들 앞에서는 대체로 긴장하지 않고,\n내 생각을 자연스럽게 표현하는 편이다.", code: "DC", egoIndex: null, okIndex: 29, scaleType: "i_plus", scaleKind: 'okgram' },
   { no: 86, text: "기분이 격해지면, 말이나 행동을 불쑥 내뱉는 편이다.", readingText: "기분이 격해지면, 말이나 행동을 불쑥 내뱉는 편이다.", code: "DB", egoIndex: 44, okIndex: null, scaleType: "fc_negative", scaleKind: 'egogram' },
