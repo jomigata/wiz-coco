@@ -63,6 +63,45 @@ const NP_NEGATIVE_FOCUS = {
   92: '거절 불능·경계 부재(NP−)',
 };
 
+/** A± 10문항 — items-99-a-scale-discriminant-ko.md */
+const A_POSITIVE_TOPIC = {
+  11: '돌발 시 이성·침착',
+  31: '사실·근거 우선 해석',
+  51: '확인된 현실 우선',
+  71: '막힐 때 대안 실행',
+  91: '착수 전 순서·계획',
+};
+const A_NEGATIVE_TOPIC = {
+  2: '규칙·절차 우선',
+  22: '손익·득실 계산',
+  42: '말투 건조·감정 표현 적음',
+  62: '진위·사실 확인 우선',
+  82: '위로보다 이유·해결',
+};
+
+/** 최종 문장과 wording TSV가 어긋난 항목 */
+const TOPIC_OVERRIDE = {
+  57: '상대 감정·동기 이해',
+};
+
+function loadWordingTopics() {
+  const p = path.join(root, 'docs/internal-materials/ego-ok/items-99-wording-comparison.tsv');
+  const byNo = {};
+  for (const line of fs.readFileSync(p, 'utf8').trim().split(/\r?\n/).slice(1)) {
+    const cols = line.split('\t');
+    const no = Number(cols[0]);
+    if (!no) continue;
+    const raw = cols[7] ?? '';
+    const m = raw.match(/측정 주제:\s*([^.(]+)/);
+    let topic = m ? m[1].trim().replace(/\.$/, '') : '';
+    if (topic.includes('기준점')) topic = topic.split('. 기준점')[0].trim();
+    byNo[no] = topic;
+  }
+  return byNo;
+}
+
+const WORDING_TOPIC = loadWordingTopics();
+
 const FOCUS = {
   9: '과한 통찰(낯선 이 짐작); 성실→부정',
   15: '잘남·부러움 인정; 부정→L포장',
@@ -88,21 +127,21 @@ const VRIN = {
   81: 'VRIN↔4',
 };
 
-function focusLine(no, scaleType, text) {
+function focusLine(no, scaleType) {
   if (FOCUS[no]) return FOCUS[no];
-  const t = text.replace(/\n/g, ' ');
-  if (scaleType === 'a_positive') return '이성·계획·현실·대안(A+ 5문항)';
-  if (scaleType === 'a_negative') return '규칙·실리·건조함·팩트(A− 5문항)';
-  if (scaleType === 'np_negative' && NP_NEGATIVE_FOCUS[no]) return NP_NEGATIVE_FOCUS[no];
-  if (scaleType.startsWith('np_')) return scaleType.endsWith('positive') ? '돌봄·격려·공감(NP+)' : '과잉챙김·참견(NP−)';
-  if (scaleType.startsWith('cp_')) return scaleType.endsWith('positive') ? '목표·양심·예의(CP+)' : '통제·비판·분노(CP−)';
-  if (scaleType.startsWith('fc_')) return scaleType.endsWith('positive') ? '호기심·활력·직관(FC+)' : '충동·즉흥(FC−)';
-  if (scaleType.startsWith('ac_')) return scaleType.endsWith('positive') ? '협력·예의·순응(AC+)' : '의존·억압·위축(AC−)';
-  if (scaleType === 'i_plus') return '자기긍정·자신감(I+)';
-  if (scaleType === 'i_minus') return '자기부정·불안·회피(I−)';
-  if (scaleType === 'u_plus') return '타인수용·개방(U+)';
-  if (scaleType === 'u_minus') return '타인비판·통제·거부(U−)';
-  return t.slice(0, 40);
+  const lb = SHORT[scaleType];
+  if (!lb) throw new Error(`Unknown scaleType for item ${no}: ${scaleType}`);
+
+  let topic =
+    NP_NEGATIVE_FOCUS[no] ??
+    (scaleType === 'a_positive' ? A_POSITIVE_TOPIC[no] : undefined) ??
+    (scaleType === 'a_negative' ? A_NEGATIVE_TOPIC[no] : undefined) ??
+    TOPIC_OVERRIDE[no] ??
+    WORDING_TOPIC[no];
+
+  if (!topic) throw new Error(`Missing 측정요지 for item ${no}`);
+  if (/\([A-Za-z+\-]+\)$/.test(topic)) return topic;
+  return `${topic}(${lb})`;
 }
 
 const out = [];
@@ -129,9 +168,21 @@ for (let i = 0; i < 99; i++) {
   const pol = POLARITY[st] ?? '';
   const br = src.includes('@') ? '수동(@)' : item.text.includes('\n') ? '자동(쉼표)' : '1줄';
   const sc = VRIN[no] ?? (st.startsWith('validity') ? (FOCUS[no]?.split(';')[0] ?? '') : '');
-  const focus = focusLine(no, st, item.text);
+  const focus = focusLine(no, st);
   const text = item.text.replace(/\n/g, ' / ');
   out.push([no, lb, st, pol, item.code, br, sc, focus, text].join('\t'));
+}
+
+const focusSeen = new Map();
+for (const line of out.slice(1)) {
+  const focus = line.split('\t')[7];
+  if (!focusSeen.has(focus)) focusSeen.set(focus, []);
+  focusSeen.get(focus).push(line.split('\t')[0]);
+}
+for (const [focus, nos] of focusSeen) {
+  if (nos.length > 1) {
+    console.warn(`Duplicate 측정요지 "${focus}" at items ${nos.join(', ')}`);
+  }
 }
 
 const outPath = path.join(root, 'docs/internal-materials/ego-ok/items-99-final-catalog-ko.tsv');

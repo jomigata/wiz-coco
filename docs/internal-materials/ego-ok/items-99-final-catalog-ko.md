@@ -30,7 +30,7 @@
 | I (OK) | 3,8,13… | 20 | I+ / I− | 오케이 긍·부 |
 | U (OK) | 5,10,18… | 20 | U+ / U− | 동일 |
 
-상세 문장별 역할: A [`items-99-a-scale-discriminant-ko.md`](./items-99-a-scale-discriminant-ko.md) · **NP− 5문항**은 catalog **측정요지** 열(12·32·52·72·92 소분류, `generate-items-99-final-catalog.mjs`)
+상세 문장별 역할: A [`items-99-a-scale-discriminant-ko.md`](./items-99-a-scale-discriminant-ko.md) · **측정요지** 열은 문항별 1줄(`wording-comparison` 주제 + A±·NP−·57번 오버라이드, `generate-items-99-final-catalog.mjs`)
 
 ## 타당도 9문항
 
