@@ -98,6 +98,12 @@ const AC_NEGATIVE_TOPIC = {
   76: '싫어도 대면 평소처럼 대함',
 };
 
+/** CP− 5문항 — 최종 문장과 wording TSV가 어긋난 항목 */
+const CP_NEGATIVE_TOPIC = {
+  4: '같이 할 때 내 방식·말로 지시',
+  34: '역할·순서대로 진행 통제',
+};
+
 /** 최종 문장과 wording TSV가 어긋난 항목 */
 const TOPIC_OVERRIDE = {
   57: '상대 감정·동기 이해',
@@ -156,6 +162,7 @@ function focusLine(no, scaleType) {
     (scaleType === 'np_positive' ? NP_POSITIVE_TOPIC[no] : undefined) ??
     (scaleType === 'ac_positive' ? AC_POSITIVE_TOPIC[no] : undefined) ??
     (scaleType === 'ac_negative' ? AC_NEGATIVE_TOPIC[no] : undefined) ??
+    (scaleType === 'cp_negative' ? CP_NEGATIVE_TOPIC[no] : undefined) ??
     (scaleType === 'a_positive' ? A_POSITIVE_TOPIC[no] : undefined) ??
     (scaleType === 'a_negative' ? A_NEGATIVE_TOPIC[no] : undefined) ??
     TOPIC_OVERRIDE[no] ??
