@@ -100,7 +100,7 @@ const AC_NEGATIVE_TOPIC = {
 
 /** CP− 5문항 — 최종 문장과 wording TSV가 어긋난 항목 */
 const CP_NEGATIVE_TOPIC = {
-  4: '둘이 일할 때 말로 방식 지시',
+  4: '이견 시 내 판단 고집',
   34: '다인 일 주도·내 기준 진행',
 };
 
