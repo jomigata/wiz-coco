@@ -104,6 +104,10 @@ const I_MINUS_TOPIC = {
   97: '결정·판단 불안',
 };
 
+const U_MINUS_TOPIC = {
+  80: '이기·불신',
+};
+
 /** FC− 5문항 — 최종 문장과 wording TSV가 어긋난 항목 */
 const FC_NEGATIVE_TOPIC = {
   28: '눈치·규칙보다 편한 방식',
@@ -113,7 +117,7 @@ const FC_NEGATIVE_TOPIC = {
 /** CP− 5문항 — 최종 문장과 wording TSV가 어긋난 항목 */
 const CP_NEGATIVE_TOPIC = {
   4: '이견 시 내 판단 고집',
-  34: '다인 일 주도·내 기준 진행',
+  34: '다인 일 방향·속도 주도',
 };
 
 /** 최종 문장과 wording TSV가 어긋난 항목 */
@@ -179,6 +183,7 @@ function focusLine(no, scaleType) {
     (scaleType === 'a_negative' ? A_NEGATIVE_TOPIC[no] : undefined) ??
     (scaleType === 'fc_negative' ? FC_NEGATIVE_TOPIC[no] : undefined) ??
     (scaleType === 'i_minus' ? I_MINUS_TOPIC[no] : undefined) ??
+    (scaleType === 'u_minus' ? U_MINUS_TOPIC[no] : undefined) ??
     TOPIC_OVERRIDE[no] ??
     WORDING_TOPIC[no];
 
