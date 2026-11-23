@@ -121,11 +121,9 @@ const CP_NEGATIVE_TOPIC = {
 };
 
 /** 최종 문장과 wording TSV가 어긋난 항목 */
-const U_PLUS_TOPIC = {
+const TOPIC_OVERRIDE = {
   57: '단점·약점 포용',
 };
-
-const TOPIC_OVERRIDE = {};
 
 function loadWordingTopics() {
   const p = path.join(root, 'docs/internal-materials/ego-ok/items-99-wording-comparison.tsv');
@@ -186,7 +184,6 @@ function focusLine(no, scaleType) {
     (scaleType === 'fc_negative' ? FC_NEGATIVE_TOPIC[no] : undefined) ??
     (scaleType === 'i_minus' ? I_MINUS_TOPIC[no] : undefined) ??
     (scaleType === 'u_minus' ? U_MINUS_TOPIC[no] : undefined) ??
-    (scaleType === 'u_plus' ? U_PLUS_TOPIC[no] : undefined) ??
     TOPIC_OVERRIDE[no] ??
     WORDING_TOPIC[no];
 
