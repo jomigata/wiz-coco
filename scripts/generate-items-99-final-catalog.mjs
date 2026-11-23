@@ -108,6 +108,10 @@ const U_MINUS_TOPIC = {
   80: '이기·불신',
 };
 
+const U_PLUS_TOPIC = {
+  67: '인간·양심 신뢰',
+};
+
 /** FC− 5문항 — 최종 문장과 wording TSV가 어긋난 항목 */
 const FC_NEGATIVE_TOPIC = {
   28: '눈치·규칙보다 편한 방식',
@@ -184,6 +188,7 @@ function focusLine(no, scaleType) {
     (scaleType === 'fc_negative' ? FC_NEGATIVE_TOPIC[no] : undefined) ??
     (scaleType === 'i_minus' ? I_MINUS_TOPIC[no] : undefined) ??
     (scaleType === 'u_minus' ? U_MINUS_TOPIC[no] : undefined) ??
+    (scaleType === 'u_plus' ? U_PLUS_TOPIC[no] : undefined) ??
     TOPIC_OVERRIDE[no] ??
     WORDING_TOPIC[no];
 
