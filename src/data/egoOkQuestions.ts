@@ -107,7 +107,7 @@ export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 84, text: "아무리 바빠도, 말과 행동에서 기본 예의를 지키려는 편이다.", readingText: "아무리 바빠도, 말과 행동에서 기본 예의를 지키려는 편이다.", code: "AA", egoIndex: 34, okIndex: null, scaleType: "cp_positive", scaleKind: 'egogram' },
   { no: 85, text: "사람들 앞에서는 대체로 긴장하지 않고,\n내 생각을 자연스럽게 표현하는 편이다.", readingText: "사람들 앞에서는 대체로 긴장하지 않고,\n내 생각을 자연스럽게 표현하는 편이다.", code: "DC", egoIndex: null, okIndex: 29, scaleType: "i_plus", scaleKind: 'okgram' },
   { no: 86, text: "조용하고 진지해야 할 자리에서, 나도 모르게 가볍게 행동하는 편이다.", readingText: "조용하고 진지해야 할 자리에서, 나도 모르게 가볍게 행동하는 편이다.", code: "DB", egoIndex: 44, okIndex: null, scaleType: "fc_negative", scaleKind: 'egogram' },
-  { no: 87, text: "개인적인 일들의 선택은, 본인이 스스로 정해야 한다고 생각한다.", readingText: "개인적인 일들의 선택은, 본인이 스스로 정해야 한다고 생각한다.", code: "BC", egoIndex: null, okIndex: 33, scaleType: "u_plus", scaleKind: 'okgram' },
+  { no: 87, text: "평소 가까운 사람의 개인적인 선택을,\n본인 뜻대로 하도록 존중하는 편이다.", readingText: "평소 가까운 사람의 개인적인 선택을,\n본인 뜻대로 하도록 존중하는 편이다.", code: "BC", egoIndex: null, okIndex: 33, scaleType: "u_plus", scaleKind: 'okgram' },
   { no: 88, text: "가까운 사람의 사소한 말이나 행동에, 순간 서운함을 느낄 때가 있다.", readingText: "가까운 사람의 사소한 말이나 행동에, 순간 서운함을 느낄 때가 있다.", code: "VX", egoIndex: null, okIndex: null, scaleType: "validity_lie", scaleKind: 'validity' },
   { no: 89, text: "평소 내 옷차림이나 스타일에, 만족하지 못해 자신이 없는 편이다.", readingText: "평소 내 옷차림이나 스타일에, 만족하지 못해 자신이 없는 편이다.", code: "EC", egoIndex: null, okIndex: 20, scaleType: "i_minus", scaleKind: 'okgram' },
   { no: 90, text: "중요한 일은 남에게 맡기기보다, 내가 직접 처리하려는 편이다.", readingText: "중요한 일은 남에게 맡기기보다, 내가 직접 처리하려는 편이다.", code: "AC", egoIndex: null, okIndex: 5, scaleType: "u_minus", scaleKind: 'okgram' },
