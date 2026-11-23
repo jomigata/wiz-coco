@@ -12,7 +12,10 @@ const json = JSON.parse(
   fs.readFileSync(path.join(root, 'docs/internal-materials/ego-ok/items-99.json'), 'utf8')
 );
 
-/** @typedef {{ tag: string, likert: string, proposed: string | null, note?: string }} RowMeta */
+/**
+ * @typedef {{ tag: string, likert: string, proposed: string | null, note?: string, elicitBefore?: number, elicitAfter?: number }} RowMeta
+ * 자기보고 정확도 % — 주관적·휴리스틱(현장 데이터 아님). rubric은 MD 참고.
+ */
 
 /** proposed null = 변경 전과 동일(유지) */
 const META = /** @type {Record<number, RowMeta>} */ ({
@@ -238,12 +241,154 @@ function displayText(t) {
   return t.includes('\n') ? t.replace(/\n/g, ' / ') : t;
 }
 
+function clampElicit(n) {
+  return Math.max(52, Math.min(93, Math.round(n)));
+}
+
+/** 변경 전: 종결·문장구조 기반 휴리스틱 */
+function scoreElicitBefore(text, scaleType, no) {
+  const t = flattenText(text);
+  let score;
+  const factors = [];
+
+  if (/생각한다\.?$/.test(t) || /본다\.?$/.test(t)) {
+    score = 88;
+    factors.push('인지종결');
+  } else if (/할 수 있다\.?$/.test(t)) {
+    score = 86;
+    factors.push('역량종결');
+  } else if (/때가 많다\.?$/.test(t)) {
+    score = 85;
+    factors.push('빈도명시');
+  } else if (/때가 있다\.?$/.test(t)) {
+    score = 87;
+    factors.push('빈도명시');
+  } else if (/편이다\.?\s*$/.test(t)) {
+    score = 73;
+    factors.push('편이다(성향뭉개기)');
+  } else {
+    score = 74;
+    factors.push('기타종결');
+  }
+
+  if (/어렵고.+어려운 편|넘기기 어렵고 용서하기 어려운 편/.test(t)) {
+    score -= 10;
+    factors.push('이중어려움+편');
+  } else if (
+    /어려운 편|못하는 편|나서지 못하는 편|거절하지 못하는 편|내지 못하는 편|자신 없는 편|받아들이기 어려운 편/.test(
+      t
+    )
+  ) {
+    score -= 6;
+    factors.push('장벽+편');
+  }
+
+  if (/느끼는 편이다/.test(t)) {
+    score -= 5;
+    factors.push('정서+편이중');
+  }
+  if (/싶어지는 편이다/.test(t)) {
+    score -= 4;
+    factors.push('욕구+편이중');
+  }
+  if (scaleType.startsWith('validity') && /편이다/.test(t)) {
+    score -= 9;
+    factors.push('타당도+편');
+  }
+  if (/말하는 편이다/.test(t) && !/내가/.test(t.slice(0, 20))) {
+    score -= 7;
+    factors.push('타인발화혼동');
+  }
+  if (/없는 편이다|거의 없는 편/.test(t)) {
+    score -= 8;
+    factors.push('절대부인+편');
+  }
+  if (/좋아지는 편|가벼워지는 편|생기는 편|떠오르는 편/.test(t)) {
+    score -= 2;
+    factors.push('반응+편');
+  }
+
+  const stigma = [14, 32, 60, 70, 80, 93];
+  if (stigma.includes(no)) {
+    score -= 1;
+    factors.push('사회바람직성');
+  }
+
+  return { score: clampElicit(score), factors: factors.join(';') || '—' };
+}
+
+const TAG_ELICIT_AFTER = {
+  action: 84,
+  effort: 83,
+  think: 87,
+  feel: 86,
+  feel_often: 87,
+  feel_sometimes: 88,
+  desire: 85,
+  difficulty: 84,
+  state: 83,
+  hear: 82,
+  validity_freq: 87,
+  validity_abs: 85,
+  validity_feel: 79,
+  imc_state: 86,
+  imc_desire: 87,
+  ability: 86,
+};
+
+/** 변경 후: 측정태그 + (통일 Likert 미적용 시 감점) */
+function scoreElicitAfter(tag, scaleType, no, changed) {
+  if (!changed) return null;
+  let score = TAG_ELICIT_AFTER[tag] ?? 82;
+  const factors = [`종결태그:${tag}`];
+
+  if (!['ability', 'validity_freq', 'imc_state', 'imc_desire'].includes(tag)) {
+    score -= 3;
+    factors.push('Likert통일감점(-3)');
+  }
+  if (scaleType.startsWith('validity') && tag === 'validity_feel') {
+    score -= 3;
+    factors.push('F과장주장');
+  }
+  if (no === 25) {
+    score -= 2;
+    factors.push('타인말빈도');
+  }
+  if (no === 42) {
+    score -= 2;
+    factors.push('타인인상추정');
+  }
+  if (no === 52) {
+    score -= 1;
+    factors.push('정서·몰입혼합');
+  }
+  if (no === 9) {
+    score -= 2;
+  }
+
+  return { score: clampElicit(score), factors: factors.join(';') };
+}
+
 const rows = json.items.map((item) => {
   const m = META[item.no];
   if (!m) throw new Error(`Missing META for item ${item.no}`);
   const before = item.text;
   const after = m.proposed ?? before;
   const changed = flattenText(before) !== flattenText(after) ? 'Y' : 'N';
+  const beforeE = scoreElicitBefore(before, item.scaleType, item.no);
+  let elicitBefore = m.elicitBefore ?? beforeE.score;
+  let elicitFactorsBefore = beforeE.factors;
+  let elicitAfter;
+  let elicitFactorsAfter;
+  if (changed === 'N') {
+    elicitAfter = m.elicitAfter ?? elicitBefore;
+    elicitFactorsAfter = '유지';
+  } else {
+    const afterE = scoreElicitAfter(m.tag, item.scaleType, item.no, true);
+    elicitAfter = m.elicitAfter ?? afterE.score;
+    elicitFactorsAfter = afterE.factors;
+  }
+  const elicitDelta = elicitAfter - elicitBefore;
   return {
     no: item.no,
     scaleType: item.scaleType,
@@ -254,6 +399,11 @@ const rows = json.items.map((item) => {
     before: displayText(before),
     after: displayText(m.proposed ? after : before),
     note: m.note ?? '',
+    elicitBefore,
+    elicitAfter,
+    elicitDelta,
+    elicitFactorsBefore,
+    elicitFactorsAfter,
   };
 });
 
@@ -262,7 +412,7 @@ const tsvPath = path.join(outDir, 'items-99-ending-mapping-ko.tsv');
 const mdPath = path.join(outDir, 'items-99-ending-mapping-ko.md');
 
 const tsvHeader =
-  '번호\tscaleType\t종결태그\t종결태그설명\tLikert템플릿\t변경여부\t변경전문장\t변경후문장\t비고\n';
+  '번호\tscaleType\t종결태그\t종결태그설명\tLikert템플릿\t변경여부\t속마음정확도_변경전%\t속마음정확도_변경후%\t증감%p\t변경전요인\t변경후요인\t변경전문장\t변경후문장\t비고\n';
 const tsvBody = rows
   .map(
     (r) =>
@@ -273,6 +423,11 @@ const tsvBody = rows
         r.tagKo,
         r.likert,
         r.changed,
+        r.elicitBefore,
+        r.elicitAfter,
+        r.elicitDelta >= 0 ? `+${r.elicitDelta}` : String(r.elicitDelta),
+        r.elicitFactorsBefore.replace(/\t/g, ' '),
+        r.elicitFactorsAfter.replace(/\t/g, ' '),
         r.before.replace(/\t/g, ' '),
         r.after.replace(/\t/g, ' '),
         r.note.replace(/\t/g, ' '),
@@ -282,6 +437,13 @@ const tsvBody = rows
 fs.writeFileSync(tsvPath, tsvHeader + tsvBody + '\n', 'utf8');
 
 const changedCount = rows.filter((r) => r.changed === 'Y').length;
+const avg = (arr) => Math.round((arr.reduce((a, b) => a + b, 0) / arr.length) * 10) / 10;
+const meanBefore = avg(rows.map((r) => r.elicitBefore));
+const meanAfter = avg(rows.map((r) => r.elicitAfter));
+const meanDelta = avg(rows.map((r) => r.elicitDelta));
+const changedRows = rows.filter((r) => r.changed === 'Y');
+const meanBeforeChg = avg(changedRows.map((r) => r.elicitBefore));
+const meanAfterChg = avg(changedRows.map((r) => r.elicitAfter));
 const md = `# 이고-오케이 99문항 — 종결 어미 매핑 (적용 전 검토용)
 
 > **상태:** 미적용 · \`items-99-source.tsv\` / 빌드 반영 전  
@@ -295,6 +457,30 @@ const md = `# 이고-오케이 99문항 — 종결 어미 매핑 (적용 전 검
 | 전체 문항 | 99 |
 | \`~편이다\` → 다른 종결 **제안** | ${changedCount} |
 | **유지** (이미 적합·타당도·생각/능력형) | ${99 - changedCount} |
+
+## 자기보고·속마음 정확도 %(휴리스틱)
+
+> **주의:** 아래 %는 내담자 실증 데이터가 아니라, 문장구조·종결어미·Likert 정렬 가정에 따른 **전문가 휴리스틱 점수**입니다. 100%는 이론적 상한에 가깝습니다.
+
+### 채점 루브릭 (문항당 가중 개념)
+
+| 요소 | 비중 | 설명 |
+|------|------|------|
+| 구성 타당 정렬 | 40% | 행동·생각·정서·장벽에 맞는 종결인가 |
+| 응답 지침 명료성 | 25% | 동의 시 무엇을 인정하는지 분명한가 |
+| 방어·사회적 바람직성 | 20% | 덜 \`모범답안\`처럼 읽히는가 |
+| 빈도·강도 앵커 | 15% | \`때가 있다\`·\`하곤 한다\` 등 빈도 추정 가능한가 |
+
+- **변경 전** \`~편이다\` 기본 73점에서 이중어미·타당도+편·정서+편 등 **감점**.
+- **변경 후** 종결태그 기본 82–88점에서 **Likert 통일 UI 미연동 −3** (제안 어미만 적용 시).
+- **유지 문항**은 변경 전·후 % **동일**.
+
+### 평균 (99문항)
+
+| 구분 | 변경 전 % | 변경 후 % | Δ |
+|------|----------:|----------:|---:|
+| 전체 | ${meanBefore} | ${meanAfter} | +${meanDelta} |
+| 변경 제안 91문항만 | ${meanBeforeChg} | ${meanAfterChg} | +${(meanAfterChg - meanBeforeChg).toFixed(1)} |
 
 ### 종결 태그 범례
 
@@ -313,14 +499,16 @@ ${Object.entries(TAG_LABEL)
 
 ---
 
-## 전 문항: 변경 전 · 변경 후
+## 전 문항: 정확도 % · 변경 전 · 변경 후
 
-| No | 척도 | 태그 | Chg | 변경 전 | 변경 후 |
-|---:|------|------|:---:|---------|---------|
+| No | 척도 | Chg | 전% | 후% | Δ | 변경 전 | 변경 후 |
+|---:|------|:---:|---:|---:|---:|---------|---------|
 ${rows
   .map(
-    (r) =>
-      `| ${r.no} | ${r.scaleType} | \`${r.tag}\` | ${r.changed} | ${r.before.replace(/\|/g, '\\|')} | ${r.after.replace(/\|/g, '\\|')} |`
+    (r) => {
+      const d = r.elicitDelta >= 0 ? `+${r.elicitDelta}` : String(r.elicitDelta);
+      return `| ${r.no} | ${r.scaleType} | ${r.changed} | ${r.elicitBefore} | ${r.elicitAfter} | ${d} | ${r.before.replace(/\|/g, '\\|')} | ${r.after.replace(/\|/g, '\\|')} |`;
+    }
   )
   .join('\n')}
 
