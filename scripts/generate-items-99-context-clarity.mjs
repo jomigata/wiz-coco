@@ -1,0 +1,294 @@
+/**
+ * 5W1H 맥락 부족 문항 목록 + 추천 문장 (검토용, 미자동 적용)
+ * npm run generate:ego-ok-items-99-context-clarity
+ */
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
+const catalog = fs
+  .readFileSync(path.join(root, 'docs/internal-materials/ego-ok/items-99-final-catalog-ko.tsv'), 'utf8')
+  .trim()
+  .split(/\r?\n/)
+  .slice(1);
+
+/** @type {Record<number, { risk: string, missing: string, suggest: string, note?: string }>} */
+const REVISIONS = {
+  1: {
+    risk: '중',
+    missing: '언제·누구(관계)',
+    suggest: '일상에서 가까운 사람들과 있을 때, 흠을 잡기보다 잘한 점이나 장점을 칭찬하는 편이다.',
+  },
+  2: {
+    risk: '중',
+    missing: '무엇(영역)',
+    suggest: '일이나 생활 규칙을 따를 때, 인정이나 예외보다 정해진 규칙과 절차대로 정확히 맞추는 편이다.',
+  },
+  5: {
+    risk: '중',
+    missing: '언제·상황',
+    suggest: '대화나 일을 함께할 때 의견이 달라도, 서로 생각이 다를 수 있다고 받아들이는 편이다.',
+  },
+  10: {
+    risk: '중',
+    missing: '언제(반복 맥락)',
+    suggest: '평소에 남들의 사소한 실수나 약속 어김이 보이면, 대충 넘기기 어렵고 용서하기 어렵다.',
+  },
+  13: {
+    risk: '상',
+    missing: '무엇(역할·장소)',
+    suggest: '직장이나 모임처럼 내가 속한 곳에서, 내 역할을 다하며 기여하고 있다고 느낀다.',
+  },
+  14: {
+    risk: '중',
+    missing: '누구·관계',
+    suggest: '함께 일하거나 지내는 사람의 행동이나 일 처리에, 쓴소리나 지적을 쉽게 하는 편이다.',
+  },
+  18: {
+    risk: '상',
+    missing: '나(자기) vs 타인 가치판단 혼동',
+    suggest: '평소에 다른 사람이 자신의 뜻을 당당히 말하는 것은, 바람직하다고 본다.',
+    note: '가치 동의 문항—「나는 ~라고 본다」로 자기 태도 명시',
+  },
+  25: {
+    risk: '상',
+    missing: '누가·어떻게(타인 발화 vs 내 인식)',
+    suggest: '가까운 사람들이 나와 있을 때, 나를 의지할 수 있다고 말하는 경우가 많다.',
+  },
+  30: {
+    risk: '중',
+    missing: '무엇(도움 장면)',
+    suggest: '주변 사람이 곤란해 보일 때, 내가 나서 돕기보다 스스로 해결하게 두는 편이다.',
+  },
+  35: {
+    risk: '상',
+    missing: '누구·무엇(갈등 장면)',
+    suggest: '함께 일하거나 결정할 때 내 방식이 더 낫다고 느껴도, 억지로 따르게 하지 않는 편이다.',
+  },
+  40: {
+    risk: '중',
+    missing: '누구·상황',
+    suggest: '가까운 사람과 의견을 나눌 때, 맞추기보다 내 원칙을 먼저 내세우는 편이다.',
+  },
+  42: {
+    risk: '중',
+    missing: '누구 앞',
+    suggest: '일상 대화에서 농담이나 감정 표현을 잘 안 하고, 말투가 건조하게 들리는 편이다.',
+  },
+  44: {
+    risk: '중',
+    missing: '언제·구체 상황',
+    suggest: '이익이 걸린 일이라도, 양심에 부끄럽지 않게 바르게 행동하려는 편이다.',
+  },
+  50: {
+    risk: '중',
+    missing: '누구(상대 관계)',
+    suggest: '가까운 사람이 나의 기대에 못 미칠 때, 답답하고 화가 나는 편이다.',
+  },
+  53: {
+    risk: '상',
+    missing: '언제·무엇',
+    suggest: '갑작스러운 일이 생기면, 복잡하게 따지지 않고 첫 느낌으로 상황을 빠르게 파악하는 편이다.',
+  },
+  57: {
+    risk: '중',
+    missing: '누구',
+    suggest: '함께 지내는 상대의 단점이나 약한 점도, 고치려 하기보다 있는 그대로 받아들이려 하는 편이다.',
+  },
+  67: {
+    risk: '중',
+    missing: '언제·상황',
+    suggest: '처음 만나거나 함께 일할 때, 다른 사람을 쉽게 의심하기보다 대체로 신뢰하는 편이다.',
+  },
+  73: {
+    risk: '중',
+    missing: '무엇(행동 관찰점)',
+    suggest: '일과 쉬는 시간을 포함해, 긍정적이고 활기찬 기운으로 일상을 보내는 편이다.',
+  },
+  76: {
+    risk: '상',
+    missing: '누구(그 사람 지칭)',
+    suggest: '마음에 들지 않는 사람 앞에서도, 겉으로는 평소처럼 대하는 편이다.',
+  },
+  77: {
+    risk: '중',
+    missing: '어떻게',
+    suggest: '가까운 사람들에게 연락하고 만나며, 관계를 이어 가는 편이다.',
+  },
+  83: {
+    risk: '중',
+    missing: '누구·상황',
+    suggest: '가까운 사람이 실수를 해도, 탓하기보다 상황을 이해하려는 편이다.',
+  },
+  87: {
+    risk: '상',
+    missing: '나(자기) vs 일반 원칙',
+    suggest: '나는 개인적인 일의 선택은, 본인이 스스로 정해야 한다고 생각한다.',
+  },
+  90: {
+    risk: '중',
+    missing: '무엇',
+    suggest: '집·일 등 결과가 중요한 일은, 남에게 맡기기보다 내가 직접 처리하려는 편이다.',
+  },
+  94: {
+    risk: '중',
+    missing: '어디·누구',
+    suggest: '사람들이 있는 자리에서도, 사소한 일이라 주위를 살피며 가볍게 행동하지 않는 편이다.',
+  },
+  96: {
+    risk: '중',
+    missing: '언제·상황',
+    suggest: '성격이 맞지 않는 동료와도, 같은 팀 일에서는 역할을 인정하며 협력할 수 있다.',
+  },
+  99: {
+    risk: '중',
+    missing: '언제',
+    suggest: '일이나 취미를 할 때, 뻔하지 않고 색다른 아이디어가 자주 떠오르는 편이다.',
+  },
+  3: {
+    risk: '중',
+    missing: '언제(평소)',
+    suggest: '평소에 나 자신의 성격과 삶의 방식을, 있는 그대로 받아들이고 아끼는 편이다.',
+  },
+  22: {
+    risk: '중',
+    missing: '무엇 결정',
+    suggest: '사람을 대하거나 일을 선택할 때, 손해와 이익을 먼저 따져보는 편이다.',
+  },
+  52: {
+    risk: '중',
+    missing: '누구',
+    suggest: '가까운 사람이 고민을 털어놓으면, 내 일처럼 끌어안고 신경 쓰는 편이다.',
+  },
+  60: {
+    risk: '중',
+    missing: '누구·상황',
+    suggest: '대화나 함께하는 일에서 생각이나 가치관이 다르면, 거부감이 들어 마음을 닫는 편이다.',
+  },
+  70: {
+    risk: '중',
+    missing: '누구·왜',
+    suggest: '피드백을 나눌 때, 상대의 잘한 점보다 고칠 점을 먼저 말한다.',
+    note: '70번 종결: 현행 어미(말한다) 유지',
+  },
+  89: {
+    risk: '중',
+    missing: '언제',
+    suggest: '사람들과 어울릴 자리에서, 내 옷차림이나 스타일에 만족하지 못해 자신이 없다.',
+  },
+};
+
+function autoMissing(text) {
+  const miss = [];
+  if (!/때|면|으면|할 때|접|중에|평소|어릴|살면서|일상|만나|이야기|대화|일할|함께/.test(text)) miss.push('언제');
+  if (/(남|상대|사람|주변|동료|가까운)/.test(text) && !/가까운|친한|동료|함께|가족|직장/.test(text))
+    miss.push('누구(모호)');
+  if (/\b그 사람\b|의지가 된다고 말하는/.test(text)) miss.push('누가·근거');
+  if (/속한 곳|작은 이득|사소한 일[^이]/.test(text)) miss.push('무엇');
+  return miss.length ? miss.join('·') : '—';
+}
+
+function autoRisk(miss, hasRevision) {
+  if (hasRevision && REVISIONS[hasRevision]?.risk === '상') return '상';
+  if (miss.includes('누가') || miss === '—' && !hasRevision) return '하';
+  if (hasRevision) return REVISIONS[hasRevision].risk;
+  if (miss.length > 8) return '중';
+  return '하';
+}
+
+const rows = catalog.map((line) => {
+  const p = line.split('\t');
+  const no = Number(p[0]);
+  const scale = p[1];
+  const focus = p[7] ?? '';
+  const text = p[8] ?? '';
+  const rev = REVISIONS[no];
+  const missing = rev?.missing ?? autoMissing(text);
+  const risk = rev?.risk ?? (missing === '—' ? '하' : missing.includes('상') ? '상' : missing.length > 6 ? '중' : '하');
+  const suggest = rev?.suggest ?? text;
+  const note = rev?.note ?? (suggest === text ? '맥락 충분·유지' : '');
+  return { no, scale, focus, text, missing, risk, suggest, note };
+});
+
+const flagged = rows.filter((r) => r.suggest !== r.text);
+const high = flagged.filter((r) => r.risk === '상');
+const mid = flagged.filter((r) => r.risk === '중');
+
+const outDir = path.join(root, 'docs/internal-materials/ego-ok');
+const tsvPath = path.join(outDir, 'items-99-context-clarity-ko.tsv');
+const mdPath = path.join(outDir, 'items-99-context-clarity-ko.md');
+
+const tsv =
+  '번호\t척도\t위험도\t부족단서(5W1H)\t측정요지\t현재문장\t추천문장\t비고\n' +
+  flagged
+    .map((r) =>
+      [r.no, r.scale, r.risk, r.missing, r.focus, r.text, r.suggest, r.note]
+        .map((c) => String(c).replace(/\t/g, ' '))
+        .join('\t')
+    )
+    .join('\n') +
+  '\n';
+
+fs.writeFileSync(tsvPath, tsv, 'utf8');
+
+const md = `# 99문항 — 5W1H 맥락·이해 용이성 검토 (미적용)
+
+> **목적:** 내담자가 「검사 문항」이 아니라 일상 문장으로 읽을 때, **누가·언제·무엇·어떻게** 단서가 부족해 측도 응답이 흐려지는 항목을 골라 **추천 문장**을 제시합니다.  
+> **생성:** \`npm run generate:ego-ok-items-99-context-clarity\`  
+> **TSV:** [items-99-context-clarity-ko.tsv](./items-99-context-clarity-ko.tsv)
+
+## 요약
+
+| 구분 | 문항 수 |
+|------|--------:|
+| **상** (우선 보강) | ${high.length} |
+| **중** (상황 한 줄 권장) | ${mid.length} |
+| **하** (목록 제외·현행 유지) | ${99 - flagged.length} |
+| **검토 목록에 포함** | ${flagged.length} |
+
+### 판단 기준 (요약)
+
+- **상:** 타인/일반 명제처럼 읽히거나, 지시어(그 사람)·관찰 주체가 불분명해 **자기 평소 성향**과 혼동
+- **중:** 상황은 추론 가능하나 **한 번 더 읽어야** 측도(측정요지)에 닿음
+- **하:** 「~할 때」·관계·행동이 이미 들어 있음
+
+---
+
+## 위험 **상** — 추천 문장
+
+| No | 부족 단서 | 현재 | 추천 |
+|---:|-----------|------|------|
+${high
+  .map(
+    (r) =>
+      `| ${r.no} | ${r.missing} | ${r.text.replace(/\|/g, '\\|')} | ${r.suggest.replace(/\|/g, '\\|')} |`
+  )
+  .join('\n')}
+
+---
+
+## 위험 **중** — 추천 문장
+
+| No | 부족 단서 | 현재 | 추천 |
+|---:|-----------|------|------|
+${mid
+  .map(
+    (r) =>
+      `| ${r.no} | ${r.missing} | ${r.text.replace(/\|/g, '\\|')} | ${r.suggest.replace(/\|/g, '\\|')} |`
+  )
+  .join('\n')}
+
+---
+
+## 적용 시 유의
+
+1. 추천문은 **측정요지 불변**·**종결어미 정책**(편이다 72 / 비편 8 / 전용 19)과 맞춰 재조정하세요.
+2. 쉼표 줄바꿈·\`@\` 규칙: [items-99-reading-linebreak-ko.md](./items-99-reading-linebreak-ko.md)
+3. VRIN·타당도 문항은 **극단 응답**이 보이도록 단서만 최소 추가합니다.
+`;
+
+fs.writeFileSync(mdPath, md, 'utf8');
+console.log(`Wrote ${tsvPath} (${flagged.length} rows)`);
+console.log(`Wrote ${mdPath}`);
+console.log(`High: ${high.length}, Mid: ${mid.length}`);
