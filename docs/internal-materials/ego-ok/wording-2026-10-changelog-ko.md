@@ -1,5 +1,12 @@
 # 99문항 문장 확정 (2026-10)
 
+## 종결 어미 혼합 정책 (2026-11-23)
+
+- **71문항:** `~편이다` 유지 + **25번** 등 동률 구간 포함 (현행 Likert 통일)
+- **8문항 비편 유지:** 15, 18, 66, 69, 75, 87, 88, 96
+- **19문항 전용 어미 적용:** 8, 9, 10, 13, 19, 24, 26, 33, 38, 39, 48, 55, 58, 68, 70, 78, 80, 82, 89
+- 근거·매핑: [`items-99-ending-mapping-ko.md`](./items-99-ending-mapping-ko.md)
+
 - **2026-10-22:** 개정 90문항 일괄 반영 — `npm run apply:ego-ok-90-revised-to-99` → [`items-90-revised-review.tsv`](./items-90-revised-review.tsv) + [`items-90-revised-confirmed-overrides.json`](./items-90-revised-confirmed-overrides.json) → `items-99-source.tsv` (타당도 9·제시순서 유지). 매핑 로그: [`items-90-apply-to-99-log.tsv`](./items-90-apply-to-99-log.tsv)
 - **원본 TSV:** `items-99-source.tsv` — 검사 화면 순서 1~99와 동일
 - **반영:** `npm run build:ego-ok-items-99` → `items-99.json`, `src/data/egoOkQuestions.ts`
