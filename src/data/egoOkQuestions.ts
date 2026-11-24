@@ -97,7 +97,7 @@ export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 74, text: "사소한 일에도 답답해져, 쉽게 욱하며 화를 내는 편이다.", readingText: "사소한 일에도 답답해져, 쉽게 욱하며 화를 내는 편이다.", code: "AB", egoIndex: 50, okIndex: null, scaleType: "cp_negative", scaleKind: 'egogram' },
   { no: 75, text: "일상이나 사회생활에서, 보통 사람들만큼 해낼 수 있다고 생각한다.", readingText: "일상이나 사회생활에서, 보통 사람들만큼 해낼 수 있다고 생각한다.", code: "DC", egoIndex: null, okIndex: 38, scaleType: "i_plus", scaleKind: 'okgram' },
   { no: 76, text: "마음에 안 들어도, 그 사람 앞에서는 평소처럼 대하는 편이다.", readingText: "마음에 안 들어도, 그 사람 앞에서는 평소처럼 대하는 편이다.", code: "EB", egoIndex: 47, okIndex: null, scaleType: "ac_negative", scaleKind: 'egogram' },
-  { no: 77, text: "가까운 사람들과 연락을 이어 가며, 관계를 유지하는 편이다.", readingText: "가까운 사람들과 연락을 이어 가며, 관계를 유지하는 편이다.", code: "BC", egoIndex: null, okIndex: 27, scaleType: "u_plus", scaleKind: 'okgram' },
+  { no: 77, text: "평소 주변 사람들과 대체로 좋은 관계를 이어가는 편이다.", readingText: "평소 주변 사람들과 대체로 좋은 관계를 이어가는 편이다.", code: "BC", egoIndex: null, okIndex: 27, scaleType: "u_plus", scaleKind: 'okgram' },
   { no: 78, text: "일상에서 깜빡하거나 착각해,\n작은 실수를 한 적이 거의 없다.", readingText: "일상에서 깜빡하거나 착각해,\n작은 실수를 한 적이 거의 없다.", code: "VX", egoIndex: null, okIndex: null, scaleType: "validity_infreq", scaleKind: 'validity' },
   { no: 79, text: "사람들과 어울리는 자리가 부담돼서, 혼자 있으려는 편이다.", readingText: "사람들과 어울리는 자리가 부담돼서, 혼자 있으려는 편이다.", code: "EC", egoIndex: null, okIndex: 30, scaleType: "i_minus", scaleKind: 'okgram' },
   { no: 80, text: "다른 사람이 아무리 친절해도, 속마음까지는 믿기 어렵다고 느낀다.", readingText: "다른 사람이 아무리 친절해도, 속마음까지는 믿기 어렵다고 느낀다.", code: "AC", egoIndex: null, okIndex: 32, scaleType: "u_minus", scaleKind: 'okgram' },
