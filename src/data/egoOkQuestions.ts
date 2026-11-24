@@ -22,7 +22,7 @@ export interface EgoOkQuestion {
 
 export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 1, text: "평소 다른 사람을 볼 때,\n단점보다 장점이 먼저 보이고 자연스럽게 칭찬하는 편이다.", readingText: "평소 다른 사람을 볼 때,\n단점보다 장점이 먼저 보이고 자연스럽게 칭찬하는 편이다.", code: "BA", egoIndex: 1, okIndex: null, scaleType: "np_positive", scaleKind: 'egogram' },
-  { no: 2, text: "인정이나 예외보다, 정해진 규칙과 절차대로 정확히 맞추는 편이다.", readingText: "인정이나 예외보다, 정해진 규칙과 절차대로 정확히 맞추는 편이다.", code: "CB", egoIndex: 20, okIndex: null, scaleType: "a_negative", scaleKind: 'egogram' },
+  { no: 2, text: "업무나 일상에서 인정이나 예외보다,\n정해진 절차와 기준을 그대로 따르는 편이다.", readingText: "업무나 일상에서 인정이나 예외보다,\n정해진 절차와 기준을 그대로 따르는 편이다.", code: "CB", egoIndex: 20, okIndex: null, scaleType: "a_negative", scaleKind: 'egogram' },
   { no: 3, text: "평소에 나 자신의 성격과 삶의 방식을,\n있는 그대로 받아들이고 아끼는 편이다.", readingText: "평소에 나 자신의 성격과 삶의 방식을,\n있는 그대로 받아들이고 아끼는 편이다.", code: "DC", egoIndex: null, okIndex: 1, scaleType: "i_plus", scaleKind: 'okgram' },
   { no: 4, text: "함께하다가 의견이 갈릴 때,\n상대보다 내 판단이 맞다고 보고 끝까지 주장하는 편이다.", readingText: "함께하다가 의견이 갈릴 때,\n상대보다 내 판단이 맞다고 보고 끝까지 주장하는 편이다.", code: "AB", egoIndex: 2, okIndex: null, scaleType: "cp_negative", scaleKind: 'egogram' },
   { no: 5, text: "대화나 일을 할 때 의견이 달라도,\n서로 생각이 다를 수 있다고 받아들이는 편이다.", readingText: "대화나 일을 할 때 의견이 달라도,\n서로 생각이 다를 수 있다고 받아들이는 편이다.", code: "BC", egoIndex: null, okIndex: 8, scaleType: "u_plus", scaleKind: 'okgram' },
