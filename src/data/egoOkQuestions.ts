@@ -67,7 +67,7 @@ export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 44, text: "이익이 걸린 일이라도, 양심에 부끄럽지 않게 바르게 행동하려는 편이다.", readingText: "이익이 걸린 일이라도, 양심에 부끄럽지 않게 바르게 행동하려는 편이다.", code: "AA", egoIndex: 13, okIndex: null, scaleType: "cp_positive", scaleKind: 'egogram' },
   { no: 45, text: "내 외모나 첫인상에, 대체로 만족하는 편이다.", readingText: "내 외모나 첫인상에, 대체로 만족하는 편이다.", code: "DC", egoIndex: null, okIndex: 21, scaleType: "i_plus", scaleKind: 'okgram' },
   { no: 46, text: "어떤 일이 마음에 꽂히면, 뒷일 생각 없이 일단 행동하는 편이다.", readingText: "어떤 일이 마음에 꽂히면, 뒷일 생각 없이 일단 행동하는 편이다.", code: "DB", egoIndex: 36, okIndex: null, scaleType: "fc_negative", scaleKind: 'egogram' },
-  { no: 47, text: "동료가 실수해도, 탓하기보다 격려하는 편이다.", readingText: "동료가 실수해도, 탓하기보다 격려하는 편이다.", code: "BC", egoIndex: null, okIndex: 34, scaleType: "u_plus", scaleKind: 'okgram' },
+  { no: 47, text: "동료가 실수나 실패를 해도, 비난하지 않고 따뜻하게 격려하는 ", readingText: "동료가 실수나 실패를 해도, 비난하지 않고 따뜻하게 격려하는 ", code: "BC", egoIndex: null, okIndex: 34, scaleType: "u_plus", scaleKind: 'okgram' },
   { no: 48, text: "몸이 무겁게 지친 날에는, 잠깐이라도 쉬고 싶어진다.", readingText: "몸이 무겁게 지친 날에는, 잠깐이라도 쉬고 싶어진다.", code: "VX", egoIndex: null, okIndex: null, scaleType: "validity_lie", scaleKind: 'validity' },
   { no: 49, text: "가끔은 나 자신이, 많이 부족하거나 무기력하게 느껴지는 편이다.", readingText: "가끔은 나 자신이, 많이 부족하거나 무기력하게 느껴지는 편이다.", code: "EC", egoIndex: null, okIndex: 7, scaleType: "i_minus", scaleKind: 'okgram' },
   { no: 50, text: "가까운 사람이 나의 기대에 못 미칠 때, 답답하고 화가 나는 편이다.", readingText: "가까운 사람이 나의 기대에 못 미칠 때, 답답하고 화가 나는 편이다.", code: "AC", egoIndex: null, okIndex: 15, scaleType: "u_minus", scaleKind: 'okgram' },
