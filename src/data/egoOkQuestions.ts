@@ -57,7 +57,7 @@ export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 34, text: "여럿이 함께 일할 때, 내가 방향과 진행 속도를 잡아 가는 편이다. ", readingText: "여럿이 함께 일할 때, 내가 방향과 진행 속도를 잡아 가는 편이다. ", code: "AB", egoIndex: 31, okIndex: null, scaleType: "cp_negative", scaleKind: 'egogram' },
   { no: 35, text: "일이나 결정에 있어서 내 방식이 더 낫다고 느껴도,\n억지로 따르게 하지 않는 편이다.", readingText: "일이나 결정에 있어서 내 방식이 더 낫다고 느껴도,\n억지로 따르게 하지 않는 편이다.", code: "BC", egoIndex: null, okIndex: 18, scaleType: "u_plus", scaleKind: 'okgram' },
   { no: 36, text: "서운한 일이 있어도, 말로 풀지 못하고 혼자 마음에 담아 두는 편이다.", readingText: "서운한 일이 있어도, 말로 풀지 못하고 혼자 마음에 담아 두는 편이다.", code: "EB", egoIndex: 29, okIndex: null, scaleType: "ac_negative", scaleKind: 'egogram' },
-  { no: 37, text: "새로운 일이 생기면, 망설이기보다 먼저 판단하고 행동하는 편이다.", readingText: "새로운 일이 생기면, 망설이기보다 먼저 판단하고 행동하는 편이다.", code: "DC", egoIndex: null, okIndex: 11, scaleType: "i_plus", scaleKind: 'okgram' },
+  { no: 37, text: "맡은 일이 생기면, 스스로 잘 이끌 수 있다고 믿는 편이다.", readingText: "맡은 일이 생기면, 스스로 잘 이끌 수 있다고 믿는 편이다.", code: "DC", egoIndex: null, okIndex: 11, scaleType: "i_plus", scaleKind: 'okgram' },
   { no: 38, text: "오래 미뤄 둔 일을 끝냈을 때, 마음이 한결 가벼워진다.", readingText: "오래 미뤄 둔 일을 끝냈을 때, 마음이 한결 가벼워진다.", code: "VX", egoIndex: null, okIndex: null, scaleType: "validity_imc", scaleKind: 'validity' },
   { no: 39, text: "문제가 생기거나 일이 어긋나면,\n먼저 내가 잘못한 것 같다고 느끼곤 한다.", readingText: "문제가 생기거나 일이 어긋나면,\n먼저 내가 잘못한 것 같다고 느끼곤 한다.", code: "EC", egoIndex: null, okIndex: 22, scaleType: "i_minus", scaleKind: 'okgram' },
   { no: 40, text: "사람들과 의견을 나눌 때, 맞추기보다 내 원칙을 먼저 내세우는 편이다.", readingText: "사람들과 의견을 나눌 때, 맞추기보다 내 원칙을 먼저 내세우는 편이다.", code: "AC", egoIndex: null, okIndex: 39, scaleType: "u_minus", scaleKind: 'okgram' },
