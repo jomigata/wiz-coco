@@ -73,7 +73,7 @@ export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 50, text: "가까운 사람이 나의 기대에 못 미칠 때, 답답하고 화가 나는 편이다.", readingText: "가까운 사람이 나의 기대에 못 미칠 때, 답답하고 화가 나는 편이다.", code: "AC", egoIndex: null, okIndex: 15, scaleType: "u_minus", scaleKind: 'okgram' },
   { no: 51, text: "일이나 상황을 볼 때,\n막연한 기대보다 지금 확인된 현실부터 보는 편이다.", readingText: "일이나 상황을 볼 때,\n막연한 기대보다 지금 확인된 현실부터 보는 편이다.", code: "CA", egoIndex: 22, okIndex: null, scaleType: "a_positive", scaleKind: 'egogram' },
   { no: 52, text: "주변 사람의 고민을 들으면, 내 일처럼 끌어안고 신경 쓰는 편이다.", readingText: "주변 사람의 고민을 들으면, 내 일처럼 끌어안고 신경 쓰는 편이다.", code: "BB", egoIndex: 25, okIndex: null, scaleType: "np_negative", scaleKind: 'egogram' },
-  { no: 53, text: "복잡하게 따지지 않고, 첫 느낌으로 상황을 빠르게 파악하는 편이다.", readingText: "복잡하게 따지지 않고, 첫 느낌으로 상황을 빠르게 파악하는 편이다.", code: "DA", egoIndex: 27, okIndex: null, scaleType: "fc_positive", scaleKind: 'egogram' },
+  { no: 53, text: "뜻밖의 일이 생기면, 따지기보다 첫 느낌으로 빠르게 상황을 보는 편이다.", readingText: "뜻밖의 일이 생기면, 따지기보다 첫 느낌으로 빠르게 상황을 보는 편이다.", code: "DA", egoIndex: 27, okIndex: null, scaleType: "fc_positive", scaleKind: 'egogram' },
   { no: 54, text: "상식이나 기본 매너에서 벗어난 행동을 보면, 받아들이기 어려운 편이다.", readingText: "상식이나 기본 매너에서 벗어난 행동을 보면, 받아들이기 어려운 편이다.", code: "AB", egoIndex: 43, okIndex: null, scaleType: "cp_negative", scaleKind: 'egogram' },
   { no: 55, text: "나는 따뜻한 관심 속에서 자랐다고 느낀다.", readingText: "나는 따뜻한 관심 속에서 자랐다고 느낀다.", code: "DC", egoIndex: null, okIndex: 3, scaleType: "i_plus", scaleKind: 'okgram' },
   { no: 56, text: "사소한 선택도 혼자 정하기 어려워,\n결국 가까운 사람이 정한 쪽을 따르는 편이다.", readingText: "사소한 선택도 혼자 정하기 어려워,\n결국 가까운 사람이 정한 쪽을 따르는 편이다.", code: "EB", egoIndex: 39, okIndex: null, scaleType: "ac_negative", scaleKind: 'egogram' },
