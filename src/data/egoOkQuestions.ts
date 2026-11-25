@@ -78,7 +78,7 @@ export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 55, text: "나는 따뜻한 관심 속에서 자랐다고 느낀다.", readingText: "나는 따뜻한 관심 속에서 자랐다고 느낀다.", code: "DC", egoIndex: null, okIndex: 3, scaleType: "i_plus", scaleKind: 'okgram' },
   { no: 56, text: "사소한 선택도 혼자 정하기 어려워,\n결국 가까운 사람이 정한 쪽을 따르는 편이다.", readingText: "사소한 선택도 혼자 정하기 어려워,\n결국 가까운 사람이 정한 쪽을 따르는 편이다.", code: "EB", egoIndex: 39, okIndex: null, scaleType: "ac_negative", scaleKind: 'egogram' },
   { no: 57, text: "함께 지내는 사람의 단점이나 약한 점도,\n고치려 하기보다 있는 그대로 받아들이려 하는 편이다.", readingText: "함께 지내는 사람의 단점이나 약한 점도,\n고치려 하기보다 있는 그대로 받아들이려 하는 편이다.", code: "BC", egoIndex: null, okIndex: 9, scaleType: "u_plus", scaleKind: 'okgram' },
-  { no: 58, text: "다른 사람과 나를 비교해서 생각하는 일이,\n거의 없다.", readingText: "다른 사람과 나를 비교해서 생각하는 일이,\n거의 없다.", code: "VX", egoIndex: null, okIndex: null, scaleType: "validity_infreq", scaleKind: 'validity' },
+  { no: 58, text: "일상에서, 다른 사람과 나를 비교해서 생각해 본 적이 거의 없다.", readingText: "일상에서, 다른 사람과 나를 비교해서 생각해 본 적이 거의 없다.", code: "VX", egoIndex: null, okIndex: null, scaleType: "validity_infreq", scaleKind: 'validity' },
   { no: 59, text: "실패가 두려워, 새로운 일이나 도전에 선뜻 나서지 못하는 편이다.", readingText: "실패가 두려워, 새로운 일이나 도전에 선뜻 나서지 못하는 편이다.", code: "EC", egoIndex: null, okIndex: 12, scaleType: "i_minus", scaleKind: 'okgram' },
   { no: 60, text: "나와 생각이나 가치관이 다르면, 거부감이 들어 마음을 닫는 편이다.", readingText: "나와 생각이나 가치관이 다르면, 거부감이 들어 마음을 닫는 편이다.", code: "AC", egoIndex: null, okIndex: 26, scaleType: "u_minus", scaleKind: 'okgram' },
   { no: 61, text: "주위에서 예의 바르고 착하다는 말을 종종 듣는 편이다.", readingText: "주위에서 예의 바르고 착하다는 말을 종종 듣는 편이다.", code: "EA", egoIndex: 21, okIndex: null, scaleType: "ac_positive", scaleKind: 'egogram' },
