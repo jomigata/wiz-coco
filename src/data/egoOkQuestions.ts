@@ -29,7 +29,7 @@ export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 6, text: "주변 시선이 신경 쓰여, 사소한 행동도 지나치게 조심하는 편이다.", readingText: "주변 시선이 신경 쓰여, 사소한 행동도 지나치게 조심하는 편이다.", code: "EB", egoIndex: 11, okIndex: null, scaleType: "ac_negative", scaleKind: 'egogram' },
   { no: 7, text: "사람들과 어울릴 때, 속마음을 숨기기보다 편하게 웃고 즐기는 편이다.", readingText: "사람들과 어울릴 때, 속마음을 숨기기보다 편하게 웃고 즐기는 편이다.", code: "DA", egoIndex: 4, okIndex: null, scaleType: "fc_positive", scaleKind: 'egogram' },
   { no: 8, text: "사람들에게 호감이나 좋은 인상을 주지 못한다고, 느낄 때가 많다.", readingText: "사람들에게 호감이나 좋은 인상을 주지 못한다고, 느낄 때가 많다.", code: "EC", egoIndex: null, okIndex: 2, scaleType: "i_minus", scaleKind: 'okgram' },
-  { no: 9, text: "낯선 사람을 만나도,\n얼마 지나지 않아 그 사람 성격을 꽤 잘 안다고 느낀다.", readingText: "낯선 사람을 만나도,\n얼마 지나지 않아 그 사람 성격을 꽤 잘 안다고 느낀다.", code: "VX", egoIndex: null, okIndex: null, scaleType: "validity_infreq", scaleKind: 'validity' },
+  { no: 9, text: "낯선 사람을 잠깐 만나도, 금방 그 사람 성격을 거의 다 안다고 느낀다.", readingText: "낯선 사람을 잠깐 만나도, 금방 그 사람 성격을 거의 다 안다고 느낀다.", code: "VX", egoIndex: null, okIndex: null, scaleType: "validity_infreq", scaleKind: 'validity' },
   { no: 10, text: "평소에 남들의 사소한 실수나 약속 어김이 보이면,\n대충 넘기거나 용서하기 어렵다.", readingText: "평소에 남들의 사소한 실수나 약속 어김이 보이면,\n대충 넘기거나 용서하기 어렵다.", code: "AC", egoIndex: null, okIndex: 36, scaleType: "u_minus", scaleKind: 'okgram' },
   { no: 11, text: "문제가 생겼을 때, 감정보다 차분하고 이성적으로 대처하는 편이다.", readingText: "문제가 생겼을 때, 감정보다 차분하고 이성적으로 대처하는 편이다.", code: "CB", egoIndex: 5, okIndex: null, scaleType: "a_positive", scaleKind: 'egogram' },
   { no: 12, text: "가까운 사람이 실수하지 않도록, 미리 챙겨 알려 주는 편이다.", readingText: "가까운 사람이 실수하지 않도록, 미리 챙겨 알려 주는 편이다.", code: "BB", egoIndex: 7, okIndex: null, scaleType: "np_negative", scaleKind: 'egogram' },
