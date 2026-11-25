@@ -83,7 +83,7 @@ export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 60, text: "나와 생각이나 가치관이 다르면, 거부감이 들어 마음을 닫는 편이다.", readingText: "나와 생각이나 가치관이 다르면, 거부감이 들어 마음을 닫는 편이다.", code: "AC", egoIndex: null, okIndex: 26, scaleType: "u_minus", scaleKind: 'okgram' },
   { no: 61, text: "주위에서 예의 바르고 착하다는 말을 종종 듣는 편이다.", readingText: "주위에서 예의 바르고 착하다는 말을 종종 듣는 편이다.", code: "EA", egoIndex: 21, okIndex: null, scaleType: "ac_positive", scaleKind: 'egogram' },
   { no: 62, text: "의문이 생긴 말을 들으면, 끝까지 사실·근거가 맞는지 확인하는 편이다.", readingText: "의문이 생긴 말을 들으면, 끝까지 사실·근거가 맞는지 확인하는 편이다.", code: "CB", egoIndex: 41, okIndex: null, scaleType: "a_negative", scaleKind: 'egogram' },
-  { no: 63, text: "주변 사람들의 노력과 성장을, 따뜻하게 격려하고 응원하는 편이다.", readingText: "주변 사람들의 노력과 성장을, 따뜻하게 격려하고 응원하는 편이다.", code: "BA", egoIndex: 23, okIndex: null, scaleType: "np_positive", scaleKind: 'egogram' },
+  { no: 63, text: "후배나 동료가 노력하는 모습을 보면,\n말로 격려하며 힘이 되어 주는 편이다.", readingText: "후배나 동료가 노력하는 모습을 보면,\n말로 격려하며 힘이 되어 주는 편이다.", code: "BA", egoIndex: 23, okIndex: null, scaleType: "np_positive", scaleKind: 'egogram' },
   { no: 64, text: "남이 보지 않아도, 공공 질서와 규칙을 지키는 편이다.", readingText: "남이 보지 않아도, 공공 질서와 규칙을 지키는 편이다.", code: "AA", egoIndex: 28, okIndex: null, scaleType: "cp_positive", scaleKind: 'egogram' },
   { no: 65, text: "내가 잘하는 분야에서는, 자신감이 있는 편이다.", readingText: "내가 잘하는 분야에서는, 자신감이 있는 편이다.", code: "DC", egoIndex: null, okIndex: 24, scaleType: "i_plus", scaleKind: 'okgram' },
   { no: 66, text: "상대의 기분보다, 내 감정을 먼저 말하거나 행동할 때가 있다.", readingText: "상대의 기분보다, 내 감정을 먼저 말하거나 행동할 때가 있다.", code: "DB", egoIndex: 32, okIndex: null, scaleType: "fc_negative", scaleKind: 'egogram' },
