@@ -101,7 +101,7 @@ export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 78, text: "일상에서 깜빡하거나 착각해,\n작은 실수를 한 적이 거의 없다.", readingText: "일상에서 깜빡하거나 착각해,\n작은 실수를 한 적이 거의 없다.", code: "VX", egoIndex: null, okIndex: null, scaleType: "validity_infreq", scaleKind: 'validity' },
   { no: 79, text: "사람들과 어울리는 게 부담스러워,\n혼자 시간을 보내는 것을 더 선호하는 편이다.", readingText: "사람들과 어울리는 게 부담스러워,\n혼자 시간을 보내는 것을 더 선호하는 편이다.", code: "EC", egoIndex: null, okIndex: 30, scaleType: "i_minus", scaleKind: 'okgram' },
   { no: 80, text: "평소 사람들이 친절하게 다가와도,\n진심이나 속마음까지는 믿기 어렵다고 느낀다.", readingText: "평소 사람들이 친절하게 다가와도,\n진심이나 속마음까지는 믿기 어렵다고 느낀다.", code: "AC", egoIndex: null, okIndex: 32, scaleType: "u_minus", scaleKind: 'okgram' },
-  { no: 81, text: "함께 정한 결론이 있으면, 내 뜻과 달라도 따르는 편이다.", readingText: "함께 정한 결론이 있으면, 내 뜻과 달라도 따르는 편이다.", code: "EA", egoIndex: 35, okIndex: null, scaleType: "ac_positive", scaleKind: 'egogram' },
+  { no: 81, text: "여럿이 의논해 정한 결론이 있으면, 내 생각과 달라도 따르는 편이다.", readingText: "여럿이 의논해 정한 결론이 있으면, 내 생각과 달라도 따르는 편이다.", code: "EA", egoIndex: 35, okIndex: null, scaleType: "ac_positive", scaleKind: 'egogram' },
   { no: 82, text: "친한 사람이 힘들다고 털어놓으면,\n들어 주기보다 원인과 어떻게 할지부터 말한다.", readingText: "친한 사람이 힘들다고 털어놓으면,\n들어 주기보다 원인과 어떻게 할지부터 말한다.", code: "CB", egoIndex: 20, okIndex: null, scaleType: "a_negative", scaleKind: 'egogram' },
   { no: 83, text: "상대가 실수를 해도, 탓하지 않고 상황을 이해하려는 편이다.", readingText: "상대가 실수를 해도, 탓하지 않고 상황을 이해하려는 편이다.", code: "BA", egoIndex: 40, okIndex: null, scaleType: "np_positive", scaleKind: 'egogram' },
   { no: 84, text: "아무리 바빠도, 말과 행동에서 기본 예의를 지키려는 편이다.", readingText: "아무리 바빠도, 말과 행동에서 기본 예의를 지키려는 편이다.", code: "AA", egoIndex: 34, okIndex: null, scaleType: "cp_positive", scaleKind: 'egogram' },
