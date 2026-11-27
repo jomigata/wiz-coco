@@ -115,7 +115,7 @@ export const EGO_OK_QUESTIONS: EgoOkQuestion[] = [
   { no: 92, text: "다른 사람이 부탁을 하면,\n내가 힘들거나 바빠도 쉽게 거절하지 못하는 편이다.", readingText: "다른 사람이 부탁을 하면,\n내가 힘들거나 바빠도 쉽게 거절하지 못하는 편이다.", code: "BB", egoIndex: 45, okIndex: null, scaleType: "np_negative", scaleKind: 'egogram' },
   { no: 93, text: "화가 나면, 상대가 내 말에 동의할 때까지 계속 밀어붙이는 편이다.", readingText: "화가 나면, 상대가 내 말에 동의할 때까지 계속 밀어붙이는 편이다.", code: "AC", egoIndex: null, okIndex: 13, scaleType: "u_minus", scaleKind: 'okgram' },
   { no: 94, text: "평소 사소한 행동이라도,\n남에게 불편이 없도록 주위를 보며 행동하는 편이다.", readingText: "평소 사소한 행동이라도,\n남에게 불편이 없도록 주위를 보며 행동하는 편이다.", code: "EA", egoIndex: 42, okIndex: null, scaleType: "ac_positive", scaleKind: 'egogram' },
-  { no: 95, text: "맡은 일은 끝까지 책임지고 마무리하는 편이다.", readingText: "맡은 일은 끝까지 책임지고 마무리하는 편이다.", code: "AA", egoIndex: 48, okIndex: null, scaleType: "cp_positive", scaleKind: 'egogram' },
+  { no: 95, text: "맡은 일이 힘들어도, 책임을 느끼며 끝까지 해내려는 편이다.", readingText: "맡은 일이 힘들어도, 책임을 느끼며 끝까지 해내려는 편이다.", code: "AA", egoIndex: 48, okIndex: null, scaleType: "cp_positive", scaleKind: 'egogram' },
   { no: 96, text: "나와 잘 맞지 않는 사람이라도,\n맡은 일에서는 역할을 인정하며 협력할 수 있다.", readingText: "나와 잘 맞지 않는 사람이라도,\n맡은 일에서는 역할을 인정하며 협력할 수 있다.", code: "BC", egoIndex: null, okIndex: 31, scaleType: "u_plus", scaleKind: 'okgram' },
   { no: 97, text: "혼자 결정해야 할 때,\n틀릴까 봐 걱정되어 쉽게 결론을 내지 못하는 편이다.", readingText: "혼자 결정해야 할 때,\n틀릴까 봐 걱정되어 쉽게 결론을 내지 못하는 편이다.", code: "EC", egoIndex: null, okIndex: 19, scaleType: "i_minus", scaleKind: 'okgram' },
   { no: 98, text: "일이 잘 안 풀려도, 포기하지 않고 다시 시도하는 편이다.", readingText: "일이 잘 안 풀려도, 포기하지 않고 다시 시도하는 편이다.", code: "DC", egoIndex: null, okIndex: 40, scaleType: "i_plus", scaleKind: 'okgram' },

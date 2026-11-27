@@ -202,7 +202,7 @@ const META = /** @type {Record<number, RowMeta>} */ ({
   },
   93: { tag: 'action', likert: 'action', proposed: '화가 나면, 상대가 내 말에 동의할 때까지 계속 밀어붙인다.' },
   94: { tag: 'action', likert: 'action', proposed: '평소 사소한 행동이라도, 남에게 불편이 없도록 주위를 보며 행동한다.' },
-  95: { tag: 'action', likert: 'action', proposed: '맡은 일은 끝까지 책임지고 마무리한다.' },
+  95: { tag: 'effort', likert: 'effort', proposed: '맡은 일이 힘들어도, 책임을 느끼며 끝까지 해내려 한다.' },
   96: { tag: 'ability', likert: 'agree', proposed: null, note: '이미 ~할 수 있다' },
   97: {
     tag: 'difficulty',
