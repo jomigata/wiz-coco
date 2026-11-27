@@ -201,7 +201,7 @@ const META = /** @type {Record<number, RowMeta>} */ ({
     proposed: '힘들거나 바빠도 내 마음이 불편해, 남의 부탁을 쉽게 거절하지 못한다.',
   },
   93: { tag: 'action', likert: 'action', proposed: '화가 나면, 상대가 내 말에 동의할 때까지 계속 밀어붙인다.' },
-  94: { tag: 'action', likert: 'action', proposed: '사소한 일이라도, 주위를 살피며 가볍게 행동하지 않는다.' },
+  94: { tag: 'action', likert: 'action', proposed: '평소 사소한 행동이라도, 남에게 불편이 없도록 주위를 보며 행동한다.' },
   95: { tag: 'action', likert: 'action', proposed: '맡은 일은 끝까지 책임지고 마무리한다.' },
   96: { tag: 'ability', likert: 'agree', proposed: null, note: '이미 ~할 수 있다' },
   97: {
